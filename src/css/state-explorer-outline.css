@@ -1,0 +1,48 @@
+/* V4.1: shared outline button appearance and pedagogical state grouping. */
+.demo-btn.outline {
+  background: var(--demo-outline-bg, transparent);
+  color: var(--demo-outline-text, var(--text));
+  border: 1px solid var(--demo-outline-border, var(--border));
+}
+.demo-btn.outline:hover:not(:disabled) {
+  background: var(--demo-outline-hover-bg, var(--surface-muted));
+  color: var(--demo-outline-hover-text, var(--text));
+  border-color: var(--demo-outline-border, var(--border));
+}
+.demo-btn.outline:active:not(:disabled) {
+  background: var(--demo-outline-active-bg, var(--surface-muted));
+  color: var(--demo-outline-active-text, var(--text));
+}
+.bd-matrix { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.bd-state-group { min-width: 0; }
+.bd-state-group-heading { margin: 0 0 10px; }
+.bd-state-group-heading h4 { margin: 0 0 3px; font-size: 1rem; }
+.bd-state-group-heading p { margin: 0; }
+.bd-state-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px; }
+
+/* V4.1: general Accent example uses the same live tokens as the laboratory. */
+.demo-btn.accent {
+  background: var(--demo-accent-bg, var(--accent));
+  color: var(--demo-accent-text, var(--on-accent));
+  border: 1px solid var(--demo-accent-border, transparent);
+}
+.demo-btn.accent:hover:not(:disabled) {
+  background: var(--demo-accent-hover-bg, var(--accent));
+  color: var(--demo-accent-hover-text, var(--on-accent));
+  border-color: var(--demo-accent-border, transparent);
+}
+.demo-btn.accent:active:not(:disabled) {
+  background: var(--demo-accent-active-bg, var(--accent));
+  color: var(--demo-accent-active-text, var(--on-accent));
+}
+/* V4.1: state-first sections, then colour treatments within each state. */
+.bd-state-group { padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); margin: 0 0 22px; }
+.bd-state-section { padding: 14px 0; border-top: 1px solid var(--border); }
+.bd-state-section-head { margin-bottom: 12px; }
+.bd-state-section-head h5 { font-size: 1rem; margin: 0 0 4px; }
+.bd-state-section-head p { margin: 0; }
+.bd-color-group { margin: 12px 0 16px; }
+.bd-color-group h6 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 0 0 8px; }
+.bd-state-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)); gap: 10px; }
+.bd-source-label { display: block; color: var(--text-muted); font-size: .73rem; overflow-wrap: anywhere; }
+.bd-cell { align-content: start; }
