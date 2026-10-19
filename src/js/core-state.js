@@ -134,10 +134,21 @@ function onColor(hex) {
   return contrast(hex, '#FFFFFF') >= contrast(hex, '#14253A') ? '#FFFFFF' : '#14253A';
 }
 
-function palette(theme = state.theme) {
-  const p = makeRamp(state.primary, state.method),
-    s = makeRamp(state.secondary, state.method),
-    a = makeRamp(state.accent, state.method);
+const SEMANTIC_COLOUR_KEYS = ['background', 'surface', 'surface-muted', 'text', 'text-muted', 'border', 'control-border', 'primary', 'on-primary', 'primary-hover', 'secondary', 'on-secondary', 'accent', 'on-accent', 'success', 'warning', 'danger', 'focus'];
+
+function resolvedSemanticRoles(roles, theme, foundation = state) {
+  const overrides = foundation.semanticOverrides?.[theme] || {};
+  const result = { ...roles };
+  for (const key of SEMANTIC_COLOUR_KEYS)
+    if (typeof overrides[key] === 'string' && /^#[0-9a-f]{6}$/i.test(overrides[key])) result[key] = overrides[key].toUpperCase();
+  if (!overrides['control-border']) result['control-border'] = result.border;
+  return result;
+}
+
+function palette(theme = state.theme, foundation = state) {
+  const p = makeRamp(foundation.primary, foundation.method),
+    s = makeRamp(foundation.secondary, foundation.method),
+    a = makeRamp(foundation.accent, foundation.method);
   const dark = theme === 'dark';
   const roles = dark ? {
     background: '#0B1422',
@@ -180,7 +191,7 @@ function palette(theme = state.theme) {
     p,
     s,
     a,
-    roles
+    roles: resolvedSemanticRoles(roles, theme, foundation)
   };
 }
 
@@ -479,6 +490,10 @@ function importConfig(obj) {
     const value = obj.clampConfig?.[key];
     if (typeof value === 'number' && Number.isFinite(value)) clampConfig[key] = clamp(value, min, max);
   }
+  n.semanticOverrides = { light: {}, dark: {} };
+  for (const theme of ['light', 'dark'])
+    for (const key of SEMANTIC_COLOUR_KEYS)
+      if (validHex(obj.semanticOverrides?.[theme]?.[key])) n.semanticOverrides[theme][key] = obj.semanticOverrides[theme][key].toUpperCase();
   state = n;
   syncControls();
   apply();

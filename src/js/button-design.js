@@ -145,9 +145,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     return (1.05 / (luminance(bg) + .05)) >= ((luminance(bg) + .05) / .05) ? '#FFFFFF' : '#101820';
   }
 
-  function baseFor(v) {
-    const source = b.sources[v] || defaults.sources[v];
-    return source === 'custom' ? (b.custom[v] || state.primary) : (['primary', 'secondary', 'accent'].includes(source) ? state[source] : source);
+  function baseFor(v, settings = b, foundation = state) {
+    const source = settings.sources[v] || defaults.sources[v];
+    return source === 'custom' ? (settings.custom[v] || foundation.primary) : (['primary', 'secondary', 'accent'].includes(source) ? foundation[source] : source);
   }
 
   function bases() {
@@ -164,10 +164,10 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     return ratio(base, bg) >= 4.5 ? base : (readable(bg) === '#FFFFFF' ? '#FFFFFF' : '#101820');
   }
 
-  function colors(v, mode = state.theme) {
-    const base = baseFor(v),
+  function colors(v, mode = state.theme, settings = b, foundation = state) {
+    const base = baseFor(v, settings, foundation),
       isClear = v === 'outline' || v === 'text',
-      o = b.overrides[v] || {};
+      o = settings.overrides[v] || {};
     const surface = mode === 'dark' ? '#142434' : '#FFFFFF';
     const bg = o.bg || (isClear ? 'transparent' : base);
     const fg = o.text || (isClear ? readableAgainst(base, surface) : readable(base));
@@ -384,12 +384,22 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     controls();
   });
   // Read the same resolved colours as the previews and CSS export.
-  window.dssGetButtonContrastData = () => ({
-    settings: JSON.parse(JSON.stringify(b)),
+  window.dssGetButtonContrastData = (settings = b, foundation = state) => ({
+    settings: JSON.parse(JSON.stringify(settings)),
     themes: Object.fromEntries(['light', 'dark'].map(theme => [theme,
-      Object.fromEntries(Object.keys(names).map(variant => [variant, colors(variant, theme)]))
+      Object.fromEntries(Object.keys(names).map(variant => [variant, colors(variant, theme, settings, foundation)]))
     ]))
   });
+  window.dssSetButtonContrastColour = (variant, property, value) => {
+    if (!validColor(value) || !Object.prototype.hasOwnProperty.call(names, variant)) return;
+    if (property === 'focus') b.focus = value;
+    else if (['text', 'bg', 'hover', 'active', 'hoverText', 'activeText', 'border'].includes(property)) {
+      b.overrides[variant] = { ...b.overrides[variant], [property]: value };
+    } else return;
+    controls();
+    render();
+    window.dssAutosave?.();
+  };
   controls();
   render();
 })();

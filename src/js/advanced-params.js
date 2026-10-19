@@ -56,9 +56,10 @@ const numeric = new Set(['focus', 'height', 'weight', 'measure', 'tracking', 'bo
 Previously they were written into a second :root block that also overrode the dark theme,
 and apply() silently replaced them in the live preview. */
 const basePalette = palette;
-palette = function(theme = state.theme) {
-  const result = basePalette(theme);
+palette = function(theme = state.theme, foundation = state) {
+  const result = basePalette(theme, foundation);
   if (theme === 'light') Object.assign(result.roles, adv.colors);
+  result.roles = resolvedSemanticRoles(result.roles, theme, foundation);
   return result;
 };
 
@@ -68,7 +69,7 @@ function syncAdvanced() {
     if (el.type === 'checkbox') el.checked = adv[key];
     else el.value = adv[key];
   }
-  for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key).value = adv.colors[key].toLowerCase();
+  for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key).value = palette('light').roles[key].toLowerCase();
   applyAdvanced();
 }
 
@@ -128,7 +129,7 @@ function applyAdvanced() {
     const out = document.getElementById(id + 'Out');
     if (out) out.textContent = String(adv[key]) + (key === 'measure' ? 'ch' : key === 'motion' ? 'ms' : key === 'tracking' ? ' / 100em' : ['focus', 'height', 'border', 'columns', 'gap'].includes(key) ? 'px' : key === 'opacity' ? '%' : '');
   }
-  for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key + 'Out').textContent = adv.colors[key].toUpperCase();
+  for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key + 'Out').textContent = palette('light').roles[key].toUpperCase();
   if (typeof renderCode === 'function') renderCode();
   window.dssUpdateContrastChecks?.();
   window.dssAutosave?.();
@@ -142,11 +143,14 @@ for (const [id, key] of Object.entries(advMap)) {
 }
 for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key).addEventListener('input', e => {
   adv.colors[key] = e.target.value.toUpperCase();
+  if (state.semanticOverrides?.light) delete state.semanticOverrides.light[key];
   apply();
   applyAdvanced();
 });
 document.getElementById('resetAdvanced').addEventListener('click', () => {
   adv = JSON.parse(JSON.stringify(ADV_DEFAULT));
+  if (state.semanticOverrides?.light)
+    for (const key of Object.keys(adv.colors)) delete state.semanticOverrides.light[key];
   apply();
   syncAdvanced();
 });
