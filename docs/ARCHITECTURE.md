@@ -14,7 +14,7 @@
 | Markup | `index.html` | Sections, landmarks, asset manifest |
 | Tokens & base | `src/css/base-tokens.css`, `layout.css` | `:root` custom properties, themes, page layout |
 | Core | `src/js/studio-registry.js`, `core-state.js` | Registry/events, state, CSS and HTML export |
-| Features | `css-dock`, `advanced-params`, `journey-library`, `button-design`, `oklch-lab`, `token-catalogue`, `clamp-explorer` | One user-facing capability each |
+| Features | `css-dock`, `advanced-params`, `journey-library`, `button-design`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit` | One user-facing capability each |
 
 Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`.
 
@@ -39,7 +39,21 @@ Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start
 
 ## Known debt (migration path)
 
-The existing seven feature scripts predate the registry and still share globals (notably `htmlExport` is wrapped by `button-design.js`). Migrating each to `DSStudio.register` and replacing the monkey-patch with `exportCss()` contributions is the first roadmap item. Converting to native ES modules (`<script type="module">`) is the natural next step once globals are gone; a bundler such as Vite can be added then without changing the module shape.
+Feature scripts still share globals (notably `htmlExport` is wrapped by `button-design.js`). Migrating each to `DSStudio.register` and replacing the monkey-patch with `exportCss()` contributions is the first roadmap item. Converting to native ES modules (`<script type="module">`) is the natural next step once globals are gone; a bundler such as Vite can be added then without changing the module shape.
+
+## Contrast inventory
+
+`contrast-audit.js` uses `palette(theme)` and the button editor's read-only
+`dssGetButtonContrastData()` snapshot to evaluate both themes without switching
+the active project. Core, advanced and button changes schedule one refresh per
+event turn. Text, conditional non-text checks, inactive exemptions and exploratory
+swatch candidates remain distinct. Alpha/brightness calculations use unrounded
+sRGB channels for ratios; displayed samples use the nearest HEX values.
+
+The report models named solid-colour contexts and state samples. It does not
+scan every rendered element, determine whether a boundary is necessary, or
+validate focus geometry, announcements or arbitrary background layers. New state
+styles need matching report coverage and browser regression checks.
 
 ## Future extension points
 

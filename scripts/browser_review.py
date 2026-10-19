@@ -169,13 +169,22 @@ app.onload = async () => {
   test('White text on white is flagged at exactly 1:1', () => report().some(row=>row.name==='Primary' && row.state==='default' && row.ratio===1 && row.status==='review'));
   input('bdDefaultBg','#ffffff'); input('bdText','#777777'); await wait();
   test('A ratio below 4.5 is not rounded into a text pass', () => report().some(row=>row.name==='Primary' && row.state==='default' && row.ratio>4.4 && row.ratio<4.5 && row.status==='review'));
+  input('bdDefaultBg','#000000'); input('bdText','#ffffff'); await wait();
+  test('Disabled opacity uses unrounded sRGB compositing', () => {
+    const row=report().find(row=>row.name==='Primary' && row.theme==='light' && row.state==='disabled' && row.location==='surface');
+    const expected=1.05/(Math.pow((.45+.055)/1.055,2.4)+.05);
+    return Math.abs(row.ratio-expected)<1e-10 && row.status==='exempt';
+  });
   const beforeOpacity=report().find(row=>row.name==='Preview card: --text' && row.theme==='light').ratio;
   input('advOpacity',20); await wait();
   test('Surface opacity updates the composited contrast', () => report().find(row=>row.name==='Preview card: --text' && row.theme==='light').ratio<beforeOpacity);
   input('advColor_danger','#abcdef'); await wait();
   test('Feedback changes update invalid-state checks', () => report().some(row=>row.name==='State Explorer input border' && row.theme==='light' && row.state==='invalid' && row.fg==='#ABCDEF'));
   input('contrastTheme','dark','change'); input('contrastResult','review','change');
-  test('Contrast theme and result filters apply together', () => [...d.querySelectorAll('#contrastChecks tbody tr')].every(row=>row.dataset.status==='review' && row.cells[0].textContent==='Dark'));
+  test('Contrast theme and result filters apply together', () => {
+    const shown=[...d.querySelectorAll('#contrastChecks tbody tr')];
+    return shown.length>0 && shown.every(row=>row.dataset.status==='review' && row.cells[0].textContent==='Dark');
+  });
   input('contrastTheme','all','change'); input('contrastResult','all','change'); input('contrastSort','ratio','change');
   test('Ratios sort ascending within each result group', () => [...d.querySelectorAll('#contrastChecks tbody')].every(body=>{
     const values=[...body.rows].map(row=>parseFloat(row.cells[3].textContent));return values.every((value,i)=>!i||value>=values[i-1]);
