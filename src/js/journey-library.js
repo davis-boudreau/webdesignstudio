@@ -19,11 +19,13 @@ Browser storage may be unavailable in private or restricted contexts. */
     jBase: 'base',
     jRatio: 'ratio',
     jLeading: 'leading',
+    jHeadingTracking: 'headingTracking',
+    jBodyTracking: 'bodyTracking',
     jSpacing: 'spacing',
     jRadius: 'radius',
     jTheme: 'theme'
   };
-  const numbers = new Set(['base', 'ratio', 'leading', 'spacing', 'radius']);
+  const numbers = new Set(['base', 'ratio', 'leading', 'headingTracking', 'bodyTracking', 'spacing', 'radius']);
 
   function notify(message) {
     el('jSaveStatus').textContent = message;
@@ -49,6 +51,7 @@ Browser storage may be unavailable in private or restricted contexts. */
       e.value = state[key];
       if (e.type === 'color') el(id + 'Out').textContent = String(state[key]).toUpperCase();
       if (['jBase', 'jRatio', 'jLeading', 'jSpacing', 'jRadius'].includes(id)) el(id + 'Out').textContent = state[key] + (['jBase', 'jSpacing', 'jRadius'].includes(id) ? 'px' : '');
+      if (['jHeadingTracking', 'jBodyTracking'].includes(id)) el(id + 'Out').textContent = round(state[key], 3) + 'em';
     }
   }
 
@@ -198,10 +201,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   el('jExportCss').addEventListener('click', () => download('design-system-tokens.css', cssExport(), 'text/css'));
   el('jExportJson').addEventListener('click', () => download('design-system-project.json', JSON.stringify(serialize(), null, 2), 'application/json'));
   el('jViewCss').addEventListener('click', () => {
-    document.getElementById('studio-section-6')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
+    window.dssRevealSection('studio-section-6');
   });
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || '{}');

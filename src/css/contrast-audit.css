@@ -44,3 +44,47 @@
 .contrast-table tr[data-status="review"] .contrast-result {
   border-bottom: 2px solid currentColor;
 }
+
+.contrast-edit { margin-top: 8px; }
+
+#colourRepair {
+  width: min(56rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 20px;
+  overflow: auto;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+#colourRepair::backdrop { background: #0009; }
+#repairSuggestions { display: grid; gap: 8px; }
+.repair-suggestion {
+  padding: 12px;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px solid var(--control-border, var(--border));
+  border-radius: 8px;
+}
+
+.repair-suggestion small { display: block; }
+.repair-chip {
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 1px solid currentColor;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+#repairPreview li { overflow-wrap: anywhere; }
+#repairPreview details { max-height: 18rem; overflow: auto; }
+.repair-actions {
+  position: sticky;
+  bottom: -20px;
+  background: var(--surface);
+  padding-block: 12px;
+}

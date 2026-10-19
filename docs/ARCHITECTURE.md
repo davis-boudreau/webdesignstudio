@@ -14,7 +14,7 @@
 | Markup | `index.html` | Sections, landmarks, asset manifest |
 | Tokens & base | `src/css/base-tokens.css`, `layout.css` | `:root` custom properties, themes, page layout |
 | Core | `src/js/studio-registry.js`, `core-state.js` | Registry/events, state, CSS and HTML export |
-| Features | `css-dock`, `advanced-params`, `journey-library`, `button-design`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit` | One user-facing capability each |
+| Features | `css-dock`, `advanced-params`, `journey-library`, `button-design`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `typography-controls`, `section-accordions` | One user-facing capability each |
 
 Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`.
 
@@ -50,10 +50,40 @@ event turn. Text, conditional non-text checks, inactive exemptions and explorato
 swatch candidates remain distinct. Alpha/brightness calculations use unrounded
 sRGB channels for ratios; displayed samples use the nearest HEX values.
 
+The report separates required pairs, conditional checks, potential colour uses
+and inactive exemptions. Conditional boundaries and unused feedback text do not
+inflate the required-problem count. `colour-repair.js` calls the pure
+`collect({foundation, buttonSettings})` path with copied settings to compare
+candidate colours without updating the studio, storage or exports. Suggestions
+rank new required problems first, then the selected pair's target and resolved
+problems. Apply checks the project revision before committing; Cancel discards
+the preview. Changes across both themes remain visible in the comparison.
+
+Semantic overrides live in `state.semanticOverrides.light/dark`, accept only
+known HEX-valued roles on import, and flow through preview and export via
+`resolvedSemanticRoles()`. `--control-border` follows `--border` until explicitly
+overridden, allowing input boundaries to differ from decorative separators.
+Button previews accept copied settings and foundation values; the commit API
+updates the selected variant's actual settings and existing controls.
+
 The report models named solid-colour contexts and state samples. It does not
 scan every rendered element, determine whether a boundary is necessary, or
 validate focus geometry, announcements or arbitrary background layers. New state
 styles need matching report coverage and browser regression checks.
+
+## Typography and section navigation
+
+Typography uses `state.ratio` for the named/custom modular scale and
+`clampConfig.mobileFactor` for a separate heading-size percentage. Tracking is
+stored in `state.headingTracking` / `bodyTracking` as em values. Import accepts
+older `advanced.tracking` hundredths; that advanced field remains synchronized
+for compatibility. Specimens and the size ladder show nominal PX/REM values
+using a 16px root, while exports retain relative fluid sizes and em spacing.
+
+The centre pane uses native `details` wrappers with the original section IDs.
+`dssRevealSection()` opens destinations for shortcuts; fragment navigation opens
+closed ancestors. Sections start collapsed on each page load; a direct fragment
+link opens its destination. Opening the responsive section recalculates its width readout.
 
 ## Future extension points
 

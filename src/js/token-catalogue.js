@@ -8,6 +8,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   if (!table || !search || !count) return;
 
   const describe = (name, type) => {
+    if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Extra character spacing in em, relative to the element font size.';
     if (name.startsWith('--example-')) return 'Fixed example brand reference; not an editable semantic role.';
     if (/^--(primary|secondary|accent)-\d+$/.test(name))
       return 'Generated colour ramp step; 500 preserves the selected anchor colour.';
@@ -28,6 +29,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   };
 
   const classify = name => {
+    if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Typography';
     if (name.startsWith('--example-')) return 'example palette';
     if (/^--(primary|secondary|accent)-\d+$/.test(name)) return 'Colour ramp';
     if (name.startsWith('--button-')) return 'Button component';

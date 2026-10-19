@@ -8,6 +8,8 @@ and use locally available fonts. Arial is the default system font. */
   --type-ratio: 1.25;
   --body-leading: 1.55;
   --heading-leading: 1.18;
+  --heading-letter-spacing: -.02em;
+  --body-letter-spacing: 0em;
   --space-unit: 4px;
   --radius-base: 12px;
   --shadow-strength: .12;
@@ -18,6 +20,7 @@ and use locally available fonts. Arial is the default system font. */
   --text: #14253a;
   --text-muted: #53657a;
   --border: #c5d0dd;
+  --control-border: var(--border);
   --primary: #004780;
   --on-primary: #ffffff;
   --primary-hover: #003765;
@@ -43,6 +46,7 @@ html {
 }
 
 body {
+  letter-spacing: var(--body-letter-spacing);
   margin: 0;
   font-family: var(--font-ui);
   font-size: var(--base-size);
@@ -243,7 +247,7 @@ p {
   width: 100%;
   min-width: 0;
   padding: 9px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border, var(--border));
   border-radius: 8px;
   color: var(--text);
   background: var(--surface)
@@ -259,7 +263,7 @@ p {
   height: 38px;
   padding: 2px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border, var(--border));
   border-radius: 7px
 }
 
@@ -436,7 +440,7 @@ p {
 .demo-input {
   width: 100%;
   padding: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border, var(--border));
   border-radius: 8px;
   background: var(--surface);
   color: var(--text)

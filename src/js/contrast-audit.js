@@ -8,7 +8,7 @@
   if (!container) return;
   const textStates = ['default', 'hover', 'focus', 'active', 'selected', 'disabled', 'loading'];
   const explorerStates = [...textStates, 'invalid', 'success', 'readonly'];
-  const statusOrder = { review: 0, pass: 1, exempt: 2, candidate: 3 };
+  const statusOrder = { review: 0, conditional: 1, pass: 2, candidate: 3, exempt: 4 };
   const stateOrder = Object.fromEntries(['default', 'hover', 'focus', 'active', 'selected', 'disabled', 'loading', 'invalid', 'success', 'warning', 'danger', 'readonly', 'candidate'].map((name, index) => [name, index]));
   const esc = value => escapeHtml(String(value));
   const rgb = colour => Array.isArray(colour) ? colour : hexRgb(colour);
@@ -19,28 +19,77 @@
   let rows = [], queued = false;
   const openGroups = new Set();
 
-  function collect() {
+  function targetsFor(row, button, foundation, palettes) {
+    const r = palettes[row.theme].roles;
+    const semantic = key => SEMANTIC_COLOUR_KEYS.includes(key) ? {
+      type: 'semantic', theme: row.theme, key, value: r[key],
+      label: `${title(row.theme)}: --${key}`
+    } : null;
+    const anchor = key => ({ type: 'anchor', key, value: foundation[key], label: `${title(key)} palette anchor (both themes)` });
+    const variant = row.name.split(' ')[0].toLowerCase();
+    const c = button.themes[row.theme][variant];
+    const buttonTarget = property => ({
+      type: 'button', variant, property,
+      value: property === 'focus' ? button.settings.focus :
+        ({ text: c.fg, bg: c.bg, hoverText: c.hoverText, activeText: c.activeText, hover: c.hover, active: c.active, border: c.border })[property] === 'transparent' ?
+          (r[row.location] || r.surface) : ({ text: c.fg, bg: c.bg, hoverText: c.hoverText, activeText: c.activeText, hover: c.hover, active: c.active, border: c.border })[property],
+      label: `${property === 'focus' ? 'All buttons' : title(variant)}: ${property} (both themes)`
+    });
+    let targets = [];
+    if (row.group.startsWith('Button Laboratory:')) {
+      if (row.name.includes('ring')) targets = [buttonTarget('focus')];
+      else if (row.name.includes('boundary')) targets = [buttonTarget('border'), buttonTarget(row.state === 'hover' ? 'hover' : row.state === 'active' ? 'active' : 'bg')];
+      else targets = [buttonTarget(row.state === 'hover' ? 'hoverText' : row.state === 'active' ? 'activeText' : 'text'),
+        buttonTarget(row.state === 'hover' ? 'hover' : row.state === 'active' ? 'active' : 'bg')];
+      targets.push(semantic(row.location));
+    } else if (row.group === 'Swatch candidates: reference and ramps') {
+      const match = row.name.match(/^(primary|secondary|accent)-\d+ /);
+      if (match) targets.push(anchor(match[1]));
+      if (row.name.endsWith('/ semantic text')) targets.push(semantic('text'));
+    } else if (row.group === 'Text and semantic roles') {
+      const match = row.name.match(/^--([\w-]+)/);
+      targets = [semantic(match ? match[1] : 'primary'), semantic(row.location.replace(/^--/, ''))];
+    } else if (row.group === 'Boundaries and indicators') {
+      const match = row.name.match(/^--(\w+)/);
+      targets = [semantic(match ? match[1] : row.name.includes('focus') ? 'focus' : 'control-border'), semantic(row.location.replace(/^--/, ''))];
+    } else if (row.group === 'Surfaces and opacity') {
+      targets = [semantic(row.name.endsWith('--text-muted') ? 'text-muted' : 'text'), semantic(row.name.startsWith('Nested') ? 'surface-muted' : 'surface')];
+    } else {
+      if (row.name.includes('input text')) targets = [semantic('text'), semantic(row.state === 'readonly' ? 'surface-muted' : 'surface')];
+      else if (row.name.includes('input border') || row.name === 'Input feedback outline')
+        targets = [semantic(row.state === 'invalid' ? 'danger' : row.state === 'success' ? 'success' : 'control-border'), semantic(row.state === 'readonly' ? 'surface-muted' : 'surface')];
+      else if (row.name.includes('focus')) targets = [semantic('focus'), semantic('surface')];
+      else if (row.name.includes('selected tile')) targets = [semantic('primary'), semantic('surface')];
+      else if (row.name.startsWith('General ')) targets = [semantic(row.name.includes('secondary') ? 'on-secondary' : 'on-primary'), semantic('primary-hover')];
+      else targets = [semantic('on-primary'), semantic(row.state === 'hover' ? 'primary-hover' : 'primary')];
+    }
+    return targets.filter(Boolean).filter((target, index, all) => all.findIndex(other => JSON.stringify(other) === JSON.stringify(target)) === index);
+  }
+
+  function collect(configuration = {}) {
     const result = [];
-    const button = window.dssGetButtonContrastData();
+    const foundation = configuration.foundation || state;
+    const button = window.dssGetButtonContrastData(configuration.buttonSettings, foundation);
+    const palettes = Object.fromEntries(['light', 'dark'].map(theme => [theme, palette(theme, foundation)]));
     const add = (theme, group, name, stateName, location, fg, bg, threshold = 4.5, note = '', scope = 'required') => {
       const [light, dark] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
       const ratio = (light + .05) / (dark + .05);
       result.push({ theme, group, name, state: stateName, location, fg: rgbHex(rgb(fg)), bg: rgbHex(rgb(bg)), threshold, ratio, note, scope,
-        status: scope === 'candidate' ? 'candidate' : threshold === null ? 'exempt' : ratio >= threshold ? 'pass' : 'review' });
+        status: threshold === null ? 'exempt' : ['candidate', 'potential'].includes(scope) ? 'candidate' : scope === 'conditional' ? 'conditional' : ratio >= threshold ? 'pass' : 'review' });
     };
     for (const theme of ['light', 'dark']) {
-      const { roles: r, p, s, a } = palette(theme);
+      const { roles: r, p, s, a } = palettes[theme];
       const surfaces = ['background', 'surface', 'surface-muted'];
       for (const bg of surfaces) {
         for (const fg of ['text', 'text-muted'])
           add(theme, 'Text and semantic roles', `--${fg}`, 'default', `--${bg}`, r[fg], r[bg]);
         add(theme, 'Text and semantic roles', 'Link text (--primary)', 'default', `--${bg}`, r.primary, r[bg], 4.5, 'Check a non-colour cue such as an underline separately; custom visited or hover styles need their own review.');
         for (const fg of ['success', 'warning', 'danger']) {
-          add(theme, 'Text and semantic roles', `--${fg} message text`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], r[bg], 4.5, 'Candidate use of the feedback role as readable text.');
-          add(theme, 'Boundaries and indicators', `--${fg} status indicator`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], r[bg], 3, 'Required when this colour is necessary to identify status; also provide words or an icon.');
+          add(theme, 'Text and semantic roles', `--${fg} message text`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], r[bg], 4.5, 'Potential use as text; the sample alerts use ordinary body text. This is not a current text failure.', 'potential');
+          add(theme, 'Boundaries and indicators', `--${fg} status indicator`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], r[bg], 3, 'Only required when this colour is necessary to identify status; also provide words or an icon.', 'conditional');
         }
         add(theme, 'Boundaries and indicators', 'Semantic focus ring', 'focus', `--${bg}`, r.focus, r[bg], 3, 'Colour check only; verify visibility, area, placement and that focus is not obscured.');
-        add(theme, 'Boundaries and indicators', 'Control border', 'default', `--${bg}`, r.border, r[bg], 3, 'Conditional: needed if this boundary is necessary to identify the control. Decorative borders need not meet this target.');
+        add(theme, 'Boundaries and indicators', 'Control border', 'default', `--${bg}`, r['control-border'], r[bg], 3, 'Potential host context: necessary input boundaries need contrast; decorative borders have their own --border role.', 'conditional');
       }
       for (const variant of ['primary', 'secondary', 'accent'])
         add(theme, 'Text and semantic roles', `--on-${variant}`, 'default', `--${variant}`, r['on-' + variant], r[variant]);
@@ -73,7 +122,7 @@
               const edge = c.border === 'transparent' ? bg : c.border;
               add(theme, 'Button Laboratory: indicators', `${title(variant)} boundary`, st, host,
                 blend(edge, surround, alpha), surround, 3,
-                'Conditional: only when the border or fill is needed to identify the control.');
+                'Only necessary when the border or fill identifies the control; a readable action label can identify a button.', 'conditional');
             }
           }
           add(theme, 'Button Laboratory: indicators', `${title(variant)} focus ring`, 'focus', host, button.settings.focus, surround, 3,
@@ -82,7 +131,7 @@
             'Persistent toggle indicator against the outside surface; also expose aria-pressed.');
           add(theme, 'Button Laboratory: indicators', `${title(variant)} selection ring (inner)`, 'selected', host,
             button.settings.focus, c.border === 'transparent' ? base : c.border, 3,
-            'Selection ring against the adjacent button fill or border. Judge whether the indicator remains distinguishable.');
+            'Extra inner-edge check, not an independent failure when the outside ring already identifies selection.', 'conditional');
         }
       }
 
@@ -99,9 +148,9 @@
         // button:disabled has opacity; the explorer input does not.
         add(theme, 'General components and form states', 'State Explorer input text', st, 'input background', r.text, inputBg, st === 'disabled' ? null : 4.5,
           st === 'readonly' ? 'Read-only remains readable and is not exempt.' : 'States without an input text override retain the default text colour.');
-        const border = st === 'invalid' ? r.danger : st === 'success' ? r.success : r.border;
+        const border = st === 'invalid' ? r.danger : st === 'success' ? r.success : r['control-border'];
         add(theme, 'General components and form states', 'State Explorer input border', st, 'input background', border, inputBg, st === 'disabled' ? null : 3,
-          'Conditional boundary check. Invalid/success border and outline must also remain visible against the outside surface.');
+          'Input boundary check. Invalid/success border and outline must also remain visible against the outside surface.');
         if (st === 'invalid' || st === 'success')
           add(theme, 'General components and form states', 'Input feedback outline', st, 'surface', border, r.surface, 3, 'Feedback indicator against the surrounding tile.');
       }
@@ -115,8 +164,8 @@
       for (const [label, bg] of [['Preview card', r.surface], ['Nested muted surface', r['surface-muted']]])
         for (const text of ['text', 'text-muted'])
           add(theme, 'Surfaces and opacity', `${label}: --${text}`, 'default', 'surface',
-            blend(r[text], r.surface, adv.opacity / 100), blend(bg, r.surface, adv.opacity / 100), 4.5,
-            `Whole-component opacity ${adv.opacity}%, composited onto an opaque --surface. Other backgrounds require a separate check.`);
+            blend(r[text], r.surface, (configuration.opacity ?? adv.opacity) / 100), blend(bg, r.surface, (configuration.opacity ?? adv.opacity) / 100), 4.5,
+            `Whole-component opacity ${configuration.opacity ?? adv.opacity}%, composited onto an opaque --surface. Other backgrounds require a separate check.`);
 
       const swatches = [...EXAMPLE_PALETTE.primary, ...EXAMPLE_PALETTE.accent,
         ...Object.entries({ primary: p, secondary: s, accent: a }).flatMap(([name, ramp]) =>
@@ -126,7 +175,7 @@
           add(theme, 'Swatch candidates: reference and ramps', `${name} / ${label}`, 'candidate', 'swatch as background', fg, hex, 4.5,
             'Exploration only: an unused swatch has no contrast requirement. Decide its actual foreground, role and state before use.', 'candidate');
     }
-    return result;
+    return result.map(row => ({ ...row, id: [row.theme, row.threshold === null ? 'Exempt' : row.scope === 'conditional' ? 'Conditional' : ['candidate', 'potential'].includes(row.scope) ? 'Potential use' : 'Required', row.group, row.name, row.state, row.location].join('|'), targets: targetsFor(row, button, foundation, palettes) }));
   }
 
   function sortRows(list) {
@@ -152,15 +201,17 @@
 
   function assessment(row) {
     if (row.status === 'exempt') return 'Exempt: inactive';
+    if (row.status === 'conditional') return row.ratio >= row.threshold ? 'Conditional: target met' : 'Conditional: judge context';
+    if (row.scope === 'potential') return row.ratio >= row.threshold ? 'Potential use: target met' : 'Potential use: below target';
     if (row.status === 'candidate') return row.ratio >= 4.5 ? 'Candidate: normal text' : row.ratio >= 3 ? 'Candidate: large text only' : 'Candidate: low contrast';
-    if (row.status === 'pass') return 'Pass for this pair';
-    return row.threshold === 4.5 && row.ratio >= 3 ? 'Review: large text only' : 'Review';
+    if (row.status === 'pass') return 'Required pair: target met';
+    return row.threshold === 4.5 && row.ratio >= 3 ? 'Required: large text only' : 'Required: below target';
   }
 
   function render() {
     const list = filtered();
     const counts = Object.fromEntries(Object.keys(statusOrder).map(key => [key, rows.filter(row => row.status === key).length]));
-    get('contrastSummary').textContent = `${rows.length} pairs across both themes: ${counts.review} to review, ${counts.pass} pass their target, ${counts.exempt} inactive exemptions, ${counts.candidate} swatch candidates. Showing ${list.length}.`;
+    get('contrastSummary').textContent = `${rows.length} pairs across both themes: ${counts.review} required pairs below target, ${counts.conditional} conditional checks, ${counts.pass} required pairs pass, ${counts.candidate} potential uses, ${counts.exempt} inactive exemptions. Showing ${list.length}.`;
     const groups = [...new Set(list.map(row => row.group))].sort((a, b) => a.localeCompare(b));
     container.innerHTML = groups.map(group => {
       const items = list.filter(row => row.group === group);
@@ -174,7 +225,7 @@
           <td><strong>${esc(row.name)}</strong><br>${esc(row.state)} · ${esc(row.location)}<small>${esc(row.note)}</small></td>
           <td><span class="contrast-example" style="color:${row.fg};background:${row.bg}">${row.threshold === 3 ? '●' : 'Aa'}</span><code>${row.fg}<br>${row.bg}</code></td>
           <td>${row.ratio.toFixed(3)}:1<br><small>${row.threshold === null ? 'No target' : `≥ ${row.threshold}:1 ${row.threshold === 3 ? 'non-text' : 'normal text'}`}</small></td>
-          <td><strong class="contrast-result">${assessment(row)}</strong></td></tr>`).join('')}</tbody></table></div></details>`;
+          <td><strong class="contrast-result">${assessment(row)}</strong><br>${row.targets.length ? `<button type="button" class="contrast-edit" data-edit-contrast="${esc(row.id)}" aria-label="Edit colour for ${esc(row.name)} ${esc(row.state)} ${row.theme}">Edit this colour</button>` : '<small>Fixed reference colours</small>'}</td></tr>`).join('')}</tbody></table></div></details>`;
     }).join('') || '<p>No pairs match these filters.</p>';
     container.querySelectorAll('details').forEach(details => details.addEventListener('toggle', () => {
       if (!details.isConnected) return;
@@ -183,7 +234,7 @@
     }));
   }
 
-  function refresh() { rows = collect(); render(); }
+  function refresh() { rows = collect(); render(); window.dssSyncSemanticEditor?.(); }
   function schedule() {
     if (queued) return;
     queued = true;
@@ -195,10 +246,15 @@
   for (const id of ['contrastTheme', 'contrastResult', 'contrastSort']) get(id).addEventListener('change', render);
   get('contrastSearch').addEventListener('input', render);
   get('contrastDownload').addEventListener('click', () => {
-    const heading = ['Theme', 'Group', 'Pair', 'State', 'Context', 'Foreground', 'Background', 'Ratio', 'Target', 'Result', 'Notes'];
-    const data = filtered().map(row => [row.theme, row.group, row.name, row.state, row.location, row.fg, row.bg, row.ratio, row.threshold ?? '', assessment(row), row.note]);
+    const heading = ['Theme', 'Category', 'Group', 'Pair', 'State', 'Context', 'Foreground', 'Background', 'Ratio', 'Target', 'Result', 'Notes'];
+    const data = filtered().map(row => [row.theme, row.threshold === null ? 'Exempt' : row.scope === 'conditional' ? 'Conditional' : ['candidate', 'potential'].includes(row.scope) ? 'Potential use' : 'Required', row.group, row.name, row.state, row.location, row.fg, row.bg, row.ratio, row.threshold ?? '', assessment(row), row.note]);
     const csv = [heading, ...data].map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     download('contrast-checks.csv', '\ufeff' + csv, 'text/csv;charset=utf-8');
+  });
+  window.dssContrastTools = { collect, refresh: schedule };
+  container.addEventListener('click', event => {
+    const action = event.target.closest('[data-edit-contrast]');
+    if (action) window.dssOpenColourRepair?.(rows.find(row => row.id === action.dataset.editContrast));
   });
   refresh();
 })();

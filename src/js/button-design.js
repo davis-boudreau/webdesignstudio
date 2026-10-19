@@ -358,10 +358,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     window.dssAutosave?.();
     window.dssUpdateTokenCatalogue?.();
   });
-  $('bdJump').addEventListener('click', () => $('buttonDesignLab').scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
-  }));
+  $('bdJump').addEventListener('click', () => window.dssRevealSection('buttonDesignLab'));
   $('bdCopy').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(buttonCSS());

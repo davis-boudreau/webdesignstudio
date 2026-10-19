@@ -21,7 +21,7 @@
     el('clampFactor').value = clampConfig.mobileFactor;
     for (const [id, val] of Object.entries({
         clampBaseOut: state.base + 'px',
-        clampRatioOut: state.ratio,
+        clampRatioOut: round(state.ratio, 4),
         clampMinWidthOut: clampConfig.minWidth + 'px',
         clampMaxWidthOut: clampConfig.maxWidth + 'px',
         clampFactorOut: Math.round(clampConfig.mobileFactor * 100) + '%',

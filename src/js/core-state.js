@@ -45,6 +45,8 @@ const DEFAULT = {
   base: 16,
   ratio: 1.25,
   leading: 1.55,
+  headingTracking: -.02,
+  bodyTracking: 0,
   spacing: 4,
   radius: 12
 };
@@ -57,6 +59,12 @@ const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950],
   mixes = [.95, .85, .7, .5, .25, 0, -.1, -.25, -.4, -.65, -.85];
 const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
 const round = (n, p = 2) => Number(n.toFixed(p));
+const TYPE_SCALES = [
+  ['minor-second', 'Minor Second', 1.067], ['major-second', 'Major Second', 1.125],
+  ['minor-third', 'Minor Third', 1.2], ['major-third', 'Major Third', 1.25],
+  ['perfect-fourth', 'Perfect Fourth', 1.333], ['augmented-fourth', 'Augmented Fourth', 1.414],
+  ['perfect-fifth', 'Perfect Fifth', 1.5]
+];
 
 function hexRgb(hex) {
   const s = hex.replace('#', '');
@@ -208,6 +216,8 @@ function apply() {
   root.style.setProperty('--font-ui', state.font);
   root.style.setProperty('--base-size', state.base + 'px');
   root.style.setProperty('--body-leading', state.leading);
+  root.style.setProperty('--heading-letter-spacing', state.headingTracking + 'em');
+  root.style.setProperty('--body-letter-spacing', state.bodyTracking + 'em');
   root.style.setProperty('--space-unit', state.spacing + 'px');
   root.style.setProperty('--radius-base', state.radius + 'px');
   root.style.setProperty('--card-radius', state.radius + 'px');
@@ -242,7 +252,8 @@ function renderRoles(roles) {
 function sizes() {
   return [-2, -1, 0, 1, 2, 3, 4, 5].map(n => ({
     name: n < 0 ? 'xs' + Math.abs(n) : n === 0 ? 'base' : 'step ' + n,
-    size: round(state.base * state.ratio ** n, 1)
+    step: n,
+    size: state.base * state.ratio ** n
   }));
 }
 const CLAMP_DEFAULTS = {
@@ -301,6 +312,8 @@ function syncFluidTypography() {
   }
   frame.style.setProperty('--preview-leading', state.leading);
   frame.style.setProperty('--preview-font', state.font);
+  frame.style.setProperty('--preview-heading-tracking', state.headingTracking + 'em');
+  frame.style.setProperty('--preview-body-tracking', state.bodyTracking + 'em');
   const width = frame.dataset.width === 'fluid' ? Math.round(frame.getBoundingClientRect().width) : ({
     mobile: 375,
     tablet: 768,
@@ -330,12 +343,12 @@ function renderType() {
         n: -1
       }].map(o => {
         const px = fluidTypePx(o.n, viewport);
-        return `<div class="type-row"><small>${o.role}<br>${px}px</small><div class="sample" style="font-size:${px}px;line-height:${o.n>0?1.18:state.leading};font-weight:${o.n>0?700:400}">${o.role==='Body'?'Build a clear and readable interface.':o.role==='Small'?'Labels and supporting details':'Design for people'}</div></div>`;
+        return `<div class="type-row"><small>${o.role}<br>${px}px<br>${round(px/16,4)}rem</small><div class="sample" style="font-size:${px}px;letter-spacing:${o.n>0?state.headingTracking:state.bodyTracking}em;line-height:${o.n>0?1.18:state.leading};font-weight:${o.n>0?700:400}">${o.role==='Body'?'Build a clear and readable interface.':o.role==='Small'?'Labels and supporting details':'Design for people'}</div></div>`;
       }).join('');
     };
   spec('mobileType', 375);
   spec('desktopType', 1280);
-  $('typeLadder').innerHTML = sz.map(o => `<div class="type-row"><small>${o.name}<br>${o.size}px</small><div class="sample" style="font-size:${o.size}px;line-height:1.2">Aa Bb Cc — Typography</div></div>`).join('');
+  $('typeLadder').innerHTML = sz.map(o => `<div class="type-row"><small>${o.name}<br>${round(o.size,2)}px<br>${round(o.size/16,4)}rem</small><div class="sample" style="font-size:${o.size}px;letter-spacing:${o.step>0?state.headingTracking:state.bodyTracking}em;line-height:1.2">Aa Bb Cc — Typography</div></div>`).join('');
   syncFluidTypography();
 }
 
@@ -381,11 +394,11 @@ function cssExport() {
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
   const semantic = r => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).join('\n');
   const sz = sizes();
-  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* EXAMPLE PALETTE: fixed reference colours. */\n  --example-white: #FFFFFF;\n  --example-blue: #004780;\n  --example-dark-grey: #495965;\n  --example-accent-teal: #00BADC;\n  --example-accent-turquoise: #5FC5BF;\n  --example-accent-orange: #F37327;\n  --example-accent-blue: #2B71B9;\n  --example-accent-green: #CBDB2A;\n  --example-accent-fuchsia: #EF426F;\n  --example-accent-light-blue: #57B7E7;\n  --example-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${o.size}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
+  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* EXAMPLE PALETTE: fixed reference colours. */\n  --example-white: #FFFFFF;\n  --example-blue: #004780;\n  --example-dark-grey: #495965;\n  --example-accent-teal: #00BADC;\n  --example-accent-turquoise: #5FC5BF;\n  --example-accent-orange: #F37327;\n  --example-accent-blue: #2B71B9;\n  --example-accent-green: #CBDB2A;\n  --example-accent-fuchsia: #EF426F;\n  --example-accent-light-blue: #57B7E7;\n  --example-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
---text-small: ${fluidTypeCss(-1)};\n  --body-leading: ${state.leading};\n  --heading-leading: 1.18;\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n  --space-2: calc(var(--space-unit) * 2);\n  --space-4: calc(var(--space-unit) * 4);\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(saved==='light'?roles:opposite)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(saved==='dark'?roles:opposite)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nbody { margin: 0; font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { width: min(100% - 2rem, 72rem); margin-inline: auto; }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
+--text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: 1.18;\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n  --space-2: calc(var(--space-unit) * 2);\n  --space-4: calc(var(--space-unit) * 4);\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(saved==='light'?roles:opposite)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(saved==='dark'?roles:opposite)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { letter-spacing: var(--heading-letter-spacing); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { width: min(100% - 2rem, 72rem); margin-inline: auto; }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
 .heading-1 { font-size: var(--text-h1); line-height: var(--heading-leading); }
 .heading-2 { font-size: var(--text-h2); line-height: var(--heading-leading); }
 .small-text { font-size: var(--text-small); }\n.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--space-4); }\n.card { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;
@@ -474,13 +487,18 @@ function importConfig(obj) {
   if (['Arial, Helvetica, sans-serif', "Georgia, 'Times New Roman', serif", 'Verdana, Geneva, sans-serif', 'system-ui, sans-serif'].includes(obj.font)) n.font = obj.font;
   for (const [k, min, max] of [
       ['base', 14, 22],
-      ['ratio', 1.125, 1.5],
+      ['ratio', 1.05, 1.5],
       ['leading', 1.3, 1.9],
+      ['headingTracking', -.05, .1],
+      ['bodyTracking', -.02, .12],
       ['spacing', 3, 8],
       ['radius', 0, 28]
     ])
     if (typeof obj[k] === 'number' && Number.isFinite(obj[k])) n[k] = clamp(obj[k], min, max);
   if (typeof obj.project === 'string') n.project = obj.project.slice(0, 90);
+  // Older projects stored heading tracking in hundredths of an em.
+  if (typeof obj.headingTracking !== 'number' && typeof obj.advanced?.tracking === 'number' && Number.isFinite(obj.advanced.tracking))
+    n.headingTracking = clamp(obj.advanced.tracking / 100, -.05, .1);
   clampConfig = { ...CLAMP_DEFAULTS };
   for (const [key, min, max] of [
       ['minWidth', 320, 600],
@@ -498,8 +516,8 @@ function importConfig(obj) {
   syncControls();
   apply();
 }
-['project', 'method', 'primary', 'secondary', 'accent', 'font', 'base', 'ratio', 'leading', 'spacing', 'radius'].forEach(k => $(k).addEventListener('input', e => {
-  state[k] = ['base', 'ratio', 'leading', 'spacing', 'radius'].includes(k) ? Number(e.target.value) : e.target.value;
+['project', 'method', 'primary', 'secondary', 'accent', 'font', 'base', 'ratio', 'leading', 'headingTracking', 'bodyTracking', 'spacing', 'radius'].forEach(k => $(k).addEventListener('input', e => {
+  state[k] = ['base', 'ratio', 'leading', 'headingTracking', 'bodyTracking', 'spacing', 'radius'].includes(k) ? Number(e.target.value) : e.target.value;
   apply();
 }));
 $('brandAccent').addEventListener('change', e => {

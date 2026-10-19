@@ -165,9 +165,17 @@
   color: var(--on-primary)
 }
 
-#main>section {
+#main>section,
+#main>.studio-section {
   scroll-margin-top: 125px
 }
+
+.section-actions { margin-bottom: 14px; }
+.section-actions button { margin: 0 4px 6px 0; }
+.studio-section { padding: 0; margin: 0 0 14px; background: var(--surface); }
+.studio-section > summary { padding: 14px 18px; }
+.studio-section > summary h2 { display: inline; margin: 0; font-size: 1.15rem; }
+.studio-section > .panel { margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
 
 @media(max-width:1500px) {
   .studio-right {

@@ -5,14 +5,14 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Design System Studio V4.1</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/layout.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-contrast">
-    <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-contrast">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/layout.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -162,9 +162,10 @@
                   <dl>
                     <dt>Font family</dt><dd>A font stack is an ordered set of fallbacks. These choices use installed fonts, so appearance can vary by device; this studio does not download font files.</dd>
                     <dt>Body size</dt><dd>The base for the scale. Start with the 16 px example, then judge your content, audience and font. A slider value alone does not establish readability.</dd>
-                    <dt>Scale ratio</dt><dd>Multiplies each successive level: 16 px at 1.25 produces 20 px, 25 px and 31.25 px. A larger ratio creates more dramatic size differences.</dd>
+                    <dt>Scale ratio</dt><dd>Choose a named interval such as Minor Second or Major Third, or use a custom ratio. It multiplies each successive level: 16 px at 1.25 produces 20 px, 25 px and 31.25 px. A larger ratio creates more dramatic size differences.</dd>
                     <dt>Line height</dt><dd>A unitless multiplier: 16 px text at 1.5 uses a 24 px line box. Give paragraphs breathing room without separating related lines too far.</dd>
-                    <dt>Fluid headings</dt><dd>The Typography studio lets you tune minimum/maximum viewports and the mobile heading multiplier. Body and small text stay constant in this tool; larger headings use bounded fluid sizes.</dd>
+                    <dt>Letter spacing</dt><dd>Heading and body spacing use em, so each adjustment scales with the text size. Check actual fonts and long labels; large negative values can crowd letters.</dd>
+                    <dt>Fluid headings</dt><dd>The Typography studio lets you tune minimum/maximum viewports and the mobile heading percentage. Body and small text stay constant in this tool; larger headings use bounded fluid sizes.</dd>
                   </dl>
                   <p>Use real headings, a paragraph and long labels. Check narrow widths, font fallbacks and 200% text resize; visual size is separate from an HTML heading's structural level.</p>
                   <p class="learning-reference">Try the <a href="#studio-section-2">Typography studio and clamp calculator</a>. Read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-family">MDN: font stacks</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/line-height">line height</a>.</p>
@@ -189,13 +190,14 @@
                   </output>
                 </div>
               </div>
+              <div class="field"><label for="jScalePreset">Named type scale</label><select id="jScalePreset"></select></div>
               <div class="field">
                 <label for="jRatio">Scale ratio</label>
                 <div class="fieldline">
                   <input id="jRatio"
                          max="1.5"
-                         min="1.125"
-                         step="0.025"
+                         min="1.05"
+                         step="any"
                          type="range"
                          value="1.25" />
                   <output id="jRatioOut">
@@ -216,6 +218,14 @@
                     1.55
                   </output>
                 </div>
+              </div>
+              <div class="field">
+                <label for="jHeadingTracking">Heading letter spacing (em) <output id="jHeadingTrackingOut">-0.02em</output></label>
+                <input id="jHeadingTracking" type="range" min="-0.05" max="0.1" step="0.005" value="-0.02">
+              </div>
+              <div class="field">
+                <label for="jBodyTracking">Body letter spacing (em) <output id="jBodyTrackingOut">0em</output></label>
+                <input id="jBodyTracking" type="range" min="-0.02" max="0.12" step="0.005" value="0">
               </div>
               <p class="journey-tip">
                 <strong>Try it:</strong>
@@ -718,8 +728,8 @@
                 <div class="fieldline">
                   <input id="ratio"
                          max="1.5"
-                         min="1.125"
-                         step="0.025"
+                         min="1.05"
+                         step="any"
                          type="range"
                          value="1.25" />
                   <output id="ratioOut">
@@ -740,6 +750,14 @@
                     1.55
                   </output>
                 </div>
+              </div>
+              <div class="field">
+                <label for="headingTracking">Heading letter spacing (em) <output id="headingTrackingOut">-0.02em</output></label>
+                <input id="headingTracking" type="range" min="-0.05" max="0.1" step="0.005" value="-0.02">
+              </div>
+              <div class="field">
+                <label for="bodyTracking">Body letter spacing (em) <output id="bodyTrackingOut">0em</output></label>
+                <input id="bodyTracking" type="range" min="-0.02" max="0.12" step="0.005" value="0">
               </div>
               <hr />
               <div class="field">
@@ -823,7 +841,7 @@
               <details>
                 <summary>Typography and readability</summary>
                 <div class="group-body">
-                  <p class="control-hint">Weight controls emphasis; measure limits line length. Start near 60–70ch for paragraphs, then judge your actual font and content. Tracking is divided by 100: -2 means -0.02em. Negative letter spacing can crowd small text.</p>
+                  <p class="control-hint">Weight controls emphasis; measure limits line length. Start near 60–70ch for paragraphs, then judge your actual font and content. Letter spacing is shown in em; use the Typography studio controls for direct adjustment. Negative letter spacing can crowd small text.</p>
                   <div class="field">
                     <label for="advWeight">Heading weight</label>
                     <select id="advWeight">
@@ -843,7 +861,7 @@
                   <div class="field">
                     <label for="advTracking">Heading letter spacing (em × 100)</label>
                     <div class="inline-range">
-                      <input id="advTracking" max="10" min="-5" type="range" value="-2" />
+                      <input id="advTracking" max="10" min="-5" step="0.5" type="range" value="-2" />
                       <output id="advTrackingOut">
                       </output>
                     </div>
@@ -944,19 +962,29 @@
         <div class="studio-right">
           <main id="main">
             <nav aria-label="Design system sections" class="studio-section-nav">
-              <a href="#studio-section-1">01 · Colour</a>
-              <a href="#studio-section-2">02 · Typography</a>
-              <a href="#studio-section-4">03 &middot; Responsive</a>
-              <a href="#studio-section-3">04 &middot; Components</a>
-              <a href="#studio-section-5">05 · Accessibility</a>
-              <a href="#studio-section-6">06 · CSS &amp; export</a>
-              <a href="#studio-section-7">07 · Workflow</a>
-              <a href="#studio-section-8">08 · Token catalogue</a>
+              <a href="#brandPalette">01 &middot; Palette</a>
+              <a href="#studio-section-1">02 &middot; Colour</a>
+              <a href="#studio-section-2">03 &middot; Typography</a>
+              <a href="#studio-section-4">04 &middot; Responsive</a>
+              <a href="#buttonDesignLab">05 &middot; Buttons</a>
+              <a href="#studio-section-3">06 &middot; Components</a>
+              <a href="#stateExplorer">07 &middot; States</a>
+              <a href="#studio-section-5">08 &middot; Accessibility</a>
+              <a href="#studio-section-6">09 &middot; Inspect &amp; export</a>
+              <a href="#studio-section-7">10 &middot; Workflow</a>
+              <a href="#studio-section-8">11 &middot; Token catalogue</a>
             </nav>
-            <section class="panel" id="brandPalette">
+            <div class="section-actions" role="group" aria-label="Section visibility">
+              <button type="button" id="expandSections" class="ghost">Expand all sections</button>
+              <button type="button" id="collapseSections" class="ghost">Collapse all sections</button>
+              <p class="help">Select a section heading to expand or collapse it. Navigation links open the section you choose.</p>
+            </div>
+            <details class="studio-section" id="brandPalette">
+              <summary><h2>1. Example colour palette</h2></summary>
+              <section class="panel">
               <div class="section-head">
                 <div>
-                  <h2>Example colour palette</h2>
+
                   <p class="help">
                     An illustrative palette with fixed HEX values. Three primary colours and eight accent colours. These are
                     <strong>brand swatches</strong>
@@ -988,10 +1016,13 @@
                 This studio uses an illustrative example palette. Adapt the colours and tokens to your own project requirements.
               </p>
             </section>
-            <section class="panel" id="studio-section-1">
+            </details>
+            <details class="studio-section" id="studio-section-1">
+              <summary><h2>2. Colour systems</h2></summary>
+              <section class="panel">
               <div class="section-head">
                 <div>
-                  <h2>1. Colour systems</h2>
+
                   <p class="help">Each ramp has 11 steps. The centre step (500) preserves your chosen HEX value.</p>
                 </div>
                 <span class="pill" id="rampMethodLabel">RGB mix</span>
@@ -1111,11 +1142,24 @@
                 </div>
               </details>
               </section>
-            <section class="panel" id="studio-section-2">
-              <h2>2. Typography studio</h2>
+            </details>
+            <details class="studio-section" id="studio-section-2">
+              <summary><h2>3. Typography studio</h2></summary>
+              <section class="panel">
+
               <p class="help">
                 A modular scale multiplies or divides the base size by the selected ratio. Compare roles and inspect fluid heading CSS.
               </p>
+              <div class="grid2">
+              <div class="field">
+                <label for="typoHeadingTracking">Heading letter spacing (em) <output id="typoHeadingTrackingOut">-0.02em</output></label>
+                <input id="typoHeadingTracking" type="range" min="-0.05" max="0.1" step="0.005" value="-0.02">
+              </div>
+              <div class="field">
+                <label for="typoBodyTracking">Body letter spacing (em) <output id="typoBodyTrackingOut">0em</output></label>
+                <input id="typoBodyTracking" type="range" min="-0.02" max="0.12" step="0.005" value="0">
+              </div>
+              </div>
               <div class="grid2">
                 <div class="component">
                   <h3>Mobile specimen · 375 px</h3>
@@ -1132,18 +1176,19 @@
                     <h3 id="clampLabTitle">Interactive Clamp Calculator</h3>
                     <p class="help">Explore how base size, modular ratio, viewport boundaries and mobile scaling generate CSS <code>clamp()</code>. Changes update the Studio typography, preview and CSS inspector.</p>
                   </div>
-                  <button type="button" class="ghost" id="clampReset">Reset clamp settings</button>
+                  <button type="button" class="ghost" id="clampReset">Reset responsive limits</button>
                 </div>
                 <div class="clamp-grid">
                   <div class="component">
                     <h4>1 · Typography foundation</h4>
                     <p class="help">Base font and modular ratio use the Studio's existing controls.</p>
+                    <div class="field"><label for="clampScalePreset">Named type scale</label><select id="clampScalePreset"></select></div>
                     <label for="clampBase">
                       Base size: <output id="clampBaseOut">16px</output></label><input id="clampBase" type="range" min="14" max="22" step="1" value="16"><label for="clampRatio">Scale ratio: <output id="clampRatioOut">1.25</output></label><input id="clampRatio"
        type="range"
-       min="1.125"
+       min="1.05"
        max="1.5"
-       step="0.025"
+       step="any"
        value="1.25"><label for="clampRole">Typography level</label><select id="clampRole">
                       <option value="5">Display</option>
                       <option value="4">H1</option>
@@ -1165,12 +1210,12 @@
        min="900"
        max="1600"
        step="10"
-       value="1280"><label for="clampFactor">Mobile heading multiplier: <output id="clampFactorOut">82%</output></label><input id="clampFactor"
+       value="1280"><label for="clampFactor">Mobile heading size (% of desktop): <output id="clampFactorOut">82%</output></label><input id="clampFactor"
        type="range"
        min="0.7"
        max="1"
        step="0.01"
-       value="0.82">
+       value="0.82"><p class="help">This percentage scales larger headings down at the minimum viewport. It is separate from the named type-scale ratio; body and small text stay constant.</p>
                     </div>
                   </div>
                   <div class="component clamp-result">
@@ -1207,7 +1252,29 @@
                     <p class="help">The calculator uses <code>rem</code> limits and offset so the exported rule better respects root font settings. Test browser zoom and user font preferences in your finished project.</p>
                   </div>
                 </section>
-                <h3 style="margin-top:18px">Complete size ladder</h3>
+                <details class="learning-note">
+                  <summary>Named scale or mobile percentage: what is the difference?</summary>
+                  <div class="learning-content">
+                    <p><strong>The type-scale ratio</strong> sets the interval between levels. Minor Second (1.067) creates small differences; Major Third (1.25) creates stronger hierarchy. Each level is the base size multiplied by the ratio raised to that level's step.</p>
+                    <p><strong>The mobile heading percentage</strong> sets the minimum size of Display, H1 and H2 relative to their desktop maximum. At the default settings, a 39.06px H1 becomes about 32.03px at 82%. This changes the responsive endpoints, not the scale's name.</p>
+                    <p>Choose the hierarchy first, then reduce large headings only as much as your narrow layout needs. Reset responsive limits restores the viewport boundaries and percentage; it keeps your scale and letter-spacing choices.</p>
+                  </div>
+                </details>
+                <details class="learning-note">
+                  <summary>Why use REM for sizes and em for letter spacing?</summary>
+                  <div class="learning-content">
+                    <ul>
+                      <li><strong>PX</strong> reports a size in CSS pixels, not necessarily physical screen pixels. It makes specimen measurements easy to compare.</li>
+                      <li><strong>REM</strong> follows the root font size. With a 16px root, 24px is 1.5rem. The ladder uses this nominal conversion; a user's root font preference can change the rendered size.</li>
+                      <li><strong>em for letter spacing</strong> follows the element's own font size. At <code>0.02em</code>, the extra spacing is 0.32px on 16px text and 0.64px on 32px text, so the spacing scales with the letters.</li>
+                      <li>For <code>font-size</code> itself, em refers to the inherited parent size. REM avoids this nesting effect when defining a site-wide type scale.</li>
+                    </ul>
+                    <p>Positive letter spacing opens the text; negative values tighten it. Start near zero for body text and adjust headings cautiously. Font, language and size matter; spacing can disrupt scripts with connected letters. Test real content, zoom and user text-spacing overrides.</p>
+                    <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/length">MDN: CSS length units</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/letter-spacing">letter spacing</a>.</p>
+                  </div>
+                </details>
+                <h3 style="margin-top:18px">Complete size ladder ? PX and REM</h3>
+                <p class="help">REM values use a nominal 16px root: rem = px ? 16. The body-size control changes the scale base, not the root font size.</p>
                 <div id="typeLadder"></div>
                 <details>
                   <summary>Practice: document your type scale</summary>
@@ -1240,10 +1307,13 @@
                 </div>
               </details>
               </section>
-              <section class="panel" id="studio-section-4">
+            </details>
+              <details class="studio-section" id="studio-section-4">
+              <summary><h2>4. Responsive page preview</h2></summary>
+              <section class="panel">
                 <div class="section-head">
                   <div>
-                    <h2>3. Responsive page preview</h2>
+
                     <p class="help">The inner demo uses a mobile-first auto-fit CSS Grid and fluid heading sizes.</p>
                   </div>
                   <div aria-label="Preview width" class="tabs" role="group">
@@ -1305,11 +1375,14 @@
                 </div>
               </details>
               </section>
-              <section class="panel" id="buttonDesignLab">
+            </details>
+              <details class="studio-section" id="buttonDesignLab">
+              <summary><h2>5. Button design laboratory</h2></summary>
+              <section class="panel">
                 <div class="section-head">
                   <div>
                     <div class="eyebrow">Component design wizard · V4.1</div>
-                    <h2>Button Design Laboratory</h2>
+
                     <p class="help">
                       Configure on the left; compare every state and variant here. CSS is generated from the same settings.
                     </p>
@@ -1355,8 +1428,11 @@
               </details>
 
               </section>
-              <section class="panel" id="studio-section-3">
-                <h2>4. Spacing, surfaces and component states</h2>
+            </details>
+              <details class="studio-section" id="studio-section-3">
+              <summary><h2>6. Spacing, surfaces and component states</h2></summary>
+              <section class="panel">
+
                 <div class="grid2">
                   <div>
                     <h3>Spacing scale</h3>
@@ -1434,10 +1510,13 @@
                 </div>
               </details>
               </section>
-              <section class="panel" id="stateExplorer">
+            </details>
+              <details class="studio-section" id="stateExplorer">
+              <summary><h2>7. Component state explorer</h2></summary>
+              <section class="panel">
                 <div class="section-head">
                   <div>
-                    <h2>Component State Explorer</h2>
+
                     <p class="help">
                       Use the left-side Interaction states control to simulate hover, focus, pressed, disabled, selected, invalid, success, read-only or loading. Real keyboard interactions remain available.
                     </p>
@@ -1472,10 +1551,13 @@
               </details>
 
               </section>
-              <section class="panel" id="studio-section-5">
-                <h2>5. Accessibility quick checks</h2>
+            </details>
+              <details class="studio-section" id="studio-section-5">
+              <summary><h2>8. Accessibility quick checks</h2></summary>
+              <section class="panel">
+
                 <p class="help">
-                  Review the defined text, swatch and component-state pairs in both themes. Results are grouped alphabetically, with pairs needing review first and the lowest ratios first within each group. A pair passing its target does not certify a component or page.
+                  Review the defined text, swatch and component-state pairs in both themes. Required problems, conditional checks, potential uses and exemptions are labelled separately. Open Edit this colour to preview a change and its effects on related pairs before applying it.
                 </p>
                 <details class="learning-note">
                   <summary>Which contrasts need testing, and what is covered here?</summary>
@@ -1494,6 +1576,19 @@
                     <p class="learning-reference">Reference: W3C <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">text contrast</a>, <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">non-text contrast</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html">meaning without colour</a>.</p>
                   </div>
                 </details>
+                <details id="semanticEditor" class="learning-note">
+                  <summary>Edit theme colours: text, surfaces, borders and semantic roles</summary>
+                  <div class="learning-content">
+                    <p>Choose a theme and role, then preview a colour or a suggested alternative. Input boundaries use <code>--control-border</code>; decorative separators keep <code>--border</code>. Changing one does not have to change the other.</p>
+                    <p>Overrides are saved in project JSON and used by previews, CSS exports and this report. They stay fixed when palette anchors change. Use generated colour removes the selected override.</p>
+                    <div class="contrast-filters">
+                      <div class="field"><label for="semanticTheme">Theme to edit</label><select id="semanticTheme"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+                      <div class="field"><label for="semanticRole">Semantic colour role</label><select id="semanticRole"></select></div>
+                    </div>
+                    <p id="semanticCurrent" class="help"></p>
+                    <div class="button-row"><button id="semanticEdit" type="button" class="ghost">Preview / edit selected colour</button><button id="semanticReset" type="button" class="ghost">Use generated colour</button></div>
+                  </div>
+                </details>
                 <div class="contrast-filters">
                   <div class="field">
                     <label for="contrastTheme">Theme</label>
@@ -1501,18 +1596,18 @@
                   </div>
                   <div class="field">
                     <label for="contrastResult">Result</label>
-                    <select id="contrastResult"><option value="all">All results</option><option value="review">Needs review</option><option value="pass">Passes target</option><option value="exempt">Inactive exemptions</option><option value="candidate">Swatch candidates</option></select>
+                    <select id="contrastResult"><option value="all">All categories</option><option value="review">Required problems</option><option value="conditional">Conditional checks</option><option value="pass">Required pairs passing</option><option value="candidate">Potential colour uses</option><option value="exempt">Inactive exemptions</option></select>
                   </div>
                   <div class="field">
                     <label for="contrastSort">Sort within groups</label>
-                    <select id="contrastSort"><option value="priority">Review first, lowest ratio</option><option value="ratio">Lowest ratio first</option><option value="name">Name A–Z</option><option value="state">Interaction order</option></select>
+                    <select id="contrastSort"><option value="priority">Problems first, lowest ratio</option><option value="ratio">Lowest ratio first</option><option value="name">Name A–Z</option><option value="state">Interaction order</option></select>
                   </div>
                   <div class="field">
                     <label for="contrastSearch">Find a pair or state</label>
                     <input id="contrastSearch" type="search" placeholder="e.g. outline, hover, focus">
                   </div>
                 </div>
-                <p id="contrastSummary" class="help" role="status"></p>
+                <p id="contrastSummary" class="help" role="status" tabindex="-1"></p>
                 <button id="contrastDownload" class="ghost" type="button">Download filtered contrast CSV</button>
                 <div id="contrastChecks"></div>
                 <p class="note">
@@ -1545,8 +1640,11 @@
                 </div>
               </details>
               </section>
-              <section class="panel" id="studio-section-6">
-                <h2>6. Inspect and export</h2>
+            </details>
+              <details class="studio-section" id="studio-section-6">
+              <summary><h2>9. Inspect and export</h2></summary>
+              <section class="panel">
+
                 <p class="help">
                   The output includes foundation tokens, semantic roles, responsive type and commented component examples. Export a JSON configuration to continue your work later.
                 </p>
@@ -1599,8 +1697,11 @@
                 </div>
               </details>
               </section>
-              <section class="panel" id="studio-section-7">
-                <h2>7. Design workflow</h2>
+            </details>
+              <details class="studio-section" id="studio-section-7">
+              <summary><h2>10. Design workflow</h2></summary>
+              <section class="panel">
+
                 <p class="help">Build a small system, test it with realistic content, then record the decisions someone else needs to use it.</p>
                 <ol>
                   <li><strong>Define:</strong> identify the audience, key tasks and content. Decide what the system needs to support.</li>
@@ -1624,10 +1725,13 @@
                 </div>
               </details>
               </section>
-              <section class="panel" id="studio-section-8">
+            </details>
+              <details class="studio-section" id="studio-section-8">
+              <summary><h2>11. Design token catalogue</h2></summary>
+              <section class="panel">
                 <div class="section-head">
                   <div>
-                    <h2>8. Design token catalogue</h2>
+
                     <p class="help">Live reference of the tokens in the exported CSS, including foundation, semantic, brand and button component values. Values update as you edit the design system.</p>
                   </div>
                   <button class="ghost" id="tokenDownload" type="button">Export token CSV</button>
@@ -1669,6 +1773,7 @@
                 </div>
               </details>
               </section>
+            </details>
               <div class="footer">Design System Studio V4.1 · standalone design toolkit · no external dependencies</div>
             </main>
             <aside aria-label="Live generated CSS" class="studio-code-dock">
@@ -1692,6 +1797,23 @@
         </div>
       </div>
       <div aria-live="polite" class="visually-hidden" id="liveStatus"></div>
+      <dialog id="colourRepair" aria-labelledby="repairTitle" aria-describedby="repairScope">
+        <h2 id="repairTitle">Edit colour</h2>
+        <p id="repairNotice" role="status" class="help"></p>
+        <div class="field"><label for="repairTarget">Colour to change</label><select id="repairTarget"></select></div>
+        <p id="repairScope" class="help"></p>
+        <div class="contrast-filters">
+          <div class="field"><label for="repairPicker">Choose a preview colour</label><input id="repairPicker" type="color" value="#000000"></div>
+          <div class="field"><label for="repairHex">Preview HEX colour</label><input id="repairHex" type="text" maxlength="7" spellcheck="false" value="#000000" aria-describedby="repairHexHelp"><small id="repairHexHelp">Use # followed by six hexadecimal digits.</small></div>
+        </div>
+        <h3>Suggested alternatives</h3>
+        <p class="help">These tested candidates are ranked by new required problems, the selected pair's target and resolved problems. Each still needs design judgment. Select one to preview; nothing is applied automatically.</p>
+        <div id="repairSuggestions"></div>
+        <h3>Effect on related pairs</h3>
+        <p id="repairEffectStatus" role="status" class="help"></p>
+        <div id="repairPreview"></div>
+        <div class="button-row repair-actions"><button id="repairApply" type="button" class="ghost">Apply previewed colour</button><button id="repairCancel" type="button" class="ghost">Cancel</button></div>
+      </dialog>
 
 
 
@@ -1699,15 +1821,18 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261019-contrast" defer></script>
-      <script src="src/js/core-state.js?v=20261019-contrast" defer></script>
-      <script src="src/js/css-dock.js?v=20261019-contrast" defer></script>
-      <script src="src/js/advanced-params.js?v=20261019-contrast" defer></script>
-      <script src="src/js/journey-library.js?v=20261019-contrast" defer></script>
-      <script src="src/js/button-design.js?v=20261019-contrast" defer></script>
-      <script src="src/js/oklch-lab.js?v=20261019-contrast" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261019-contrast" defer></script>
-      <script src="src/js/clamp-explorer.js?v=20261019-contrast" defer></script>
-      <script src="src/js/contrast-audit.js?v=20261019-contrast" defer></script>
+      <script src="src/js/studio-registry.js?v=20261019-typography" defer></script>
+      <script src="src/js/core-state.js?v=20261019-typography" defer></script>
+      <script src="src/js/css-dock.js?v=20261019-typography" defer></script>
+      <script src="src/js/advanced-params.js?v=20261019-typography" defer></script>
+      <script src="src/js/journey-library.js?v=20261019-typography" defer></script>
+      <script src="src/js/button-design.js?v=20261019-typography" defer></script>
+      <script src="src/js/oklch-lab.js?v=20261019-typography" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261019-typography" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
+      <script src="src/js/contrast-audit.js?v=20261019-typography" defer></script>
+      <script src="src/js/colour-repair.js?v=20261019-typography" defer></script>
+      <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
+      <script src="src/js/section-accordions.js?v=20261019-collapsed" defer></script>
     </body>
   </html>

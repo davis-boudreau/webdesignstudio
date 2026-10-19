@@ -64,6 +64,7 @@ palette = function(theme = state.theme, foundation = state) {
 };
 
 function syncAdvanced() {
+  adv.tracking = state.headingTracking * 100;
   for (const [id, key] of Object.entries(advMap)) {
     const el = document.getElementById(id);
     if (el.type === 'checkbox') el.checked = adv[key];
@@ -74,6 +75,7 @@ function syncAdvanced() {
 }
 
 function applyAdvanced() {
+  adv.tracking = state.headingTracking * 100;
   const root = document.documentElement;
   const vars = {
     '--focus-width-demo': adv.focus + 'px',
@@ -104,7 +106,7 @@ function applyAdvanced() {
   document.querySelectorAll('.preview-frame p').forEach(el => el.style.maxWidth = adv.measure + 'ch');
   document.querySelectorAll('.preview-frame h3').forEach(el => {
     el.style.fontWeight = adv.weight;
-    el.style.letterSpacing = adv.tracking / 100 + 'em';
+    el.style.removeProperty('letter-spacing');
   });
   document.querySelectorAll('.preview-card,.component.muted-surface').forEach(el => el.style.opacity = adv.opacity / 100);
   document.querySelectorAll('a').forEach(el => {
@@ -127,7 +129,7 @@ function applyAdvanced() {
   document.getElementById('advInputHelp').textContent = adv.state === 'invalid' ? 'Error: please enter a valid email address' : adv.state === 'success' ? 'Success: input looks valid' : 'Surface + border + feedback states';
   for (const [id, key] of Object.entries(advMap)) {
     const out = document.getElementById(id + 'Out');
-    if (out) out.textContent = String(adv[key]) + (key === 'measure' ? 'ch' : key === 'motion' ? 'ms' : key === 'tracking' ? ' / 100em' : ['focus', 'height', 'border', 'columns', 'gap'].includes(key) ? 'px' : key === 'opacity' ? '%' : '');
+    if (out) out.textContent = key === 'tracking' ? `${round(state.headingTracking,3)}em` : String(adv[key]) + (key === 'measure' ? 'ch' : key === 'motion' ? 'ms' : ['focus', 'height', 'border', 'columns', 'gap'].includes(key) ? 'px' : key === 'opacity' ? '%' : '');
   }
   for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key + 'Out').textContent = palette('light').roles[key].toUpperCase();
   if (typeof renderCode === 'function') renderCode();
@@ -138,6 +140,10 @@ for (const [id, key] of Object.entries(advMap)) {
   const el = document.getElementById(id);
   el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', () => {
     adv[key] = el.type === 'checkbox' ? el.checked : numeric.has(key) ? Number(el.value) : el.value;
+    if (key === 'tracking') {
+      state.headingTracking = adv.tracking / 100;
+      apply();
+    }
     applyAdvanced();
   });
 }
@@ -149,6 +155,7 @@ for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' +
 });
 document.getElementById('resetAdvanced').addEventListener('click', () => {
   adv = JSON.parse(JSON.stringify(ADV_DEFAULT));
+  state.headingTracking = DEFAULT.headingTracking;
   if (state.semanticOverrides?.light)
     for (const key of Object.keys(adv.colors)) delete state.semanticOverrides.light[key];
   apply();
@@ -157,7 +164,7 @@ document.getElementById('resetAdvanced').addEventListener('click', () => {
 /* Wrap existing exports without changing V2.5 foundation/semantic logic. */
 const oldCssExport = cssExport;
 cssExport = function() {
-  return oldCssExport() + `\n/* V2.6: ADVANCED COMPONENT TOKENS. Feedback colours live in the theme blocks above. */\n:root {\n  --focus-width: ${adv.focus}px;\n  --control-height: ${adv.height}px;\n  --border-width: ${adv.border}px;\n  --heading-weight: ${adv.weight};\n  --reading-measure: ${adv.measure}ch;\n  --heading-tracking: ${adv.tracking/100}em;\n  --grid-card-min: ${adv.columns}px;\n  --grid-gap: ${adv.gap}px;\n  --grid-align: ${adv.align};\n  --surface-opacity: ${adv.opacity/100};\n  --elevation: ${({none:'none',subtle:'0 2px 8px #00000018',medium:'0 6px 20px #00000028',strong:'0 12px 32px #00000040'})[adv.shadow]};\n  --motion-duration: ${adv.reduce?0:adv.motion}ms;\n}\n/* Interactive states: visible focus is essential for keyboard navigation. */\n.button { min-height: var(--control-height); border-width: var(--border-width); transition: background var(--motion-duration), transform var(--motion-duration); }\n.button:hover:not(:disabled) { background: var(--primary-hover); }\n.button:active:not(:disabled) { transform: translateY(2px); }\n.button:focus-visible, .input:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n.button:disabled { opacity: .55; cursor: not-allowed; }\n.button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--primary); }\n.input { min-height: var(--control-height); border: var(--border-width) solid var(--border); }\n.input[aria-invalid="true"] { border-color: var(--danger); }\n.input:read-only { background: var(--surface-muted); }\n.card { box-shadow: var(--elevation); border-width: var(--border-width); opacity: var(--surface-opacity); }\n.card-grid { align-items: var(--grid-align); gap: var(--grid-gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); }\n.page-title { font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); }\np { max-width: var(--reading-measure); }\na { text-decoration: ${adv.underline?'underline':'none'}; }\n@media (prefers-reduced-motion: reduce) { .button { transition: none; } }\n`
+  return oldCssExport() + `\n/* V2.6: ADVANCED COMPONENT TOKENS. Feedback colours live in the theme blocks above. */\n:root {\n  --focus-width: ${adv.focus}px;\n  --control-height: ${adv.height}px;\n  --border-width: ${adv.border}px;\n  --heading-weight: ${adv.weight};\n  --reading-measure: ${adv.measure}ch;\n  --heading-tracking: ${state.headingTracking}em;\n  --grid-card-min: ${adv.columns}px;\n  --grid-gap: ${adv.gap}px;\n  --grid-align: ${adv.align};\n  --surface-opacity: ${adv.opacity/100};\n  --elevation: ${({none:'none',subtle:'0 2px 8px #00000018',medium:'0 6px 20px #00000028',strong:'0 12px 32px #00000040'})[adv.shadow]};\n  --motion-duration: ${adv.reduce?0:adv.motion}ms;\n}\n/* Interactive states: visible focus is essential for keyboard navigation. */\n.button { min-height: var(--control-height); border-width: var(--border-width); transition: background var(--motion-duration), transform var(--motion-duration); }\n.button:hover:not(:disabled) { background: var(--primary-hover); }\n.button:active:not(:disabled) { transform: translateY(2px); }\n.button:focus-visible, .input:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n.button:disabled { opacity: .55; cursor: not-allowed; }\n.button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--primary); }\n.input { min-height: var(--control-height); border: var(--border-width) solid var(--control-border); }\n.input[aria-invalid="true"] { border-color: var(--danger); }\n.input:read-only { background: var(--surface-muted); }\n.card { box-shadow: var(--elevation); border-width: var(--border-width); opacity: var(--surface-opacity); }\n.card-grid { align-items: var(--grid-align); gap: var(--grid-gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); }\n.page-title { font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); }\np { max-width: var(--reading-measure); }\na { text-decoration: ${adv.underline?'underline':'none'}; }\n@media (prefers-reduced-motion: reduce) { .button { transition: none; } }\n`
 };
 projectJson = function() {
   return JSON.stringify({
@@ -191,6 +198,7 @@ importConfig = function(obj) {
       if (validHex(obj.advanced.colors?.[k])) next.colors[k] = obj.advanced.colors[k].toUpperCase();
     adv = next;
   } else adv = JSON.parse(JSON.stringify(ADV_DEFAULT));
+  adv.tracking = state.headingTracking * 100;
   apply();
   syncAdvanced();
 };

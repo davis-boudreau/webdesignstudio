@@ -4,14 +4,17 @@
   font-family: var(--preview-font, Arial, sans-serif);
   font-size: var(--preview-type-body, 16px);
   line-height: var(--preview-leading, 1.5);
+  letter-spacing: var(--preview-body-tracking, 0em);
 }
 
 #previewFrame>h3 {
+  letter-spacing: var(--preview-heading-tracking, -.02em);
   font-size: var(--preview-type-display, 32px);
   line-height: 1.18;
 }
 
 #previewFrame .preview-card h3 {
+  letter-spacing: var(--preview-heading-tracking, -.02em);
   font-size: var(--preview-type-h2, 22px);
   line-height: 1.18;
 }
