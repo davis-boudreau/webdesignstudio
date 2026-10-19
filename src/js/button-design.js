@@ -261,6 +261,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     $('bdThemes').innerHTML = ['light', 'dark'].map(m => `<div class="bd-theme-card" data-mode="${m}"><strong>${m==='light'?'Light':'Dark'} preview</strong>${btn(b.variant,b.selectedState,b.size,m)}</div>`).join('');
     $('bdMatrix').innerHTML = stateGroups.map(group => `<section class="bd-state-group" aria-label="${group.title}"><div class="bd-state-group-heading"><h4>${group.title}</h4><p class="help">${group.description}</p></div>${group.items.map(st=>`<section class="bd-state-section" aria-label="${stateLabels[st]}"><div class="bd-state-section-head"><h5>${stateLabels[st]}</h5><p class="help">${esc(explain[st])}</p></div>${colorGroups.map(type=>`<div class="bd-color-group"><h6>${type.title}</h6><div class="bd-state-grid">${type.variants.map(v=>`<div class="bd-cell"><strong>${names[v]}</strong><span class="bd-source-label">${esc(sourceLabel(v))}</span>${btn(v,st,'md',state.theme)}</div>`).join('')}</div></div>`).join('')}</section>`).join('')}</section>`).join('');
     syncLegacyButtons();
+    window.dssUpdateContrastChecks?.();
     $('bdCode').textContent = buttonCSS();
     if (typeof renderCode === 'function') renderCode();
   }
@@ -381,6 +382,13 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   document.addEventListener('dss:reset', () => {
     b = sanitize(null);
     controls();
+  });
+  // Read the same resolved colours as the previews and CSS export.
+  window.dssGetButtonContrastData = () => ({
+    settings: JSON.parse(JSON.stringify(b)),
+    themes: Object.fromEntries(['light', 'dark'].map(theme => [theme,
+      Object.fromEntries(Object.keys(names).map(variant => [variant, colors(variant, theme)]))
+    ]))
   });
   controls();
   render();

@@ -134,11 +134,11 @@ function onColor(hex) {
   return contrast(hex, '#FFFFFF') >= contrast(hex, '#14253A') ? '#FFFFFF' : '#14253A';
 }
 
-function palette() {
+function palette(theme = state.theme) {
   const p = makeRamp(state.primary, state.method),
     s = makeRamp(state.secondary, state.method),
     a = makeRamp(state.accent, state.method);
-  const dark = state.theme === 'dark';
+  const dark = theme === 'dark';
   const roles = dark ? {
     background: '#0B1422',
     surface: '#152236',

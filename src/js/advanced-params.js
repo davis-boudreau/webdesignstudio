@@ -56,9 +56,9 @@ const numeric = new Set(['focus', 'height', 'weight', 'measure', 'tracking', 'bo
 Previously they were written into a second :root block that also overrode the dark theme,
 and apply() silently replaced them in the live preview. */
 const basePalette = palette;
-palette = function() {
-  const result = basePalette();
-  if (state.theme === 'light') Object.assign(result.roles, adv.colors);
+palette = function(theme = state.theme) {
+  const result = basePalette(theme);
+  if (theme === 'light') Object.assign(result.roles, adv.colors);
   return result;
 };
 
@@ -130,6 +130,7 @@ function applyAdvanced() {
   }
   for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key + 'Out').textContent = adv.colors[key].toUpperCase();
   if (typeof renderCode === 'function') renderCode();
+  window.dssUpdateContrastChecks?.();
   window.dssAutosave?.();
 }
 for (const [id, key] of Object.entries(advMap)) {
