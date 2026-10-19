@@ -140,6 +140,64 @@ app.onload = async () => {
     d.querySelector('button[data-width="'+mode+'"]').click(); await wait();
     test('Preview has exact '+mode+' width', () => Math.abs(d.getElementById('previewFrame').getBoundingClientRect().width-width)<1);
   }
+  reset(); await wait();
+  const report = () => w.dssGetContrastChecks();
+  test('Contrast report covers both themes without changing the active theme', () => {
+    return new Set(report().map(row=>row.theme)).size===2 && d.documentElement.dataset.theme==='light' && evaluate('state.theme')==='light';
+  });
+  test('Every button variant and state is represented in both themes', () => {
+    return ['light','dark'].every(theme=>['primary','secondary','accent','outline','text'].every(variant=>
+      ['default','hover','focus','active','selected','disabled','loading'].every(state=>report().some(row=>
+        row.group==='Button Laboratory: text' && row.theme===theme && row.name.toLowerCase()===variant && row.state===state))));
+  });
+  test('Reference swatches and every generated ramp step have candidate checks', () => {
+    const rows=report().filter(row=>row.scope==='candidate');
+    return rows.length===(11+33)*2*2 && rows.every(row=>row.status==='candidate');
+  });
+  test('Disabled controls are exempt and read-only text is tested', () => report().filter(row=>row.state==='disabled').every(row=>row.status==='exempt') &&
+    report().some(row=>row.name==='State Explorer input text' && row.state==='readonly' && row.threshold===4.5));
+  test('Loading exemption follows the actual disabled state', () => {
+    const rows=report().filter(row=>row.state==='loading');
+    return rows.filter(row=>row.group==='Button Laboratory: text').every(row=>row.threshold===4.5) &&
+      rows.filter(row=>row.name==='State Explorer button text').every(row=>row.status==='exempt');
+  });
+  test('Focus indicators have a separate non-text target', () => report().some(row=>row.name==='Primary focus ring' && row.threshold===3 && row.state==='focus'));
+  const oldForeground=report().find(row=>row.name==='Primary' && row.state==='hover' && row.theme==='light').fg;
+  input('bdVariant','primary'); input('bdHoverText','#123456'); await wait();
+  test('Button override updates the contrast inventory', () => report().some(row=>row.name==='Primary' && row.state==='hover' && row.theme==='light' && row.fg==='#123456' && row.fg!==oldForeground));
+  input('bdDefaultBg','#ffffff'); input('bdText','#ffffff'); await wait();
+  test('White text on white is flagged at exactly 1:1', () => report().some(row=>row.name==='Primary' && row.state==='default' && row.ratio===1 && row.status==='review'));
+  input('bdDefaultBg','#ffffff'); input('bdText','#777777'); await wait();
+  test('A ratio below 4.5 is not rounded into a text pass', () => report().some(row=>row.name==='Primary' && row.state==='default' && row.ratio>4.4 && row.ratio<4.5 && row.status==='review'));
+  const beforeOpacity=report().find(row=>row.name==='Preview card: --text' && row.theme==='light').ratio;
+  input('advOpacity',20); await wait();
+  test('Surface opacity updates the composited contrast', () => report().find(row=>row.name==='Preview card: --text' && row.theme==='light').ratio<beforeOpacity);
+  input('advColor_danger','#abcdef'); await wait();
+  test('Feedback changes update invalid-state checks', () => report().some(row=>row.name==='State Explorer input border' && row.theme==='light' && row.state==='invalid' && row.fg==='#ABCDEF'));
+  input('contrastTheme','dark','change'); input('contrastResult','review','change');
+  test('Contrast theme and result filters apply together', () => [...d.querySelectorAll('#contrastChecks tbody tr')].every(row=>row.dataset.status==='review' && row.cells[0].textContent==='Dark'));
+  input('contrastTheme','all','change'); input('contrastResult','all','change'); input('contrastSort','ratio','change');
+  test('Ratios sort ascending within each result group', () => [...d.querySelectorAll('#contrastChecks tbody')].every(body=>{
+    const values=[...body.rows].map(row=>parseFloat(row.cells[3].textContent));return values.every((value,i)=>!i||value>=values[i-1]);
+  }));
+  input('contrastSearch','Primary focus ring');
+  test('Search narrows the displayed contrast pairs', () => {
+    const shown=[...d.querySelectorAll('#contrastChecks tbody tr')];
+    return shown.length>0 && shown.every(row=>row.cells[1].textContent.includes('Primary focus ring'));
+  });
+  const realDownload=w.download; let contrastCsv;
+  w.download=(name,content)=>{contrastCsv={name,content};};
+  d.getElementById('contrastDownload').click(); w.download=realDownload;
+  test('Contrast CSV exports the currently filtered list', () => contrastCsv.name==='contrast-checks.csv' && contrastCsv.content.includes('Primary focus ring') && !contrastCsv.content.includes('Swatch candidates:'));
+  input('contrastSearch',''); input('contrastSort','priority','change');
+  test('Default sorting puts review rows before passes within groups', () => [...d.querySelectorAll('#contrastChecks tbody')].every(body=>{
+    const ranks={review:0,pass:1,exempt:2,candidate:3};const values=[...body.rows].map(row=>ranks[row.dataset.status]);
+    return values.every((value,i)=>!i||value>=values[i-1]);
+  }));
+  app.style.width='320px';
+  d.querySelector('#contrastChecks .contrast-group summary').click(); await wait();
+  test('Expanded contrast table scrolls within a 320px page', () => d.documentElement.scrollWidth<=w.innerWidth+1);
+  test('Contrast report ratios are finite and between 1 and 21', () => report().every(row=>Number.isFinite(row.ratio) && row.ratio>=1 && row.ratio<=21));
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
 };

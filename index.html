@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-builder">
     <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-builder">
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-contrast">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -1474,8 +1475,45 @@
               <section class="panel" id="studio-section-5">
                 <h2>5. Accessibility quick checks</h2>
                 <p class="help">
-                  WCAG 2.x text contrast: 4.5:1 for normal text and 3:1 for large text. This checker measures selected colour pairs only; it does not certify accessibility.
+                  Review the defined text, swatch and component-state pairs in both themes. Results are grouped alphabetically, with pairs needing review first and the lowest ratios first within each group. A pair passing its target does not certify a component or page.
                 </p>
+                <details class="learning-note">
+                  <summary>Which contrasts need testing, and what is covered here?</summary>
+                  <div class="learning-content">
+                    <ol>
+                      <li><strong>Text and semantic roles:</strong> body/muted text on page, surface and muted surface; feedback colours as text; on-primary, on-secondary and on-accent against their action backgrounds.</li>
+                      <li><strong>Boundaries and indicators:</strong> required control boundaries, status indicators and focus rings against adjacent surfaces. A decorative border or an action already identified by its text may not need a contrasting enclosing shape.</li>
+                      <li><strong>Button Laboratory:</strong> every variant in default, hover, focus, active, selected, disabled and loading states; text, conditional boundaries, focus and selection rings. Transparent buttons are checked against each named host surface and the fixed theme-comparison background.</li>
+                      <li><strong>General components and forms:</strong> all State Explorer states, including invalid, success and read-only; input borders, feedback outlines, general button hover and selected-tile indicators.</li>
+                      <li><strong>Surfaces and opacity:</strong> card and nested-surface text composited over the stated parent surface. The same opacity can produce a different result on another background.</li>
+                      <li><strong>Swatch candidates:</strong> all reference swatches and generated ramp steps paired with white and semantic text. These are potential uses, not failures of an unused colour.</li>
+                    </ol>
+                    <p><strong>Targets:</strong> 4.5:1 for normal text; 3:1 for qualifying large text and necessary non-text indicators. Text rows keep the 4.5:1 target and flag combinations suitable only for large text. Decisions use the unrounded ratio; composited samples show the nearest HEX colour.</p>
+                    <p><strong>Exemptions:</strong> genuinely inactive controls have no minimum contrast requirement. Read-only is not disabled. Loading remains subject to contrast unless the control is actually inactive; the Laboratory and Explorer demonstrate different loading treatments.</p>
+                    <p><strong>Still check manually:</strong> focus visibility, size and obscuring; whether a boundary is necessary; meaning without colour; real validation and announcements; placeholders, links, images, gradients, overlays and any combinations introduced in your finished site. The report models the named solid-colour contexts, not every browser-rendered pixel or possible state combination.</p>
+                    <p class="learning-reference">Reference: W3C <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">text contrast</a>, <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">non-text contrast</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html">meaning without colour</a>.</p>
+                  </div>
+                </details>
+                <div class="contrast-filters">
+                  <div class="field">
+                    <label for="contrastTheme">Theme</label>
+                    <select id="contrastTheme"><option value="all">Both themes</option><option value="light">Light</option><option value="dark">Dark</option></select>
+                  </div>
+                  <div class="field">
+                    <label for="contrastResult">Result</label>
+                    <select id="contrastResult"><option value="all">All results</option><option value="review">Needs review</option><option value="pass">Passes target</option><option value="exempt">Inactive exemptions</option><option value="candidate">Swatch candidates</option></select>
+                  </div>
+                  <div class="field">
+                    <label for="contrastSort">Sort within groups</label>
+                    <select id="contrastSort"><option value="priority">Review first, lowest ratio</option><option value="ratio">Lowest ratio first</option><option value="name">Name A–Z</option><option value="state">Interaction order</option></select>
+                  </div>
+                  <div class="field">
+                    <label for="contrastSearch">Find a pair or state</label>
+                    <input id="contrastSearch" type="search" placeholder="e.g. outline, hover, focus">
+                  </div>
+                </div>
+                <p id="contrastSummary" class="help" role="status"></p>
+                <button id="contrastDownload" class="ghost" type="button">Download filtered contrast CSV</button>
                 <div id="contrastChecks"></div>
                 <p class="note">
                   Also verify focus visibility, keyboard use, 200% text resize, content reflow, non-text contrast and meaning conveyed without colour.
@@ -1484,7 +1522,7 @@
               <details class="learning-note">
                 <summary>What does a contrast pass tell you?</summary>
                 <div class="learning-content">
-                  <p>The ratio compares a foreground with its background. A pass here covers the named pair only; this panel uses the normal-text threshold for its samples.</p>
+                  <p>The ratio compares a foreground with its background. A pass covers only the named pair, state, theme and context. Text and necessary non-text indicators have different targets; inactive exemptions and unused swatch candidates are labelled separately.</p>
                   <ul>
                     <li><strong>Text:</strong> aim for at least 4.5:1, or 3:1 for large text (at least 24 CSS px regular or about 18.67 CSS px bold). A heading label alone does not make text large.</li>
                     <li><strong>Controls:</strong> necessary visual boundaries and state indicators generally need 3:1 against adjacent colours. Check hover, focus and active colours separately.</li>
@@ -1670,5 +1708,6 @@
       <script src="src/js/oklch-lab.js?v=20261019-builder" defer></script>
       <script src="src/js/token-catalogue.js?v=20261019-builder" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261019-builder" defer></script>
+      <script src="src/js/contrast-audit.js?v=20261019-contrast" defer></script>
     </body>
   </html>

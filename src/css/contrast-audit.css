@@ -1,0 +1,46 @@
+.contrast-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+  margin-block: 14px;
+}
+
+.contrast-filters .field { margin: 0; }
+.contrast-group > summary { line-height: 1.6; }
+.contrast-group > summary .help { display: block; }
+
+.contrast-table-wrap {
+  overflow: auto;
+  max-height: 32rem;
+  margin-top: 10px;
+}
+
+.contrast-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 650px;
+  font-size: .82rem;
+}
+
+.contrast-table caption { text-align: left; padding: 8px; }
+.contrast-table th, .contrast-table td {
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+  padding: 10px;
+}
+
+.contrast-table th { background: var(--surface-muted); }
+.contrast-table td:nth-child(2) { min-width: 210px; }
+.contrast-table small { display: block; margin-top: 4px; }
+.contrast-table code { white-space: nowrap; font-size: .78rem; }
+.contrast-example {
+  display: inline-block;
+  padding: 6px 10px;
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.contrast-table tr[data-status="review"] .contrast-result {
+  border-bottom: 2px solid currentColor;
+}
