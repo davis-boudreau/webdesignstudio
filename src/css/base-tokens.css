@@ -131,6 +131,8 @@ p {
 
 .brand {
   display: flex;
+  color: var(--text);
+  text-decoration: none;
   gap: 10px;
   align-items: center;
   font-weight: 800;

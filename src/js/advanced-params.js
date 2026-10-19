@@ -107,7 +107,7 @@ function applyAdvanced() {
   });
   document.querySelectorAll('.preview-card,.component.muted-surface').forEach(el => el.style.opacity = adv.opacity / 100);
   document.querySelectorAll('a').forEach(el => {
-    if (!el.closest('.studio-section-nav')) el.style.textDecoration = adv.underline ? 'underline' : 'none';
+    if (!el.closest('.studio-section-nav, .brand')) el.style.textDecoration = adv.underline ? 'underline' : 'none';
   });
   document.querySelectorAll('.demo-btn').forEach(el => el.style.transitionDuration = (adv.reduce ? 0 : adv.motion) + 'ms');
   const btn = document.getElementById('advDemoButton'),
