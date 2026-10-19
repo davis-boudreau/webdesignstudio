@@ -1052,6 +1052,28 @@
                   </div>
                 </div>
                 <p class="help">The wheel shows an sRGB display approximation. At its edges, out-of-gamut chroma is reduced automatically. The ramp generator varies lightness toward its endpoints and gently reduces chroma at the extremes. The example swatches remain unchanged.</p>
+                <details class="learning-note">
+                  <summary>How does OKLCH work, and how should I explore the wheel?</summary>
+                  <div class="learning-content">
+                    <p>OKLCH separates perceived lightness from colour intensity and hue. This makes it useful for exploring related colours without adjusting red, green and blue channels individually. Perceptual uniformity is an approximation, not a guarantee that every colour looks equally bright.</p>
+                    <ul>
+                      <li><strong>L — lightness:</strong> the lightness axis runs from black at 0% to white at 100%. Move the lightness slider to explore lighter or darker colours; it is separate from your position on the wheel.</li>
+                      <li><strong>C — chroma:</strong> move from the centre toward the edge to increase colour intensity. At zero chroma the colour is neutral, so changing hue has no visible effect. This tool's 0.4 limit is a control range, not a universal gamut boundary.</li>
+                      <li><strong>h — hue:</strong> move around the circle to change the colour family. Hue is an angle; 0° and 360° meet at the same point.</li>
+                      <li><strong>sRGB gamut:</strong> some combinations cannot be represented in sRGB. The tool reduces chroma for its HEX preview, so several vivid selections can look similar even though their requested OKLCH coordinates differ.</li>
+                    </ul>
+                    <p><strong>Try this sequence:</strong></p>
+                    <ol>
+                      <li>Choose Primary, Supporting or Accent. This loads that palette anchor into the wheel.</li>
+                      <li>Keep lightness steady and compare hues. Then lower chroma to create a quieter colour. Drag the wheel or use the labelled sliders with the keyboard.</li>
+                      <li>Adjust lightness and watch the HEX swatch and gamut message. The coordinates describe your requested selection; HEX shows the sRGB result.</li>
+                      <li>Select <strong>Apply to selected role</strong> to update the anchor and its ramp. Review the resulting text/background pairs in both themes.</li>
+                    </ol>
+                    <p>Exploring does not change the project until you apply. <strong>Load current role colour</strong> discards an uncommitted exploration and reloads the selected anchor; it does not restore the example defaults.</p>
+                    <p><strong>Check contrast separately:</strong> OKLCH lightness is not WCAG relative luminance. Equal lightness values do not establish a passing contrast ratio, and a vivid colour does not automatically make a readable button.</p>
+                    <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/oklch">MDN: OKLCH syntax and colour coordinates</a>. Then use <a href="#studio-section-5">Accessibility quick checks</a> to inspect the generated colour pairs.</p>
+                  </div>
+                </details>
               </section>
               <div id="ramps"></div>
               <h3>Semantic colour roles</h3>
