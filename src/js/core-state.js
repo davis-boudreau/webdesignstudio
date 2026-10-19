@@ -381,7 +381,7 @@ function cssExport() {
 }
 
 function htmlExport() {
-  return `<!doctype html>\n<html lang="en" data-theme="light">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${escapeHtml(state.project)}<\/title>\n  <!-- Save the exported CSS alongside this file. -->\n  <link rel="stylesheet" href="tokens.css">\n<\/head>\n<body>\n  <main class="container">\n    <h1 class="page-title">${escapeHtml(state.project)}</h1>\n    <p>A responsive example using semantic design tokens.</p>\n    <div class="card-grid">\n      <article class="card"><h2>Colour</h2><p>Primary, surface, and text roles.</p><button class="button">Explore</button></article>\n      <article class="card"><h2>Typography</h2><p>Responsive type and readable leading.</p></article>\n      <article class="card"><h2>Layout</h2><p>CSS Grid automatically adapts to space.</p></article>\n    </div>\n  <\/main>\n<\/body>\n<\/html>\n`;
+  return `<!doctype html>\n<html lang="en" data-theme="${state.theme}">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${escapeHtml(state.project)}<\/title>\n  <!-- Save the exported CSS alongside this file. -->\n  <link rel="stylesheet" href="tokens.css">\n<\/head>\n<body>\n  <main class="container">\n    <h1 class="page-title">${escapeHtml(state.project)}</h1>\n    <p>A responsive example using semantic design tokens.</p>\n    <div class="card-grid">\n      <article class="card"><h2>Colour</h2><p>Primary, surface, and text roles.</p><button class="button">Explore</button></article>\n      <article class="card"><h2>Typography</h2><p>Responsive type and readable leading.</p></article>\n      <article class="card"><h2>Layout</h2><p>CSS Grid automatically adapts to space.</p></article>\n    </div>\n  <\/main>\n<\/body>\n<\/html>\n`;
 }
 
 function escapeHtml(s) {
@@ -394,6 +394,7 @@ function projectJson() {
   return JSON.stringify({
     schemaVersion: 2,
     brandReference: "Studio example palette",
+    clampConfig: { ...clampConfig },
     ...state
   }, null, 2);
 }
@@ -408,7 +409,11 @@ function renderCode() {
     ['viewCss', 'css'],
     ['viewJson', 'json'],
     ['viewHtml', 'html']
-  ].forEach(([id, t]) => $(id).setAttribute('aria-selected', String(codeTab === t)));
+  ].forEach(([id, t]) => {
+    $(id).setAttribute('aria-selected', String(codeTab === t));
+    $(id).tabIndex = codeTab === t ? 0 : -1;
+    if (codeTab === t) $('codeView').setAttribute('aria-labelledby', id);
+  });
 }
 
 function download(name, content, type) {
@@ -435,6 +440,7 @@ function syncControls() {
 /* FIX: a single reset path. Other modules listen for "dss:reset" so they only reset
 when a reset actually happens (previously they reset even when the confirm box was cancelled). */
 function resetStudio(msg) {
+  clampConfig = { ...CLAMP_DEFAULTS };
   state = {
     ...DEFAULT
   };
@@ -464,6 +470,15 @@ function importConfig(obj) {
     ])
     if (typeof obj[k] === 'number' && Number.isFinite(obj[k])) n[k] = clamp(obj[k], min, max);
   if (typeof obj.project === 'string') n.project = obj.project.slice(0, 90);
+  clampConfig = { ...CLAMP_DEFAULTS };
+  for (const [key, min, max] of [
+      ['minWidth', 320, 600],
+      ['maxWidth', 900, 1600],
+      ['mobileFactor', .7, 1]
+    ]) {
+    const value = obj.clampConfig?.[key];
+    if (typeof value === 'number' && Number.isFinite(value)) clampConfig[key] = clamp(value, min, max);
+  }
   state = n;
   syncControls();
   apply();
@@ -525,6 +540,18 @@ $('downloadCode').addEventListener('click', () => download(codeTab === 'css' ? '
 ].forEach(([id, t]) => $(id).addEventListener('click', () => {
   codeTab = t;
   renderCode();
+}));
+const codeTabs = ['viewCss', 'viewJson', 'viewHtml'];
+codeTabs.forEach((id, index) => $(id).addEventListener('keydown', event => {
+  let next;
+  if (event.key === 'ArrowRight') next = (index + 1) % codeTabs.length;
+  else if (event.key === 'ArrowLeft') next = (index + codeTabs.length - 1) % codeTabs.length;
+  else if (event.key === 'Home') next = 0;
+  else if (event.key === 'End') next = codeTabs.length - 1;
+  else return;
+  event.preventDefault();
+  $(codeTabs[next]).click();
+  $(codeTabs[next]).focus();
 }));
 /* FIX: only the width tab buttons. The old selector "[data-width]" also matched the preview frame itself,
 so clicking anywhere inside the preview un-pressed every width tab. */

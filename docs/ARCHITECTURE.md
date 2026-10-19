@@ -4,7 +4,7 @@
 
 1. **Zero build, zero runtime dependencies.** Plain HTML, CSS and classic scripts. Contributors need only a browser and a static server.
 2. **One source of truth.** Foundation values live in a single state object; CSS preview, export, token catalogue and clamp explorer all derive from it.
-3. **Feature modules over a shared core.** Each studio feature owns one CSS file and one JS file and registers with `DSStudio`.
+3. **Feature modules over a shared core.** The intended extension API is `DSStudio`; existing features still share globals while migration is pending.
 4. **Imported data is data.** JSON import is validated and never executed.
 
 ## Layers
@@ -34,8 +34,8 @@ Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start
      exportCss() { return '/* contributed to Export CSS */'; }
    });
    ```
-3. Add the `<link>` / `<script defer>` tags to `index.html` and the markup section.
-4. Run `python scripts/check_structure.py`.
+3. Add the `<link>` / `<script defer>` tags to `index.html` and the markup section. The current export generator does not yet call `DSStudio.collectCss()`; exporting a registered module's CSS requires integrating that hook first.
+4. Run `python scripts/check_structure.py` and `python scripts/browser_review.py`.
 
 ## Known debt (migration path)
 

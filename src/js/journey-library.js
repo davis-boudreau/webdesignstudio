@@ -6,6 +6,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   const el = id => document.getElementById(id);
   const STORE = 'dss-v27-projects';
   let step = 0,
+    autosaveSuspended = false,
     activeId = null,
     projects = {};
   const bindings = {
@@ -53,10 +54,8 @@ Browser storage may be unavailable in private or restricted contexts. */
 
   function serialize() {
     return {
-      schemaVersion: 2.9,
       preset: 'custom',
-      ...state,
-      advanced: JSON.parse(JSON.stringify(adv))
+      ...JSON.parse(projectJson())
     };
   }
 
@@ -72,13 +71,28 @@ Browser storage may be unavailable in private or restricted contexts. */
   /* FIX: one autosave routine, also used by the theme toggle and the Button wizard (exposed below),
   so every kind of change is written to the active local project. */
   function autosave() {
-    if (activeId && projects[activeId]) {
+    if (!autosaveSuspended && activeId && projects[activeId]) {
       projects[activeId].data = serialize();
       projects[activeId].updated = new Date().toISOString();
       if (persist()) notify('Changes saved locally to ' + projects[activeId].name + '.');
     }
   }
   window.dssAutosave = autosave;
+  // Loading a different project must not autosave intermediate settings over the old one.
+  const previousImport = importConfig;
+  importConfig = function(data) {
+    autosaveSuspended = true;
+    try {
+      return previousImport(data);
+    } finally {
+      autosaveSuspended = false;
+    }
+  };
+  const previousReset = resetStudio;
+  resetStudio = function(message) {
+    activeId = null;
+    return previousReset(message);
+  };
   /* FIX: the theme select has no matching legacy control (there is no #theme element),
   so el('theme') was null and changing "Preview theme" crashed. Theme is now set directly. */
   function updateKey(key, value) {
@@ -101,6 +115,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   apply = function() {
     prevApply();
     syncJourney();
+    autosave();
   };
   el('jPreset').addEventListener('change', e => {
     if (e.target.value === 'example') {
@@ -194,12 +209,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   } catch (err) {
     notify('Local storage unavailable. JSON export still works.');
   }
-  /* Refresh journey fields when an advanced control changes state. */
-  document.querySelectorAll('.studio-legacy input,.studio-legacy select').forEach(control => control.addEventListener('input', () => {
-    syncJourney();
-    autosave();
-  }));
-  el('themeToggle').addEventListener('click', autosave);
+  // Foundation changes save after apply(); advanced and button editors save after updating their state.
   /* FIX: only react to resets that actually happened (the old listener ran even when Reset was cancelled). */
   document.addEventListener('dss:reset', () => {
     activeId = null;

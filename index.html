@@ -5,22 +5,23 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Design System Studio V4.1 | Button Design Wizard</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css">
-    <link rel="stylesheet" href="src/css/layout.css">
-    <link rel="stylesheet" href="src/css/journey-library.css">
-    <link rel="stylesheet" href="src/css/button-lab.css">
-    <link rel="stylesheet" href="src/css/oklch-lab.css">
-    <link rel="stylesheet" href="src/css/state-explorer-outline.css">
-    <link rel="stylesheet" href="src/css/preview-typography.css">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-review">
+    <link rel="stylesheet" href="src/css/layout.css?v=20261019-review">
+    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-review">
+    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-review">
+    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-review">
+    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-review">
+    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-review">
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to studio previews</a>
     <header class="topbar">
       <div class="shell top-inner">
         <div class="brand">
           <span class="brandmark">DS</span>
           <span>
             Design System Studio
-            <small class="pill">V4.1 · Button Design Wizard</small>
+            <small class="pill">V4.1</small>
           </span>
         </div>
         <div class="top-actions">
@@ -41,7 +42,7 @@
         <div class="eyebrow">Explore colour, typography and components</div>
         <h1>Design System Studio · Build &amp; Inspect</h1>
         <p>
-          Choose design parameters on the left. Explore seven live design-system sections on the right, inspect the generated CSS beside the components, then export your project-ready design system.
+          Choose design parameters on the left. Explore the live design-system sections on the right, inspect the generated CSS beside the components, then export your design system starting point.
         </p>
       </section>
       <div class="layout">
@@ -409,7 +410,7 @@
                   <div class="field">
                     <label for="bdFocus">Focus ring colour</label>
                     <div class="fieldline">
-                      <input id="bdFocus" type="color" value="#f37327" />
+                      <input id="bdFocus" type="color" value="#b45309" />
                       <output id="bdFocusOut">
                         #F37327
                       </output>
@@ -835,11 +836,11 @@
         </aside>
         <div class="studio-right">
           <main id="main">
-            <nav aria-label="Seven design system sections" class="studio-section-nav">
+            <nav aria-label="Design system sections" class="studio-section-nav">
               <a href="#studio-section-1">01 · Colour</a>
               <a href="#studio-section-2">02 · Typography</a>
-              <a href="#studio-section-3">03 · Components</a>
-              <a href="#studio-section-4">04 · Responsive</a>
+              <a href="#studio-section-4">03 &middot; Responsive</a>
+              <a href="#studio-section-3">04 &middot; Components</a>
               <a href="#studio-section-5">05 · Accessibility</a>
               <a href="#studio-section-6">06 · CSS &amp; export</a>
               <a href="#studio-section-7">07 · Workflow</a>
@@ -1097,6 +1098,57 @@
                   </ol>
                 </details>
               </section>
+              <section class="panel" id="studio-section-4">
+                <div class="section-head">
+                  <div>
+                    <h2>3. Responsive page preview</h2>
+                    <p class="help">The inner demo uses a mobile-first auto-fit CSS Grid and fluid heading sizes.</p>
+                  </div>
+                  <div aria-label="Preview width" class="tabs" role="group">
+                    <button aria-pressed="false" class="tab" data-width="mobile" type="button">375 px</button>
+                    <button aria-pressed="false" class="tab" data-width="tablet" type="button">768 px</button>
+                    <button aria-pressed="true" class="tab" data-width="desktop" type="button">1280 px</button>
+                    <button aria-pressed="false" class="tab" data-width="fluid" type="button">Fluid</button>
+                  </div>
+                </div>
+                <div class="preview-shell" id="previewShell">
+                  <div class="preview-frame" data-width="desktop" id="previewFrame">
+                    <div class="eyebrow">Illustrative campus events</div>
+                    <h3>Discover what's happening</h3>
+                    <p class="muted">
+                      A sample interface using the current colour, typography, spacing and radius tokens. Resize the preview to test wrapping and layout.
+                    </p>
+                    <div class="preview-grid">
+                      <article class="preview-card">
+                        <span class="badge">Workshop</span>
+                        <h3>Design fundamentals</h3>
+                        <p class="mini muted">Explore colour, typography and visual hierarchy.</p>
+                        <button class="demo-btn" type="button">View details</button>
+                      </article>
+                      <article class="preview-card">
+                        <span class="badge">Community</span>
+                        <h3>Open house</h3>
+                        <p class="mini muted">Connect with students and instructors.</p>
+                        <button class="demo-btn secondary" type="button">Learn more</button>
+                      </article>
+                      <article class="preview-card">
+                        <span class="badge">Technology</span>
+                        <h3>Build a website</h3>
+                        <p class="mini muted">Apply reusable tokens to responsive components.</p>
+                        <button class="demo-btn outline" type="button">Explore</button>
+                      </article>
+                    </div>
+                  </div>
+                </div>
+                <p class="help">
+                  The preview is constrained by your browser width. For an exact 1280 px screenshot, open the exported page in browser device emulation or a sufficiently wide viewport.
+                </p>
+                <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
+                <p class="help"
+                   id="responsiveTypeReadout"
+                   role="status"
+                   aria-live="polite"></p>
+              </section>
               <section class="panel" id="buttonDesignLab">
                 <div class="section-head">
                   <div>
@@ -1174,7 +1226,7 @@
                 </div>
               </section>
               <section class="panel" id="studio-section-3">
-                <h2>3. Spacing, surfaces and component states</h2>
+                <h2>4. Spacing, surfaces and component states</h2>
                 <div class="grid2">
                   <div>
                     <h3>Spacing scale</h3>
@@ -1269,57 +1321,6 @@
                   </ul>
                 </details>
               </section>
-              <section class="panel" id="studio-section-4">
-                <div class="section-head">
-                  <div>
-                    <h2>4. Responsive page preview</h2>
-                    <p class="help">The inner demo uses a mobile-first auto-fit CSS Grid and fluid heading sizes.</p>
-                  </div>
-                  <div aria-label="Preview width" class="tabs" role="group">
-                    <button aria-pressed="false" class="tab" data-width="mobile" type="button">375 px</button>
-                    <button aria-pressed="false" class="tab" data-width="tablet" type="button">768 px</button>
-                    <button aria-pressed="true" class="tab" data-width="desktop" type="button">1280 px</button>
-                    <button aria-pressed="false" class="tab" data-width="fluid" type="button">Fluid</button>
-                  </div>
-                </div>
-                <div class="preview-shell" id="previewShell">
-                  <div class="preview-frame" data-width="desktop" id="previewFrame">
-                    <div class="eyebrow">Illustrative campus events</div>
-                    <h3>Discover what's happening</h3>
-                    <p class="muted">
-                      A sample interface using the current colour, typography, spacing and radius tokens. Resize the preview to test wrapping and layout.
-                    </p>
-                    <div class="preview-grid">
-                      <article class="preview-card">
-                        <span class="badge">Workshop</span>
-                        <h3>Design fundamentals</h3>
-                        <p class="mini muted">Explore colour, typography and visual hierarchy.</p>
-                        <button class="demo-btn" type="button">View details</button>
-                      </article>
-                      <article class="preview-card">
-                        <span class="badge">Community</span>
-                        <h3>Open house</h3>
-                        <p class="mini muted">Connect with students and instructors.</p>
-                        <button class="demo-btn secondary" type="button">Learn more</button>
-                      </article>
-                      <article class="preview-card">
-                        <span class="badge">Technology</span>
-                        <h3>Build a website</h3>
-                        <p class="mini muted">Apply reusable tokens to responsive components.</p>
-                        <button class="demo-btn outline" type="button">Explore</button>
-                      </article>
-                    </div>
-                  </div>
-                </div>
-                <p class="help">
-                  The preview is constrained by your browser width. For an exact 1280 px screenshot, open the exported page in browser device emulation or a sufficiently wide viewport.
-                </p>
-                <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
-                <p class="help"
-                   id="responsiveTypeReadout"
-                   role="status"
-                   aria-live="polite"></p>
-              </section>
               <section class="panel" id="studio-section-5">
                 <h2>5. Accessibility quick checks</h2>
                 <p class="help">
@@ -1339,16 +1340,19 @@
                   <button aria-selected="true"
                           class="tab"
                           id="viewCss"
+                          aria-controls="codeView"
                           role="tab"
                           type="button">Commented CSS</button>
                   <button aria-selected="false"
                           class="tab"
                           id="viewJson"
+                          aria-controls="codeView"
                           role="tab"
                           type="button">Project JSON</button>
                   <button aria-selected="false"
                           class="tab"
                           id="viewHtml"
+                          aria-controls="codeView"
                           role="tab"
                           type="button">HTML example</button>
                 </div>
@@ -1356,7 +1360,7 @@
                   <button class="demo-btn" id="copyCode" type="button">Copy visible code</button>
                   <button class="ghost" id="downloadCode" type="button">Download visible code</button>
                 </div>
-                <pre class="code" id="codeView" tabindex="0"></pre>
+                <pre class="code" id="codeView" role="tabpanel" aria-labelledby="viewCss" tabindex="0"></pre>
                 <h3>Token dependency inspector</h3>
                 <div class="token-list" id="tokenInspector"></div>
               </section>
@@ -1453,14 +1457,14 @@
 
 
 
-      <script src="src/js/studio-registry.js" defer></script>
-      <script src="src/js/core-state.js" defer></script>
-      <script src="src/js/css-dock.js" defer></script>
-      <script src="src/js/advanced-params.js" defer></script>
-      <script src="src/js/journey-library.js" defer></script>
-      <script src="src/js/button-design.js" defer></script>
-      <script src="src/js/oklch-lab.js" defer></script>
-      <script src="src/js/token-catalogue.js" defer></script>
-      <script src="src/js/clamp-explorer.js" defer></script>
+      <script src="src/js/studio-registry.js?v=20261019-review" defer></script>
+      <script src="src/js/core-state.js?v=20261019-review" defer></script>
+      <script src="src/js/css-dock.js?v=20261019-review" defer></script>
+      <script src="src/js/advanced-params.js?v=20261019-review" defer></script>
+      <script src="src/js/journey-library.js?v=20261019-review" defer></script>
+      <script src="src/js/button-design.js?v=20261019-review" defer></script>
+      <script src="src/js/oklch-lab.js?v=20261019-review" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261019-review" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261019-review" defer></script>
     </body>
   </html>

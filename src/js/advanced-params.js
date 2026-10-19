@@ -114,6 +114,8 @@ function applyAdvanced() {
     inp = document.getElementById('advDemoInput');
   for (const id of ['stateButtonTile', 'stateInputTile']) document.getElementById(id).dataset.state = adv.state;
   btn.disabled = ['disabled', 'loading'].includes(adv.state);
+  btn.setAttribute('aria-busy', String(adv.state === 'loading'));
+  inp.setAttribute('aria-describedby', 'advInputHelp');
   inp.disabled = adv.state === 'disabled';
   inp.readOnly = adv.state === 'readonly';
   inp.setAttribute('aria-invalid', String(adv.state === 'invalid'));
@@ -128,6 +130,7 @@ function applyAdvanced() {
   }
   for (const key of Object.keys(adv.colors)) document.getElementById('advColor_' + key + 'Out').textContent = adv.colors[key].toUpperCase();
   if (typeof renderCode === 'function') renderCode();
+  window.dssAutosave?.();
 }
 for (const [id, key] of Object.entries(advMap)) {
   const el = document.getElementById(id);
@@ -149,12 +152,13 @@ document.getElementById('resetAdvanced').addEventListener('click', () => {
 /* Wrap existing exports without changing V2.5 foundation/semantic logic. */
 const oldCssExport = cssExport;
 cssExport = function() {
-  return oldCssExport() + `\n/* V2.6: ADVANCED COMPONENT TOKENS. Feedback colours live in the theme blocks above. */\n:root {\n  --focus-width: ${adv.focus}px;\n  --control-height: ${adv.height}px;\n  --border-width: ${adv.border}px;\n  --heading-weight: ${adv.weight};\n  --reading-measure: ${adv.measure}ch;\n  --heading-tracking: ${adv.tracking/100}em;\n  --grid-card-min: ${adv.columns}px;\n  --grid-gap: ${adv.gap}px;\n  --surface-opacity: ${adv.opacity/100};\n  --elevation: ${({none:'none',subtle:'0 2px 8px #00000018',medium:'0 6px 20px #00000028',strong:'0 12px 32px #00000040'})[adv.shadow]};\n  --motion-duration: ${adv.reduce?0:adv.motion}ms;\n}\n/* Interactive states: visible focus is essential for keyboard navigation. */\n.button { min-height: var(--control-height); border-width: var(--border-width); transition: background var(--motion-duration), transform var(--motion-duration); }\n.button:hover:not(:disabled) { background: var(--primary-hover); }\n.button:active:not(:disabled) { transform: translateY(2px); }\n.button:focus-visible, .input:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n.button:disabled { opacity: .55; cursor: not-allowed; }\n.button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--primary); }\n.input { min-height: var(--control-height); border: var(--border-width) solid var(--border); }\n.input[aria-invalid="true"] { border-color: var(--danger); }\n.input:read-only { background: var(--surface-muted); }\n.card { box-shadow: var(--elevation); border-width: var(--border-width); }\n.card-grid { gap: var(--grid-gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); }\n.page-title { font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); }\np { max-width: var(--reading-measure); }\na { text-decoration: ${adv.underline?'underline':'none'}; }\n@media (prefers-reduced-motion: reduce) { .button { transition: none; } }\n`
+  return oldCssExport() + `\n/* V2.6: ADVANCED COMPONENT TOKENS. Feedback colours live in the theme blocks above. */\n:root {\n  --focus-width: ${adv.focus}px;\n  --control-height: ${adv.height}px;\n  --border-width: ${adv.border}px;\n  --heading-weight: ${adv.weight};\n  --reading-measure: ${adv.measure}ch;\n  --heading-tracking: ${adv.tracking/100}em;\n  --grid-card-min: ${adv.columns}px;\n  --grid-gap: ${adv.gap}px;\n  --grid-align: ${adv.align};\n  --surface-opacity: ${adv.opacity/100};\n  --elevation: ${({none:'none',subtle:'0 2px 8px #00000018',medium:'0 6px 20px #00000028',strong:'0 12px 32px #00000040'})[adv.shadow]};\n  --motion-duration: ${adv.reduce?0:adv.motion}ms;\n}\n/* Interactive states: visible focus is essential for keyboard navigation. */\n.button { min-height: var(--control-height); border-width: var(--border-width); transition: background var(--motion-duration), transform var(--motion-duration); }\n.button:hover:not(:disabled) { background: var(--primary-hover); }\n.button:active:not(:disabled) { transform: translateY(2px); }\n.button:focus-visible, .input:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n.button:disabled { opacity: .55; cursor: not-allowed; }\n.button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--primary); }\n.input { min-height: var(--control-height); border: var(--border-width) solid var(--border); }\n.input[aria-invalid="true"] { border-color: var(--danger); }\n.input:read-only { background: var(--surface-muted); }\n.card { box-shadow: var(--elevation); border-width: var(--border-width); opacity: var(--surface-opacity); }\n.card-grid { align-items: var(--grid-align); gap: var(--grid-gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); }\n.page-title { font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); }\np { max-width: var(--reading-measure); }\na { text-decoration: ${adv.underline?'underline':'none'}; }\n@media (prefers-reduced-motion: reduce) { .button { transition: none; } }\n`
 };
 projectJson = function() {
   return JSON.stringify({
     schemaVersion: 2.9,
     brandReference: 'Studio example palette',
+    clampConfig: { ...clampConfig },
     ...state,
     advanced: adv
   }, null, 2);
@@ -169,9 +173,13 @@ importConfig = function(obj) {
       if (typeof next[key] === 'boolean' && typeof v === 'boolean') next[key] = v;
       else if (typeof next[key] === 'number' && typeof v === 'number' && Number.isFinite(v)) {
         const el = document.getElementById(id);
-        const min = el.min === '' ? -999 : Number(el.min),
-          max = el.max === '' ? 999 : Number(el.max);
-        next[key] = Math.max(min, Math.min(max, v));
+        if (el.tagName === 'SELECT') {
+          if (Array.from(el.options).some(option => Number(option.value) === v)) next[key] = v;
+        } else {
+          const min = el.hasAttribute('min') ? Number(el.min) : -999,
+            max = el.hasAttribute('max') ? Number(el.max) : 999;
+          next[key] = Math.max(min, Math.min(max, v));
+        }
       } else if (typeof next[key] === 'string' && typeof v === 'string' && Array.from(document.getElementById(id).options || []).some(o => o.value === v)) next[key] = v;
     }
     for (const k of Object.keys(next.colors))

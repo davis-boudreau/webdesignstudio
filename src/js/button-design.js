@@ -13,7 +13,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     radius: 8,
     border: 1,
     weight: 600,
-    focus: '#F37327',
+    focus: '#B45309',
     focusWidth: 3,
     motion: 150,
     mobileFull: false,
@@ -110,7 +110,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
         ['motion', 0, 350]
       ]) b[k] = clampNumber(raw[k], lo, hi, defaults[k]);
     b.weight = [400, 500, 600, 700].includes(Number(raw.weight)) ? Number(raw.weight) : 600;
-    b.variant = names[raw.variant] ? raw.variant : 'primary';
+    b.variant = Object.prototype.hasOwnProperty.call(names, raw.variant) ? raw.variant : 'primary';
     b.size = ['sm', 'md', 'lg'].includes(raw.size) ? raw.size : 'md';
     b.selectedState = states.includes(raw.selectedState) ? raw.selectedState : 'default';
     b.focus = validColor(raw.focus) ? raw.focus : defaults.focus;
@@ -289,11 +289,11 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   }
 
   function buttonCSS() {
-    const variants = Object.keys(names).map(v => {
-      const c = colors(v);
+    const variants = mode => Object.keys(names).map(v => {
+      const c = colors(v, mode);
       return `  /* ${names[v]} variant colours */\n  --button-${v}-source: ${baseFor(v)};\n  --button-${v}-bg: ${c.bg};\n  --button-${v}-text: ${c.fg};\n  --button-${v}-border: ${c.border};\n  --button-${v}-hover: ${c.hover};\n  --button-${v}-active: ${c.active};\n  --button-${v}-hover-text: ${c.hoverText};\n  --button-${v}-active-text: ${c.activeText};`;
     }).join('\n');
-    return `/* Design System Studio V4.1 · Button component CSS\n   FOUNDATION → COMPONENT TOKENS → STATES.\n   Verify text contrast in each theme and state. */\n:root {\n  --button-pad-x: ${b.padX}px;\n  --button-pad-y: ${b.padY}px;\n  --button-min-height: ${b.minHeight}px;\n  --button-radius: ${b.radius}px;\n  --button-border-width: ${b.border}px;\n  --button-font-weight: ${b.weight};\n  --button-focus: ${b.focus};\n  --button-focus-width: ${b.focusWidth}px;\n  --button-motion: ${b.motion}ms;\n${variants}\n}\n/* Base component: reusable for all variants. */\n.ds-button {\n  display: inline-flex; align-items: center; justify-content: center;\n  gap: .5em; min-height: var(--button-min-height);\n  padding: var(--button-pad-y) var(--button-pad-x);\n  border: var(--button-border-width) solid transparent;\n  border-radius: var(--button-radius);\n  font: inherit; font-weight: var(--button-font-weight);\n  cursor: pointer; text-align: center;\n  transition: background-color var(--button-motion), border-color var(--button-motion);\n}\n/* Size variants scale the same foundation dimensions. */\n.ds-button--sm { min-height: calc(var(--button-min-height) * .8); padding: calc(var(--button-pad-y) * .8) calc(var(--button-pad-x) * .8); font-size: .875rem; }\n.ds-button--lg { min-height: calc(var(--button-min-height) * 1.22); padding: calc(var(--button-pad-y) * 1.22) calc(var(--button-pad-x) * 1.22); font-size: 1.125rem; }\n${Object.keys(names).map(v=>`/* ${names[v]} variant and its interactive states. */\n.ds-button--${v} { background: var(--button-${v}-bg); color: var(--button-${v}-text); border-color: var(--button-${v}-border); }\n.ds-button--${v}:hover:not(:disabled) { background: var(--button-${v}-hover); color: var(--button-${v}-hover-text); }\n.ds-button--${v}:active:not(:disabled) { background: var(--button-${v}-active); color: var(--button-${v}-active-text); }`).join('\n')}\n/* Real keyboard focus, not just the preview simulation. */\n.ds-button:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }\n/* Native disabled attribute prevents activation. */\n.ds-button:disabled { opacity: .55; cursor: not-allowed; }\n/* aria-pressed is only for persistent toggle buttons. */\n.ds-button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--button-focus); }\n/* aria-busy requires JavaScript behaviour and status announcements. */\n.ds-button[aria-busy="true"] { cursor: progress; }\n${b.mobileFull?'/* Optional mobile full-width action. */\n@media (max-width: 40rem) { .ds-button--mobile-full { width: 100%; } }\n':''}/* Honour user reduced-motion preferences. */\n@media (prefers-reduced-motion: reduce) { .ds-button { transition: none; } }\n`;
+    return `/* Design System Studio V4.1 · Button component CSS\n   FOUNDATION → COMPONENT TOKENS → STATES.\n   Verify text contrast in each theme and state. */\n:root {\n  --button-pad-x: ${b.padX}px;\n  --button-pad-y: ${b.padY}px;\n  --button-min-height: ${b.minHeight}px;\n  --button-radius: ${b.radius}px;\n  --button-border-width: ${b.border}px;\n  --button-font-weight: ${b.weight};\n  --button-focus: ${b.focus};\n  --button-focus-width: ${b.focusWidth}px;\n  --button-motion: ${b.motion}ms;\n${variants('light')}\n}\n[data-theme="dark"] {\n${variants('dark')}\n}\n/* Base component: reusable for all variants. */\n.ds-button {\n  display: inline-flex; align-items: center; justify-content: center;\n  gap: .5em; min-height: var(--button-min-height);\n  padding: var(--button-pad-y) var(--button-pad-x);\n  border: var(--button-border-width) solid transparent;\n  border-radius: var(--button-radius);\n  font: inherit; font-weight: var(--button-font-weight);\n  cursor: pointer; text-align: center;\n  transition: background-color var(--button-motion), border-color var(--button-motion);\n}\n/* Size variants scale the same foundation dimensions. */\n.ds-button--sm { min-height: calc(var(--button-min-height) * .8); padding: calc(var(--button-pad-y) * .8) calc(var(--button-pad-x) * .8); font-size: .875rem; }\n.ds-button--lg { min-height: calc(var(--button-min-height) * 1.22); padding: calc(var(--button-pad-y) * 1.22) calc(var(--button-pad-x) * 1.22); font-size: 1.125rem; }\n${Object.keys(names).map(v=>`/* ${names[v]} variant and its interactive states. */\n.ds-button--${v} { background: var(--button-${v}-bg); color: var(--button-${v}-text); border-color: var(--button-${v}-border); }\n.ds-button--${v}:hover:not(:disabled) { background: var(--button-${v}-hover); color: var(--button-${v}-hover-text); }\n.ds-button--${v}:active:not(:disabled) { background: var(--button-${v}-active); color: var(--button-${v}-active-text); }`).join('\n')}\n/* Real keyboard focus, not just the preview simulation. */\n.ds-button:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }\n/* Native disabled attribute prevents activation. */\n.ds-button:disabled { opacity: .55; cursor: not-allowed; }\n/* aria-pressed is only for persistent toggle buttons. */\n.ds-button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--button-focus); }\n/* aria-busy requires JavaScript behaviour and status announcements. */\n.ds-button[aria-busy="true"] { cursor: progress; }\n${b.mobileFull?'/* Optional mobile full-width action. */\n@media (max-width: 40rem) { .ds-button--mobile-full { width: 100%; } }\n':''}/* Honour user reduced-motion preferences. */\n@media (prefers-reduced-motion: reduce) { .ds-button { transition: none; } }\n`;
   }
   // Keep existing JSON/project save mechanisms by storing settings inside the shared state.
   const oldImport = importConfig;
@@ -311,8 +311,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   const oldHtml = htmlExport;
   htmlExport = function() {
     let html = oldHtml();
+    const sizeClass = b.size === 'md' ? '' : ` ds-button--${b.size}`;
     const extra = b.mobileFull ? ' ds-button--mobile-full' : '';
-    return html.replace('<\/main>', `<section class="card"><h2>Button system</h2><div class="button-row">${Object.keys(names).map(v=>`<button class="ds-button ds-button--${v}${extra}" type="button">${names[v]} action</button>`).join('')}<\/div><\/section>\n<\/main>`);
+    return html.replace('<\/main>', `<section class="card"><h2>Button system</h2><div class="button-row">${Object.keys(names).map(v=>`<button class="ds-button ds-button--${v}${sizeClass}${extra}" type="button">${names[v]} action</button>`).join('')}<\/div><\/section>\n<\/main>`);
   };
   for (const id of ['bdVariant', 'bdSize', 'bdState', 'bdPaddingX', 'bdPaddingY', 'bdMinHeight', 'bdRadius', 'bdBorder', 'bdWeight', 'bdFocus', 'bdFocusWidth', 'bdMotion', 'bdMobileFull', 'bdHover', 'bdActive', 'bdText', 'bdHoverText', 'bdActiveText', 'bdDefaultBg', 'bdBorderColor', 'bdSource', 'bdCustom']) $(id).addEventListener('input', e => {
     const key = {

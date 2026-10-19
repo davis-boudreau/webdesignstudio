@@ -32,9 +32,13 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how to add a feature module
 
 ```bash
 python scripts/check_structure.py   # verifies index.html <-> src/ consistency
+python scripts/browser_review.py    # Chrome smoke tests using an isolated temporary profile
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Browser checks require Chrome/Chromium or Edge. Set `CHROME_BIN` if the executable
+is not detected automatically. The tests run against a temporary local server.
 
 ## Licence
 

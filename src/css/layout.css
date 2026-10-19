@@ -1,4 +1,19 @@
 /* V2.5: parameters remain on the left, live examples and CSS remain visible on the right. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--text);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(255px, 310px) minmax(0, 1fr);

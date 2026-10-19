@@ -75,7 +75,7 @@
 }
 
 .bd-button:focus-visible {
-  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #f37327);
+  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #b45309);
   outline-offset: 3px
 }
 
@@ -89,7 +89,7 @@
 }
 
 .bd-button[data-sim=focus] {
-  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #f37327);
+  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #b45309);
   outline-offset: 3px
 }
 
@@ -108,7 +108,7 @@
 }
 
 .bd-button[data-sim=selected] {
-  box-shadow: 0 0 0 2px var(--bd-focus, #f37327)
+  box-shadow: 0 0 0 2px var(--bd-focus, #b45309)
 }
 
 /* FIX: hover/active simulations already use the exact hover/active colours inline.
