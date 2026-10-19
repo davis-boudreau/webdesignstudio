@@ -2,7 +2,7 @@
 /* STATE: all user-editable foundation values live in one plain object.
 JSON import validates fields; exporting never executes imported code. */
 /* BRAND SOURCE OF TRUTH: illustrative colours for the example preset.
-The palette is immutable in this classroom preset. Students can experiment
+The palette is immutable in this example preset. You can experiment
 with editable interface colours without changing the reference swatch list. */
 const EXAMPLE_PALETTE = {
   primary: [
@@ -370,7 +370,7 @@ function cssExport() {
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
   const semantic = r => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).join('\n');
   const sz = sizes();
-  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Classroom-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* EXAMPLE PALETTE: fixed reference colours. */\n  --example-white: #FFFFFF;\n  --example-blue: #004780;\n  --example-dark-grey: #495965;\n  --example-accent-teal: #00BADC;\n  --example-accent-turquoise: #5FC5BF;\n  --example-accent-orange: #F37327;\n  --example-accent-blue: #2B71B9;\n  --example-accent-green: #CBDB2A;\n  --example-accent-fuchsia: #EF426F;\n  --example-accent-light-blue: #57B7E7;\n  --example-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${o.size}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
+  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* EXAMPLE PALETTE: fixed reference colours. */\n  --example-white: #FFFFFF;\n  --example-blue: #004780;\n  --example-dark-grey: #495965;\n  --example-accent-teal: #00BADC;\n  --example-accent-turquoise: #5FC5BF;\n  --example-accent-orange: #F37327;\n  --example-accent-blue: #2B71B9;\n  --example-accent-green: #CBDB2A;\n  --example-accent-fuchsia: #EF426F;\n  --example-accent-light-blue: #57B7E7;\n  --example-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${o.size}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
