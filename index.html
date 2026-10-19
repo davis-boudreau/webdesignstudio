@@ -5,13 +5,13 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Design System Studio V4.1</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-learning">
-    <link rel="stylesheet" href="src/css/layout.css?v=20261019-learning">
-    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-learning">
-    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-learning">
-    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-learning">
-    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-learning">
-    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/layout.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-builder">
+    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-builder">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -51,7 +51,7 @@
             <div class="journey-kicker">Start here · Minimum viable design system</div>
             <h2 id="journeyTitle">Build your design system</h2>
             <p class="help">
-              Follow six practical decisions to create usable CSS. At each step: choose, observe the preview, inspect the code, and explain your decision. Advanced controls remain available below.
+              Follow six practical decisions to create usable CSS. At each step: choose, observe the preview, inspect the code, and explain your decision. Expand the step guide for definitions and checks; Advanced Parameters offers optional refinement.
             </p>
             <div aria-label="Builder steps" class="journey-steps" role="group">
               <button data-journey-step="0" type="button">1 · Start</button>
@@ -62,12 +62,28 @@
               <button data-journey-step="5" type="button">6 · Deliver</button>
             </div>
             <div class="journey-pane" data-journey-pane="0">
+              <h3 class="journey-stage-title">1. Define the project</h3>
+              <p class="help">Choose a starting point for a real audience and task. Your choices should support that purpose.</p>
+              <details class="learning-note build-guide">
+                <summary>What should I decide before changing styles?</summary>
+                <div class="learning-content">
+                  <dl>
+                    <dt>Project name</dt><dd>Use a descriptive name so you can recognize saved designs and exports. This name is not a website address.</dd>
+                    <dt>Starting preset</dt><dd>Example supplies a complete starting design. Choosing it again restores defaults; save or export work you want to keep first. Custom keeps your current choices for adaptation.</dd>
+                    <dt>Audience and task</dt><dd>Write a one-sentence brief in your project notes: ?Help community members find an event and register.? Identify one main action and the content people need to complete it.</dd>
+                    <dt>Scope</dt><dd>Start with a palette, type scale, spacing rules and a few components. A design system also needs usage guidance and testing; generated tokens are the starting point.</dd>
+                  </dl>
+                  <p>Step ticks show progress through this builder, not validation of your design. You can revisit any step.</p>
+                  <p class="learning-reference">See <a href="#studio-section-7">Design workflow</a> for the full process.</p>
+                </div>
+              </details>
+
               <div class="field">
                 <label for="jProject">Project name</label>
                 <input id="jProject" maxlength="90" value="My Project" />
               </div>
               <div class="field">
-                <label for="jPreset">Starting theme</label>
+                <label for="jPreset">Starting preset</label>
                 <select id="jPreset">
                   <option value="example">Example &middot; starter colour palette</option>
                   <option value="custom">Custom &middot; adapt the starter palette</option>
@@ -77,11 +93,25 @@
                 <strong>Your goal:</strong>
                 Identify the website and its audience. Start with the example project, then adapt the design to your own project.
               </p>
-              <p class="journey-tip">
-                The example preset provides a starting palette. The 11 brand swatches remain unchanged; your project can use custom semantic roles and generated ramps. Arial is the default system font.
-              </p>
+              <p class="journey-tip"><strong>Before moving on:</strong> You can name the audience, main task and one reason for adapting the example.</p>
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden="">
+              <h3 class="journey-stage-title">2. Choose colour roles</h3>
+              <p class="help">Assign colours a purpose, then evaluate the combinations people will actually see.</p>
+              <details class="learning-note build-guide">
+                <summary>How do I choose and check my palette?</summary>
+                <div class="learning-content">
+                  <dl>
+                    <dt>Primary UI colour</dt><dd>Sets the anchor for your main action colour family. Choose a distinguishable emphasis colour; it does not need to fill every surface.</dd>
+                    <dt>Supporting colour</dt><dd>Provides a quieter, related family for secondary emphasis. It is not automatically the page background or body-text colour.</dd>
+                    <dt>Accent colour</dt><dd>Highlights selected content or actions. An accent does not automatically mean success, warning or error; those feedback roles have their own controls.</dd>
+                    <dt>Ramp method</dt><dd>RGB mix moves toward white or black. OKLCH varies perceptual lightness and chroma. Both preserve your anchor at step 500; neither guarantees readable combinations.</dd>
+                    <dt>Themes and contrast</dt><dd>Light and dark modes derive different semantic shades from the same anchors. Inspect text against its actual background, including hover and active states; add words or icons when colour communicates meaning.</dd>
+                  </dl>
+                  <p class="learning-reference">Explore <a href="#studio-section-1">Colour systems</a>, then review <a href="#studio-section-5">Accessibility quick checks</a>.</p>
+                </div>
+              </details>
+
               <div class="field">
                 <label for="jPrimary">Primary UI colour</label>
                 <div class="fieldline">
@@ -105,7 +135,7 @@
                 <div class="fieldline">
                   <input id="jAccent" type="color" value="#cbdb2a" />
                   <output id="jAccentOut">
-                    #00BADC
+                    #CBDB2A
                   </output>
                 </div>
               </div>
@@ -120,11 +150,26 @@
                 <strong>Try it:</strong>
                 Change the primary colour and inspect buttons, surfaces and the generated CSS. Compare light and dark mode; do not assume an attractive colour has sufficient contrast.
               </p>
-              <p class="journey-tip">
-                Use primary for main actions, supporting colours for secondary emphasis, and accent sparingly. Check each foreground/background pair after changes.
-              </p>
+              <p class="journey-tip"><strong>Before moving on:</strong> You can explain each colour role and identify the foreground/background pairs you have checked.</p>
             </div>
             <div class="journey-pane" data-journey-pane="2" hidden="">
+              <h3 class="journey-stage-title">3. Build a readable type scale</h3>
+              <p class="help">Establish comfortable body text first, then create a clear heading hierarchy.</p>
+              <details class="learning-note build-guide">
+                <summary>What do the typography controls change?</summary>
+                <div class="learning-content">
+                  <dl>
+                    <dt>Font family</dt><dd>A font stack is an ordered set of fallbacks. These choices use installed fonts, so appearance can vary by device; this studio does not download font files.</dd>
+                    <dt>Body size</dt><dd>The base for the scale. Start with the 16 px example, then judge your content, audience and font. A slider value alone does not establish readability.</dd>
+                    <dt>Scale ratio</dt><dd>Multiplies each successive level: 16 px at 1.25 produces 20 px, 25 px and 31.25 px. A larger ratio creates more dramatic size differences.</dd>
+                    <dt>Line height</dt><dd>A unitless multiplier: 16 px text at 1.5 uses a 24 px line box. Give paragraphs breathing room without separating related lines too far.</dd>
+                    <dt>Fluid headings</dt><dd>The Typography studio lets you tune minimum/maximum viewports and the mobile heading multiplier. Body and small text stay constant in this tool; larger headings use bounded fluid sizes.</dd>
+                  </dl>
+                  <p>Use real headings, a paragraph and long labels. Check narrow widths, font fallbacks and 200% text resize; visual size is separate from an HTML heading's structural level.</p>
+                  <p class="learning-reference">Try the <a href="#studio-section-2">Typography studio and clamp calculator</a>. Read <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-family">MDN: font stacks</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/line-height">line height</a>.</p>
+                </div>
+              </details>
+
               <div class="field">
                 <label for="jFont">Font family</label>
                 <select id="jFont">
@@ -175,11 +220,25 @@
                 <strong>Try it:</strong>
                 Compare display, heading and body sizes at mobile and desktop widths. Record your chosen sizes; check long headings and line wrapping.
               </p>
-              <p class="journey-tip">
-                A smaller scale ratio creates subtler hierarchy. A larger ratio creates stronger differences; check that headings still fit on mobile.
-              </p>
+              <p class="journey-tip"><strong>Before moving on:</strong> Body text remains readable, headings form a clear hierarchy, and long text fits at narrow and wide widths.</p>
             </div>
             <div class="journey-pane" data-journey-pane="3" hidden="">
+              <h3 class="journey-stage-title">4. Create consistent components</h3>
+              <p class="help">Use repeatable spacing and surfaces so cards, forms and actions feel like one system.</p>
+              <details class="learning-note build-guide">
+                <summary>How do spacing, radius and themes work together?</summary>
+                <div class="learning-content">
+                  <dl>
+                    <dt>Spacing base</dt><dd>Sets a repeatable unit. A 4 px base creates 8 px, 16 px and 24 px multiples. Use tighter gaps within a group and larger gaps between groups.</dd>
+                    <dt>Corner radius</dt><dd>Shapes the general cards and demo controls. Keep related surfaces consistent; the Button Laboratory has its own radius setting.</dd>
+                    <dt>Preview theme</dt><dd>Switches the studio between light and dark semantic roles. Dark mode changes colour relationships; it is not simply an inverted image. Inspect borders, text and focus separately.</dd>
+                    <dt>Advanced parameters</dt><dd>Refine control height, focus thickness, feedback colours, reading measure, borders, shadows, opacity, grid width/gap and motion. Change one category at a time so its effect is clear.</dd>
+                  </dl>
+                  <p>Spacing separates content; padding creates room inside a component. A shadow is optional, and reducing surface opacity also fades its text. The Button Laboratory's geometry and state colours are edited separately from the general demos.</p>
+                  <p class="learning-reference">Inspect <a href="#studio-section-3">Spacing, surfaces and component states</a> and <a href="#stateExplorer">Component State Explorer</a>.</p>
+                </div>
+              </details>
+
               <div class="field">
                 <label for="jSpacing">Spacing base (px)</label>
                 <div class="fieldline">
@@ -209,11 +268,27 @@
                 <strong>Try it:</strong>
                 Inspect cards, forms, borders, buttons and focus states. Resize the preview and compare the same components in light and dark themes.
               </p>
-              <p class="journey-tip">
-                These two controls establish a consistent foundation. Refine borders, states, surfaces, grid and motion in Advanced Parameters.
-              </p>
+              <p class="journey-tip"><strong>Before moving on:</strong> Cards and fields have consistent spacing, readable surfaces and visible focus in both themes.</p>
             </div>
             <div class="journey-pane" data-journey-pane="4" hidden="">
+              <h3 class="journey-stage-title">5. Design button variants and states</h3>
+              <p class="help">Make an action easy to recognize, activate and understand before adding visual polish.</p>
+              <details class="learning-note build-guide">
+                <summary>Which button settings are shared, and what should I test?</summary>
+                <div class="learning-content">
+                  <dl>
+                    <dt>Variant and colour source</dt><dd>Choose the variant you are editing. Palette sources follow their colour anchors; fixed swatches and custom colours remain specific choices. Manual background or text overrides take precedence over a source.</dd>
+                    <dt>Size and state</dt><dd>Size selects the live sample and exported example size; the comparison matrix uses medium buttons. State holds an interaction appearance for review. It does not implement a real action or workflow.</dd>
+                    <dt>Padding and minimum height</dt><dd>Horizontal and vertical padding give the label room. Minimum height is a lower bound; padding, font size and wrapping can make a button taller. Small/large variants scale the base dimensions.</dd>
+                    <dt>Radius, border and weight</dt><dd>Shape and emphasis should support the action's priority. These geometry settings are shared across button variants; they do not change only the selected variant.</dd>
+                    <dt>Colour overrides</dt><dd>Default, hover and active foreground/background pairs are edited per variant. Outline and text variants start transparent; changing their background picker makes it an explicit colour.</dd>
+                    <dt>Focus, motion and mobile width</dt><dd>Focus colour/width, transition duration and optional narrow-screen full width are shared button settings. Keep focus visible, respect reduced motion and test long labels.</dd>
+                  </dl>
+                  <p>Use an action label such as ?Save changes?. Test every relevant state in both themes. A contrast pass for the selected sample does not check every variant or the focus ring.</p>
+                  <p class="learning-reference">Compare the <a href="#buttonDesignLab">Button Design Laboratory</a>. Read <a href="https://www.w3.org/WAI/ARIA/apg/patterns/button/">W3C: button interaction</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html">target sizing and spacing</a>.</p>
+                </div>
+              </details>
+
               <strong>Button Design Wizard</strong>
               <p class="help">
                 Define the default appearance, then inspect every relevant state. Settings apply across the state matrix, both themes and exported CSS.
@@ -339,6 +414,7 @@
               <details>
                 <summary>Advanced state colours and behaviour</summary>
                 <div class="group-body">
+                  <p class="control-hint">Colour overrides belong to the selected variant; focus, timing and mobile width settings affect the whole button system. Overrides remain fixed when you change a colour source, so recheck them after palette edits.</p>
                   <p class="control-hint">
                     <strong>Button text colours:</strong>
                     Set a separate foreground colour for default, hover, and active states. Changes apply to the selected variant and are included in CSS and project JSON.
@@ -378,7 +454,7 @@
                         #004780
                       </output>
                     </div>
-                    <p class="help">For outline/text buttons, default is transparent until you explicitly customize it.</p>
+                    <p class="help">Outline/text buttons stay transparent until customized; the picker shows a solid colour because it cannot represent transparency.</p>
                   </div>
                   <div class="field">
                     <label for="bdBorderColor">Border colour</label>
@@ -412,7 +488,7 @@
                     <div class="fieldline">
                       <input id="bdFocus" type="color" value="#b45309" />
                       <output id="bdFocusOut">
-                        #F37327
+                        #B45309
                       </output>
                     </div>
                   </div>
@@ -451,8 +527,26 @@
                 </output>
               </p>
               <button class="ghost" id="bdJump" type="button">View button laboratory →</button>
+              <p class="journey-tip"><strong>Before moving on:</strong> Each variant has a clear purpose; its text, interaction states, focus and target area have been reviewed.</p>
             </div>
             <div class="journey-pane" data-journey-pane="5" hidden="">
+              <h3 class="journey-stage-title">6. Review, export and implement</h3>
+              <p class="help">Review the design, save a portable backup, and test the exported code in its destination.</p>
+              <details class="learning-note build-guide">
+                <summary>What should a complete handoff include?</summary>
+                <div class="learning-content">
+                  <dl>
+                    <dt>Review evidence</dt><dd>Use the checklist as a reminder, not an automated pass. Record tested themes, widths, keyboard behaviour, text resizing and any remaining issues in your project notes.</dd>
+                    <dt>CSS</dt><dd>Download the generated styles and apply the matching classes to semantic HTML. Review the generic page rules before integrating them into an existing site.</dd>
+                    <dt>JSON</dt><dd>Backs up editable studio settings, including typography, advanced values and buttons. It does not contain your finished site's content, application logic or readiness ticks.</dd>
+                    <dt>Starter HTML</dt><dd>Available under Inspect and export. It expects a file named <code>tokens.css</code> in the same folder. This step's Download CSS uses <code>design-system-tokens.css</code>: rename it or update the HTML stylesheet link.</dd>
+                    <dt>Local save versus backup</dt><dd>Save project keeps an active design in this browser and autosaves later edits. Download JSON for a portable copy. New project or Reset starts an unsaved design.</dd>
+                    <dt>Implementation</dt><dd>Add real content and behaviour, including validation and loading feedback. Retest the finished page: working studio previews do not guarantee a complete or accessible website.</dd>
+                  </dl>
+                  <p class="learning-reference">Use <a href="#studio-section-6">Inspect and export</a> for CSS, JSON and starter HTML; use the <a href="#studio-section-8">Token catalogue</a> for a filtered CSV reference.</p>
+                </div>
+              </details>
+
               <strong>Review → Test → Export → Implement</strong>
               <p class="help">
                 Your design system now has foundation and semantic tokens, responsive typography and component examples. Before using it in a project, complete the human checks below.
@@ -505,6 +599,7 @@
               <p class="journey-tip">
                 Apply the CSS to semantic HTML, test at narrow and wide widths, and keep CSS plus JSON with your project files. Browser-local saves are not permanent backups.
               </p>
+              <p class="journey-tip"><strong>Before moving on:</strong> You have CSS, a restorable JSON backup, usage notes and a tested starter page with its stylesheet linked correctly.</p>
             </div>
             <div class="journey-actions">
               <button id="jBack" type="button">← Back</button>
@@ -577,7 +672,7 @@
                 <div class="fieldline">
                   <input id="accent" type="color" value="#cbdb2a" />
                   <output id="accentOut">
-                    #00BADC
+                    #CBDB2A
                   </output>
                 </div>
               </div>
@@ -710,7 +805,7 @@
                       </output>
                     </div>
                   </div>
-                  <p class="control-hint">Choose a state, then inspect the right-hand State Explorer and generated CSS.</p>
+                  <p class="control-hint">Choose a state, then inspect Component State Explorer. Focus thickness must remain visible; control height is a minimum, not a guarantee of a suitable touch target. Test the actual rendered size and spacing.</p>
                 </div>
               </details>
               <details>
@@ -719,7 +814,7 @@
                   <p class="control-hint">
                     These editable semantic roles are distinct from the fixed example palette reference swatches. They set the
                     <strong>light theme</strong>
-                    feedback colours; the dark theme keeps its own generated, higher-contrast values.
+                    feedback colours; the dark theme keeps its own preset values. Success, warning and error also need meaningful text; a focus colour must contrast with adjacent surfaces.
                   </p>
                   <div id="advColors"></div>
                 </div>
@@ -727,7 +822,7 @@
               <details>
                 <summary>Typography and readability</summary>
                 <div class="group-body">
-                  <p class="control-hint">Weight controls emphasis; measure limits line length. Start near 60–70ch for paragraphs, then judge your actual font and content. Negative letter spacing can crowd small text.</p>
+                  <p class="control-hint">Weight controls emphasis; measure limits line length. Start near 60–70ch for paragraphs, then judge your actual font and content. Tracking is divided by 100: -2 means -0.02em. Negative letter spacing can crowd small text.</p>
                   <div class="field">
                     <label for="advWeight">Heading weight</label>
                     <select id="advWeight">
@@ -788,7 +883,7 @@
               <details>
                 <summary>Responsive and layout</summary>
                 <div class="group-body">
-                  <p class="control-hint">Minimum card width influences when columns wrap. Gap separates tracks; alignment positions cards within their grid area. Test intermediate widths as well as the presets.</p>
+                  <p class="control-hint">Minimum card width influences when columns wrap. Gap separates tracks; alignment places cards vertically within their grid area (start, centre or stretch). Test intermediate widths as well as the presets.</p>
                   <div class="field">
                     <label for="advColumns">Card grid minimum width</label>
                     <div class="inline-range">
@@ -839,7 +934,7 @@
                       </output>
                     </div>
                   </div>
-                  <p class="control-hint">A simulated state does not replace keyboard, zoom, reflow or screen-reader testing.</p>
+                  <p class="control-hint">Motion duration is in milliseconds: 150ms is 0.15 seconds. Keep link underlines or another non-colour cue. The Button Laboratory has its own transition setting; test reduced-motion preferences in the finished page.</p>
                 </div>
               </details>
             </section>
@@ -1432,7 +1527,7 @@
                     <li><strong>HTML</strong> is a starter page that expects <code>tokens.css</code> alongside it. Adapt its content and structure; application behaviours are yours to implement.</li>
                     <li><strong>CSV</strong> is a reference table for review and handoff. Its export follows the token catalogue's current filter.</li>
                   </ul>
-                  <p><strong>Try it:</strong> download CSS and HTML into one folder, open the HTML, and inspect it in both themes. Review generic rules such as <code>body</code> and <code>p</code> before adding the CSS to an existing site.</p>
+                  <p><strong>Try it:</strong> download CSS and HTML into one folder, name the stylesheet <code>tokens.css</code> (or update the HTML link), and inspect the page in both themes. Review generic rules such as <code>body</code> and <code>p</code> before adding the CSS to an existing site.</p>
                   <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascading_variables/Using_custom_properties">MDN: CSS custom properties, inheritance and fallbacks</a>.</p>
                 </div>
               </details>
@@ -1544,14 +1639,14 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261019-learning" defer></script>
-      <script src="src/js/core-state.js?v=20261019-learning" defer></script>
-      <script src="src/js/css-dock.js?v=20261019-learning" defer></script>
-      <script src="src/js/advanced-params.js?v=20261019-learning" defer></script>
-      <script src="src/js/journey-library.js?v=20261019-learning" defer></script>
-      <script src="src/js/button-design.js?v=20261019-learning" defer></script>
-      <script src="src/js/oklch-lab.js?v=20261019-learning" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261019-learning" defer></script>
-      <script src="src/js/clamp-explorer.js?v=20261019-learning" defer></script>
+      <script src="src/js/studio-registry.js?v=20261019-builder" defer></script>
+      <script src="src/js/core-state.js?v=20261019-builder" defer></script>
+      <script src="src/js/css-dock.js?v=20261019-builder" defer></script>
+      <script src="src/js/advanced-params.js?v=20261019-builder" defer></script>
+      <script src="src/js/journey-library.js?v=20261019-builder" defer></script>
+      <script src="src/js/button-design.js?v=20261019-builder" defer></script>
+      <script src="src/js/oklch-lab.js?v=20261019-builder" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261019-builder" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261019-builder" defer></script>
     </body>
   </html>

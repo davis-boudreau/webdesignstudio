@@ -53,6 +53,19 @@
   margin: 0
 }
 
+.journey-stage-title,
+.journey-pane > .build-guide {
+  margin: 0;
+}
+
+.build-guide dt {
+  font-weight: 700;
+}
+
+.build-guide dd {
+  margin: .15rem 0 .8rem;
+}
+
 .journey-actions {
   display: flex;
   gap: .5rem;
