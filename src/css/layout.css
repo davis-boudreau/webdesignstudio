@@ -14,6 +14,33 @@
   transform: translateY(0);
 }
 
+.learning-note > summary {
+  padding-block: 3px;
+  line-height: 1.5;
+}
+
+.learning-content {
+  font-size: .9rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.learning-content > :first-child {
+  margin-top: .75rem;
+}
+
+.learning-content > :last-child {
+  margin-bottom: .25rem;
+}
+
+.learning-content li + li {
+  margin-top: .4rem;
+}
+
+.learning-reference {
+  font-size: .85rem;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(255px, 310px) minmax(0, 1fr);

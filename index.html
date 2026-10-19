@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
-    <title>Design System Studio V4.1 | Button Design Wizard</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-review">
-    <link rel="stylesheet" href="src/css/layout.css?v=20261019-review">
-    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-review">
-    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-review">
-    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-review">
-    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-review">
-    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-review">
+    <title>Design System Studio V4.1</title>
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/layout.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-learning">
+    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-learning">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -121,7 +121,7 @@
                 Change the primary colour and inspect buttons, surfaces and the generated CSS. Compare light and dark mode; do not assume an attractive colour has sufficient contrast.
               </p>
               <p class="journey-tip">
-                Brand swatches are fixed references; colour ramps are generated teaching derivatives. Check contrast after changing colours.
+                Use primary for main actions, supporting colours for secondary emphasis, and accent sparingly. Check each foreground/background pair after changes.
               </p>
             </div>
             <div class="journey-pane" data-journey-pane="2" hidden="">
@@ -173,10 +173,10 @@
               </div>
               <p class="journey-tip">
                 <strong>Try it:</strong>
-                Compare display, heading and body sizes at mobile and desktop widths. Record your chosen sizes in Figma; check long headings and line wrapping.
+                Compare display, heading and body sizes at mobile and desktop widths. Record your chosen sizes; check long headings and line wrapping.
               </p>
               <p class="journey-tip">
-                Compare the responsive typography specimens on the right, then recreate your mobile and desktop scales in Figma.
+                A smaller scale ratio creates subtler hierarchy. A larger ratio creates stronger differences; check that headings still fit on mobile.
               </p>
             </div>
             <div class="journey-pane" data-journey-pane="3" hidden="">
@@ -458,7 +458,7 @@
                 Your design system now has foundation and semantic tokens, responsive typography and component examples. Before using it in a project, complete the human checks below.
               </p>
               <div class="journey-tip">
-                <strong>Student readiness checklist (self-assessment)</strong>
+                <strong>Project readiness checklist (self-assessment)</strong>
                 <div class="readiness-checks">
                   <label>
                     <input class="readiness-item" type="checkbox" />
@@ -470,7 +470,7 @@
                   </label>
                   <label>
                     <input class="readiness-item" type="checkbox" />
-                    I compared typography on mobile and desktop and documented it in Figma.
+                    I compared typography on mobile and desktop and documented the scale.
                   </label>
                   <label>
                     <input class="readiness-item" type="checkbox" />
@@ -503,7 +503,7 @@
                 <button id="jViewCss" type="button">Show CSS</button>
               </div>
               <p class="journey-tip">
-                Apply the CSS to your own semantic HTML, test at 375 / 768 / 1280 px, and commit CSS plus JSON to your GitHub repository. Local browser storage is not a permanent backup.
+                Apply the CSS to semantic HTML, test at narrow and wide widths, and keep CSS plus JSON with your project files. Browser-local saves are not permanent backups.
               </p>
             </div>
             <div class="journey-actions">
@@ -525,6 +525,14 @@
                 <button id="jLoadLocal" type="button">Load</button>
                 <button id="jDeleteLocal" type="button">Delete</button>
               </div>
+
+              <details class="learning-note">
+                <summary>Why keep a JSON backup?</summary>
+                <div class="learning-content">
+                  <p>Save project stores a copy in this browser. Later edits autosave to the active saved project. New project and Reset start an unsaved design.</p>
+                  <p>Browser data can be cleared and does not sync across devices. Download JSON for a portable backup; use Load JSON to restore it.</p>
+                </div>
+              </details>
               <p class="journey-status" id="jSaveStatus" role="status">
                 Example project is loaded into My Project. Save a copy to preserve changes.
               </p>
@@ -719,6 +727,7 @@
               <details>
                 <summary>Typography and readability</summary>
                 <div class="group-body">
+                  <p class="control-hint">Weight controls emphasis; measure limits line length. Start near 60–70ch for paragraphs, then judge your actual font and content. Negative letter spacing can crowd small text.</p>
                   <div class="field">
                     <label for="advWeight">Heading weight</label>
                     <select id="advWeight">
@@ -748,6 +757,7 @@
               <details>
                 <summary>Surfaces, borders and elevation</summary>
                 <div class="group-body">
+                  <p class="control-hint">Use borders and surface changes to clarify groups. Opacity fades text and controls too; use the preview to check whether content remains readable.</p>
                   <div class="field">
                     <label for="advBorder">Border width</label>
                     <div class="inline-range">
@@ -778,6 +788,7 @@
               <details>
                 <summary>Responsive and layout</summary>
                 <div class="group-body">
+                  <p class="control-hint">Minimum card width influences when columns wrap. Gap separates tracks; alignment positions cards within their grid area. Test intermediate widths as well as the presets.</p>
                   <div class="field">
                     <label for="advColumns">Card grid minimum width</label>
                     <div class="inline-range">
@@ -862,36 +873,21 @@
               <div class="brand-grid" id="brandPrimary"></div>
               <h3>Accent brand colours</h3>
               <div class="brand-grid" id="brandAccents"></div>
-              <div class="note">
-                <strong>Important distinction:</strong>
-                <ul>
-                  <li>
-                    <strong>Brand primary</strong>
-                    describes the example's white, blue and dark grey palette.
-                  </li>
-                  <li>
-                    <strong>
-                      CSS
-                      <code>
-                        --primary
-                      </code>
-                    </strong>
-                    describes the interface's main action colour; its default is Deep blue.
-                  </li>
-                  <li>
-                    <strong>Brand accent</strong>
-                    describes eight example colours; select one to feature in a UI component.
-                  </li>
-                  <li>
-                    <strong>Generated ramps</strong>
-                    are teaching aids derived from an reference swatch; they are not additional reference colours.
-                  </li>
-                  <li>
-                    <strong>Contrast and meaning:</strong>
-                    an example palette colour is not automatically accessible as text or a button background.
-                  </li>
-                </ul>
-              </div>
+
+              <details class="learning-note">
+                <summary>Why separate palette swatches from colour roles?</summary>
+                <div class="learning-content">
+                  <p>A swatch records a colour; a semantic role describes its job. The same blue can support several roles, and a role can use a different shade in dark mode.</p>
+                  <ul>
+                    <li><strong>Foundation:</strong> a reference value such as <code>--primary-500</code>.</li>
+                    <li><strong>Semantic:</strong> <code>--primary</code> for an action background and <code>--on-primary</code> for its text.</li>
+                    <li><strong>Component:</strong> <code>--button-primary-bg</code> for one button variant. Inspect component tokens too when customizing buttons.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> choose a swatch, switch themes, and compare the semantic tokens. Check foreground and background together.</p>
+                  <p class="learning-reference">Read more: <a href="https://designsystem.digital.gov/design-tokens/">USWDS design tokens</a>.</p>
+                </div>
+              </details>
+
               <p class="help">
                 This studio uses an illustrative example palette. Adapt the colours and tokens to your own project requirements.
               </p>
@@ -908,7 +904,7 @@
                 <div class="section-head">
                   <div>
                     <h3 id="oklchTitle">Interactive OKLCH colour wheel</h3>
-                    <p class="help">Explore hue around the wheel and chroma from centre to edge. Adjust perceptual lightness separately, then apply the colour to a semantic role. The 500 ramp step remains your chosen colour.</p>
+                    <p class="help">Explore hue around the wheel and chroma from centre to edge. Adjust perceptual lightness separately, then apply the colour to a palette anchor. Its ramp and theme roles update; step 500 preserves your chosen colour.</p>
                   </div>
                   <span class="pill">Perceptual colour lab</span>
                 </div>
@@ -978,11 +974,25 @@
                   </li>
                   <li>Neither method automatically guarantees contrast or an attractive palette. Review each role and theme.</li>
                   <li>
-                    Secondary and accent colours are independently chosen in V2; harmony suggestions are planned for a later iteration.
+                    Supporting and accent colours are independent anchors. Choose them for their purpose in the interface, then test the resulting combinations.
                   </li>
                 </ul>
               </details>
-            </section>
+
+              <details class="learning-note">
+                <summary>Why use ramps and semantic colours?</summary>
+                <div class="learning-content">
+                  <p>Ramps provide related shades for surfaces, text and interaction states. Step numbers are this tool's naming convention; step 500 is an anchor, not a contrast rating.</p>
+                  <ul>
+                    <li><strong>Lightness</strong> changes perceived brightness; <strong>chroma</strong> changes colour intensity; <strong>hue</strong> identifies the colour family.</li>
+                    <li>A screen's <strong>gamut</strong> is its reproducible colour range. The wheel reduces chroma when converting an out-of-gamut selection to sRGB HEX.</li>
+                    <li>Success, warning and error colours communicate meaning. Pair them with text or an icon, and check them in both themes.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> keep the anchor fixed, compare RGB mix with OKLCH, then inspect the text/background pairs in Accessibility quick checks.</p>
+                  <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/oklch">MDN: OKLCH colour</a>.</p>
+                </div>
+              </details>
+              </section>
             <section class="panel" id="studio-section-2">
               <h2>2. Typography studio</h2>
               <p class="help">
@@ -1082,7 +1092,7 @@
                 <h3 style="margin-top:18px">Complete size ladder</h3>
                 <div id="typeLadder"></div>
                 <details>
-                  <summary>Figma exercise — reproduce the scale</summary>
+                  <summary>Practice: document your type scale</summary>
                   <ol>
                     <li>
                       Create two frames:
@@ -1091,12 +1101,26 @@
                       <strong>1280 px</strong>
                       wide.
                     </li>
-                    <li>Use the same font family and content in both frames.</li>
+                    <li>Use the same font family and realistic content in both frames, in a design tool of your choice.</li>
                     <li>Recreate the displayed sizes and line heights as named text styles.</li>
                     <li>Compare hierarchy, wrapping, line lengths and readability.</li>
                     <li>Record any changes before applying them to your integrated project.</li>
                   </ol>
                 </details>
+
+              <details class="learning-note">
+                <summary>Why use a type scale and fluid sizes?</summary>
+                <div class="learning-content">
+                  <p>A scale creates repeatable visual hierarchy: a 16 px base with a 1.25 ratio gives 20 px, 25 px and 31.25 px steps. Choose sizes for real content, rather than using every step.</p>
+                  <ul>
+                    <li><code>clamp(minimum, preferred, maximum)</code> bounds a fluid size. Here the mobile multiplier affects Display, H1 and H2; body and small text stay constant.</li>
+                    <li><code>rem</code> follows the root font size. The calculation assumes a nominal 16 px root; viewport units alone do not follow a user's text-size preference.</li>
+                    <li>Line height is a multiplier; <code>ch</code> approximates the width of the font's zero character. Both affect reading comfort and wrapping.</li>
+                  </ul>
+                  <p><strong>Check:</strong> long headings, readable paragraphs, missing-font fallbacks and 200% text resize. A visual H1 size does not replace a meaningful HTML heading structure.</p>
+                  <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/clamp">MDN: clamp()</a> and <a href="https://www.w3.org/WAI/tutorials/page-structure/headings/">W3C: heading structure</a>.</p>
+                </div>
+              </details>
               </section>
               <section class="panel" id="studio-section-4">
                 <div class="section-head">
@@ -1113,7 +1137,7 @@
                 </div>
                 <div class="preview-shell" id="previewShell">
                   <div class="preview-frame" data-width="desktop" id="previewFrame">
-                    <div class="eyebrow">Illustrative campus events</div>
+                    <div class="eyebrow">Community events example</div>
                     <h3>Discover what's happening</h3>
                     <p class="muted">
                       A sample interface using the current colour, typography, spacing and radius tokens. Resize the preview to test wrapping and layout.
@@ -1128,7 +1152,7 @@
                       <article class="preview-card">
                         <span class="badge">Community</span>
                         <h3>Open house</h3>
-                        <p class="mini muted">Connect with students and instructors.</p>
+                        <p class="mini muted">Meet people and exchange ideas.</p>
                         <button class="demo-btn secondary" type="button">Learn more</button>
                       </article>
                       <article class="preview-card">
@@ -1141,13 +1165,27 @@
                   </div>
                 </div>
                 <p class="help">
-                  The preview is constrained by your browser width. For an exact 1280 px screenshot, open the exported page in browser device emulation or a sufficiently wide viewport.
+                  Fixed presets keep their selected width; scroll inside the preview when needed. Use browser device emulation to test the exported page at other widths.
                 </p>
                 <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
                 <p class="help"
                    id="responsiveTypeReadout"
                    role="status"
                    aria-live="polite"></p>
+
+              <details class="learning-note">
+                <summary>Why test between device sizes?</summary>
+                <div class="learning-content">
+                  <p>A responsive layout adapts to available space, not a list of devices. These width presets are checkpoints; Fluid helps you explore the space your browser provides.</p>
+                  <ul>
+                    <li><strong>Grid</strong> arranges rows and columns; <code>auto-fit</code> fits as many tracks as space permits, while <code>minmax()</code> bounds their size.</li>
+                    <li>The preview uses container-relative heading sizes; the exported page uses viewport-relative sizes. Test the export in an actual browser viewport too.</li>
+                    <li>Inspect long labels, wrapping, reading order and controls. Horizontal scrolling inside this inspection panel is intentional; the finished page should reflow.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> change grid minimum width and gap in Advanced Parameters. Find where a card needs to wrap, then test just above and below that width.</p>
+                  <p class="learning-reference">Read more: <a href="https://web.dev/learn/design">web.dev: responsive design</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Basic_concepts">MDN: CSS Grid</a>.</p>
+                </div>
+              </details>
               </section>
               <section class="panel" id="buttonDesignLab">
                 <div class="section-head">
@@ -1182,48 +1220,22 @@
                   <button class="ghost" id="bdCopy" type="button">Copy button CSS</button>
                   <button class="ghost" id="bdExport" type="button">Download button CSS</button>
                 </div>
-                <div class="note">
-                  <strong>Accessibility and semantics:</strong>
+
+              <details class="learning-note">
+                <summary>Why separate button appearance from behaviour?</summary>
+                <div class="learning-content">
+                  <p>Button styling communicates priority and state. Native HTML and application logic provide activation, focus and feedback.</p>
                   <ul>
-                    <li>
-                      <code>
-                        :hover
-                      </code>
-                      ,
-                      <code>
-                        :active
-                      </code>
-                      and
-                      <code>
-                        :focus-visible
-                      </code>
-                      are real CSS pseudo-classes. The matrix uses labelled simulations for side-by-side inspection.
-                    </li>
-                    <li>
-                      Use native
-                      <code>
-                        &lt;button&gt;
-                      </code>
-                      and the
-                      <code>
-                        disabled
-                      </code>
-                      attribute for unavailable actions.
-                    </li>
-                    <li>
-                      <code>
-                        aria-pressed
-                      </code>
-                      belongs on toggle buttons only. Ordinary submit buttons do not need it.
-                    </li>
-                    <li>
-                      Loading requires application logic, accessible status messaging and duplicate-submission prevention; CSS alone cannot provide that behaviour.
-                    </li>
-                    <li>
-                      Test contrast in both themes and with every hover/active colour. Reduced-motion preferences disable nonessential transitions.
-                    </li>
+                    <li>Use <code>&lt;button&gt;</code> for an action and <code>&lt;a href&gt;</code> for navigation. Give buttons clear action labels; specify <code>type="button"</code> when they should not submit a form.</li>
+                    <li><code>:hover</code>, <code>:active</code> and <code>:focus-visible</code> respond to real interaction. <code>aria-pressed</code> belongs on a persistent toggle, not an ordinary action button.</li>
+                    <li>Use native <code>disabled</code> for an unavailable action. Loading needs logic to prevent repeat submissions and a status message; <code>aria-busy</code> alone does not block clicks.</li>
+                    <li>Check text and focus-ring contrast in both themes. Allow enough target area and spacing; larger touch targets are easier to activate.</li>
                   </ul>
+                  <p><strong>Try it:</strong> compare one variant across all states, then use Tab and Enter/Space on the live button. Keep a visible focus ring.</p>
+                  <p class="learning-reference">Read more: <a href="https://www.w3.org/WAI/ARIA/apg/patterns/button/">W3C: button pattern</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html">target size and spacing</a>.</p>
                 </div>
+              </details>
+
               </section>
               <section class="panel" id="studio-section-3">
                 <h2>4. Spacing, surfaces and component states</h2>
@@ -1260,7 +1272,7 @@
                     <label for="demoEmail">Email address</label>
                     <input class="demo-input"
                            id="demoEmail"
-                           placeholder="student@example.ca"
+                           placeholder="person@example.com"
                            type="email" />
                     <p class="help">Try keyboard focus and inspect the border token.</p>
                   </div>
@@ -1289,6 +1301,20 @@
                     <div class="mini">Check required fields.</div>
                   </div>
                 </div>
+
+              <details class="learning-note">
+                <summary>Why standardize spacing, surfaces and feedback?</summary>
+                <div class="learning-content">
+                  <p>Repeated spacing helps people recognize groups. Surface colours and borders communicate structure; shadows and rounded corners support that hierarchy.</p>
+                  <ul>
+                    <li><strong>Padding</strong> creates space inside a component; <strong>gap</strong> separates items in a layout. This spacing scale uses multiples of your base unit.</li>
+                    <li>Opacity affects a whole component, including its text. Recheck contrast when reducing it; a softer surface colour can preserve text clarity.</li>
+                    <li>Form fields need persistent labels. Error text should identify the problem and how to fix it; connect the message with <code>aria-describedby</code> and mark invalid fields with <code>aria-invalid</code>.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> vary spacing and surface opacity, then review the same form in both themes. The sample alerts illustrate appearance; a real form must validate input and announce updates.</p>
+                  <p class="learning-reference">Read more: <a href="https://www.w3.org/WAI/tutorials/forms/notifications/">W3C: form errors and notifications</a>.</p>
+                </div>
+              </details>
               </section>
               <section class="panel" id="stateExplorer">
                 <div class="section-head">
@@ -1308,18 +1334,25 @@
                   </div>
                   <div class="state-tile" id="stateInputTile">
                     <label for="advDemoInput">Input preview</label>
-                    <input class="demo-input" id="advDemoInput" value="student@example.ca" />
+                    <input class="demo-input" id="advDemoInput" value="person@example.com" />
                     <p class="state-label" id="advInputHelp">Surface + border + feedback states</p>
                   </div>
                 </div>
-                <details>
-                  <summary>Why simulate states?</summary>
+
+              <details class="learning-note">
+                <summary>Why simulate states?</summary>
+                <div class="learning-content">
+                  <p>Simulations hold a temporary appearance still so you can compare states without keeping a pointer down or submitting a form. They make gaps in an interaction design easier to spot.</p>
                   <ul>
-                    <li>Students can inspect visual states without needing a mouse or triggering form validation.</li>
-                    <li>State-specific CSS appears in the generated stylesheet.</li>
-                    <li>Use keyboard Tab to verify real focus-visible behaviour separately.</li>
+                    <li><strong>Hover</strong> means a pointer is over a control; <strong>focus</strong> identifies keyboard position; <strong>active</strong> is the moment of activation.</li>
+                    <li><strong>Selected</strong> persists for a toggle. <strong>Disabled</strong> prevents use; <strong>read-only</strong> keeps a field available to inspect and copy.</li>
+                    <li><strong>Invalid</strong> needs a useful correction message; <strong>loading</strong> needs progress feedback. Not every state applies to every component.</li>
                   </ul>
-                </details>
+                  <p><strong>Check:</strong> the tiles demonstrate styling. Separately test keyboard focus, actual validation, status announcements and repeat-click prevention in your implementation.</p>
+                  <p class="learning-reference">Read more: <a href="https://www.w3.org/WAI/ARIA/apg/patterns/button/">W3C: button interaction</a> and <a href="https://www.w3.org/WAI/tutorials/forms/notifications/">accessible notifications</a>.</p>
+                </div>
+              </details>
+
               </section>
               <section class="panel" id="studio-section-5">
                 <h2>5. Accessibility quick checks</h2>
@@ -1330,6 +1363,32 @@
                 <p class="note">
                   Also verify focus visibility, keyboard use, 200% text resize, content reflow, non-text contrast and meaning conveyed without colour.
                 </p>
+
+              <details class="learning-note">
+                <summary>What does a contrast pass tell you?</summary>
+                <div class="learning-content">
+                  <p>The ratio compares a foreground with its background. A pass here covers the named pair only; this panel uses the normal-text threshold for its samples.</p>
+                  <ul>
+                    <li><strong>Text:</strong> aim for at least 4.5:1, or 3:1 for large text (at least 24 CSS px regular or about 18.67 CSS px bold). A heading label alone does not make text large.</li>
+                    <li><strong>Controls:</strong> necessary visual boundaries and state indicators generally need 3:1 against adjacent colours. Check hover, focus and active colours separately.</li>
+                    <li><strong>Context:</strong> transparency, images and gradients change the effective background. Colour alone must not carry an error, selection or status.</li>
+                  </ul>
+                  <p><strong>Read more:</strong> <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">W3C: text contrast</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">non-text contrast</a>.</p>
+                </div>
+              </details>
+
+              <details class="learning-note">
+                <summary>What should I check beyond colour?</summary>
+                <div class="learning-content">
+                  <ul>
+                    <li>Use Tab and Shift+Tab: reach each interactive control in a useful order, see focus clearly, and avoid traps or focus hidden behind sticky content.</li>
+                    <li>Enlarge text to 200%. Check reflow at a 320 CSS px viewport and zoom the finished page; avoid clipped text and overlapping controls.</li>
+                    <li>Use descriptive headings, labels, links and error messages. Check screen-reader names, states and announcements; respect reduced-motion preferences.</li>
+                    <li>Test with realistic content and, where possible, people who use assistive technology. Automated checks and visual simulations cover only part of the experience.</li>
+                  </ul>
+                  <p class="learning-reference">Use the <a href="https://www.w3.org/WAI/WCAG22/quickref/">W3C WCAG 2.2 quick reference</a> to plan a fuller review.</p>
+                </div>
+              </details>
               </section>
               <section class="panel" id="studio-section-6">
                 <h2>6. Inspect and export</h2>
@@ -1363,38 +1422,52 @@
                 <pre class="code" id="codeView" role="tabpanel" aria-labelledby="viewCss" tabindex="0"></pre>
                 <h3>Token dependency inspector</h3>
                 <div class="token-list" id="tokenInspector"></div>
+
+              <details class="learning-note">
+                <summary>Which export do I need, and how do I use it?</summary>
+                <div class="learning-content">
+                  <ul>
+                    <li><strong>CSS</strong> contains reusable custom properties and example component rules. Link <code>tokens.css</code> from your page and use the matching class names.</li>
+                    <li><strong>Project JSON</strong> stores editable studio settings, including typography and button choices. Load it here to resume work; it is not a standards-based design-token interchange file.</li>
+                    <li><strong>HTML</strong> is a starter page that expects <code>tokens.css</code> alongside it. Adapt its content and structure; application behaviours are yours to implement.</li>
+                    <li><strong>CSV</strong> is a reference table for review and handoff. Its export follows the token catalogue's current filter.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> download CSS and HTML into one folder, open the HTML, and inspect it in both themes. Review generic rules such as <code>body</code> and <code>p</code> before adding the CSS to an existing site.</p>
+                  <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascading_variables/Using_custom_properties">MDN: CSS custom properties, inheritance and fallbacks</a>.</p>
+                </div>
+              </details>
+
+              <details class="learning-note">
+                <summary>Why inspect the CSS while designing?</summary>
+                <div class="learning-content">
+                  <p>Connect a visual change to the rule that produces it. Search the code for a semantic role, then inspect its component usage. The inspector and CSS downloads use the same generator; HTML and JSON are available under Inspect and export.</p>
+                </div>
+              </details>
               </section>
               <section class="panel" id="studio-section-7">
                 <h2>7. Design workflow</h2>
+                <p class="help">Build a small system, test it with realistic content, then record the decisions someone else needs to use it.</p>
                 <ol>
-                  <li>
-                    <strong>03A — Colour:</strong>
-                    configure example primary, supporting and accent colours; compare RGB Mix/OKLCH; review semantic tokens and contrast.
-                  </li>
-                  <li>
-                    <strong>03B — Typography:</strong>
-                    configure a font stack, modular scale and leading; recreate the mobile and desktop scale in Figma.
-                  </li>
-                  <li>
-                    <strong>Responsive implementation:</strong>
-                    inspect CSS Grid, Flexbox,
-                    <code>
-                      clamp()
-                    </code>
-                    , spacing, radius and component states.
-                  </li>
-                  <li>
-                    <strong>Project handoff:</strong>
-                    save JSON and export commented CSS; integrate and adapt the code in your own project.
-                  </li>
-                  <li>
-                    <strong>Reflection:</strong>
-                    explain your choices and provide evidence of Figma work, testing and Git commits in Brightspace.
-                  </li>
+                  <li><strong>Define:</strong> identify the audience, key tasks and content. Decide what the system needs to support.</li>
+                  <li><strong>Choose:</strong> establish colour roles, typography and spacing. Record why each choice helps the audience.</li>
+                  <li><strong>Apply:</strong> use those tokens in buttons, cards and forms; compare themes and responsive widths.</li>
+                  <li><strong>Test:</strong> inspect contrast, keyboard interaction, text resizing, real content and component states.</li>
+                  <li><strong>Deliver:</strong> export CSS and a JSON backup, document usage, and retest after integration.</li>
                 </ol>
-                <p class="note">
-                  This is a learning tool, not a substitute for design reasoning, Figma deliverables, implementation or formal accessibility testing.
-                </p>
+
+              <details class="learning-note">
+                <summary>Why document decisions as well as values?</summary>
+                <div class="learning-content">
+                  <p>A value says what to use; a short usage rule explains when to use it. Together they let another person make consistent changes.</p>
+                  <ul>
+                    <li>Record the token or component, its purpose, allowed variants and one realistic example.</li>
+                    <li>For example: ?Use the primary button for the main action in a task; use a quieter variant for supporting actions.?</li>
+                    <li>Include testing evidence, known limits and a revision date. Keep exported CSS, JSON and usage notes together in version control or your shared project folder.</li>
+                  </ul>
+                  <p><strong>Practice:</strong> ask someone else to build a small card or form using only your tokens and notes. Use their questions to improve the guidance.</p>
+                  <p class="learning-reference">Explore a professional example: <a href="https://designsystem.digital.gov/design-tokens/">USWDS token documentation</a>.</p>
+                </div>
+              </details>
               </section>
               <section class="panel" id="studio-section-8">
                 <div class="section-head">
@@ -1426,6 +1499,20 @@
                   </table>
                 </div>
                 <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Example brand tokens are fixed references; generated colour ramps are teaching derivatives.</p>
+
+              <details class="learning-note">
+                <summary>Why name tokens by purpose?</summary>
+                <div class="learning-content">
+                  <p>A token is a named design decision. Purpose-based names help you change a theme without rewriting every component.</p>
+                  <ul>
+                    <li>Follow the layers: <code>--primary-500</code> is a foundation shade, <code>--primary</code> is an interface role, and <code>--button-primary-bg</code> is a component value.</li>
+                    <li>The catalogue reads generated CSS declarations. Some values are resolved colours rather than alias references; matching values do not imply a live dependency.</li>
+                    <li>Check the scope shown in each description. A dark-theme declaration can replace a base value with the same name.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> filter for ?button? or ?hover?, change a colour, and compare the catalogue with Live CSS. Clear the filter before exporting a complete CSV.</p>
+                  <p class="learning-reference">Read more: <a href="https://designsystem.digital.gov/design-tokens/">USWDS: using design tokens</a>.</p>
+                </div>
+              </details>
               </section>
               <div class="footer">Design System Studio V4.1 · standalone design toolkit · no external dependencies</div>
             </main>
@@ -1457,14 +1544,14 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261019-review" defer></script>
-      <script src="src/js/core-state.js?v=20261019-review" defer></script>
-      <script src="src/js/css-dock.js?v=20261019-review" defer></script>
-      <script src="src/js/advanced-params.js?v=20261019-review" defer></script>
-      <script src="src/js/journey-library.js?v=20261019-review" defer></script>
-      <script src="src/js/button-design.js?v=20261019-review" defer></script>
-      <script src="src/js/oklch-lab.js?v=20261019-review" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261019-review" defer></script>
-      <script src="src/js/clamp-explorer.js?v=20261019-review" defer></script>
+      <script src="src/js/studio-registry.js?v=20261019-learning" defer></script>
+      <script src="src/js/core-state.js?v=20261019-learning" defer></script>
+      <script src="src/js/css-dock.js?v=20261019-learning" defer></script>
+      <script src="src/js/advanced-params.js?v=20261019-learning" defer></script>
+      <script src="src/js/journey-library.js?v=20261019-learning" defer></script>
+      <script src="src/js/button-design.js?v=20261019-learning" defer></script>
+      <script src="src/js/oklch-lab.js?v=20261019-learning" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261019-learning" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261019-learning" defer></script>
     </body>
   </html>
