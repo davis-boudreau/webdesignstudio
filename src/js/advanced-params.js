@@ -1,5 +1,5 @@
 'use strict';
-/* V2.6 Advanced parameters: these values are separate from the immutable NSCC brand reference. */
+/* V2.6 Advanced parameters: these values are separate from the immutable example palette reference. */
 /* FIX: defaults now match the light-theme palette. The old focus default (#00BADC teal) is only ~2.2:1
 against white, which fails the 3:1 non-text contrast minimum for focus indicators. */
 const ADV_DEFAULT = {
@@ -154,7 +154,7 @@ cssExport = function() {
 projectJson = function() {
   return JSON.stringify({
     schemaVersion: 2.9,
-    brandReference: 'NSCC Visual Identity Guidelines',
+    brandReference: 'Studio example palette',
     ...state,
     advanced: adv
   }, null, 2);

@@ -103,9 +103,9 @@ Browser storage may be unavailable in private or restricted contexts. */
     syncJourney();
   };
   el('jPreset').addEventListener('change', e => {
-    if (e.target.value === 'nscc') {
-      resetStudio('NSCC example restored.');
-      notify('NSCC example restored. Save a project copy to keep your changes.');
+    if (e.target.value === 'example') {
+      resetStudio('Example project restored.');
+      notify('Example project restored. Save a project copy to keep your changes.');
     } else {
       activeId = null;
       notify('Custom project: change the parameters, then select Save project.');
@@ -203,7 +203,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   /* FIX: only react to resets that actually happened (the old listener ran even when Reset was cancelled). */
   document.addEventListener('dss:reset', () => {
     activeId = null;
-    el('jPreset').value = 'nscc';
+    el('jPreset').value = 'example';
   });
   /* FIX: replaces the old setTimeout(150) guess; fired after a JSON file has finished loading. */
   document.addEventListener('dss:imported', () => {

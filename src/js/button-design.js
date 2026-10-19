@@ -68,7 +68,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   function sourceLabel(v) {
     const source = b.sources[v] || defaults.sources[v];
     if (source === 'custom') return 'Custom colour';
-    if (source.startsWith('#')) return `NSCC swatch ${source.toUpperCase()}`;
+    if (source.startsWith('#')) return `Example swatch ${source.toUpperCase()}`;
     return `Theme ${source}`;
   }
   const explain = {
@@ -267,7 +267,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
 
   function syncLegacyButtons() {
     // The general Components demonstration shares the Button Laboratory's outline tokens.
-    // Both default and hover colours now follow the outline variant, including its selected NSCC accent source.
+    // Both default and hover colours now follow the outline variant, including its selected Example accent source.
     const c = colors('outline');
     const root = document.documentElement;
     root.style.setProperty('--demo-outline-bg', c.bg);
@@ -376,7 +376,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     oldApply();
     render();
   };
-  /* FIX: Reset / Restore NSCC / New project now also reset the button design. */
+  /* FIX: Reset / Restore Example / New project now also reset the button design. */
   document.addEventListener('dss:reset', () => {
     b = sanitize(null);
     controls();

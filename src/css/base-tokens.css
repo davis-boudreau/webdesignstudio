@@ -1,6 +1,6 @@
 /* DESIGN SYSTEM STUDIO V3.3 — Foundation → Semantic → Components.
 All examples are responsive, keyboard accessible where practical,
-and use locally available fonts. Greycliff is licensed; Arial is its classroom alternative. */
+and use locally available fonts. Arial is the default system font. */
 :root {
   /* FOUNDATION: reusable measurements */
   --font-ui: Arial, Helvetica, sans-serif;
@@ -693,7 +693,7 @@ summary {
   }
 }
 
-/* OFFICIAL BRAND SWATCHES: fixed values, separate from generated semantic roles. */
+/* EXAMPLE PALETTE SWATCHES: fixed values, separate from generated semantic roles. */
 .brand-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));

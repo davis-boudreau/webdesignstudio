@@ -23,9 +23,9 @@ Review of the V4.1 single-file build (3,776 lines, ~163 KB) before modularisatio
 | `innerHTML` | 14 uses | Audit each for user-controlled data (imported JSON, project names); prefer `textContent`/DOM construction |
 | Naming | Mixed prefixes (`bd-`, `demo-`, `ds-`, `studio-`) | Adopt one convention, e.g. `ds-` for exported output, `studio-` for app chrome |
 | Token format | Custom state object | Export W3C Design Tokens (DTCG) JSON for Style Dictionary / Figma interop |
-| Fonts | Greycliff is licensed and unavailable | Keep system fallback stack; document how to supply a licensed font |
+| Fonts | Custom fonts may require a licence and local installation | Keep system fallback stack; document how to supply a licensed font |
 | Quality gates | None | CI structure check (added), then Playwright accessibility smoke tests (axe), Stylelint, ESLint |
-| Content | Brand-specific (NSCC) text mixed into the generic tool | Move brand data to `presets/nscc.json` and ship a neutral default |
+| Content | Keep example content independent of any institution | Use a neutral example preset; consider moving palette data to `presets/example.json` |
 
 ## Roadmap
 

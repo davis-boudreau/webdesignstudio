@@ -8,7 +8,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   if (!table || !search || !count) return;
 
   const describe = (name, type) => {
-    if (name.startsWith('--nscc-')) return 'Fixed official NSCC brand reference; not an editable semantic role.';
+    if (name.startsWith('--example-')) return 'Fixed example brand reference; not an editable semantic role.';
     if (/^--(primary|secondary|accent)-\d+$/.test(name))
       return 'Generated colour ramp step; 500 preserves the selected anchor colour.';
     if (name.includes('hover-text')) return 'Foreground colour for the button hover state.';
@@ -28,7 +28,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   };
 
   const classify = name => {
-    if (name.startsWith('--nscc-')) return 'Official brand';
+    if (name.startsWith('--example-')) return 'example palette';
     if (/^--(primary|secondary|accent)-\d+$/.test(name)) return 'Colour ramp';
     if (name.startsWith('--button-')) return 'Button component';
     if (/^--(font|text-step|text-display|type-ratio|body-leading|heading-leading)/.test(name)) return 'Typography';

@@ -38,4 +38,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Please follow the [Code of Conduct](CODE
 
 ## Licence
 
-[MIT](LICENSE). The NSCC brand colours referenced in the studio belong to their owner and are used as a reference example only; Greycliff is a licensed font, so Arial is the bundled fallback.
+[MIT](LICENSE). The studio includes an illustrative example palette and uses locally available system fonts by default.

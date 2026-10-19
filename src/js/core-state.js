@@ -1,13 +1,13 @@
 'use strict';
 /* STATE: all user-editable foundation values live in one plain object.
 JSON import validates fields; exporting never executes imported code. */
-/* BRAND SOURCE OF TRUTH: exact colours from NSCC Visual Identity Guidelines.
+/* BRAND SOURCE OF TRUTH: illustrative colours for the example preset.
 The palette is immutable in this classroom preset. Students can experiment
-with editable interface colours without changing the official swatch list. */
-const NSCC_BRAND = {
+with editable interface colours without changing the reference swatch list. */
+const EXAMPLE_PALETTE = {
   primary: [
     ['White', '#FFFFFF'],
-    ['NSCC blue', '#004780'],
+    ['Deep blue', '#004780'],
     ['Dark grey', '#495965']
   ],
   accent: [
@@ -24,14 +24,14 @@ const NSCC_BRAND = {
 
 function renderBrand() {
   const make = (items, role) => items.map(([name, hex]) => `<div class="brand-swatch"><div class="brand-swatch-color" style="background:${hex}"></div><div class="brand-swatch-info"><strong>${name}</strong><code>${hex}</code><button type="button" data-brand-role="${role}" data-brand-hex="${hex}" aria-label="Use ${name} as ${role} colour">Use as ${role==='accent'?'accent':'UI primary'}</button></div></div>`).join('');
-  $('brandPrimary').innerHTML = make(NSCC_BRAND.primary, 'primary');
-  $('brandAccents').innerHTML = make(NSCC_BRAND.accent, 'accent');
+  $('brandPrimary').innerHTML = make(EXAMPLE_PALETTE.primary, 'primary');
+  $('brandAccents').innerHTML = make(EXAMPLE_PALETTE.accent, 'accent');
   document.querySelectorAll('[data-brand-role]').forEach(btn => btn.addEventListener('click', () => {
     const role = btn.dataset.brandRole;
     state[role] = btn.dataset.brandHex.toLowerCase();
     $(role).value = state[role];
     apply();
-    announce('Selected official brand swatch as an editable UI role.');
+    announce('Selected example palette swatch as an editable UI role.');
   }));
 }
 const DEFAULT = {
@@ -206,7 +206,7 @@ function apply() {
   $('rampMethodLabel').textContent = state.method === 'mix' ? 'RGB mix' : 'OKLCH';
   ['primary', 'secondary', 'accent'].forEach(k => $(k + 'Out').textContent = state[k].toUpperCase());
   ['base', 'ratio', 'leading', 'spacing', 'radius'].forEach(k => $(k + 'Out').textContent = state[k] + (k === 'base' || k === 'spacing' || k === 'radius' ? 'px' : ''));
-  $('brandAccent').value = NSCC_BRAND.accent.some(([, hex]) => hex.toLowerCase() === state.accent.toLowerCase()) ? state.accent.toUpperCase() : '';
+  $('brandAccent').value = EXAMPLE_PALETTE.accent.some(([, hex]) => hex.toLowerCase() === state.accent.toLowerCase()) ? state.accent.toUpperCase() : '';
   renderRamps({
     primary: p,
     secondary: s,
@@ -370,7 +370,7 @@ function cssExport() {
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
   const semantic = r => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).join('\n');
   const sz = sizes();
-  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Classroom-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* OFFICIAL NSCC BRAND: fixed reference colours. */\n  --nscc-white: #FFFFFF;\n  --nscc-blue: #004780;\n  --nscc-dark-grey: #495965;\n  --nscc-accent-teal: #00BADC;\n  --nscc-accent-turquoise: #5FC5BF;\n  --nscc-accent-orange: #F37327;\n  --nscc-accent-blue: #2B71B9;\n  --nscc-accent-green: #CBDB2A;\n  --nscc-accent-fuchsia: #EF426F;\n  --nscc-accent-light-blue: #57B7E7;\n  --nscc-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps are NOT additional official brand swatches. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the NSCC alternative to licensed Greycliff. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${o.size}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
+  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Classroom-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* EXAMPLE PALETTE: fixed reference colours. */\n  --example-white: #FFFFFF;\n  --example-blue: #004780;\n  --example-dark-grey: #495965;\n  --example-accent-teal: #00BADC;\n  --example-accent-turquoise: #5FC5BF;\n  --example-accent-orange: #F37327;\n  --example-accent-blue: #2B71B9;\n  --example-accent-green: #CBDB2A;\n  --example-accent-fuchsia: #EF426F;\n  --example-accent-light-blue: #57B7E7;\n  --example-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${o.size}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
@@ -393,7 +393,7 @@ hijacking button clicks. */
 function projectJson() {
   return JSON.stringify({
     schemaVersion: 2,
-    brandReference: "NSCC Visual Identity Guidelines",
+    brandReference: "Studio example palette",
     ...state
   }, null, 2);
 }
@@ -479,13 +479,13 @@ $('brandAccent').addEventListener('change', e => {
     apply();
   }
 });
-$('restoreNSCC').addEventListener('click', () => resetStudio('Official NSCC classroom defaults restored.'));
+$('restoreDefaults').addEventListener('click', () => resetStudio('Example defaults restored.'));
 $('themeToggle').addEventListener('click', () => {
   state.theme = state.theme === 'light' ? 'dark' : 'light';
   apply();
 });
 $('resetBtn').addEventListener('click', () => {
-  if (confirm('Reset all studio settings to the NSCC classroom example?')) resetStudio('Settings reset.');
+  if (confirm('Reset all studio settings to the example defaults?')) resetStudio('Settings reset.');
 });
 $('saveBtn').addEventListener('click', () => {
   download('design-system-studio.json', projectJson(), 'application/json');

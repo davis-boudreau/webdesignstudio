@@ -38,7 +38,7 @@
     </header>
     <div class="shell">
       <section class="hero">
-        <div class="eyebrow">WEBD 3100 · Workshops 03A and 03B</div>
+        <div class="eyebrow">Explore colour, typography and components</div>
         <h1>Design System Studio · Build &amp; Inspect</h1>
         <p>
           Choose design parameters on the left. Explore seven live design-system sections on the right, inspect the generated CSS beside the components, then export your project-ready design system.
@@ -68,16 +68,16 @@
               <div class="field">
                 <label for="jPreset">Starting theme</label>
                 <select id="jPreset">
-                  <option value="nscc">NSCC · official brand colours</option>
-                  <option value="custom">Custom · start from NSCC and edit</option>
+                  <option value="example">Example &middot; starter colour palette</option>
+                  <option value="custom">Custom &middot; adapt the starter palette</option>
                 </select>
               </div>
               <p class="journey-tip">
                 <strong>Your goal:</strong>
-                Identify the website and its audience. Start with the NSCC example, then adapt the design to your own project.
+                Identify the website and its audience. Start with the example project, then adapt the design to your own project.
               </p>
               <p class="journey-tip">
-                NSCC is the example preset. The 11 brand swatches remain unchanged; your project can use custom semantic roles and generated ramps. Greycliff is licensed, so Arial is the default alternative.
+                The example preset provides a starting palette. The 11 brand swatches remain unchanged; your project can use custom semantic roles and generated ramps. Arial is the default system font.
               </p>
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden="">
@@ -127,7 +127,7 @@
               <div class="field">
                 <label for="jFont">Font family</label>
                 <select id="jFont">
-                  <option value="Arial, Helvetica, sans-serif">Arial · NSCC alternative</option>
+                  <option value="Arial, Helvetica, sans-serif">Arial · system font</option>
                   <option value="Georgia, 'Times New Roman', serif">Georgia · serif</option>
                   <option value="Verdana, Geneva, sans-serif">Verdana · sans-serif</option>
                   <option value="system-ui, sans-serif">System UI</option>
@@ -233,12 +233,12 @@
                   <option value="primary">Theme primary</option>
                   <option value="secondary">Theme secondary</option>
                   <option value="accent">Theme accent</option>
-                  <optgroup label="Official NSCC primary colours">
+                  <optgroup label="Example primary colours">
                     <option value="#FFFFFF">White</option>
-                    <option value="#004780">NSCC blue</option>
+                    <option value="#004780">Deep blue</option>
                     <option value="#495965">Dark grey</option>
                   </optgroup>
-                  <optgroup label="Official NSCC accent colours">
+                  <optgroup label="Example accent colours">
                     <option value="#00BADC">Teal</option>
                     <option value="#5FC5BF">Turquoise</option>
                     <option value="#F37327">Orange</option>
@@ -250,7 +250,7 @@
                   </optgroup>
                   <option value="custom">Custom colour</option>
                 </select>
-                <p class="help">Official swatches are fixed references. Theme colours update when the palette changes.</p>
+                <p class="help">Example swatches provide a fixed reference. Theme colours update when the palette changes.</p>
               </div>
               <div class="field" hidden="" id="bdCustomWrap">
                 <label for="bdCustom">Custom base colour</label>
@@ -525,7 +525,7 @@
                 <button id="jDeleteLocal" type="button">Delete</button>
               </div>
               <p class="journey-status" id="jSaveStatus" role="status">
-                NSCC example is loaded into My Project. Save a copy to preserve changes.
+                Example project is loaded into My Project. Save a copy to preserve changes.
               </p>
             </div>
           </section>
@@ -555,7 +555,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="secondary">Supporting colour (default: NSCC dark grey)</label>
+                <label for="secondary">Supporting colour (default: dark grey)</label>
                 <div class="fieldline">
                   <input id="secondary" type="color" value="#495965" />
                   <output id="secondaryOut">
@@ -564,7 +564,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="accent">Featured accent (choose from NSCC palette)</label>
+                <label for="accent">Featured accent (choose from example palette)</label>
                 <div class="fieldline">
                   <input id="accent" type="color" value="#cbdb2a" />
                   <output id="accentOut">
@@ -573,7 +573,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="brandAccent">Official NSCC accent swatch</label>
+                <label for="brandAccent">Example accent swatch</label>
                 <select id="brandAccent">
                   <option value="">Custom accent (use picker above)</option>
                   <option value="#00BADC">Teal · #00BADC</option>
@@ -586,14 +586,14 @@
                   <option value="#FFEF00">Yellow · #FFEF00</option>
                 </select>
                 <p class="help">
-                  The official accent swatches are fixed brand colours. Generated tints/shades are educational derivatives, not additional official NSCC colours.
+                  The example accent swatches provide a fixed reference. Generated tints and shades extend your project palette.
                 </p>
               </div>
               <hr />
               <div class="field">
                 <label for="font">Font family</label>
                 <select id="font">
-                  <option value="Arial, Helvetica, sans-serif">Arial · sans-serif (NSCC alternative)</option>
+                  <option value="Arial, Helvetica, sans-serif">Arial · sans-serif (system font)</option>
                   <option value="Georgia, 'Times New Roman', serif">Georgia · serif</option>
                   <option value="Verdana, Geneva, sans-serif">Verdana · sans-serif</option>
                   <option value="system-ui, sans-serif">System UI · sans-serif</option>
@@ -656,7 +656,7 @@
                 </div>
               </div>
               <p class="help">
-                The NSCC case study uses Arial because Greycliff is licensed. Colours are illustrative classroom examples, not an official NSCC token library.
+                The example project uses Arial as a locally available system font. Colours are illustrative starting points for your own design system.
               </p>
             </section>
             <section aria-labelledby="advancedTitle" class="panel studio-controls">
@@ -708,7 +708,7 @@
                 <summary>Semantic colours and feedback</summary>
                 <div class="group-body">
                   <p class="control-hint">
-                    These editable semantic roles are distinct from the fixed NSCC brand reference swatches. They set the
+                    These editable semantic roles are distinct from the fixed example palette reference swatches. They set the
                     <strong>light theme</strong>
                     feedback colours; the dark theme keeps its own generated, higher-contrast values.
                   </p>
@@ -848,14 +848,14 @@
             <section class="panel" id="brandPalette">
               <div class="section-head">
                 <div>
-                  <h2>NSCC official colour palette</h2>
+                  <h2>Example colour palette</h2>
                   <p class="help">
-                    Exact HEX values from the NSCC Visual Identity Guidelines. Three primary colours and eight accent colours. These are
+                    An illustrative palette with fixed HEX values. Three primary colours and eight accent colours. These are
                     <strong>brand swatches</strong>
                     , not interchangeable CSS semantic roles.
                   </p>
                 </div>
-                <button class="ghost" id="restoreNSCC" type="button">Restore NSCC defaults</button>
+                <button class="ghost" id="restoreDefaults" type="button">Restore example defaults</button>
               </div>
               <h3>Primary brand colours</h3>
               <div class="brand-grid" id="brandPrimary"></div>
@@ -866,7 +866,7 @@
                 <ul>
                   <li>
                     <strong>Brand primary</strong>
-                    describes NSCC's official white, blue and dark grey palette.
+                    describes the example's white, blue and dark grey palette.
                   </li>
                   <li>
                     <strong>
@@ -875,28 +875,24 @@
                         --primary
                       </code>
                     </strong>
-                    describes the interface's main action colour; its default is NSCC blue.
+                    describes the interface's main action colour; its default is Deep blue.
                   </li>
                   <li>
                     <strong>Brand accent</strong>
-                    describes eight approved colours; select one to feature in a UI component.
+                    describes eight example colours; select one to feature in a UI component.
                   </li>
                   <li>
                     <strong>Generated ramps</strong>
-                    are teaching aids derived from an official swatch; they are not official additional brand colours.
+                    are teaching aids derived from an reference swatch; they are not additional reference colours.
                   </li>
                   <li>
                     <strong>Contrast and meaning:</strong>
-                    an official brand colour is not automatically accessible as text or a button background.
+                    an example palette colour is not automatically accessible as text or a button background.
                   </li>
                 </ul>
               </div>
               <p class="help">
-                Reference:
-                <a href="https://www.nscc.ca/docs/about-nscc/visual-identity-guidelines/guidelines.pdf"
-                   rel="noopener noreferrer"
-                   target="_blank">NSCC Visual Identity Guidelines (PDF)</a>
-                . This classroom tool is an educational prototype, not an official NSCC website template.
+                This studio uses an illustrative example palette. Adapt the colours and tokens to your own project requirements.
               </p>
             </section>
             <section class="panel" id="studio-section-1">
@@ -963,7 +959,7 @@
                     </div>
                   </div>
                 </div>
-                <p class="help">The wheel shows an sRGB display approximation. At its edges, out-of-gamut chroma is reduced automatically. The ramp generator varies lightness toward its endpoints and gently reduces chroma at the extremes. The official NSCC swatches remain unchanged.</p>
+                <p class="help">The wheel shows an sRGB display approximation. At its edges, out-of-gamut chroma is reduced automatically. The ramp generator varies lightness toward its endpoints and gently reduces chroma at the extremes. The example swatches remain unchanged.</p>
               </section>
               <div id="ramps"></div>
               <h3>Semantic colour roles</h3>
@@ -1369,7 +1365,7 @@
                 <ol>
                   <li>
                     <strong>03A — Colour:</strong>
-                    configure NSCC primary, supporting and accent colours; compare RGB Mix/OKLCH; review semantic tokens and contrast.
+                    configure example primary, supporting and accent colours; compare RGB Mix/OKLCH; review semantic tokens and contrast.
                   </li>
                   <li>
                     <strong>03B — Typography:</strong>
@@ -1425,9 +1421,9 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Official NSCC brand tokens are fixed references; generated colour ramps are teaching derivatives.</p>
+                <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Example brand tokens are fixed references; generated colour ramps are teaching derivatives.</p>
               </section>
-              <div class="footer">Design System Studio V4.1 · WEBD 3100 · standalone classroom beta · no external dependencies</div>
+              <div class="footer">Design System Studio V4.1 · standalone design toolkit · no external dependencies</div>
             </main>
             <aside aria-label="Live generated CSS" class="studio-code-dock">
               <div class="studio-dock-header">
@@ -1443,7 +1439,7 @@
               </div>
               <pre aria-label="Generated CSS code" id="dockCss" tabindex="0"></pre>
               <p class="studio-dock-note">
-                Foundation → semantic → component rules. Generated ramps are teaching derivatives, not official NSCC brand swatches.
+                Foundation → semantic → component rules. Generated ramps extend the example palette with tints and shades.
               </p>
             </aside>
           </div>
