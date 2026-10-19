@@ -1,7 +1,7 @@
 'use strict';
 /* Extension point for Design System Studio.
-   Feature modules register themselves here instead of reaching into each other's globals.
-   Load this file before any module; see docs/ARCHITECTURE.md. */
+Feature modules register themselves here instead of reaching into each other's globals.
+Load this file before any module; see docs/ARCHITECTURE.md. */
 (() => {
   const modules = new Map();
   const listeners = new Map();
@@ -19,7 +19,9 @@
       return mod;
     },
 
-    get modules() { return [...modules.values()]; },
+    get modules() {
+      return [...modules.values()];
+    },
 
     on(event, fn) {
       if (!listeners.has(event)) listeners.set(event, new Set());
@@ -29,7 +31,11 @@
 
     emit(event, detail) {
       (listeners.get(event) || []).forEach(fn => {
-        try { fn(detail); } catch (err) { console.error(`DSStudio listener for "${event}" failed`, err); }
+        try {
+          fn(detail);
+        } catch (err) {
+          console.error(`DSStudio listener for "${event}" failed`, err);
+        }
       });
     },
 
@@ -43,8 +49,13 @@
 
     start() {
       modules.forEach(mod => {
-        try { mod.init({ studio: DSStudio }); }
-        catch (err) { console.error(`DSStudio module "${mod.id}" failed to init`, err); }
+        try {
+          mod.init({
+            studio: DSStudio
+          });
+        } catch (err) {
+          console.error(`DSStudio module "${mod.id}" failed to init`, err);
+        }
       });
       DSStudio.emit('ready');
     }

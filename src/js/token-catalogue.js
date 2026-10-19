@@ -1,5 +1,5 @@
 /* V4.1: token catalogue reads the same CSS generator used by Export CSS.
-   No separate hardcoded values: the table stays synchronized with the export. */
+No separate hardcoded values: the table stays synchronized with the export. */
 (() => {
   'use strict';
   const table = document.getElementById('tokenTableBody');
@@ -47,27 +47,38 @@
       if (!match) continue;
       const [, name, value] = match;
       const type = classify(name);
-      tokens.push({ type, name, value, description: describe(name, type), scope });
+      tokens.push({
+        type,
+        name,
+        value,
+        description: describe(name, type),
+        scope
+      });
     }
     return tokens;
   };
 
   const escapeHtml = value => String(value).replace(/[&<>"']/g, char =>
-    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    } [char]));
 
   const filtered = () => {
     const q = search.value.trim().toLowerCase();
-    return readTokens().filter(row =>
-      [row.type, row.name, row.value, row.description, row.scope]
-        .some(value => value.toLowerCase().includes(q)));
+    return readTokens().filter(row => [row.type, row.name, row.value, row.description, row.scope]
+      .some(value => value.toLowerCase().includes(q)));
   };
 
   const update = () => {
     const rows = filtered();
     count.textContent = `${rows.length} tokens shown${search.value ? ' (filtered)' : ''}.`;
     table.innerHTML = rows.map(row => {
-      const colour = /^#[0-9a-f]{6}$/i.test(row.value)
-        ? `<span class="token-dot" style="background:${row.value}" aria-hidden="true"></span>` : '';
+      const colour = /^#[0-9a-f]{6}$/i.test(row.value) ?
+        `<span class="token-dot" style="background:${row.value}" aria-hidden="true"></span>` : '';
       return `<tr><td>${escapeHtml(row.type)}</td><td><code>${escapeHtml(row.name)}</code></td>` +
         `<td><div class="token-value">${colour}<code>${escapeHtml(row.value)}</code></div></td>` +
         `<td>${escapeHtml(row.description)} <small class="muted">(${escapeHtml(row.scope)})</small></td></tr>`;
@@ -76,11 +87,16 @@
 
   window.dssUpdateTokenCatalogue = update;
   const originalRenderCode = renderCode;
-  renderCode = function () { originalRenderCode(); update(); };
+  renderCode = function() {
+    originalRenderCode();
+    update();
+  };
   search.addEventListener('input', update);
   document.getElementById('tokenDownload').addEventListener('click', () => {
-    const csv = [['Token type','Token name','Value','Description','Scope'],
-      ...filtered().map(row => [row.type,row.name,row.value,row.description,row.scope])]
+    const csv = [
+        ['Token type', 'Token name', 'Value', 'Description', 'Scope'],
+        ...filtered().map(row => [row.type, row.name, row.value, row.description, row.scope])
+      ]
       .map(row => row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(','))
       .join('\r\n');
     download('design-system-tokens.csv', '\ufeff' + csv, 'text/csv;charset=utf-8');

@@ -1,107 +1,126 @@
-   /* V3.3: responsive, token-driven button component editor */
+/* V3.3: responsive, token-driven button component editor */
 .bd-single {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:125px;
-  padding:18px;
-  background:var(--surface-muted);
-  border-radius:12px
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 125px;
+  padding: 18px;
+  background: var(--surface-muted);
+  border-radius: 12px
 }
+
 .bd-theme-grid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px
 }
+
 .bd-theme-card {
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:15px;
-  display:grid;
-  gap:12px;
-  justify-items:start
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 15px;
+  display: grid;
+  gap: 12px;
+  justify-items: start
 }
+
 .bd-theme-card[data-mode=light] {
-  background:#fff;
-  color:#172b3b
+  background: #fff;
+  color: #172b3b
 }
+
 .bd-theme-card[data-mode=dark] {
-  background:#142434;
-  color:#fff
+  background: #142434;
+  color: #fff
 }
+
 .bd-matrix {
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));
-  gap:10px;
-  margin:12px 0 20px
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr));
+  gap: 10px;
+  margin: 12px 0 20px
 }
+
 .bd-cell {
-  border:1px solid var(--border);
-  border-radius:10px;
-  background:var(--surface);
-  padding:12px;
-  display:grid;
-  gap:9px;
-  align-content:start;
-  min-width:0
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 12px;
+  display: grid;
+  gap: 9px;
+  align-content: start;
+  min-width: 0
 }
+
 .bd-cell small {
-  color:var(--text-muted)
+  color: var(--text-muted)
 }
+
 .bd-cell code {
-  font-size:.73rem;
-  overflow-wrap:anywhere
+  font-size: .73rem;
+  overflow-wrap: anywhere
 }
+
 .bd-button {
-  display:inline-flex;
-  justify-content:center;
-  align-items:center;
-  gap:.5em;
-  max-width:100%;
-  text-align:center;
-  cursor:pointer;
-  white-space:normal;
-  transition:background-color var(--bd-motion,150ms),border-color var(--bd-motion,150ms);
-  font-family:inherit
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: .5em;
+  max-width: 100%;
+  text-align: center;
+  cursor: pointer;
+  white-space: normal;
+  transition: background-color var(--bd-motion, 150ms), border-color var(--bd-motion, 150ms);
+  font-family: inherit
 }
+
 .bd-button:focus-visible {
-  outline:var(--bd-focus-width,3px) solid var(--bd-focus,#f37327);
-  outline-offset:3px
+  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #f37327);
+  outline-offset: 3px
 }
+
 .bd-button:disabled {
-  cursor:not-allowed;
-  opacity:.55
+  cursor: not-allowed;
+  opacity: .55
 }
+
 .bd-button[aria-busy=true] {
-  cursor:progress
+  cursor: progress
 }
+
 .bd-button[data-sim=focus] {
-  outline:var(--bd-focus-width,3px) solid var(--bd-focus,#f37327);
-  outline-offset:3px
+  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #f37327);
+  outline-offset: 3px
 }
+
 .bd-button[data-sim=disabled] {
-  opacity:.55
+  opacity: .55
 }
+
 .bd-button[data-sim=loading] {
-  opacity:.8;
-  cursor:progress
+  opacity: .8;
+  cursor: progress
 }
-.bd-button[data-sim=hover],.bd-button[data-sim=active] {
-  filter:none
+
+.bd-button[data-sim=hover],
+.bd-button[data-sim=active] {
+  filter: none
 }
+
 .bd-button[data-sim=selected] {
-  box-shadow:0 0 0 2px var(--bd-focus,#f37327)
+  box-shadow: 0 0 0 2px var(--bd-focus, #f37327)
 }
+
 /* FIX: hover/active simulations already use the exact hover/active colours inline.
-   The old brightness() filter darkened them a second time, so the preview did not match the exported CSS. */
+The old brightness() filter darkened them a second time, so the preview did not match the exported CSS. */
 @media(max-width:600px) {
   .bd-theme-grid {
-    grid-template-columns:1fr
+    grid-template-columns: 1fr
   }
 }
+
 @media(prefers-reduced-motion:reduce) {
   .bd-button {
-    transition:none!important
+    transition: none !important
   }
 }
-  

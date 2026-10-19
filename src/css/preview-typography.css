@@ -1,7 +1,30 @@
 /* V4.1: cqi units resolve against the simulated device, not the outer browser. */
-#previewFrame { container-type: inline-size; font-family:var(--preview-font,Arial,sans-serif); font-size:var(--preview-type-body,16px); line-height:var(--preview-leading,1.5); }
-#previewFrame > h3 { font-size:var(--preview-type-display,32px); line-height:1.18; }
-#previewFrame .preview-card h3 { font-size:var(--preview-type-h2,22px); line-height:1.18; }
-#previewFrame .mini, #previewFrame .eyebrow { font-size:var(--preview-type-small,13px); }
-#previewFrame p:not(.mini) { font-size:var(--preview-type-body,16px); }
-#responsiveTypeReadout { font-weight:650; }
+#previewFrame {
+  container-type: inline-size;
+  font-family: var(--preview-font, Arial, sans-serif);
+  font-size: var(--preview-type-body, 16px);
+  line-height: var(--preview-leading, 1.5);
+}
+
+#previewFrame>h3 {
+  font-size: var(--preview-type-display, 32px);
+  line-height: 1.18;
+}
+
+#previewFrame .preview-card h3 {
+  font-size: var(--preview-type-h2, 22px);
+  line-height: 1.18;
+}
+
+#previewFrame .mini,
+#previewFrame .eyebrow {
+  font-size: var(--preview-type-small, 13px);
+}
+
+#previewFrame p:not(.mini) {
+  font-size: var(--preview-type-body, 16px);
+}
+
+#responsiveTypeReadout {
+  font-weight: 650;
+}

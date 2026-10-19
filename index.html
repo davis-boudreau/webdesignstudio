@@ -1,1939 +1,1455 @@
 <!DOCTYPE html>
 <html data-theme="light" lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width,initial-scale=1" name="viewport"/>
-  <meta content="light dark" name="color-scheme"/>
-  <title>
-   Design System Studio V4.1 | Button Design Wizard
-  </title>
-  <link rel="stylesheet" href="src/css/base-tokens.css">
-  <link rel="stylesheet" href="src/css/layout.css">
-  <link rel="stylesheet" href="src/css/journey-library.css">
-  <link rel="stylesheet" href="src/css/button-lab.css">
-  <link rel="stylesheet" href="src/css/oklch-lab.css">
-  <link rel="stylesheet" href="src/css/state-explorer-outline.css">
-  <link rel="stylesheet" href="src/css/preview-typography.css">
-</head>
- <body>
-  <header class="topbar">
-   <div class="shell top-inner">
-    <div class="brand">
-     <span class="brandmark">
-      DS
-     </span>
-     <span>
-      Design System Studio
-      <small class="pill">
-       V4.1 · Button Design Wizard
-      </small>
-     </span>
-    </div>
-    <div class="top-actions">
-     <button id="themeToggle" type="button">
-      Switch to dark
-     </button>
-     <button id="resetBtn" type="button">
-      Reset
-     </button>
-     <button id="saveBtn" type="button">
-      Save JSON
-     </button>
-     <button id="loadBtn" type="button">
-      Load JSON
-     </button>
-     <input accept=".json,application/json" class="visually-hidden" id="loadFile" type="file"/>
-     <button id="cssBtn" type="button">
-      Export CSS
-     </button>
-    </div>
-   </div>
-  </header>
-  <div class="shell">
-   <section class="hero">
-    <div class="eyebrow">
-     WEBD 3100 · Workshops 03A and 03B
-    </div>
-    <h1>
-     Design System Studio · Build &amp; Inspect
-    </h1>
-    <p>
-     Choose design parameters on the left. Explore seven live design-system sections on the right, inspect the generated CSS beside the components, then export your project-ready design system.
-    </p>
-   </section>
-   <div class="layout">
-    <aside aria-label="Design system controls" class="sidebar">
-     <section aria-labelledby="journeyTitle" class="panel studio-journey">
-      <div class="journey-kicker">
-       Start here · Minimum viable design system
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <meta content="light dark" name="color-scheme" />
+    <title>Design System Studio V4.1 | Button Design Wizard</title>
+    <link rel="stylesheet" href="src/css/base-tokens.css">
+    <link rel="stylesheet" href="src/css/layout.css">
+    <link rel="stylesheet" href="src/css/journey-library.css">
+    <link rel="stylesheet" href="src/css/button-lab.css">
+    <link rel="stylesheet" href="src/css/oklch-lab.css">
+    <link rel="stylesheet" href="src/css/state-explorer-outline.css">
+    <link rel="stylesheet" href="src/css/preview-typography.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="shell top-inner">
+        <div class="brand">
+          <span class="brandmark">DS</span>
+          <span>
+            Design System Studio
+            <small class="pill">V4.1 · Button Design Wizard</small>
+          </span>
+        </div>
+        <div class="top-actions">
+          <button id="themeToggle" type="button">Switch to dark</button>
+          <button id="resetBtn" type="button">Reset</button>
+          <button id="saveBtn" type="button">Save JSON</button>
+          <button id="loadBtn" type="button">Load JSON</button>
+          <input accept=".json,application/json"
+                 class="visually-hidden"
+                 id="loadFile"
+                 type="file" />
+          <button id="cssBtn" type="button">Export CSS</button>
+        </div>
       </div>
-      <h2 id="journeyTitle">
-       Build your design system
-      </h2>
-      <p class="help">
-       Follow six practical decisions to create usable CSS. At each step: choose, observe the preview, inspect the code, and explain your decision. Advanced controls remain available below.
-      </p>
-      <div aria-label="Builder steps" class="journey-steps" role="group">
-       <button data-journey-step="0" type="button">
-        1 · Start
-       </button>
-       <button data-journey-step="1" type="button">
-        2 · Palette
-       </button>
-       <button data-journey-step="2" type="button">
-        3 · Typography
-       </button>
-       <button data-journey-step="3" type="button">
-        4 · Components
-       </button>
-       <button data-journey-step="4" type="button">
-        5 · Buttons
-       </button>
-       <button data-journey-step="5" type="button">
-        6 · Deliver
-       </button>
-      </div>
-      <div class="journey-pane" data-journey-pane="0">
-       <div class="field">
-        <label for="jProject">
-         Project name
-        </label>
-        <input id="jProject" maxlength="90" value="My Project"/>
-       </div>
-       <div class="field">
-        <label for="jPreset">
-         Starting theme
-        </label>
-        <select id="jPreset">
-         <option value="nscc">
-          NSCC · official brand colours
-         </option>
-         <option value="custom">
-          Custom · start from NSCC and edit
-         </option>
-        </select>
-       </div>
-       <p class="journey-tip">
-        <strong>
-         Your goal:
-        </strong>
-        Identify the website and its audience. Start with the NSCC example, then adapt the design to your own project.
-       </p>
-       <p class="journey-tip">
-        NSCC is the example preset. The 11 brand swatches remain unchanged; your project can use custom semantic roles and generated ramps. Greycliff is licensed, so Arial is the default alternative.
-       </p>
-      </div>
-      <div class="journey-pane" data-journey-pane="1" hidden="">
-       <div class="field">
-        <label for="jPrimary">
-         Primary UI colour
-        </label>
-        <div class="fieldline">
-         <input id="jPrimary" type="color" value="#004780"/>
-         <output id="jPrimaryOut">
-          #004780
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jSecondary">
-         Supporting colour
-        </label>
-        <div class="fieldline">
-         <input id="jSecondary" type="color" value="#495965"/>
-         <output id="jSecondaryOut">
-          #495965
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jAccent">
-         Accent colour
-        </label>
-        <div class="fieldline">
-         <input id="jAccent" type="color" value="#cbdb2a"/>
-         <output id="jAccentOut">
-          #00BADC
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jRamp">
-         Ramp method
-        </label>
-        <select id="jRamp">
-         <option value="mix">
-          RGB mix
-         </option>
-         <option value="oklch">
-          OKLCH
-         </option>
-        </select>
-       </div>
-       <p class="journey-tip">
-        <strong>
-         Try it:
-        </strong>
-        Change the primary colour and inspect buttons, surfaces and the generated CSS. Compare light and dark mode; do not assume an attractive colour has sufficient contrast.
-       </p>
-       <p class="journey-tip">
-        Brand swatches are fixed references; colour ramps are generated teaching derivatives. Check contrast after changing colours.
-       </p>
-      </div>
-      <div class="journey-pane" data-journey-pane="2" hidden="">
-       <div class="field">
-        <label for="jFont">
-         Font family
-        </label>
-        <select id="jFont">
-         <option value="Arial, Helvetica, sans-serif">
-          Arial · NSCC alternative
-         </option>
-         <option value="Georgia, 'Times New Roman', serif">
-          Georgia · serif
-         </option>
-         <option value="Verdana, Geneva, sans-serif">
-          Verdana · sans-serif
-         </option>
-         <option value="system-ui, sans-serif">
-          System UI
-         </option>
-        </select>
-       </div>
-       <div class="field">
-        <label for="jBase">
-         Body size (px)
-        </label>
-        <div class="fieldline">
-         <input id="jBase" max="22" min="14" type="range" value="16"/>
-         <output id="jBaseOut">
-          16px
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jRatio">
-         Scale ratio
-        </label>
-        <div class="fieldline">
-         <input id="jRatio" max="1.5" min="1.125" step="0.025" type="range" value="1.25"/>
-         <output id="jRatioOut">
-          1.25
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jLeading">
-         Line height
-        </label>
-        <div class="fieldline">
-         <input id="jLeading" max="1.9" min="1.3" step="0.05" type="range" value="1.55"/>
-         <output id="jLeadingOut">
-          1.55
-         </output>
-        </div>
-       </div>
-       <p class="journey-tip">
-        <strong>
-         Try it:
-        </strong>
-        Compare display, heading and body sizes at mobile and desktop widths. Record your chosen sizes in Figma; check long headings and line wrapping.
-       </p>
-       <p class="journey-tip">
-        Compare the responsive typography specimens on the right, then recreate your mobile and desktop scales in Figma.
-       </p>
-      </div>
-      <div class="journey-pane" data-journey-pane="3" hidden="">
-       <div class="field">
-        <label for="jSpacing">
-         Spacing base (px)
-        </label>
-        <div class="fieldline">
-         <input id="jSpacing" max="8" min="3" type="range" value="4"/>
-         <output id="jSpacingOut">
-          4px
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jRadius">
-         Corner radius (px)
-        </label>
-        <div class="fieldline">
-         <input id="jRadius" max="28" min="0" step="2" type="range" value="12"/>
-         <output id="jRadiusOut">
-          12px
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="jTheme">
-         Preview theme
-        </label>
-        <select id="jTheme">
-         <option value="light">
-          Light
-         </option>
-         <option value="dark">
-          Dark
-         </option>
-        </select>
-       </div>
-       <p class="journey-tip">
-        <strong>
-         Try it:
-        </strong>
-        Inspect cards, forms, borders, buttons and focus states. Resize the preview and compare the same components in light and dark themes.
-       </p>
-       <p class="journey-tip">
-        These two controls establish a consistent foundation. Refine borders, states, surfaces, grid and motion in Advanced Parameters.
-       </p>
-      </div>
-      <div class="journey-pane" data-journey-pane="4" hidden="">
-       <strong>
-        Button Design Wizard
-       </strong>
-       <p class="help">
-        Define the default appearance, then inspect every relevant state. Settings apply across the state matrix, both themes and exported CSS.
-       </p>
-       <div class="field">
-        <label for="bdVariant">
-         Variant to edit
-        </label>
-        <select id="bdVariant">
-         <option value="primary">
-          Primary action
-         </option>
-         <option value="secondary">
-          Secondary action
-         </option>
-         <option value="accent">
-          Accent action
-         </option>
-         <option value="outline">
-          Outline action
-         </option>
-         <option value="text">
-          Text action
-         </option>
-        </select>
-       </div>
-       <div class="field">
-        <label for="bdSource">
-         Colour source for selected variant
-        </label>
-        <select id="bdSource">
-         <option value="primary">
-          Theme primary
-         </option>
-         <option value="secondary">
-          Theme secondary
-         </option>
-         <option value="accent">
-          Theme accent
-         </option>
-         <optgroup label="Official NSCC primary colours">
-          <option value="#FFFFFF">
-           White
-          </option>
-          <option value="#004780">
-           NSCC blue
-          </option>
-          <option value="#495965">
-           Dark grey
-          </option>
-         </optgroup>
-         <optgroup label="Official NSCC accent colours">
-          <option value="#00BADC">
-           Teal
-          </option>
-          <option value="#5FC5BF">
-           Turquoise
-          </option>
-          <option value="#F37327">
-           Orange
-          </option>
-          <option value="#2B71B9">
-           Accent blue
-          </option>
-          <option value="#CBDB2A">
-           Green
-          </option>
-          <option value="#EF426F">
-           Fuchsia
-          </option>
-          <option value="#57B7E7">
-           Light blue
-          </option>
-          <option value="#FFEF00">
-           Yellow
-          </option>
-         </optgroup>
-         <option value="custom">
-          Custom colour
-         </option>
-        </select>
-        <p class="help">
-         Official swatches are fixed references. Theme colours update when the palette changes.
-        </p>
-       </div>
-       <div class="field" hidden="" id="bdCustomWrap">
-        <label for="bdCustom">
-         Custom base colour
-        </label>
-        <div class="fieldline">
-         <input id="bdCustom" type="color" value="#004780"/>
-         <output id="bdCustomOut">
-          #004780
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="bdSize">
-         Size to preview
-        </label>
-        <select id="bdSize">
-         <option value="sm">
-          Small
-         </option>
-         <option selected="" value="md">
-          Medium
-         </option>
-         <option value="lg">
-          Large
-         </option>
-        </select>
-       </div>
-       <div class="field">
-        <label for="bdState">
-         State to inspect
-        </label>
-        <select id="bdState">
-         <option value="default">
-          Default
-         </option>
-         <option value="hover">
-          Hover
-         </option>
-         <option value="focus">
-          Focus-visible
-         </option>
-         <option value="active">
-          Active / pressed
-         </option>
-         <option value="disabled">
-          Disabled
-         </option>
-         <option value="loading">
-          Loading
-         </option>
-         <option value="selected">
-          Toggle selected
-         </option>
-        </select>
-       </div>
-       <div class="field">
-        <label for="bdPaddingX">
-         Horizontal padding ·
-         <output id="bdPaddingXOut">
-          18px
-         </output>
-        </label>
-        <input id="bdPaddingX" max="36" min="8" step="2" type="range" value="18"/>
-       </div>
-       <div class="field">
-        <label for="bdPaddingY">
-         Vertical padding ·
-         <output id="bdPaddingYOut">
-          12px
-         </output>
-        </label>
-        <input id="bdPaddingY" max="22" min="6" step="1" type="range" value="12"/>
-       </div>
-       <div class="field">
-        <label for="bdMinHeight">
-         Minimum height ·
-         <output id="bdMinHeightOut">
-          44px
-         </output>
-        </label>
-        <input id="bdMinHeight" max="64" min="36" step="2" type="range" value="44"/>
-       </div>
-       <div class="field">
-        <label for="bdRadius">
-         Button radius ·
-         <output id="bdRadiusOut">
-          8px
-         </output>
-        </label>
-        <input id="bdRadius" max="28" min="0" step="2" type="range" value="8"/>
-       </div>
-       <div class="field">
-        <label for="bdBorder">
-         Border width ·
-         <output id="bdBorderOut">
-          1px
-         </output>
-        </label>
-        <input id="bdBorder" max="4" min="1" type="range" value="1"/>
-       </div>
-       <div class="field">
-        <label for="bdWeight">
-         Font weight
-        </label>
-        <select id="bdWeight">
-         <option value="400">
-          Regular · 400
-         </option>
-         <option value="500">
-          Medium · 500
-         </option>
-         <option selected="" value="600">
-          Semibold · 600
-         </option>
-         <option value="700">
-          Bold · 700
-         </option>
-        </select>
-       </div>
-       <details>
-        <summary>
-         Advanced state colours and behaviour
-        </summary>
-        <div class="group-body">
-         <p class="control-hint">
-          <strong>
-           Button text colours:
-          </strong>
-          Set a separate foreground colour for default, hover, and active states. Changes apply to the selected variant and are included in CSS and project JSON.
-         </p>
-         <div class="field">
-          <label for="bdText">
-           Default text colour (selected variant)
-          </label>
-          <div class="fieldline">
-           <input id="bdText" type="color" value="#ffffff"/>
-           <output id="bdTextOut">
-            #FFFFFF
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdHoverText">
-           Hover text colour (selected variant)
-          </label>
-          <div class="fieldline">
-           <input id="bdHoverText" type="color" value="#ffffff"/>
-           <output id="bdHoverTextOut">
-            #FFFFFF
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdActiveText">
-           Active text colour (selected variant)
-          </label>
-          <div class="fieldline">
-           <input id="bdActiveText" type="color" value="#ffffff"/>
-           <output id="bdActiveTextOut">
-            #FFFFFF
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdDefaultBg">
-           Default background colour
-          </label>
-          <div class="fieldline">
-           <input id="bdDefaultBg" type="color" value="#004780"/>
-           <output id="bdDefaultBgOut">
-            #004780
-           </output>
-          </div>
-          <p class="help">
-           For outline/text buttons, default is transparent until you explicitly customize it.
-          </p>
-         </div>
-         <div class="field">
-          <label for="bdBorderColor">
-           Border colour
-          </label>
-          <div class="fieldline">
-           <input id="bdBorderColor" type="color" value="#004780"/>
-           <output id="bdBorderColorOut">
-            #004780
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdHover">
-           Hover background (selected variant)
-          </label>
-          <div class="fieldline">
-           <input id="bdHover" type="color" value="#00345d"/>
-           <output id="bdHoverOut">
-            #00345D
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdActive">
-           Active background (selected variant)
-          </label>
-          <div class="fieldline">
-           <input id="bdActive" type="color" value="#002947"/>
-           <output id="bdActiveOut">
-            #002947
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdFocus">
-           Focus ring colour
-          </label>
-          <div class="fieldline">
-           <input id="bdFocus" type="color" value="#f37327"/>
-           <output id="bdFocusOut">
-            #F37327
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="bdFocusWidth">
-           Focus ring width ·
-           <output id="bdFocusWidthOut">
-            3px
-           </output>
-          </label>
-          <input id="bdFocusWidth" max="5" min="2" type="range" value="3"/>
-         </div>
-         <div class="field">
-          <label for="bdMotion">
-           Transition duration ·
-           <output id="bdMotionOut">
-            150ms
-           </output>
-          </label>
-          <input id="bdMotion" max="350" min="0" step="25" type="range" value="150"/>
-         </div>
-         <label class="checkrow">
-          <input id="bdMobileFull" type="checkbox"/>
-          Full-width buttons on narrow screens
-         </label>
-        </div>
-       </details>
-       <p class="journey-tip">
-        <strong>
-         Try it:
-        </strong>
-        Select each state, compare the state matrix, then use Tab to test actual keyboard focus. The matrix simulates hover/focus for comparison; actual behaviour uses native selectors.
-       </p>
-       <p class="journey-tip">
-        <strong>
-         Contrast check:
-        </strong>
-        <output id="bdContrast" role="status">
-         Select a button state
-        </output>
-       </p>
-       <button class="ghost" id="bdJump" type="button">
-        View button laboratory →
-       </button>
-      </div>
-      <div class="journey-pane" data-journey-pane="5" hidden="">
-       <strong>
-        Review → Test → Export → Implement
-       </strong>
-       <p class="help">
-        Your design system now has foundation and semantic tokens, responsive typography and component examples. Before using it in a project, complete the human checks below.
-       </p>
-       <div class="journey-tip">
-        <strong>
-         Student readiness checklist (self-assessment)
-        </strong>
-        <div class="readiness-checks">
-         <label>
-          <input class="readiness-item" type="checkbox"/>
-          I can explain primary, supporting and accent colour roles.
-         </label>
-         <label>
-          <input class="readiness-item" type="checkbox"/>
-          I checked text and component contrast in both themes.
-         </label>
-         <label>
-          <input class="readiness-item" type="checkbox"/>
-          I compared typography on mobile and desktop and documented it in Figma.
-         </label>
-         <label>
-          <input class="readiness-item" type="checkbox"/>
-          I tested responsive cards/forms and keyboard focus.
-         </label>
-         <label>
-          <input class="readiness-item" type="checkbox"/>
-          I inspected button variants and all applicable interaction states, including keyboard focus.
-         </label>
-         <label>
-          <input class="readiness-item" type="checkbox"/>
-          I exported CSS and backed up the project as JSON.
-         </label>
-        </div>
-        <p class="help" id="readinessStatus" role="status">
-         0 of 6 checks completed. These are self-reported, not automated accessibility tests.
-        </p>
-       </div>
-       <div class="journey-mini">
-        <span>
-         ✓ Colour
-        </span>
-        <span>
-         ✓ Typography
-        </span>
-        <span>
-         ✓ Spacing
-        </span>
-        <span>
-         ✓ Radius
-        </span>
-        <span>
-         ✓ Themes
-        </span>
-        <span>
-         ✓ Button states
-        </span>
-       </div>
-       <div class="local-actions">
-        <button id="jExportCss" type="button">
-         Download CSS
-        </button>
-        <button id="jExportJson" type="button">
-         Download JSON
-        </button>
-        <button id="jViewCss" type="button">
-         Show CSS
-        </button>
-       </div>
-       <p class="journey-tip">
-        Apply the CSS to your own semantic HTML, test at 375 / 768 / 1280 px, and commit CSS plus JSON to your GitHub repository. Local browser storage is not a permanent backup.
-       </p>
-      </div>
-      <div class="journey-actions">
-       <button id="jBack" type="button">
-        ← Back
-       </button>
-       <button id="jNext" type="button">
-        Next →
-       </button>
-      </div>
-      <div class="journey-status" id="jProgress" role="status">
-       Step 1 of 6
-      </div>
-      <div class="local-projects">
-       <hr/>
-       <h3>
-        My local projects
-       </h3>
-       <p class="help">
-        Saved only in this browser, on this device. No account or server.
-       </p>
-       <div class="field">
-        <label for="jProjects">
-         Saved designs
-        </label>
-        <select id="jProjects">
-        </select>
-       </div>
-       <div class="local-actions">
-        <button id="jSaveLocal" type="button">
-         Save project
-        </button>
-        <button id="jNewLocal" type="button">
-         New project
-        </button>
-        <button id="jLoadLocal" type="button">
-         Load
-        </button>
-        <button id="jDeleteLocal" type="button">
-         Delete
-        </button>
-       </div>
-       <p class="journey-status" id="jSaveStatus" role="status">
-        NSCC example is loaded into My Project. Save a copy to preserve changes.
-       </p>
-      </div>
-     </section>
-     <details class="studio-legacy">
-      <summary>
-       All parameters · Advanced editing
-      </summary>
-      <section class="panel">
-       <h2>
-        Configure foundations
-       </h2>
-       <p class="help">
-        Changes update the previews and generated code immediately.
-       </p>
-       <div class="field">
-        <label for="project">
-         Project name
-        </label>
-        <input id="project" maxlength="90" value="My Project"/>
-       </div>
-       <div class="field">
-        <label for="method">
-         Colour ramp method
-        </label>
-        <select id="method">
-         <option value="mix">
-          RGB mix (white/black)
-         </option>
-         <option value="oklch">
-          OKLCH lightness
-         </option>
-        </select>
-       </div>
-       <div class="field">
-        <label for="primary">
-         Primary colour
-        </label>
-        <div class="fieldline">
-         <input id="primary" type="color" value="#004780"/>
-         <output id="primaryOut">
-          #004780
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="secondary">
-         Supporting colour (default: NSCC dark grey)
-        </label>
-        <div class="fieldline">
-         <input id="secondary" type="color" value="#495965"/>
-         <output id="secondaryOut">
-          #495965
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="accent">
-         Featured accent (choose from NSCC palette)
-        </label>
-        <div class="fieldline">
-         <input id="accent" type="color" value="#cbdb2a"/>
-         <output id="accentOut">
-          #00BADC
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="brandAccent">
-         Official NSCC accent swatch
-        </label>
-        <select id="brandAccent">
-         <option value="">
-          Custom accent (use picker above)
-         </option>
-         <option value="#00BADC">
-          Teal · #00BADC
-         </option>
-         <option value="#5FC5BF">
-          Turquoise · #5FC5BF
-         </option>
-         <option value="#F37327">
-          Orange · #F37327
-         </option>
-         <option value="#2B71B9">
-          Blue · #2B71B9
-         </option>
-         <option value="#CBDB2A">
-          Green · #CBDB2A
-         </option>
-         <option value="#EF426F">
-          Fuchsia · #EF426F
-         </option>
-         <option value="#57B7E7">
-          Light blue · #57B7E7
-         </option>
-         <option value="#FFEF00">
-          Yellow · #FFEF00
-         </option>
-        </select>
-        <p class="help">
-         The official accent swatches are fixed brand colours. Generated tints/shades are educational derivatives, not additional official NSCC colours.
-        </p>
-       </div>
-       <hr/>
-       <div class="field">
-        <label for="font">
-         Font family
-        </label>
-        <select id="font">
-         <option value="Arial, Helvetica, sans-serif">
-          Arial · sans-serif (NSCC alternative)
-         </option>
-         <option value="Georgia, 'Times New Roman', serif">
-          Georgia · serif
-         </option>
-         <option value="Verdana, Geneva, sans-serif">
-          Verdana · sans-serif
-         </option>
-         <option value="system-ui, sans-serif">
-          System UI · sans-serif
-         </option>
-        </select>
-       </div>
-       <div class="field">
-        <label for="base">
-         Body font size
-        </label>
-        <div class="fieldline">
-         <input id="base" max="22" min="14" step="1" type="range" value="16"/>
-         <output id="baseOut">
-          16px
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="ratio">
-         Typography ratio
-        </label>
-        <div class="fieldline">
-         <input id="ratio" max="1.5" min="1.125" step="0.025" type="range" value="1.25"/>
-         <output id="ratioOut">
-          1.25
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="leading">
-         Body line height
-        </label>
-        <div class="fieldline">
-         <input id="leading" max="1.9" min="1.3" step="0.05" type="range" value="1.55"/>
-         <output id="leadingOut">
-          1.55
-         </output>
-        </div>
-       </div>
-       <hr/>
-       <div class="field">
-        <label for="spacing">
-         Spacing unit
-        </label>
-        <div class="fieldline">
-         <input id="spacing" max="8" min="3" step="1" type="range" value="4"/>
-         <output id="spacingOut">
-          4px
-         </output>
-        </div>
-       </div>
-       <div class="field">
-        <label for="radius">
-         Corner radius
-        </label>
-        <div class="fieldline">
-         <input id="radius" max="28" min="0" step="2" type="range" value="12"/>
-         <output id="radiusOut">
-          12px
-         </output>
-        </div>
-       </div>
-       <p class="help">
-        The NSCC case study uses Arial because Greycliff is licensed. Colours are illustrative classroom examples, not an official NSCC token library.
-       </p>
-      </section>
-      <section aria-labelledby="advancedTitle" class="panel studio-controls">
-       <div class="section-head">
-        <h2 id="advancedTitle">
-         Advanced design parameters
-        </h2>
-        <button class="ghost" id="resetAdvanced" type="button">
-         Reset
-        </button>
-       </div>
-       <p class="help">
-        Expand a category to tune the system. All controls update live previews and exported CSS. Component states are simulated for teaching.
-       </p>
-       <details open="">
-        <summary>
-         Interaction states
-        </summary>
-        <div class="group-body">
-         <div class="field">
-          <label for="advState">
-           Demonstrate state
-          </label>
-          <select id="advState">
-           <option value="default">
-            Default
-           </option>
-           <option value="hover">
-            Hover
-           </option>
-           <option value="focus">
-            Focus-visible
-           </option>
-           <option value="active">
-            Active / pressed
-           </option>
-           <option value="disabled">
-            Disabled
-           </option>
-           <option value="selected">
-            Selected
-           </option>
-           <option value="invalid">
-            Invalid
-           </option>
-           <option value="success">
-            Valid / success
-           </option>
-           <option value="readonly">
-            Read-only
-           </option>
-           <option value="loading">
-            Loading
-           </option>
-          </select>
-         </div>
-         <div class="field">
-          <label for="advFocus">
-           Focus outline thickness
-          </label>
-          <div class="inline-range">
-           <input id="advFocus" max="6" min="2" step="1" type="range" value="3"/>
-           <output id="advFocusOut">
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="advHeight">
-           Control height
-          </label>
-          <div class="inline-range">
-           <input id="advHeight" max="64" min="34" type="range" value="42"/>
-           <output id="advHeightOut">
-           </output>
-          </div>
-         </div>
-         <p class="control-hint">
-          Choose a state, then inspect the right-hand State Explorer and generated CSS.
-         </p>
-        </div>
-       </details>
-       <details>
-        <summary>
-         Semantic colours and feedback
-        </summary>
-        <div class="group-body">
-         <p class="control-hint">
-          These editable semantic roles are distinct from the fixed NSCC brand reference swatches. They set the
-          <strong>
-           light theme
-          </strong>
-          feedback colours; the dark theme keeps its own generated, higher-contrast values.
-         </p>
-         <div id="advColors">
-         </div>
-        </div>
-       </details>
-       <details>
-        <summary>
-         Typography and readability
-        </summary>
-        <div class="group-body">
-         <div class="field">
-          <label for="advWeight">
-           Heading weight
-          </label>
-          <select id="advWeight">
-           <option value="600">
-            600 · Semibold
-           </option>
-           <option selected="" value="700">
-            700 · Bold
-           </option>
-           <option value="800">
-            800 · Extra bold
-           </option>
-          </select>
-         </div>
-         <div class="field">
-          <label for="advMeasure">
-           Reading measure (ch)
-          </label>
-          <div class="inline-range">
-           <input id="advMeasure" max="85" min="40" type="range" value="65"/>
-           <output id="advMeasureOut">
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="advTracking">
-           Heading letter spacing (em × 100)
-          </label>
-          <div class="inline-range">
-           <input id="advTracking" max="10" min="-5" type="range" value="-2"/>
-           <output id="advTrackingOut">
-           </output>
-          </div>
-         </div>
-        </div>
-       </details>
-       <details>
-        <summary>
-         Surfaces, borders and elevation
-        </summary>
-        <div class="group-body">
-         <div class="field">
-          <label for="advBorder">
-           Border width
-          </label>
-          <div class="inline-range">
-           <input id="advBorder" max="4" min="1" type="range" value="1"/>
-           <output id="advBorderOut">
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="advShadow">
-           Elevation
-          </label>
-          <select id="advShadow">
-           <option value="none">
-            None
-           </option>
-           <option value="subtle">
-            Subtle
-           </option>
-           <option value="medium">
-            Medium
-           </option>
-           <option value="strong">
-            Strong
-           </option>
-          </select>
-         </div>
-         <div class="field">
-          <label for="advOpacity">
-           Muted surface opacity (%)
-          </label>
-          <div class="inline-range">
-           <input id="advOpacity" max="100" min="20" type="range" value="100"/>
-           <output id="advOpacityOut">
-           </output>
-          </div>
-         </div>
-        </div>
-       </details>
-       <details>
-        <summary>
-         Responsive and layout
-        </summary>
-        <div class="group-body">
-         <div class="field">
-          <label for="advColumns">
-           Card grid minimum width
-          </label>
-          <div class="inline-range">
-           <input id="advColumns" max="320" min="150" step="10" type="range" value="210"/>
-           <output id="advColumnsOut">
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="advGap">
-           Grid gap (px)
-          </label>
-          <div class="inline-range">
-           <input id="advGap" max="32" min="4" type="range" value="12"/>
-           <output id="advGapOut">
-           </output>
-          </div>
-         </div>
-         <div class="field">
-          <label for="advAlign">
-           Content alignment
-          </label>
-          <select id="advAlign">
-           <option value="start">
-            Start
-           </option>
-           <option value="center">
-            Center
-           </option>
-           <option selected="" value="stretch">
-            Stretch
-           </option>
-          </select>
-         </div>
-        </div>
-       </details>
-       <details>
-        <summary>
-         Accessibility and motion
-        </summary>
-        <div class="group-body">
-         <div class="checkrow">
-          <input id="advReduce" type="checkbox"/>
-          <label for="advReduce">
-           Reduce demo animations
-          </label>
-         </div>
-         <div class="checkrow">
-          <input checked="" id="advUnderline" type="checkbox"/>
-          <label for="advUnderline">
-           Underline links
-          </label>
-         </div>
-         <div class="field">
-          <label for="advMotion">
-           Transition duration (ms)
-          </label>
-          <div class="inline-range">
-           <input id="advMotion" max="500" min="0" step="25" type="range" value="150"/>
-           <output id="advMotionOut">
-           </output>
-          </div>
-         </div>
-         <p class="control-hint">
-          A simulated state does not replace keyboard, zoom, reflow or screen-reader testing.
-         </p>
-        </div>
-       </details>
-      </section>
-     </details>
-    </aside>
-    <div class="studio-right">
-     <main id="main">
-      <nav aria-label="Seven design system sections" class="studio-section-nav">
-       <a href="#studio-section-1">
-        01 · Colour
-       </a>
-       <a href="#studio-section-2">
-        02 · Typography
-       </a>
-       <a href="#studio-section-3">
-        03 · Components
-       </a>
-       <a href="#studio-section-4">
-        04 · Responsive
-       </a>
-       <a href="#studio-section-5">
-        05 · Accessibility
-       </a>
-       <a href="#studio-section-6">
-        06 · CSS &amp; export
-       </a>
-       <a href="#studio-section-7">
-        07 · Workflow
-       </a>
-       <a href="#studio-section-8">08 · Token catalogue</a>
-      </nav>
-      <section class="panel" id="brandPalette">
-       <div class="section-head">
-        <div>
-         <h2>
-          NSCC official colour palette
-         </h2>
-         <p class="help">
-          Exact HEX values from the NSCC Visual Identity Guidelines. Three primary colours and eight accent colours. These are
-          <strong>
-           brand swatches
-          </strong>
-          , not interchangeable CSS semantic roles.
-         </p>
-        </div>
-        <button class="ghost" id="restoreNSCC" type="button">
-         Restore NSCC defaults
-        </button>
-       </div>
-       <h3>
-        Primary brand colours
-       </h3>
-       <div class="brand-grid" id="brandPrimary">
-       </div>
-       <h3>
-        Accent brand colours
-       </h3>
-       <div class="brand-grid" id="brandAccents">
-       </div>
-       <div class="note">
-        <strong>
-         Important distinction:
-        </strong>
-        <ul>
-         <li>
-          <strong>
-           Brand primary
-          </strong>
-          describes NSCC's official white, blue and dark grey palette.
-         </li>
-         <li>
-          <strong>
-           CSS
-           <code>
-            --primary
-           </code>
-          </strong>
-          describes the interface's main action colour; its default is NSCC blue.
-         </li>
-         <li>
-          <strong>
-           Brand accent
-          </strong>
-          describes eight approved colours; select one to feature in a UI component.
-         </li>
-         <li>
-          <strong>
-           Generated ramps
-          </strong>
-          are teaching aids derived from an official swatch; they are not official additional brand colours.
-         </li>
-         <li>
-          <strong>
-           Contrast and meaning:
-          </strong>
-          an official brand colour is not automatically accessible as text or a button background.
-         </li>
-        </ul>
-       </div>
-       <p class="help">
-        Reference:
-        <a href="https://www.nscc.ca/docs/about-nscc/visual-identity-guidelines/guidelines.pdf" rel="noopener noreferrer" target="_blank">
-         NSCC Visual Identity Guidelines (PDF)
-        </a>
-        . This classroom tool is an educational prototype, not an official NSCC website template.
-       </p>
-      </section>
-      <section class="panel" id="studio-section-1">
-       <div class="section-head">
-        <div>
-         <h2>
-          1. Colour systems
-         </h2>
-         <p class="help">
-          Each ramp has 11 steps. The centre step (500) preserves your chosen HEX value.
-         </p>
-        </div>
-        <span class="pill" id="rampMethodLabel">
-         RGB mix
-        </span>
-       </div>
-       <section class="oklch-workbench" aria-labelledby="oklchTitle">
-  <div class="section-head"><div><h3 id="oklchTitle">Interactive OKLCH colour wheel</h3><p class="help">Explore hue around the wheel and chroma from centre to edge. Adjust perceptual lightness separately, then apply the colour to a semantic role. The 500 ramp step remains your chosen colour.</p></div><span class="pill">Perceptual colour lab</span></div>
-  <div class="oklch-workspace">
-    <div class="oklch-wheel-wrap"><canvas id="oklchWheel" width="340" height="340" role="img" aria-label="Interactive hue and chroma colour wheel. Use the accessible sliders to change the selection."></canvas><div class="oklch-wheel-cross" id="oklchWheelCross" aria-hidden="true"></div></div>
-    <div class="oklch-editor">
-      <div class="field"><label for="oklchRole">Colour role to edit</label><select id="oklchRole"><option value="primary">Primary</option><option value="secondary">Supporting</option><option value="accent">Accent</option></select></div>
-      <div class="field"><label for="oklchLight">Perceptual lightness (L) <output id="oklchLightOut"></output></label><input id="oklchLight" type="range" min="0" max="100" step="1"></div>
-      <div class="field"><label for="oklchChroma">Chroma (C) <output id="oklchChromaOut"></output></label><input id="oklchChroma" type="range" min="0" max="0.4" step="0.005"></div>
-      <div class="field"><label for="oklchHue">Hue (h) <output id="oklchHueOut"></output></label><input id="oklchHue" type="range" min="0" max="359" step="1"></div>
-      <div class="oklch-result"><div id="oklchSwatch" class="oklch-selected-swatch"></div><div><strong id="oklchHex">#004780</strong><div id="oklchCoords" class="help"></div><div id="oklchGamut" class="help" role="status"></div></div></div>
-      <div class="button-row"><button type="button" id="oklchApply" class="ghost">Apply to selected role</button><button type="button" id="oklchReset" class="ghost">Load current role colour</button></div>
-    </div>
-  </div>
-  <p class="help">The wheel shows an sRGB display approximation. At its edges, out-of-gamut chroma is reduced automatically. The ramp generator varies lightness toward its endpoints and gently reduces chroma at the extremes. The official NSCC swatches remain unchanged.</p>
-</section>
-<div id="ramps">
-       </div>
-       <h3>
-        Semantic colour roles
-       </h3>
-       <div class="swatch-grid" id="semanticSwatches">
-       </div>
-       <details>
-        <summary>
-         How does the ramp generator work?
-        </summary>
-        <ul>
-         <li>
-          <strong>
-           RGB Mix:
-          </strong>
-          interpolate each red, green and blue channel toward white for lighter steps, or black for darker steps. Round channels to whole numbers.
-         </li>
-         <li>
-          <strong>
-           OKLCH:
-          </strong>
-          convert the anchor to perceptual lightness, chroma and hue; vary lightness and gently reduce chroma at the extremes; convert back to sRGB while reducing out-of-gamut chroma.
-         </li>
-         <li>
-          Neither method automatically guarantees contrast or an attractive palette. Review each role and theme.
-         </li>
-         <li>
-          Secondary and accent colours are independently chosen in V2; harmony suggestions are planned for a later iteration.
-         </li>
-        </ul>
-       </details>
-      </section>
-      <section class="panel" id="studio-section-2">
-       <h2>
-        2. Typography studio
-       </h2>
-       <p class="help">
-        A modular scale multiplies or divides the base size by the selected ratio. Compare roles and inspect fluid heading CSS.
-       </p>
-       <div class="grid2">
-        <div class="component">
-         <h3>
-          Mobile specimen · 375 px
-         </h3>
-         <div id="mobileType">
-         </div>
-        </div>
-        <div class="component">
-         <h3>
-          Desktop specimen · 1280 px
-         </h3>
-         <div id="desktopType">
-         </div>
-        </div>
-       </div>
-       <section class="clamp-lab" aria-labelledby="clampLabTitle">
-        <div class="section-head"><div><h3 id="clampLabTitle">Interactive Clamp Calculator</h3><p class="help">Explore how base size, modular ratio, viewport boundaries and mobile scaling generate CSS <code>clamp()</code>. Changes update the Studio typography, preview and CSS inspector.</p></div><button type="button" class="ghost" id="clampReset">Reset clamp settings</button></div>
-        <div class="clamp-grid">
-         <div class="component"><h4>1 · Typography foundation</h4><p class="help">Base font and modular ratio use the Studio's existing controls.</p><label for="clampBase">Base size: <output id="clampBaseOut">16px</output></label><input id="clampBase" type="range" min="14" max="22" step="1" value="16"><label for="clampRatio">Scale ratio: <output id="clampRatioOut">1.25</output></label><input id="clampRatio" type="range" min="1.125" max="1.5" step="0.025" value="1.25"><label for="clampRole">Typography level</label><select id="clampRole"><option value="5">Display</option><option value="4">H1</option><option value="3" selected>H2</option><option value="0">Body</option><option value="-1">Small</option></select></div>
-         <div class="component"><h4>2 · Responsive boundaries</h4><label for="clampMinWidth">Minimum viewport: <output id="clampMinWidthOut">375px</output></label><input id="clampMinWidth" type="range" min="320" max="600" step="5" value="375"><label for="clampMaxWidth">Maximum viewport: <output id="clampMaxWidthOut">1280px</output></label><input id="clampMaxWidth" type="range" min="900" max="1600" step="10" value="1280"><label for="clampFactor">Mobile heading multiplier: <output id="clampFactorOut">82%</output></label><input id="clampFactor" type="range" min="0.7" max="1" step="0.01" value="0.82"></div>
-        </div>
-        <div class="component clamp-result"><h4>3 · Explore the viewport</h4><label for="clampViewport">Viewport width: <output id="clampViewportOut">768px</output></label><input id="clampViewport" type="range" min="320" max="1600" step="1" value="768"><div class="clamp-metrics"><div><small>Minimum</small><strong id="clampMinFont">—</strong></div><div><small>Computed at viewport</small><strong id="clampComputed">—</strong></div><div><small>Maximum</small><strong id="clampMaxFont">—</strong></div></div><svg id="clampGraph" viewBox="0 0 640 190" role="img" aria-label="Responsive font size plotted against viewport width"><path d="M48 18 V154 H620" fill="none" stroke="currentColor" opacity=".35"/><path id="clampCurve" fill="none" stroke="#008e9e" stroke-width="4"/><circle id="clampDot" r="6" fill="#CBDB2A" stroke="#14253A" stroke-width="2"/><text x="48" y="177" fill="currentColor" font-size="13">320px</text><text x="565" y="177" fill="currentColor" font-size="13">1600px</text><text x="54" y="14" fill="currentColor" font-size="13">Font size</text></svg><p class="help" id="clampExplanation"></p></div>
-        <div class="component"><div class="section-head"><h4>4 · Generated CSS and the calculation</h4><button class="ghost" type="button" id="clampCopy">Copy CSS</button></div><pre class="clamp-css"><code id="clampCss"></code></pre><div id="clampMath" class="help"></div><p class="help">The calculator uses <code>rem</code> limits and offset so the exported rule better respects root font settings. Test browser zoom and user font preferences in your finished project.</p></div>
-       </section>
-       <h3 style="margin-top:18px">
-        Complete size ladder
-       </h3>
-       <div id="typeLadder">
-       </div>
-       <details>
-        <summary>
-         Figma exercise — reproduce the scale
-        </summary>
-        <ol>
-         <li>
-          Create two frames:
-          <strong>
-           375 px
-          </strong>
-          and
-          <strong>
-           1280 px
-          </strong>
-          wide.
-         </li>
-         <li>
-          Use the same font family and content in both frames.
-         </li>
-         <li>
-          Recreate the displayed sizes and line heights as named text styles.
-         </li>
-         <li>
-          Compare hierarchy, wrapping, line lengths and readability.
-         </li>
-         <li>
-          Record any changes before applying them to your integrated project.
-         </li>
-        </ol>
-       </details>
-      </section>
-      <section class="panel" id="buttonDesignLab">
-       <div class="section-head">
-        <div>
-         <div class="eyebrow">
-          Component design wizard · V4.1
-         </div>
-         <h2>
-          Button Design Laboratory
-         </h2>
-         <p class="help">
-          Configure on the left; compare every state and variant here. CSS is generated from the same settings.
-         </p>
-        </div>
-        <span class="pill" id="bdContext">
-         Primary · Medium · Default
-        </span>
-       </div>
-       <div class="grid2">
-        <div class="component">
-         <h3>
-          Selected button · live preview
-         </h3>
-         <div class="bd-single" id="bdSingle">
-         </div>
-         <p class="help" id="bdDescription">
-         </p>
-         <p class="help">
-          Use Tab to inspect a genuine keyboard focus ring on the live button. Hover and pressed state tiles are teaching simulations.
-         </p>
-        </div>
-        <div class="component">
-         <h3>
-          Theme comparison
-         </h3>
-         <div class="bd-theme-grid" id="bdThemes">
-         </div>
-        </div>
-       </div>
-       <h3>
-        All button variants × interaction states
-       </h3>
-       <div class="bd-matrix" id="bdMatrix">
-       </div>
-       <h3>
-        CSS for this button system
-       </h3>
-       <pre class="code" id="bdCode" tabindex="0"></pre>
-       <div class="button-row">
-        <button class="ghost" id="bdCopy" type="button">
-         Copy button CSS
-        </button>
-        <button class="ghost" id="bdExport" type="button">
-         Download button CSS
-        </button>
-       </div>
-       <div class="note">
-        <strong>
-         Accessibility and semantics:
-        </strong>
-        <ul>
-         <li>
-          <code>
-           :hover
-          </code>
-          ,
-          <code>
-           :active
-          </code>
-          and
-          <code>
-           :focus-visible
-          </code>
-          are real CSS pseudo-classes. The matrix uses labelled simulations for side-by-side inspection.
-         </li>
-         <li>
-          Use native
-          <code>
-           &lt;button&gt;
-          </code>
-          and the
-          <code>
-           disabled
-          </code>
-          attribute for unavailable actions.
-         </li>
-         <li>
-          <code>
-           aria-pressed
-          </code>
-          belongs on toggle buttons only. Ordinary submit buttons do not need it.
-         </li>
-         <li>
-          Loading requires application logic, accessible status messaging and duplicate-submission prevention; CSS alone cannot provide that behaviour.
-         </li>
-         <li>
-          Test contrast in both themes and with every hover/active colour. Reduced-motion preferences disable nonessential transitions.
-         </li>
-        </ul>
-       </div>
-      </section>
-      <section class="panel" id="studio-section-3">
-       <h2>
-        3. Spacing, surfaces and component states
-       </h2>
-       <div class="grid2">
-        <div>
-         <h3>
-          Spacing scale
-         </h3>
-         <div class="spacer-bars" id="spacingBars">
-         </div>
-        </div>
-        <div>
-         <h3>
-          Surface layers
-         </h3>
-         <div class="component">
-          <strong>
-           Surface
-          </strong>
-          <p class="mini muted">
-           --surface · main card background
-          </p>
-          <div class="component muted-surface">
-           <strong>
-            Muted surface
-           </strong>
-           <p class="mini muted">
-            --surface-muted · nested region
-           </p>
-          </div>
-         </div>
-        </div>
-       </div>
-       <hr/>
-       <h3>
-        Buttons and states
-       </h3>
-       <div class="button-row">
-        <button class="demo-btn" type="button">
-         Primary
-        </button>
-        <button class="demo-btn secondary" type="button">
-         Secondary
-        </button>
-        <button class="demo-btn accent" type="button">
-         Accent
-        </button>
-        <button class="demo-btn outline" type="button">
-         Outline
-        </button>
-        <button class="demo-btn" disabled="" type="button">
-         Disabled
-        </button>
-       </div>
-       <p class="help">
-        Use Tab to inspect focus-visible; hover over buttons to observe their hover states.
-       </p>
-       <div class="grid2" style="margin-top:16px">
-        <div class="component">
-         <h3>
-          Form control
-         </h3>
-         <label for="demoEmail">
-          Email address
-         </label>
-         <input class="demo-input" id="demoEmail" placeholder="student@example.ca" type="email"/>
-         <p class="help">
-          Try keyboard focus and inspect the border token.
-         </p>
-        </div>
-        <div class="component">
-         <h3>
-          Validation state
-         </h3>
-         <label for="demoInvalid">
-          Required field
-         </label>
-         <input aria-describedby="invalidHelp" aria-invalid="true" class="demo-input" id="demoInvalid" value="invalid value"/>
-         <p class="help" id="invalidHelp">
-          Example error: enter a valid value.
-         </p>
-        </div>
-       </div>
-       <div class="grid3" style="margin-top:14px">
-        <div class="alert">
-         <strong>
-          Success
-         </strong>
-         <div class="mini">
-          Changes saved (example).
-         </div>
-        </div>
-        <div class="alert warn">
-         <strong>
-          Warning
-         </strong>
-         <div class="mini">
-          Review contrast values.
-         </div>
-        </div>
-        <div class="alert error">
-         <strong>
-          Error
-         </strong>
-         <div class="mini">
-          Check required fields.
-         </div>
-        </div>
-       </div>
-      </section>
-      <section class="panel" id="stateExplorer">
-       <div class="section-head">
-        <div>
-         <h2>
-          Component State Explorer
-         </h2>
-         <p class="help">
-          Use the left-side Interaction states control to simulate hover, focus, pressed, disabled, selected, invalid, success, read-only or loading. Real keyboard interactions remain available.
-         </p>
-        </div>
-        <span class="pill" id="advStateLabel">
-         Default
-        </span>
-       </div>
-       <div class="state-sandbox">
-        <div class="state-tile" id="stateButtonTile">
-         <label>
-          Button preview
-         </label>
-         <button class="demo-btn" id="advDemoButton" type="button">
-          Register for an event
-         </button>
-         <p class="state-label">
-          Primary background + on-primary text
-         </p>
-        </div>
-        <div class="state-tile" id="stateInputTile">
-         <label for="advDemoInput">
-          Input preview
-         </label>
-         <input class="demo-input" id="advDemoInput" value="student@example.ca"/>
-         <p class="state-label" id="advInputHelp">
-          Surface + border + feedback states
-         </p>
-        </div>
-       </div>
-       <details>
-        <summary>
-         Why simulate states?
-        </summary>
-        <ul>
-         <li>
-          Students can inspect visual states without needing a mouse or triggering form validation.
-         </li>
-         <li>
-          State-specific CSS appears in the generated stylesheet.
-         </li>
-         <li>
-          Use keyboard Tab to verify real focus-visible behaviour separately.
-         </li>
-        </ul>
-       </details>
-      </section>
-      <section class="panel" id="studio-section-4">
-       <div class="section-head">
-        <div>
-         <h2>
-          4. Responsive page preview
-         </h2>
-         <p class="help">
-          The inner demo uses a mobile-first auto-fit CSS Grid and fluid heading sizes.
-         </p>
-        </div>
-        <div aria-label="Preview width" class="tabs" role="group">
-         <button aria-pressed="false" class="tab" data-width="mobile" type="button">
-          375 px
-         </button>
-         <button aria-pressed="false" class="tab" data-width="tablet" type="button">
-          768 px
-         </button>
-         <button aria-pressed="true" class="tab" data-width="desktop" type="button">
-          1280 px
-         </button>
-         <button aria-pressed="false" class="tab" data-width="fluid" type="button">
-          Fluid
-         </button>
-        </div>
-       </div>
-       <div class="preview-shell" id="previewShell">
-        <div class="preview-frame" data-width="desktop" id="previewFrame">
-         <div class="eyebrow">
-          Illustrative campus events
-         </div>
-         <h3>
-          Discover what's happening
-         </h3>
-         <p class="muted">
-          A sample interface using the current colour, typography, spacing and radius tokens. Resize the preview to test wrapping and layout.
-         </p>
-         <div class="preview-grid">
-          <article class="preview-card">
-           <span class="badge">
-            Workshop
-           </span>
-           <h3>
-            Design fundamentals
-           </h3>
-           <p class="mini muted">
-            Explore colour, typography and visual hierarchy.
-           </p>
-           <button class="demo-btn" type="button">
-            View details
-           </button>
-          </article>
-          <article class="preview-card">
-           <span class="badge">
-            Community
-           </span>
-           <h3>
-            Open house
-           </h3>
-           <p class="mini muted">
-            Connect with students and instructors.
-           </p>
-           <button class="demo-btn secondary" type="button">
-            Learn more
-           </button>
-          </article>
-          <article class="preview-card">
-           <span class="badge">
-            Technology
-           </span>
-           <h3>
-            Build a website
-           </h3>
-           <p class="mini muted">
-            Apply reusable tokens to responsive components.
-           </p>
-           <button class="demo-btn outline" type="button">
-            Explore
-           </button>
-          </article>
-         </div>
-        </div>
-       </div>
-       <p class="help">
-        The preview is constrained by your browser width. For an exact 1280 px screenshot, open the exported page in browser device emulation or a sufficiently wide viewport.
-       </p>
-       <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
-       <p class="help" id="responsiveTypeReadout" role="status" aria-live="polite"></p>
-      </section>
-      <section class="panel" id="studio-section-5">
-       <h2>
-        5. Accessibility quick checks
-       </h2>
-       <p class="help">
-        WCAG 2.x text contrast: 4.5:1 for normal text and 3:1 for large text. This checker measures selected colour pairs only; it does not certify accessibility.
-       </p>
-       <div id="contrastChecks">
-       </div>
-       <p class="note">
-        Also verify focus visibility, keyboard use, 200% text resize, content reflow, non-text contrast and meaning conveyed without colour.
-       </p>
-      </section>
-      <section class="panel" id="studio-section-6">
-       <h2>
-        6. Inspect and export
-       </h2>
-       <p class="help">
-        The output includes foundation tokens, semantic roles, responsive type and commented component examples. Export a JSON configuration to continue your work later.
-       </p>
-       <div aria-label="Code views" class="tabs" role="tablist">
-        <button aria-selected="true" class="tab" id="viewCss" role="tab" type="button">
-         Commented CSS
-        </button>
-        <button aria-selected="false" class="tab" id="viewJson" role="tab" type="button">
-         Project JSON
-        </button>
-        <button aria-selected="false" class="tab" id="viewHtml" role="tab" type="button">
-         HTML example
-        </button>
-       </div>
-       <div class="button-row">
-        <button class="demo-btn" id="copyCode" type="button">
-         Copy visible code
-        </button>
-        <button class="ghost" id="downloadCode" type="button">
-         Download visible code
-        </button>
-       </div>
-       <pre class="code" id="codeView" tabindex="0"></pre>
-       <h3>
-        Token dependency inspector
-       </h3>
-       <div class="token-list" id="tokenInspector">
-       </div>
-      </section>
-      <section class="panel" id="studio-section-7">
-       <h2>
-        7. Classroom workflow
-       </h2>
-       <ol>
-        <li>
-         <strong>
-          03A — Colour:
-         </strong>
-         configure NSCC primary, supporting and accent colours; compare RGB Mix/OKLCH; review semantic tokens and contrast.
-        </li>
-        <li>
-         <strong>
-          03B — Typography:
-         </strong>
-         configure a font stack, modular scale and leading; recreate the mobile and desktop scale in Figma.
-        </li>
-        <li>
-         <strong>
-          Responsive implementation:
-         </strong>
-         inspect CSS Grid, Flexbox,
-         <code>
-          clamp()
-         </code>
-         , spacing, radius and component states.
-        </li>
-        <li>
-         <strong>
-          Project handoff:
-         </strong>
-         save JSON and export commented CSS; integrate and adapt the code in your own project.
-        </li>
-        <li>
-         <strong>
-          Reflection:
-         </strong>
-         explain your choices and provide evidence of Figma work, testing and Git commits in Brightspace.
-        </li>
-       </ol>
-       <p class="note">
-        This is a learning tool, not a substitute for design reasoning, Figma deliverables, implementation or formal accessibility testing.
-       </p>
-      </section>
-      <section class="panel" id="studio-section-8">
-       <div class="section-head">
-        <div>
-         <h2>8. Design token catalogue</h2>
-         <p class="help">Live reference of the tokens in the exported CSS, including foundation, semantic, brand and button component values. Values update as you edit the design system.</p>
-        </div>
-        <button class="ghost" id="tokenDownload" type="button">Export token CSV</button>
-       </div>
-       <div class="field">
-        <label for="tokenSearch">Filter tokens by type, name or description</label>
-        <input id="tokenSearch" type="search" placeholder="e.g. accent, spacing, button hover" />
-       </div>
-       <p id="tokenCount" class="help" role="status"></p>
-       <div class="token-table-wrap">
-        <table class="token-catalogue">
-         <thead><tr><th scope="col">Token type</th><th scope="col">Token name</th><th scope="col">Current value</th><th scope="col">Description / usage</th></tr></thead>
-         <tbody id="tokenTableBody"></tbody>
-        </table>
-       </div>
-       <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Official NSCC brand tokens are fixed references; generated colour ramps are teaching derivatives.</p>
-      </section>
-      <div class="footer">
-       Design System Studio V4.1 · WEBD 3100 · standalone classroom beta · no external dependencies
-      </div>
-     </main>
-     <aside aria-label="Live generated CSS" class="studio-code-dock">
-      <div class="studio-dock-header">
-       <div>
-        <strong>
-         Live CSS inspector
-        </strong>
+    </header>
+    <div class="shell">
+      <section class="hero">
+        <div class="eyebrow">WEBD 3100 · Workshops 03A and 03B</div>
+        <h1>Design System Studio · Build &amp; Inspect</h1>
         <p>
-         Updates as you change the parameters
+          Choose design parameters on the left. Explore seven live design-system sections on the right, inspect the generated CSS beside the components, then export your project-ready design system.
         </p>
-       </div>
-       <button id="dockCopy" type="button">
-        Copy CSS
-       </button>
+      </section>
+      <div class="layout">
+        <aside aria-label="Design system controls" class="sidebar">
+          <section aria-labelledby="journeyTitle" class="panel studio-journey">
+            <div class="journey-kicker">Start here · Minimum viable design system</div>
+            <h2 id="journeyTitle">Build your design system</h2>
+            <p class="help">
+              Follow six practical decisions to create usable CSS. At each step: choose, observe the preview, inspect the code, and explain your decision. Advanced controls remain available below.
+            </p>
+            <div aria-label="Builder steps" class="journey-steps" role="group">
+              <button data-journey-step="0" type="button">1 · Start</button>
+              <button data-journey-step="1" type="button">2 · Palette</button>
+              <button data-journey-step="2" type="button">3 · Typography</button>
+              <button data-journey-step="3" type="button">4 · Components</button>
+              <button data-journey-step="4" type="button">5 · Buttons</button>
+              <button data-journey-step="5" type="button">6 · Deliver</button>
+            </div>
+            <div class="journey-pane" data-journey-pane="0">
+              <div class="field">
+                <label for="jProject">Project name</label>
+                <input id="jProject" maxlength="90" value="My Project" />
+              </div>
+              <div class="field">
+                <label for="jPreset">Starting theme</label>
+                <select id="jPreset">
+                  <option value="nscc">NSCC · official brand colours</option>
+                  <option value="custom">Custom · start from NSCC and edit</option>
+                </select>
+              </div>
+              <p class="journey-tip">
+                <strong>Your goal:</strong>
+                Identify the website and its audience. Start with the NSCC example, then adapt the design to your own project.
+              </p>
+              <p class="journey-tip">
+                NSCC is the example preset. The 11 brand swatches remain unchanged; your project can use custom semantic roles and generated ramps. Greycliff is licensed, so Arial is the default alternative.
+              </p>
+            </div>
+            <div class="journey-pane" data-journey-pane="1" hidden="">
+              <div class="field">
+                <label for="jPrimary">Primary UI colour</label>
+                <div class="fieldline">
+                  <input id="jPrimary" type="color" value="#004780" />
+                  <output id="jPrimaryOut">
+                    #004780
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jSecondary">Supporting colour</label>
+                <div class="fieldline">
+                  <input id="jSecondary" type="color" value="#495965" />
+                  <output id="jSecondaryOut">
+                    #495965
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jAccent">Accent colour</label>
+                <div class="fieldline">
+                  <input id="jAccent" type="color" value="#cbdb2a" />
+                  <output id="jAccentOut">
+                    #00BADC
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jRamp">Ramp method</label>
+                <select id="jRamp">
+                  <option value="mix">RGB mix</option>
+                  <option value="oklch">OKLCH</option>
+                </select>
+              </div>
+              <p class="journey-tip">
+                <strong>Try it:</strong>
+                Change the primary colour and inspect buttons, surfaces and the generated CSS. Compare light and dark mode; do not assume an attractive colour has sufficient contrast.
+              </p>
+              <p class="journey-tip">
+                Brand swatches are fixed references; colour ramps are generated teaching derivatives. Check contrast after changing colours.
+              </p>
+            </div>
+            <div class="journey-pane" data-journey-pane="2" hidden="">
+              <div class="field">
+                <label for="jFont">Font family</label>
+                <select id="jFont">
+                  <option value="Arial, Helvetica, sans-serif">Arial · NSCC alternative</option>
+                  <option value="Georgia, 'Times New Roman', serif">Georgia · serif</option>
+                  <option value="Verdana, Geneva, sans-serif">Verdana · sans-serif</option>
+                  <option value="system-ui, sans-serif">System UI</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="jBase">Body size (px)</label>
+                <div class="fieldline">
+                  <input id="jBase" max="22" min="14" type="range" value="16" />
+                  <output id="jBaseOut">
+                    16px
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jRatio">Scale ratio</label>
+                <div class="fieldline">
+                  <input id="jRatio"
+                         max="1.5"
+                         min="1.125"
+                         step="0.025"
+                         type="range"
+                         value="1.25" />
+                  <output id="jRatioOut">
+                    1.25
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jLeading">Line height</label>
+                <div class="fieldline">
+                  <input id="jLeading"
+                         max="1.9"
+                         min="1.3"
+                         step="0.05"
+                         type="range"
+                         value="1.55" />
+                  <output id="jLeadingOut">
+                    1.55
+                  </output>
+                </div>
+              </div>
+              <p class="journey-tip">
+                <strong>Try it:</strong>
+                Compare display, heading and body sizes at mobile and desktop widths. Record your chosen sizes in Figma; check long headings and line wrapping.
+              </p>
+              <p class="journey-tip">
+                Compare the responsive typography specimens on the right, then recreate your mobile and desktop scales in Figma.
+              </p>
+            </div>
+            <div class="journey-pane" data-journey-pane="3" hidden="">
+              <div class="field">
+                <label for="jSpacing">Spacing base (px)</label>
+                <div class="fieldline">
+                  <input id="jSpacing" max="8" min="3" type="range" value="4" />
+                  <output id="jSpacingOut">
+                    4px
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jRadius">Corner radius (px)</label>
+                <div class="fieldline">
+                  <input id="jRadius" max="28" min="0" step="2" type="range" value="12" />
+                  <output id="jRadiusOut">
+                    12px
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="jTheme">Preview theme</label>
+                <select id="jTheme">
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+              <p class="journey-tip">
+                <strong>Try it:</strong>
+                Inspect cards, forms, borders, buttons and focus states. Resize the preview and compare the same components in light and dark themes.
+              </p>
+              <p class="journey-tip">
+                These two controls establish a consistent foundation. Refine borders, states, surfaces, grid and motion in Advanced Parameters.
+              </p>
+            </div>
+            <div class="journey-pane" data-journey-pane="4" hidden="">
+              <strong>Button Design Wizard</strong>
+              <p class="help">
+                Define the default appearance, then inspect every relevant state. Settings apply across the state matrix, both themes and exported CSS.
+              </p>
+              <div class="field">
+                <label for="bdVariant">Variant to edit</label>
+                <select id="bdVariant">
+                  <option value="primary">Primary action</option>
+                  <option value="secondary">Secondary action</option>
+                  <option value="accent">Accent action</option>
+                  <option value="outline">Outline action</option>
+                  <option value="text">Text action</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="bdSource">Colour source for selected variant</label>
+                <select id="bdSource">
+                  <option value="primary">Theme primary</option>
+                  <option value="secondary">Theme secondary</option>
+                  <option value="accent">Theme accent</option>
+                  <optgroup label="Official NSCC primary colours">
+                    <option value="#FFFFFF">White</option>
+                    <option value="#004780">NSCC blue</option>
+                    <option value="#495965">Dark grey</option>
+                  </optgroup>
+                  <optgroup label="Official NSCC accent colours">
+                    <option value="#00BADC">Teal</option>
+                    <option value="#5FC5BF">Turquoise</option>
+                    <option value="#F37327">Orange</option>
+                    <option value="#2B71B9">Accent blue</option>
+                    <option value="#CBDB2A">Green</option>
+                    <option value="#EF426F">Fuchsia</option>
+                    <option value="#57B7E7">Light blue</option>
+                    <option value="#FFEF00">Yellow</option>
+                  </optgroup>
+                  <option value="custom">Custom colour</option>
+                </select>
+                <p class="help">Official swatches are fixed references. Theme colours update when the palette changes.</p>
+              </div>
+              <div class="field" hidden="" id="bdCustomWrap">
+                <label for="bdCustom">Custom base colour</label>
+                <div class="fieldline">
+                  <input id="bdCustom" type="color" value="#004780" />
+                  <output id="bdCustomOut">
+                    #004780
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="bdSize">Size to preview</label>
+                <select id="bdSize">
+                  <option value="sm">Small</option>
+                  <option selected="" value="md">Medium</option>
+                  <option value="lg">Large</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="bdState">State to inspect</label>
+                <select id="bdState">
+                  <option value="default">Default</option>
+                  <option value="hover">Hover</option>
+                  <option value="focus">Focus-visible</option>
+                  <option value="active">Active / pressed</option>
+                  <option value="disabled">Disabled</option>
+                  <option value="loading">Loading</option>
+                  <option value="selected">Toggle selected</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="bdPaddingX">
+                  Horizontal padding ·
+                  <output id="bdPaddingXOut">
+                    18px
+                  </output>
+                </label>
+                <input id="bdPaddingX" max="36" min="8" step="2" type="range" value="18" />
+              </div>
+              <div class="field">
+                <label for="bdPaddingY">
+                  Vertical padding ·
+                  <output id="bdPaddingYOut">
+                    12px
+                  </output>
+                </label>
+                <input id="bdPaddingY" max="22" min="6" step="1" type="range" value="12" />
+              </div>
+              <div class="field">
+                <label for="bdMinHeight">
+                  Minimum height ·
+                  <output id="bdMinHeightOut">
+                    44px
+                  </output>
+                </label>
+                <input id="bdMinHeight" max="64" min="36" step="2" type="range" value="44" />
+              </div>
+              <div class="field">
+                <label for="bdRadius">
+                  Button radius ·
+                  <output id="bdRadiusOut">
+                    8px
+                  </output>
+                </label>
+                <input id="bdRadius" max="28" min="0" step="2" type="range" value="8" />
+              </div>
+              <div class="field">
+                <label for="bdBorder">
+                  Border width ·
+                  <output id="bdBorderOut">
+                    1px
+                  </output>
+                </label>
+                <input id="bdBorder" max="4" min="1" type="range" value="1" />
+              </div>
+              <div class="field">
+                <label for="bdWeight">Font weight</label>
+                <select id="bdWeight">
+                  <option value="400">Regular · 400</option>
+                  <option value="500">Medium · 500</option>
+                  <option selected="" value="600">Semibold · 600</option>
+                  <option value="700">Bold · 700</option>
+                </select>
+              </div>
+              <details>
+                <summary>Advanced state colours and behaviour</summary>
+                <div class="group-body">
+                  <p class="control-hint">
+                    <strong>Button text colours:</strong>
+                    Set a separate foreground colour for default, hover, and active states. Changes apply to the selected variant and are included in CSS and project JSON.
+                  </p>
+                  <div class="field">
+                    <label for="bdText">Default text colour (selected variant)</label>
+                    <div class="fieldline">
+                      <input id="bdText" type="color" value="#ffffff" />
+                      <output id="bdTextOut">
+                        #FFFFFF
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdHoverText">Hover text colour (selected variant)</label>
+                    <div class="fieldline">
+                      <input id="bdHoverText" type="color" value="#ffffff" />
+                      <output id="bdHoverTextOut">
+                        #FFFFFF
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdActiveText">Active text colour (selected variant)</label>
+                    <div class="fieldline">
+                      <input id="bdActiveText" type="color" value="#ffffff" />
+                      <output id="bdActiveTextOut">
+                        #FFFFFF
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdDefaultBg">Default background colour</label>
+                    <div class="fieldline">
+                      <input id="bdDefaultBg" type="color" value="#004780" />
+                      <output id="bdDefaultBgOut">
+                        #004780
+                      </output>
+                    </div>
+                    <p class="help">For outline/text buttons, default is transparent until you explicitly customize it.</p>
+                  </div>
+                  <div class="field">
+                    <label for="bdBorderColor">Border colour</label>
+                    <div class="fieldline">
+                      <input id="bdBorderColor" type="color" value="#004780" />
+                      <output id="bdBorderColorOut">
+                        #004780
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdHover">Hover background (selected variant)</label>
+                    <div class="fieldline">
+                      <input id="bdHover" type="color" value="#00345d" />
+                      <output id="bdHoverOut">
+                        #00345D
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdActive">Active background (selected variant)</label>
+                    <div class="fieldline">
+                      <input id="bdActive" type="color" value="#002947" />
+                      <output id="bdActiveOut">
+                        #002947
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdFocus">Focus ring colour</label>
+                    <div class="fieldline">
+                      <input id="bdFocus" type="color" value="#f37327" />
+                      <output id="bdFocusOut">
+                        #F37327
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="bdFocusWidth">
+                      Focus ring width ·
+                      <output id="bdFocusWidthOut">
+                        3px
+                      </output>
+                    </label>
+                    <input id="bdFocusWidth" max="5" min="2" type="range" value="3" />
+                  </div>
+                  <div class="field">
+                    <label for="bdMotion">
+                      Transition duration ·
+                      <output id="bdMotionOut">
+                        150ms
+                      </output>
+                    </label>
+                    <input id="bdMotion" max="350" min="0" step="25" type="range" value="150" />
+                  </div>
+                  <label class="checkrow">
+                    <input id="bdMobileFull" type="checkbox" />
+                    Full-width buttons on narrow screens
+                  </label>
+                </div>
+              </details>
+              <p class="journey-tip">
+                <strong>Try it:</strong>
+                Select each state, compare the state matrix, then use Tab to test actual keyboard focus. The matrix simulates hover/focus for comparison; actual behaviour uses native selectors.
+              </p>
+              <p class="journey-tip">
+                <strong>Contrast check:</strong>
+                <output id="bdContrast" role="status">
+                  Select a button state
+                </output>
+              </p>
+              <button class="ghost" id="bdJump" type="button">View button laboratory →</button>
+            </div>
+            <div class="journey-pane" data-journey-pane="5" hidden="">
+              <strong>Review → Test → Export → Implement</strong>
+              <p class="help">
+                Your design system now has foundation and semantic tokens, responsive typography and component examples. Before using it in a project, complete the human checks below.
+              </p>
+              <div class="journey-tip">
+                <strong>Student readiness checklist (self-assessment)</strong>
+                <div class="readiness-checks">
+                  <label>
+                    <input class="readiness-item" type="checkbox" />
+                    I can explain primary, supporting and accent colour roles.
+                  </label>
+                  <label>
+                    <input class="readiness-item" type="checkbox" />
+                    I checked text and component contrast in both themes.
+                  </label>
+                  <label>
+                    <input class="readiness-item" type="checkbox" />
+                    I compared typography on mobile and desktop and documented it in Figma.
+                  </label>
+                  <label>
+                    <input class="readiness-item" type="checkbox" />
+                    I tested responsive cards/forms and keyboard focus.
+                  </label>
+                  <label>
+                    <input class="readiness-item" type="checkbox" />
+                    I inspected button variants and all applicable interaction states, including keyboard focus.
+                  </label>
+                  <label>
+                    <input class="readiness-item" type="checkbox" />
+                    I exported CSS and backed up the project as JSON.
+                  </label>
+                </div>
+                <p class="help" id="readinessStatus" role="status">
+                  0 of 6 checks completed. These are self-reported, not automated accessibility tests.
+                </p>
+              </div>
+              <div class="journey-mini">
+                <span>✓ Colour</span>
+                <span>✓ Typography</span>
+                <span>✓ Spacing</span>
+                <span>✓ Radius</span>
+                <span>✓ Themes</span>
+                <span>✓ Button states</span>
+              </div>
+              <div class="local-actions">
+                <button id="jExportCss" type="button">Download CSS</button>
+                <button id="jExportJson" type="button">Download JSON</button>
+                <button id="jViewCss" type="button">Show CSS</button>
+              </div>
+              <p class="journey-tip">
+                Apply the CSS to your own semantic HTML, test at 375 / 768 / 1280 px, and commit CSS plus JSON to your GitHub repository. Local browser storage is not a permanent backup.
+              </p>
+            </div>
+            <div class="journey-actions">
+              <button id="jBack" type="button">← Back</button>
+              <button id="jNext" type="button">Next →</button>
+            </div>
+            <div class="journey-status" id="jProgress" role="status">Step 1 of 6</div>
+            <div class="local-projects">
+              <hr />
+              <h3>My local projects</h3>
+              <p class="help">Saved only in this browser, on this device. No account or server.</p>
+              <div class="field">
+                <label for="jProjects">Saved designs</label>
+                <select id="jProjects"></select>
+              </div>
+              <div class="local-actions">
+                <button id="jSaveLocal" type="button">Save project</button>
+                <button id="jNewLocal" type="button">New project</button>
+                <button id="jLoadLocal" type="button">Load</button>
+                <button id="jDeleteLocal" type="button">Delete</button>
+              </div>
+              <p class="journey-status" id="jSaveStatus" role="status">
+                NSCC example is loaded into My Project. Save a copy to preserve changes.
+              </p>
+            </div>
+          </section>
+          <details class="studio-legacy">
+            <summary>All parameters · Advanced editing</summary>
+            <section class="panel">
+              <h2>Configure foundations</h2>
+              <p class="help">Changes update the previews and generated code immediately.</p>
+              <div class="field">
+                <label for="project">Project name</label>
+                <input id="project" maxlength="90" value="My Project" />
+              </div>
+              <div class="field">
+                <label for="method">Colour ramp method</label>
+                <select id="method">
+                  <option value="mix">RGB mix (white/black)</option>
+                  <option value="oklch">OKLCH lightness</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="primary">Primary colour</label>
+                <div class="fieldline">
+                  <input id="primary" type="color" value="#004780" />
+                  <output id="primaryOut">
+                    #004780
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="secondary">Supporting colour (default: NSCC dark grey)</label>
+                <div class="fieldline">
+                  <input id="secondary" type="color" value="#495965" />
+                  <output id="secondaryOut">
+                    #495965
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="accent">Featured accent (choose from NSCC palette)</label>
+                <div class="fieldline">
+                  <input id="accent" type="color" value="#cbdb2a" />
+                  <output id="accentOut">
+                    #00BADC
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="brandAccent">Official NSCC accent swatch</label>
+                <select id="brandAccent">
+                  <option value="">Custom accent (use picker above)</option>
+                  <option value="#00BADC">Teal · #00BADC</option>
+                  <option value="#5FC5BF">Turquoise · #5FC5BF</option>
+                  <option value="#F37327">Orange · #F37327</option>
+                  <option value="#2B71B9">Blue · #2B71B9</option>
+                  <option value="#CBDB2A">Green · #CBDB2A</option>
+                  <option value="#EF426F">Fuchsia · #EF426F</option>
+                  <option value="#57B7E7">Light blue · #57B7E7</option>
+                  <option value="#FFEF00">Yellow · #FFEF00</option>
+                </select>
+                <p class="help">
+                  The official accent swatches are fixed brand colours. Generated tints/shades are educational derivatives, not additional official NSCC colours.
+                </p>
+              </div>
+              <hr />
+              <div class="field">
+                <label for="font">Font family</label>
+                <select id="font">
+                  <option value="Arial, Helvetica, sans-serif">Arial · sans-serif (NSCC alternative)</option>
+                  <option value="Georgia, 'Times New Roman', serif">Georgia · serif</option>
+                  <option value="Verdana, Geneva, sans-serif">Verdana · sans-serif</option>
+                  <option value="system-ui, sans-serif">System UI · sans-serif</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="base">Body font size</label>
+                <div class="fieldline">
+                  <input id="base" max="22" min="14" step="1" type="range" value="16" />
+                  <output id="baseOut">
+                    16px
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="ratio">Typography ratio</label>
+                <div class="fieldline">
+                  <input id="ratio"
+                         max="1.5"
+                         min="1.125"
+                         step="0.025"
+                         type="range"
+                         value="1.25" />
+                  <output id="ratioOut">
+                    1.25
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="leading">Body line height</label>
+                <div class="fieldline">
+                  <input id="leading"
+                         max="1.9"
+                         min="1.3"
+                         step="0.05"
+                         type="range"
+                         value="1.55" />
+                  <output id="leadingOut">
+                    1.55
+                  </output>
+                </div>
+              </div>
+              <hr />
+              <div class="field">
+                <label for="spacing">Spacing unit</label>
+                <div class="fieldline">
+                  <input id="spacing" max="8" min="3" step="1" type="range" value="4" />
+                  <output id="spacingOut">
+                    4px
+                  </output>
+                </div>
+              </div>
+              <div class="field">
+                <label for="radius">Corner radius</label>
+                <div class="fieldline">
+                  <input id="radius" max="28" min="0" step="2" type="range" value="12" />
+                  <output id="radiusOut">
+                    12px
+                  </output>
+                </div>
+              </div>
+              <p class="help">
+                The NSCC case study uses Arial because Greycliff is licensed. Colours are illustrative classroom examples, not an official NSCC token library.
+              </p>
+            </section>
+            <section aria-labelledby="advancedTitle" class="panel studio-controls">
+              <div class="section-head">
+                <h2 id="advancedTitle">Advanced design parameters</h2>
+                <button class="ghost" id="resetAdvanced" type="button">Reset</button>
+              </div>
+              <p class="help">
+                Expand a category to tune the system. All controls update live previews and exported CSS. Component states are simulated for teaching.
+              </p>
+              <details open="">
+                <summary>Interaction states</summary>
+                <div class="group-body">
+                  <div class="field">
+                    <label for="advState">Demonstrate state</label>
+                    <select id="advState">
+                      <option value="default">Default</option>
+                      <option value="hover">Hover</option>
+                      <option value="focus">Focus-visible</option>
+                      <option value="active">Active / pressed</option>
+                      <option value="disabled">Disabled</option>
+                      <option value="selected">Selected</option>
+                      <option value="invalid">Invalid</option>
+                      <option value="success">Valid / success</option>
+                      <option value="readonly">Read-only</option>
+                      <option value="loading">Loading</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="advFocus">Focus outline thickness</label>
+                    <div class="inline-range">
+                      <input id="advFocus" max="6" min="2" step="1" type="range" value="3" />
+                      <output id="advFocusOut">
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="advHeight">Control height</label>
+                    <div class="inline-range">
+                      <input id="advHeight" max="64" min="34" type="range" value="42" />
+                      <output id="advHeightOut">
+                      </output>
+                    </div>
+                  </div>
+                  <p class="control-hint">Choose a state, then inspect the right-hand State Explorer and generated CSS.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Semantic colours and feedback</summary>
+                <div class="group-body">
+                  <p class="control-hint">
+                    These editable semantic roles are distinct from the fixed NSCC brand reference swatches. They set the
+                    <strong>light theme</strong>
+                    feedback colours; the dark theme keeps its own generated, higher-contrast values.
+                  </p>
+                  <div id="advColors"></div>
+                </div>
+              </details>
+              <details>
+                <summary>Typography and readability</summary>
+                <div class="group-body">
+                  <div class="field">
+                    <label for="advWeight">Heading weight</label>
+                    <select id="advWeight">
+                      <option value="600">600 · Semibold</option>
+                      <option selected="" value="700">700 · Bold</option>
+                      <option value="800">800 · Extra bold</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="advMeasure">Reading measure (ch)</label>
+                    <div class="inline-range">
+                      <input id="advMeasure" max="85" min="40" type="range" value="65" />
+                      <output id="advMeasureOut">
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="advTracking">Heading letter spacing (em × 100)</label>
+                    <div class="inline-range">
+                      <input id="advTracking" max="10" min="-5" type="range" value="-2" />
+                      <output id="advTrackingOut">
+                      </output>
+                    </div>
+                  </div>
+                </div>
+              </details>
+              <details>
+                <summary>Surfaces, borders and elevation</summary>
+                <div class="group-body">
+                  <div class="field">
+                    <label for="advBorder">Border width</label>
+                    <div class="inline-range">
+                      <input id="advBorder" max="4" min="1" type="range" value="1" />
+                      <output id="advBorderOut">
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="advShadow">Elevation</label>
+                    <select id="advShadow">
+                      <option value="none">None</option>
+                      <option value="subtle">Subtle</option>
+                      <option value="medium">Medium</option>
+                      <option value="strong">Strong</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="advOpacity">Muted surface opacity (%)</label>
+                    <div class="inline-range">
+                      <input id="advOpacity" max="100" min="20" type="range" value="100" />
+                      <output id="advOpacityOut">
+                      </output>
+                    </div>
+                  </div>
+                </div>
+              </details>
+              <details>
+                <summary>Responsive and layout</summary>
+                <div class="group-body">
+                  <div class="field">
+                    <label for="advColumns">Card grid minimum width</label>
+                    <div class="inline-range">
+                      <input id="advColumns"
+                             max="320"
+                             min="150"
+                             step="10"
+                             type="range"
+                             value="210" />
+                      <output id="advColumnsOut">
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="advGap">Grid gap (px)</label>
+                    <div class="inline-range">
+                      <input id="advGap" max="32" min="4" type="range" value="12" />
+                      <output id="advGapOut">
+                      </output>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="advAlign">Content alignment</label>
+                    <select id="advAlign">
+                      <option value="start">Start</option>
+                      <option value="center">Center</option>
+                      <option selected="" value="stretch">Stretch</option>
+                    </select>
+                  </div>
+                </div>
+              </details>
+              <details>
+                <summary>Accessibility and motion</summary>
+                <div class="group-body">
+                  <div class="checkrow">
+                    <input id="advReduce" type="checkbox" />
+                    <label for="advReduce">Reduce demo animations</label>
+                  </div>
+                  <div class="checkrow">
+                    <input checked="" id="advUnderline" type="checkbox" />
+                    <label for="advUnderline">Underline links</label>
+                  </div>
+                  <div class="field">
+                    <label for="advMotion">Transition duration (ms)</label>
+                    <div class="inline-range">
+                      <input id="advMotion" max="500" min="0" step="25" type="range" value="150" />
+                      <output id="advMotionOut">
+                      </output>
+                    </div>
+                  </div>
+                  <p class="control-hint">A simulated state does not replace keyboard, zoom, reflow or screen-reader testing.</p>
+                </div>
+              </details>
+            </section>
+          </details>
+        </aside>
+        <div class="studio-right">
+          <main id="main">
+            <nav aria-label="Seven design system sections" class="studio-section-nav">
+              <a href="#studio-section-1">01 · Colour</a>
+              <a href="#studio-section-2">02 · Typography</a>
+              <a href="#studio-section-3">03 · Components</a>
+              <a href="#studio-section-4">04 · Responsive</a>
+              <a href="#studio-section-5">05 · Accessibility</a>
+              <a href="#studio-section-6">06 · CSS &amp; export</a>
+              <a href="#studio-section-7">07 · Workflow</a>
+              <a href="#studio-section-8">08 · Token catalogue</a>
+            </nav>
+            <section class="panel" id="brandPalette">
+              <div class="section-head">
+                <div>
+                  <h2>NSCC official colour palette</h2>
+                  <p class="help">
+                    Exact HEX values from the NSCC Visual Identity Guidelines. Three primary colours and eight accent colours. These are
+                    <strong>brand swatches</strong>
+                    , not interchangeable CSS semantic roles.
+                  </p>
+                </div>
+                <button class="ghost" id="restoreNSCC" type="button">Restore NSCC defaults</button>
+              </div>
+              <h3>Primary brand colours</h3>
+              <div class="brand-grid" id="brandPrimary"></div>
+              <h3>Accent brand colours</h3>
+              <div class="brand-grid" id="brandAccents"></div>
+              <div class="note">
+                <strong>Important distinction:</strong>
+                <ul>
+                  <li>
+                    <strong>Brand primary</strong>
+                    describes NSCC's official white, blue and dark grey palette.
+                  </li>
+                  <li>
+                    <strong>
+                      CSS
+                      <code>
+                        --primary
+                      </code>
+                    </strong>
+                    describes the interface's main action colour; its default is NSCC blue.
+                  </li>
+                  <li>
+                    <strong>Brand accent</strong>
+                    describes eight approved colours; select one to feature in a UI component.
+                  </li>
+                  <li>
+                    <strong>Generated ramps</strong>
+                    are teaching aids derived from an official swatch; they are not official additional brand colours.
+                  </li>
+                  <li>
+                    <strong>Contrast and meaning:</strong>
+                    an official brand colour is not automatically accessible as text or a button background.
+                  </li>
+                </ul>
+              </div>
+              <p class="help">
+                Reference:
+                <a href="https://www.nscc.ca/docs/about-nscc/visual-identity-guidelines/guidelines.pdf"
+                   rel="noopener noreferrer"
+                   target="_blank">NSCC Visual Identity Guidelines (PDF)</a>
+                . This classroom tool is an educational prototype, not an official NSCC website template.
+              </p>
+            </section>
+            <section class="panel" id="studio-section-1">
+              <div class="section-head">
+                <div>
+                  <h2>1. Colour systems</h2>
+                  <p class="help">Each ramp has 11 steps. The centre step (500) preserves your chosen HEX value.</p>
+                </div>
+                <span class="pill" id="rampMethodLabel">RGB mix</span>
+              </div>
+              <section class="oklch-workbench" aria-labelledby="oklchTitle">
+                <div class="section-head">
+                  <div>
+                    <h3 id="oklchTitle">Interactive OKLCH colour wheel</h3>
+                    <p class="help">Explore hue around the wheel and chroma from centre to edge. Adjust perceptual lightness separately, then apply the colour to a semantic role. The 500 ramp step remains your chosen colour.</p>
+                  </div>
+                  <span class="pill">Perceptual colour lab</span>
+                </div>
+                <div class="oklch-workspace">
+                  <div class="oklch-wheel-wrap">
+                    <canvas id="oklchWheel"
+                            width="340"
+                            height="340"
+                            role="img"
+                            aria-label="Interactive hue and chroma colour wheel. Use the accessible sliders to change the selection."></canvas>
+                    <div class="oklch-wheel-cross" id="oklchWheelCross" aria-hidden="true"></div>
+                  </div>
+                  <div class="oklch-editor">
+                    <div class="field">
+                      <label for="oklchRole">Colour role to edit</label><select id="oklchRole">
+                        <option value="primary">Primary</option>
+                        <option value="secondary">Supporting</option>
+                        <option value="accent">Accent</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="oklchLight">
+                        Perceptual lightness (L) <output id="oklchLightOut"></output>
+                      </label>
+                      <input id="oklchLight" type="range" min="0" max="100" step="1">
+                    </div>
+                    <div class="field">
+                      <label for="oklchChroma">
+                        Chroma (C) <output id="oklchChromaOut"></output>
+                      </label>
+                      <input id="oklchChroma" type="range" min="0" max="0.4" step="0.005">
+                    </div>
+                    <div class="field">
+                      <label for="oklchHue">
+                        Hue (h) <output id="oklchHueOut"></output>
+                      </label>
+                      <input id="oklchHue" type="range" min="0" max="359" step="1">
+                    </div>
+                    <div class="oklch-result">
+                      <div id="oklchSwatch" class="oklch-selected-swatch"></div>
+                      <div>
+                        <strong id="oklchHex">#004780</strong>
+                        <div id="oklchCoords" class="help"></div>
+                        <div id="oklchGamut" class="help" role="status"></div>
+                      </div>
+                    </div>
+                    <div class="button-row">
+                      <button type="button" id="oklchApply" class="ghost">Apply to selected role</button><button type="button" id="oklchReset" class="ghost">Load current role colour</button>
+                    </div>
+                  </div>
+                </div>
+                <p class="help">The wheel shows an sRGB display approximation. At its edges, out-of-gamut chroma is reduced automatically. The ramp generator varies lightness toward its endpoints and gently reduces chroma at the extremes. The official NSCC swatches remain unchanged.</p>
+              </section>
+              <div id="ramps"></div>
+              <h3>Semantic colour roles</h3>
+              <div class="swatch-grid" id="semanticSwatches"></div>
+              <details>
+                <summary>How does the ramp generator work?</summary>
+                <ul>
+                  <li>
+                    <strong>RGB Mix:</strong>
+                    interpolate each red, green and blue channel toward white for lighter steps, or black for darker steps. Round channels to whole numbers.
+                  </li>
+                  <li>
+                    <strong>OKLCH:</strong>
+                    convert the anchor to perceptual lightness, chroma and hue; vary lightness and gently reduce chroma at the extremes; convert back to sRGB while reducing out-of-gamut chroma.
+                  </li>
+                  <li>Neither method automatically guarantees contrast or an attractive palette. Review each role and theme.</li>
+                  <li>
+                    Secondary and accent colours are independently chosen in V2; harmony suggestions are planned for a later iteration.
+                  </li>
+                </ul>
+              </details>
+            </section>
+            <section class="panel" id="studio-section-2">
+              <h2>2. Typography studio</h2>
+              <p class="help">
+                A modular scale multiplies or divides the base size by the selected ratio. Compare roles and inspect fluid heading CSS.
+              </p>
+              <div class="grid2">
+                <div class="component">
+                  <h3>Mobile specimen · 375 px</h3>
+                  <div id="mobileType"></div>
+                </div>
+                <div class="component">
+                  <h3>Desktop specimen · 1280 px</h3>
+                  <div id="desktopType"></div>
+                </div>
+              </div>
+              <section class="clamp-lab" aria-labelledby="clampLabTitle">
+                <div class="section-head">
+                  <div>
+                    <h3 id="clampLabTitle">Interactive Clamp Calculator</h3>
+                    <p class="help">Explore how base size, modular ratio, viewport boundaries and mobile scaling generate CSS <code>clamp()</code>. Changes update the Studio typography, preview and CSS inspector.</p>
+                  </div>
+                  <button type="button" class="ghost" id="clampReset">Reset clamp settings</button>
+                </div>
+                <div class="clamp-grid">
+                  <div class="component">
+                    <h4>1 · Typography foundation</h4>
+                    <p class="help">Base font and modular ratio use the Studio's existing controls.</p>
+                    <label for="clampBase">
+                      Base size: <output id="clampBaseOut">16px</output></label><input id="clampBase" type="range" min="14" max="22" step="1" value="16"><label for="clampRatio">Scale ratio: <output id="clampRatioOut">1.25</output></label><input id="clampRatio"
+       type="range"
+       min="1.125"
+       max="1.5"
+       step="0.025"
+       value="1.25"><label for="clampRole">Typography level</label><select id="clampRole">
+                      <option value="5">Display</option>
+                      <option value="4">H1</option>
+                      <option value="3" selected>H2</option>
+                      <option value="0">Body</option>
+                      <option value="-1">Small</option>
+                      </select>
+                    </div>
+                    <div class="component">
+                      <h4>2 · Responsive boundaries</h4>
+                      <label for="clampMinWidth">
+                        Minimum viewport: <output id="clampMinWidthOut">375px</output></label><input id="clampMinWidth"
+       type="range"
+       min="320"
+       max="600"
+       step="5"
+       value="375"><label for="clampMaxWidth">Maximum viewport: <output id="clampMaxWidthOut">1280px</output></label><input id="clampMaxWidth"
+       type="range"
+       min="900"
+       max="1600"
+       step="10"
+       value="1280"><label for="clampFactor">Mobile heading multiplier: <output id="clampFactorOut">82%</output></label><input id="clampFactor"
+       type="range"
+       min="0.7"
+       max="1"
+       step="0.01"
+       value="0.82">
+                    </div>
+                  </div>
+                  <div class="component clamp-result">
+                    <h4>3 · Explore the viewport</h4>
+                    <label for="clampViewport">
+                      Viewport width: <output id="clampViewportOut">768px</output></label><input id="clampViewport"
+       type="range"
+       min="320"
+       max="1600"
+       step="1"
+       value="768">
+                    <div class="clamp-metrics">
+                      <div><small>Minimum</small><strong id="clampMinFont">—</strong></div>
+                      <div><small>Computed at viewport</small><strong id="clampComputed">—</strong></div>
+                      <div><small>Maximum</small><strong id="clampMaxFont">—</strong></div>
+                    </div>
+                    <svg id="clampGraph"
+                         viewBox="0 0 640 190"
+                         role="img"
+                         aria-label="Responsive font size plotted against viewport width">
+                      <path d="M48 18 V154 H620" fill="none" stroke="currentColor" opacity=".35" />
+                      <path id="clampCurve" fill="none" stroke="#008e9e" stroke-width="4" />
+                      <circle id="clampDot" r="6" fill="#CBDB2A" stroke="#14253A" stroke-width="2" /><text x="48" y="177" fill="currentColor" font-size="13">320px</text><text x="565" y="177" fill="currentColor" font-size="13">1600px</text><text x="54" y="14" fill="currentColor" font-size="13">Font size</text>
+                    </svg>
+                    <p class="help" id="clampExplanation"></p>
+                  </div>
+                  <div class="component">
+                    <div class="section-head">
+                      <h4>4 · Generated CSS and the calculation</h4>
+                      <button class="ghost" type="button" id="clampCopy">Copy CSS</button>
+                    </div>
+                    <pre class="clamp-css"><code id="clampCss"></code></pre>
+                    <div id="clampMath" class="help"></div>
+                    <p class="help">The calculator uses <code>rem</code> limits and offset so the exported rule better respects root font settings. Test browser zoom and user font preferences in your finished project.</p>
+                  </div>
+                </section>
+                <h3 style="margin-top:18px">Complete size ladder</h3>
+                <div id="typeLadder"></div>
+                <details>
+                  <summary>Figma exercise — reproduce the scale</summary>
+                  <ol>
+                    <li>
+                      Create two frames:
+                      <strong>375 px</strong>
+                      and
+                      <strong>1280 px</strong>
+                      wide.
+                    </li>
+                    <li>Use the same font family and content in both frames.</li>
+                    <li>Recreate the displayed sizes and line heights as named text styles.</li>
+                    <li>Compare hierarchy, wrapping, line lengths and readability.</li>
+                    <li>Record any changes before applying them to your integrated project.</li>
+                  </ol>
+                </details>
+              </section>
+              <section class="panel" id="buttonDesignLab">
+                <div class="section-head">
+                  <div>
+                    <div class="eyebrow">Component design wizard · V4.1</div>
+                    <h2>Button Design Laboratory</h2>
+                    <p class="help">
+                      Configure on the left; compare every state and variant here. CSS is generated from the same settings.
+                    </p>
+                  </div>
+                  <span class="pill" id="bdContext">Primary · Medium · Default</span>
+                </div>
+                <div class="grid2">
+                  <div class="component">
+                    <h3>Selected button · live preview</h3>
+                    <div class="bd-single" id="bdSingle"></div>
+                    <p class="help" id="bdDescription"></p>
+                    <p class="help">
+                      Use Tab to inspect a genuine keyboard focus ring on the live button. Hover and pressed state tiles are teaching simulations.
+                    </p>
+                  </div>
+                  <div class="component">
+                    <h3>Theme comparison</h3>
+                    <div class="bd-theme-grid" id="bdThemes"></div>
+                  </div>
+                </div>
+                <h3>All button variants × interaction states</h3>
+                <div class="bd-matrix" id="bdMatrix"></div>
+                <h3>CSS for this button system</h3>
+                <pre class="code" id="bdCode" tabindex="0"></pre>
+                <div class="button-row">
+                  <button class="ghost" id="bdCopy" type="button">Copy button CSS</button>
+                  <button class="ghost" id="bdExport" type="button">Download button CSS</button>
+                </div>
+                <div class="note">
+                  <strong>Accessibility and semantics:</strong>
+                  <ul>
+                    <li>
+                      <code>
+                        :hover
+                      </code>
+                      ,
+                      <code>
+                        :active
+                      </code>
+                      and
+                      <code>
+                        :focus-visible
+                      </code>
+                      are real CSS pseudo-classes. The matrix uses labelled simulations for side-by-side inspection.
+                    </li>
+                    <li>
+                      Use native
+                      <code>
+                        &lt;button&gt;
+                      </code>
+                      and the
+                      <code>
+                        disabled
+                      </code>
+                      attribute for unavailable actions.
+                    </li>
+                    <li>
+                      <code>
+                        aria-pressed
+                      </code>
+                      belongs on toggle buttons only. Ordinary submit buttons do not need it.
+                    </li>
+                    <li>
+                      Loading requires application logic, accessible status messaging and duplicate-submission prevention; CSS alone cannot provide that behaviour.
+                    </li>
+                    <li>
+                      Test contrast in both themes and with every hover/active colour. Reduced-motion preferences disable nonessential transitions.
+                    </li>
+                  </ul>
+                </div>
+              </section>
+              <section class="panel" id="studio-section-3">
+                <h2>3. Spacing, surfaces and component states</h2>
+                <div class="grid2">
+                  <div>
+                    <h3>Spacing scale</h3>
+                    <div class="spacer-bars" id="spacingBars"></div>
+                  </div>
+                  <div>
+                    <h3>Surface layers</h3>
+                    <div class="component">
+                      <strong>Surface</strong>
+                      <p class="mini muted">--surface · main card background</p>
+                      <div class="component muted-surface">
+                        <strong>Muted surface</strong>
+                        <p class="mini muted">--surface-muted · nested region</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <hr />
+                <h3>Buttons and states</h3>
+                <div class="button-row">
+                  <button class="demo-btn" type="button">Primary</button>
+                  <button class="demo-btn secondary" type="button">Secondary</button>
+                  <button class="demo-btn accent" type="button">Accent</button>
+                  <button class="demo-btn outline" type="button">Outline</button>
+                  <button class="demo-btn" disabled="" type="button">Disabled</button>
+                </div>
+                <p class="help">Use Tab to inspect focus-visible; hover over buttons to observe their hover states.</p>
+                <div class="grid2" style="margin-top:16px">
+                  <div class="component">
+                    <h3>Form control</h3>
+                    <label for="demoEmail">Email address</label>
+                    <input class="demo-input"
+                           id="demoEmail"
+                           placeholder="student@example.ca"
+                           type="email" />
+                    <p class="help">Try keyboard focus and inspect the border token.</p>
+                  </div>
+                  <div class="component">
+                    <h3>Validation state</h3>
+                    <label for="demoInvalid">Required field</label>
+                    <input aria-describedby="invalidHelp"
+                           aria-invalid="true"
+                           class="demo-input"
+                           id="demoInvalid"
+                           value="invalid value" />
+                    <p class="help" id="invalidHelp">Example error: enter a valid value.</p>
+                  </div>
+                </div>
+                <div class="grid3" style="margin-top:14px">
+                  <div class="alert">
+                    <strong>Success</strong>
+                    <div class="mini">Changes saved (example).</div>
+                  </div>
+                  <div class="alert warn">
+                    <strong>Warning</strong>
+                    <div class="mini">Review contrast values.</div>
+                  </div>
+                  <div class="alert error">
+                    <strong>Error</strong>
+                    <div class="mini">Check required fields.</div>
+                  </div>
+                </div>
+              </section>
+              <section class="panel" id="stateExplorer">
+                <div class="section-head">
+                  <div>
+                    <h2>Component State Explorer</h2>
+                    <p class="help">
+                      Use the left-side Interaction states control to simulate hover, focus, pressed, disabled, selected, invalid, success, read-only or loading. Real keyboard interactions remain available.
+                    </p>
+                  </div>
+                  <span class="pill" id="advStateLabel">Default</span>
+                </div>
+                <div class="state-sandbox">
+                  <div class="state-tile" id="stateButtonTile">
+                    <label>Button preview</label>
+                    <button class="demo-btn" id="advDemoButton" type="button">Register for an event</button>
+                    <p class="state-label">Primary background + on-primary text</p>
+                  </div>
+                  <div class="state-tile" id="stateInputTile">
+                    <label for="advDemoInput">Input preview</label>
+                    <input class="demo-input" id="advDemoInput" value="student@example.ca" />
+                    <p class="state-label" id="advInputHelp">Surface + border + feedback states</p>
+                  </div>
+                </div>
+                <details>
+                  <summary>Why simulate states?</summary>
+                  <ul>
+                    <li>Students can inspect visual states without needing a mouse or triggering form validation.</li>
+                    <li>State-specific CSS appears in the generated stylesheet.</li>
+                    <li>Use keyboard Tab to verify real focus-visible behaviour separately.</li>
+                  </ul>
+                </details>
+              </section>
+              <section class="panel" id="studio-section-4">
+                <div class="section-head">
+                  <div>
+                    <h2>4. Responsive page preview</h2>
+                    <p class="help">The inner demo uses a mobile-first auto-fit CSS Grid and fluid heading sizes.</p>
+                  </div>
+                  <div aria-label="Preview width" class="tabs" role="group">
+                    <button aria-pressed="false" class="tab" data-width="mobile" type="button">375 px</button>
+                    <button aria-pressed="false" class="tab" data-width="tablet" type="button">768 px</button>
+                    <button aria-pressed="true" class="tab" data-width="desktop" type="button">1280 px</button>
+                    <button aria-pressed="false" class="tab" data-width="fluid" type="button">Fluid</button>
+                  </div>
+                </div>
+                <div class="preview-shell" id="previewShell">
+                  <div class="preview-frame" data-width="desktop" id="previewFrame">
+                    <div class="eyebrow">Illustrative campus events</div>
+                    <h3>Discover what's happening</h3>
+                    <p class="muted">
+                      A sample interface using the current colour, typography, spacing and radius tokens. Resize the preview to test wrapping and layout.
+                    </p>
+                    <div class="preview-grid">
+                      <article class="preview-card">
+                        <span class="badge">Workshop</span>
+                        <h3>Design fundamentals</h3>
+                        <p class="mini muted">Explore colour, typography and visual hierarchy.</p>
+                        <button class="demo-btn" type="button">View details</button>
+                      </article>
+                      <article class="preview-card">
+                        <span class="badge">Community</span>
+                        <h3>Open house</h3>
+                        <p class="mini muted">Connect with students and instructors.</p>
+                        <button class="demo-btn secondary" type="button">Learn more</button>
+                      </article>
+                      <article class="preview-card">
+                        <span class="badge">Technology</span>
+                        <h3>Build a website</h3>
+                        <p class="mini muted">Apply reusable tokens to responsive components.</p>
+                        <button class="demo-btn outline" type="button">Explore</button>
+                      </article>
+                    </div>
+                  </div>
+                </div>
+                <p class="help">
+                  The preview is constrained by your browser width. For an exact 1280 px screenshot, open the exported page in browser device emulation or a sufficiently wide viewport.
+                </p>
+                <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
+                <p class="help"
+                   id="responsiveTypeReadout"
+                   role="status"
+                   aria-live="polite"></p>
+              </section>
+              <section class="panel" id="studio-section-5">
+                <h2>5. Accessibility quick checks</h2>
+                <p class="help">
+                  WCAG 2.x text contrast: 4.5:1 for normal text and 3:1 for large text. This checker measures selected colour pairs only; it does not certify accessibility.
+                </p>
+                <div id="contrastChecks"></div>
+                <p class="note">
+                  Also verify focus visibility, keyboard use, 200% text resize, content reflow, non-text contrast and meaning conveyed without colour.
+                </p>
+              </section>
+              <section class="panel" id="studio-section-6">
+                <h2>6. Inspect and export</h2>
+                <p class="help">
+                  The output includes foundation tokens, semantic roles, responsive type and commented component examples. Export a JSON configuration to continue your work later.
+                </p>
+                <div aria-label="Code views" class="tabs" role="tablist">
+                  <button aria-selected="true"
+                          class="tab"
+                          id="viewCss"
+                          role="tab"
+                          type="button">Commented CSS</button>
+                  <button aria-selected="false"
+                          class="tab"
+                          id="viewJson"
+                          role="tab"
+                          type="button">Project JSON</button>
+                  <button aria-selected="false"
+                          class="tab"
+                          id="viewHtml"
+                          role="tab"
+                          type="button">HTML example</button>
+                </div>
+                <div class="button-row">
+                  <button class="demo-btn" id="copyCode" type="button">Copy visible code</button>
+                  <button class="ghost" id="downloadCode" type="button">Download visible code</button>
+                </div>
+                <pre class="code" id="codeView" tabindex="0"></pre>
+                <h3>Token dependency inspector</h3>
+                <div class="token-list" id="tokenInspector"></div>
+              </section>
+              <section class="panel" id="studio-section-7">
+                <h2>7. Classroom workflow</h2>
+                <ol>
+                  <li>
+                    <strong>03A — Colour:</strong>
+                    configure NSCC primary, supporting and accent colours; compare RGB Mix/OKLCH; review semantic tokens and contrast.
+                  </li>
+                  <li>
+                    <strong>03B — Typography:</strong>
+                    configure a font stack, modular scale and leading; recreate the mobile and desktop scale in Figma.
+                  </li>
+                  <li>
+                    <strong>Responsive implementation:</strong>
+                    inspect CSS Grid, Flexbox,
+                    <code>
+                      clamp()
+                    </code>
+                    , spacing, radius and component states.
+                  </li>
+                  <li>
+                    <strong>Project handoff:</strong>
+                    save JSON and export commented CSS; integrate and adapt the code in your own project.
+                  </li>
+                  <li>
+                    <strong>Reflection:</strong>
+                    explain your choices and provide evidence of Figma work, testing and Git commits in Brightspace.
+                  </li>
+                </ol>
+                <p class="note">
+                  This is a learning tool, not a substitute for design reasoning, Figma deliverables, implementation or formal accessibility testing.
+                </p>
+              </section>
+              <section class="panel" id="studio-section-8">
+                <div class="section-head">
+                  <div>
+                    <h2>8. Design token catalogue</h2>
+                    <p class="help">Live reference of the tokens in the exported CSS, including foundation, semantic, brand and button component values. Values update as you edit the design system.</p>
+                  </div>
+                  <button class="ghost" id="tokenDownload" type="button">Export token CSV</button>
+                </div>
+                <div class="field">
+                  <label for="tokenSearch">Filter tokens by type, name or description</label>
+                  <input id="tokenSearch"
+                         type="search"
+                         placeholder="e.g. accent, spacing, button hover" />
+                </div>
+                <p id="tokenCount" class="help" role="status"></p>
+                <div class="token-table-wrap">
+                  <table class="token-catalogue">
+                    <thead>
+                      <tr>
+                        <th scope="col">Token type</th>
+                        <th scope="col">Token name</th>
+                        <th scope="col">Current value</th>
+                        <th scope="col">Description / usage</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tokenTableBody">
+                    </tbody>
+                  </table>
+                </div>
+                <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Official NSCC brand tokens are fixed references; generated colour ramps are teaching derivatives.</p>
+              </section>
+              <div class="footer">Design System Studio V4.1 · WEBD 3100 · standalone classroom beta · no external dependencies</div>
+            </main>
+            <aside aria-label="Live generated CSS" class="studio-code-dock">
+              <div class="studio-dock-header">
+                <div>
+                  <strong>Live CSS inspector</strong>
+                  <p>Updates as you change the parameters</p>
+                </div>
+                <button id="dockCopy" type="button">Copy CSS</button>
+              </div>
+              <div class="studio-dock-actions">
+                <button id="dockDownload" type="button">Download tokens.css</button>
+                <button aria-expanded="true" id="dockToggle" type="button">Collapse code</button>
+              </div>
+              <pre aria-label="Generated CSS code" id="dockCss" tabindex="0"></pre>
+              <p class="studio-dock-note">
+                Foundation → semantic → component rules. Generated ramps are teaching derivatives, not official NSCC brand swatches.
+              </p>
+            </aside>
+          </div>
+        </div>
       </div>
-      <div class="studio-dock-actions">
-       <button id="dockDownload" type="button">
-        Download tokens.css
-       </button>
-       <button aria-expanded="true" id="dockToggle" type="button">
-        Collapse code
-       </button>
-      </div>
-      <pre aria-label="Generated CSS code" id="dockCss" tabindex="0"></pre>
-      <p class="studio-dock-note">
-       Foundation → semantic → component rules. Generated ramps are teaching derivatives, not official NSCC brand swatches.
-      </p>
-     </aside>
-    </div>
-   </div>
-  </div>
-  <div aria-live="polite" class="visually-hidden" id="liveStatus">
-  </div>
+      <div aria-live="polite" class="visually-hidden" id="liveStatus"></div>
 
 
 
@@ -1941,14 +1457,14 @@
 
 
 
-  <script src="src/js/studio-registry.js" defer></script>
-  <script src="src/js/core-state.js" defer></script>
-  <script src="src/js/css-dock.js" defer></script>
-  <script src="src/js/advanced-params.js" defer></script>
-  <script src="src/js/journey-library.js" defer></script>
-  <script src="src/js/button-design.js" defer></script>
-  <script src="src/js/oklch-lab.js" defer></script>
-  <script src="src/js/token-catalogue.js" defer></script>
-  <script src="src/js/clamp-explorer.js" defer></script>
-</body>
-</html>
+      <script src="src/js/studio-registry.js" defer></script>
+      <script src="src/js/core-state.js" defer></script>
+      <script src="src/js/css-dock.js" defer></script>
+      <script src="src/js/advanced-params.js" defer></script>
+      <script src="src/js/journey-library.js" defer></script>
+      <script src="src/js/button-design.js" defer></script>
+      <script src="src/js/oklch-lab.js" defer></script>
+      <script src="src/js/token-catalogue.js" defer></script>
+      <script src="src/js/clamp-explorer.js" defer></script>
+    </body>
+  </html>

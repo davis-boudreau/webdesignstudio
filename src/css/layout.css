@@ -1,147 +1,173 @@
-   /* V2.5: parameters remain on the left, live examples and CSS remain visible on the right. */
+/* V2.5: parameters remain on the left, live examples and CSS remain visible on the right. */
 .layout {
-  display:grid;
-  grid-template-columns:minmax(255px,310px) minmax(0,1fr);
-  align-items:start;
-  gap:16px
+  display: grid;
+  grid-template-columns: minmax(255px, 310px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px
 }
+
 .studio-right {
-  min-width:0;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(280px,34%);
-  gap:14px;
-  align-items:start
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 34%);
+  gap: 14px;
+  align-items: start
 }
+
 .studio-right #main {
-  min-width:0
+  min-width: 0
 }
+
 .studio-code-dock {
-  position:sticky;
-  top:76px;
-  max-height:calc(100vh - 90px);
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-  border:1px solid var(--border);
-  border-radius:var(--radius-base);
-  background:var(--surface);
-  overflow:hidden;
-  box-shadow:0 8px 26px #00000010
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 90px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: 0 8px 26px #00000010
 }
+
 .studio-dock-header {
-  padding:13px;
-  display:flex;
-  align-items:start;
-  justify-content:space-between;
-  gap:8px;
-  border-bottom:1px solid var(--border)
+  padding: 13px;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--border)
 }
-.studio-dock-header p,.studio-dock-note {
-  font-size:.76rem;
-  color:var(--text-muted);
-  margin:4px 0 0
-}
-.studio-dock-header button,.studio-dock-actions button {
-  font-size:.78rem;
-  padding:6px 9px;
-  border:1px solid var(--border);
-  background:var(--surface-muted);
-  color:var(--text);
-  border-radius:7px;
-  cursor:pointer
-}
-.studio-dock-actions {
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  padding:8px 12px;
-  border-bottom:1px solid var(--border)
-}
-#dockCss {
-  margin:0;
-  overflow:auto;
-  flex:1;
-  min-height:190px;
-  padding:12px;
-  font-size:11px;
-  line-height:1.5;
-  white-space:pre;
-  tab-size:2;
-  background:var(--surface-muted);
-  color:var(--text)
-}
+
+.studio-dock-header p,
 .studio-dock-note {
-  padding:0 12px 12px
+  font-size: .76rem;
+  color: var(--text-muted);
+  margin: 4px 0 0
 }
+
+.studio-dock-header button,
+.studio-dock-actions button {
+  font-size: .78rem;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text);
+  border-radius: 7px;
+  cursor: pointer
+}
+
+.studio-dock-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border)
+}
+
+#dockCss {
+  margin: 0;
+  overflow: auto;
+  flex: 1;
+  min-height: 190px;
+  padding: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+  background: var(--surface-muted);
+  color: var(--text)
+}
+
+.studio-dock-note {
+  padding: 0 12px 12px
+}
+
 .studio-code-dock.is-collapsed #dockCss {
-  display:none
+  display: none
 }
+
 .studio-code-dock.is-collapsed {
-  max-height:none
+  max-height: none
 }
+
 .studio-section-nav {
-  position:sticky;
-  top:58px;
-  z-index:4;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:8px;
-  display:flex;
-  gap:5px;
-  overflow-x:auto;
-  margin-bottom:14px
+  position: sticky;
+  top: 58px;
+  z-index: 4;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  margin-bottom: 14px
 }
+
 .studio-section-nav a {
-  font-size:.77rem;
-  text-decoration:none;
-  white-space:nowrap;
-  border-radius:6px;
-  padding:8px 9px;
-  color:var(--text);
-  background:var(--surface-muted)
+  font-size: .77rem;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 6px;
+  padding: 8px 9px;
+  color: var(--text);
+  background: var(--surface-muted)
 }
-.studio-section-nav a:hover,.studio-section-nav a:focus-visible {
-  background:var(--primary);
-  color:var(--on-primary)
+
+.studio-section-nav a:hover,
+.studio-section-nav a:focus-visible {
+  background: var(--primary);
+  color: var(--on-primary)
 }
+
 #main>section {
-  scroll-margin-top:125px
+  scroll-margin-top: 125px
 }
+
 @media(max-width:1500px) {
   .studio-right {
-    grid-template-columns:minmax(0,1fr)
+    grid-template-columns: minmax(0, 1fr)
   }
+
   .studio-code-dock {
-    position:relative;
-    top:auto;
-    max-height:420px;
-    grid-row:1
+    position: relative;
+    top: auto;
+    max-height: 420px;
+    grid-row: 1
   }
+
   .studio-section-nav {
-    top:0
+    top: 0
   }
 }
+
 @media(max-width:900px) {
   .layout {
-    grid-template-columns:1fr
+    grid-template-columns: 1fr
   }
+
   .studio-right {
-    grid-template-columns:1fr
+    grid-template-columns: 1fr
   }
+
   .studio-code-dock {
-    max-height:370px
+    max-height: 370px
   }
+
   .sidebar {
-    position:static
+    position: static
   }
 }
+
 @media(max-width:580px) {
   .studio-dock-header {
-    flex-wrap:wrap
+    flex-wrap: wrap
   }
+
   .studio-section-nav {
-    position:static
+    position: static
   }
 }
-  

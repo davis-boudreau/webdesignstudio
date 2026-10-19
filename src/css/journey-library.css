@@ -1,117 +1,140 @@
-   /* V2.7: guided journey, progressive disclosure and local project library. */
+/* V2.7: guided journey, progressive disclosure and local project library. */
 .studio-journey {
-  border:2px solid var(--primary,#004780);
-  background:var(--surface,#fff)
+  border: 2px solid var(--primary, #004780);
+  background: var(--surface, #fff)
 }
+
 .journey-kicker {
-  font-size:.78rem;
-  font-weight:800;
-  letter-spacing:.09em;
-  text-transform:uppercase;
-  color:var(--primary,#004780)
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--primary, #004780)
 }
+
 .journey-steps {
-  display:flex;
-  flex-wrap:wrap;
-  gap:.35rem;
-  margin:.75rem 0
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin: .75rem 0
 }
+
 .journey-steps button {
-  font-size:.78rem;
-  padding:.5rem .6rem;
-  border:1px solid var(--border,#ccd);
-  border-radius:.5rem;
-  background:var(--surface,#fff);
-  color:var(--text,#222);
-  cursor:pointer
+  font-size: .78rem;
+  padding: .5rem .6rem;
+  border: 1px solid var(--border, #ccd);
+  border-radius: .5rem;
+  background: var(--surface, #fff);
+  color: var(--text, #222);
+  cursor: pointer
 }
+
 .journey-steps button[aria-current=step] {
-  background:var(--primary,#004780);
-  color:var(--on-primary,#fff);
-  border-color:var(--primary,#004780)
+  background: var(--primary, #004780);
+  color: var(--on-primary, #fff);
+  border-color: var(--primary, #004780)
 }
+
 .journey-steps button.is-complete:not([aria-current])::after {
-  content:' ✓';
-  font-weight:bold
+  content: ' ✓';
+  font-weight: bold
 }
+
 .journey-pane[hidden] {
-  display:none!important
+  display: none !important
 }
+
 .journey-pane {
-  display:grid;
-  gap:.8rem
+  display: grid;
+  gap: .8rem
 }
+
 .journey-pane .field {
-  margin:0
+  margin: 0
 }
+
 .journey-actions {
-  display:flex;
-  gap:.5rem;
-  justify-content:space-between;
-  margin-top:1rem;
-  flex-wrap:wrap
+  display: flex;
+  gap: .5rem;
+  justify-content: space-between;
+  margin-top: 1rem;
+  flex-wrap: wrap
 }
-.journey-actions button,.local-actions button {
-  padding:.55rem .8rem;
-  cursor:pointer
+
+.journey-actions button,
+.local-actions button {
+  padding: .55rem .8rem;
+  cursor: pointer
 }
+
 .journey-tip {
-  padding:.7rem;
-  border-left:3px solid var(--accent,#cbdb2a);
-  background:var(--surface-muted,#f1f5f9);
-  font-size:.87rem
+  padding: .7rem;
+  border-left: 3px solid var(--accent, #cbdb2a);
+  background: var(--surface-muted, #f1f5f9);
+  font-size: .87rem
 }
+
 .journey-status {
-  font-size:.8rem;
-  color:var(--text-muted,#475569);
-  margin-top:.5rem
+  font-size: .8rem;
+  color: var(--text-muted, #475569);
+  margin-top: .5rem
 }
+
 .local-projects {
-  margin-top:1rem
+  margin-top: 1rem
 }
+
 .local-actions {
-  display:flex;
-  flex-wrap:wrap;
-  gap:.4rem;
-  margin-top:.5rem
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .5rem
 }
+
 .local-projects select {
-  width:100%
+  width: 100%
 }
+
 .local-projects .field {
-  margin-top:.6rem
+  margin-top: .6rem
 }
+
 .studio-legacy {
-  margin-top:.75rem
+  margin-top: .75rem
 }
+
 .studio-legacy>summary {
-  font-weight:700;
-  cursor:pointer;
-  padding:.65rem;
-  border:1px solid var(--border,#ccd);
-  border-radius:.5rem
+  font-weight: 700;
+  cursor: pointer;
+  padding: .65rem;
+  border: 1px solid var(--border, #ccd);
+  border-radius: .5rem
 }
+
 .studio-legacy>.panel {
-  margin-top:.6rem
+  margin-top: .6rem
 }
+
 .journey-mini {
-  font-size:.82rem;
-  display:flex;
-  flex-wrap:wrap;
-  gap:.45rem
+  font-size: .82rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem
 }
+
 .journey-mini span {
-  padding:.25rem .45rem;
-  border:1px solid var(--border,#ccd);
-  border-radius:.4rem
+  padding: .25rem .45rem;
+  border: 1px solid var(--border, #ccd);
+  border-radius: .4rem
 }
+
 @media(max-width:720px) {
   .journey-steps {
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr))
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr))
   }
+
   .journey-steps button {
-    min-width:0
+    min-width: 0
   }
 }
-  
