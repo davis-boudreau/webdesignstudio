@@ -5,14 +5,16 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Design System Studio V4.1</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-typography">
-    <link rel="stylesheet" href="src/css/layout.css?v=20261019-typography">
-    <link rel="stylesheet" href="src/css/journey-library.css?v=20261019-typography">
-    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-state-practices">
+    <link rel="stylesheet" href="src/css/layout.css?v=20261020-reaudit">
+    <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-learning">
+    <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-state-practices">
     <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-typography">
-    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
+    <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
+    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -43,7 +45,7 @@
         <div class="eyebrow">Explore colour, typography and components</div>
         <h1>Design System Studio · Build &amp; Inspect</h1>
         <p>
-          Choose design parameters on the left. Explore the live design-system sections on the right, inspect the generated CSS beside the components, then export your design system starting point.
+          Choose design parameters on the left. Explore the live design-system sections on the right, inspect the generated CSS and sample HTML beside the components, then export your design system starting point.
         </p>
       </section>
       <div class="layout">
@@ -52,7 +54,7 @@
             <div class="journey-kicker">Start here · Minimum viable design system</div>
             <h2 id="journeyTitle">Build your design system</h2>
             <p class="help">
-              Follow six practical decisions to create usable CSS. At each step: choose, observe the preview, inspect the code, and explain your decision. Expand the step guide for definitions and checks; Advanced Parameters offers optional refinement.
+              Configure your tokens through eight steps in this wizard. Use the centre lessons to learn, compare examples and explain your decisions; inspect the generated HTML and CSS on the right. Derived ramps, scales and aliases follow their foundation settings.
             </p>
             <div aria-label="Builder steps" class="journey-steps" role="group">
               <button data-journey-step="0" type="button">1 · Start</button>
@@ -60,7 +62,9 @@
               <button data-journey-step="2" type="button">3 · Typography</button>
               <button data-journey-step="3" type="button">4 · Components</button>
               <button data-journey-step="4" type="button">5 · Buttons</button>
-              <button data-journey-step="5" type="button">6 · Deliver</button>
+              <button data-journey-step="5" type="button">6 · Layout</button>
+              <button data-journey-step="6" type="button">7 · Accessibility</button>
+              <button data-journey-step="7" type="button">8 · Deliver</button>
             </div>
             <div class="journey-pane" data-journey-pane="0">
               <h3 class="journey-stage-title">1. Define the project</h3>
@@ -97,7 +101,7 @@
               <p class="journey-tip"><strong>Before moving on:</strong> You can name the audience, main task and one reason for adapting the example.</p>
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden="">
-              <h3 class="journey-stage-title">2. Choose colour roles</h3>
+              <h3 class="journey-stage-title">2. Brand Palette and Main Palette</h3>
               <p class="help">Assign colours a purpose, then evaluate the combinations people will actually see.</p>
               <details class="learning-note build-guide">
                 <summary>How do I choose and check my palette?</summary>
@@ -113,7 +117,22 @@
                 </div>
               </details>
 
+              <h4>Brand Palette</h4>
+              <p class="help">Your named brand colours are the reference for the interface. The example palette is a starting point.</p>
+              <ul id="jBrandSwatches" class="brand-palette-list" tabindex="0" aria-label="Brand Palette colours"></ul>
+              <details>
+                <summary>Edit Brand Palette</summary>
+                <p class="help">Edit, add or remove up to 24 named colours. Main Palette dropdowns copy a colour when selected; editing a brand swatch is a separate choice from applying it to the interface.</p>
+                <p id="jBrandCount" class="help"></p>
+                <div id="jBrandEditor"></div>
+                <button id="jBrandAdd" class="ghost" type="button">Add brand colour</button>
+              </details>
+              <p id="jBrandStatus" class="help" role="status"></p>
+              <h4 class="main-palette-title">Main Palette</h4>
+              <p class="help">Assign each UI role from the Brand Palette, or use its colour picker for a custom value. Check contrast for the actual role and state.</p>
               <div class="field">
+                <label for="jPrimaryBrand">Primary UI colour · Brand Palette</label>
+                <select id="jPrimaryBrand"></select>
                 <label for="jPrimary">Primary UI colour</label>
                 <div class="fieldline">
                   <input id="jPrimary" type="color" value="#004780" />
@@ -123,6 +142,8 @@
                 </div>
               </div>
               <div class="field">
+                <label for="jSecondaryBrand">Supporting colour · Brand Palette</label>
+                <select id="jSecondaryBrand"></select>
                 <label for="jSecondary">Supporting colour</label>
                 <div class="fieldline">
                   <input id="jSecondary" type="color" value="#495965" />
@@ -132,6 +153,8 @@
                 </div>
               </div>
               <div class="field">
+                <label for="jAccentBrand">Accent colour · Brand Palette</label>
+                <select id="jAccentBrand"></select>
                 <label for="jAccent">Accent colour</label>
                 <div class="fieldline">
                   <input id="jAccent" type="color" value="#cbdb2a" />
@@ -160,7 +183,7 @@
                 <summary>What do the typography controls change?</summary>
                 <div class="learning-content">
                   <dl>
-                    <dt>Font family</dt><dd>A font stack is an ordered set of fallbacks. These choices use installed fonts, so appearance can vary by device; this studio does not download font files.</dd>
+                    <dt>Font family</dt><dd>A font stack is an ordered set of fallbacks. System choices use installed fonts. Optional Google Fonts in the Typography studio load web fonts and show the matching HTML and CSS.</dd>
                     <dt>Body size</dt><dd>The base for the scale. Start with the 16 px example, then judge your content, audience and font. A slider value alone does not establish readability.</dd>
                     <dt>Scale ratio</dt><dd>Choose a named interval such as Minor Second or Major Third, or use a custom ratio. It multiplies each successive level: 16 px at 1.25 produces 20 px, 25 px and 31.25 px. A larger ratio creates more dramatic size differences.</dd>
                     <dt>Line height</dt><dd>A unitless multiplier: 16 px text at 1.5 uses a 24 px line box. Give paragraphs breathing room without separating related lines too far.</dd>
@@ -173,7 +196,7 @@
               </details>
 
               <div class="field">
-                <label for="jFont">Font family</label>
+                <label for="jFont">System body font</label>
                 <select id="jFont">
                   <option value="Arial, Helvetica, sans-serif">Arial · system font</option>
                   <option value="Georgia, 'Times New Roman', serif">Georgia · serif</option>
@@ -181,6 +204,7 @@
                   <option value="system-ui, sans-serif">System UI</option>
                 </select>
               </div>
+              <p class="help">Configure Google Fonts and separate heading/body fonts under Heading and body font sources below. The system font above is used in System fonts mode. <a href="#fontControls">Explore font-loading and fallback examples in the centre lesson.</a></p>
               <div class="field">
                 <label for="jBase">Body size (px)</label>
                 <div class="fieldline">
@@ -206,7 +230,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="jLeading">Line height</label>
+                <label for="jLeading">Body line-height</label>
                 <div class="fieldline">
                   <input id="jLeading"
                          max="1.9"
@@ -243,7 +267,7 @@
                     <dt>Spacing base</dt><dd>Sets a repeatable unit. A 4 px base creates 8 px, 16 px and 24 px multiples. Use tighter gaps within a group and larger gaps between groups.</dd>
                     <dt>Corner radius</dt><dd>Shapes the general cards and demo controls. Keep related surfaces consistent; the Button Laboratory has its own radius setting.</dd>
                     <dt>Preview theme</dt><dd>Switches the studio between light and dark semantic roles. Dark mode changes colour relationships; it is not simply an inverted image. Inspect borders, text and focus separately.</dd>
-                    <dt>Advanced parameters</dt><dd>Refine control height, focus thickness, feedback colours, reading measure, borders, shadows, opacity, grid width/gap and motion. Change one category at a time so its effect is clear.</dd>
+                    <dt>Wizard refinements</dt><dd>Typography includes readability and responsive limits. Layout includes spacing, surfaces and grid rules. Accessibility includes control height, focus thickness, link cues and motion. Change one category at a time so its effect is clear.</dd>
                   </dl>
                   <p>Spacing separates content; padding creates room inside a component. A shadow is optional, and reducing surface opacity also fades its text. The Button Laboratory's geometry and state colours are edited separately from the general demos.</p>
                   <p class="learning-reference">Inspect <a href="#studio-section-3">Spacing, surfaces and component states</a> and <a href="#stateExplorer">Component State Explorer</a>.</p>
@@ -275,6 +299,21 @@
                   <option value="dark">Dark</option>
                 </select>
               </div>
+              <section aria-labelledby="jSemanticTitle">
+                <h4 id="jSemanticTitle">Semantic colour roles</h4>
+                <p class="help">Give colours a job: text, surfaces, borders, actions and feedback. Edit the preview theme selected above; the other theme keeps its own colours.</p>
+                <div class="field">
+                  <label for="jSemanticRole">Role to view or edit</label>
+                  <select id="jSemanticRole" aria-describedby="jSemanticHelp"></select>
+                </div>
+                <p id="jSemanticHelp" class="help"></p>
+                <p><span id="jSemanticSwatch" class="repair-chip" aria-hidden="true"></span> <output id="jSemanticCurrent" for="jSemanticRole jTheme"></output></p>
+                <div class="button-row">
+                  <button id="jSemanticEdit" type="button" class="ghost">Preview / edit role colour</button>
+                  <button id="jSemanticReset" type="button" class="ghost">Use generated colour</button>
+                </div>
+                <p class="help">Preview contrast effects before applying. Custom overrides stay fixed when the Main Palette changes; use generated colour to follow the palette again.</p>
+              </section>
               <p class="journey-tip">
                 <strong>Try it:</strong>
                 Inspect cards, forms, borders, buttons and focus states. Resize the preview and compare the same components in light and dark themes.
@@ -284,6 +323,22 @@
             <div class="journey-pane" data-journey-pane="4" hidden="">
               <h3 class="journey-stage-title">5. Design button variants and states</h3>
               <p class="help">Make an action easy to recognize, activate and understand before adding visual polish.</p>
+              <details class="learning-note build-guide">
+                <summary>Default state best practices: colour plus visible cues</summary>
+                <div class="learning-content">
+                  <p>Keep the button recognizable across states. Communicate meaning with text or shape as well as colour.</p>
+                  <dl>
+                    <dt>Hover</dt><dd>Underline the label while retaining the button's shape and size.</dd>
+                    <dt>Keyboard focus</dt><dd>Keep a visible outline. An underline supplements focus; it does not replace the outline.</dd>
+                    <dt>Active / pressed</dt><dd>Use a momentary inset appearance. This is different from a persistent selection.</dd>
+                    <dt>Selected toggle</dt><dd>Show a checkmark and ring. Keep the label unchanged between off/on and update aria-pressed="false" or "true" in application code.</dd>
+                    <dt>Loading</dt><dd>Show “Processing…” and a progress indicator at full opacity. Respect reduced motion; announce progress/completion and prevent duplicate submissions in application code. aria-busy alone does not disable an action.</dd>
+                    <dt>Disabled</dt><dd>Use native disabled behaviour and explain the reason in nearby text when needed. A faded colour alone is insufficient.</dd>
+                  </dl>
+                  <p>These cues complement the contrast checks below. They do not repair unreadable text.</p>
+                  <p class="learning-reference"><a href="https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html">W3C: use of colour</a> · <a href="https://www.w3.org/WAI/ARIA/apg/patterns/button/">W3C: button behaviour</a> · <a href="https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html">W3C: status messages</a>.</p>
+                </div>
+              </details>
               <details class="learning-note build-guide">
                 <summary>Which button settings are shared, and what should I test?</summary>
                 <div class="learning-content">
@@ -295,7 +350,7 @@
                     <dt>Colour overrides</dt><dd>Default, hover and active foreground/background pairs are edited per variant. Outline and text variants start transparent; changing their background picker makes it an explicit colour.</dd>
                     <dt>Focus, motion and mobile width</dt><dd>Focus colour/width, transition duration and optional narrow-screen full width are shared button settings. Keep focus visible, respect reduced motion and test long labels.</dd>
                   </dl>
-                  <p>Use an action label such as ?Save changes?. Test every relevant state in both themes. A contrast pass for the selected sample does not check every variant or the focus ring.</p>
+                  <p>Use an action label such as “Save changes”. Review every variant and state in both themes, including the separate focus and selection indicators, then test actual keyboard interaction.</p>
                   <p class="learning-reference">Compare the <a href="#buttonDesignLab">Button Design Laboratory</a>. Read <a href="https://www.w3.org/WAI/ARIA/apg/patterns/button/">W3C: button interaction</a> and <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html">target sizing and spacing</a>.</p>
                 </div>
               </details>
@@ -304,6 +359,19 @@
               <p class="help">
                 Define the default appearance, then inspect every relevant state. Settings apply across the state matrix, both themes and exported CSS.
               </p>
+              <details id="bdReview" class="bd-review">
+                <summary>Review all variants and states</summary>
+                <p class="help">Expand a variant and choose a state to inspect its contrast in both themes. Review means a required text or indicator pair is below target.</p>
+                <p id="bdReviewSummary" class="help" role="status"></p>
+                <div id="bdReviewVariants"></div>
+              </details>
+              <section id="bdReviewSelection" class="bd-review-selection" aria-labelledby="bdReviewTitle">
+                <h4 id="bdReviewTitle">Selected state contrast</h4>
+                <p id="bdContrast" class="help" role="status"></p>
+                <p id="bdReviewHint" class="help"></p>
+                <div id="bdReviewPairs"></div>
+                <p class="help">Text target: 4.5:1. Focus and selection indicators: 3:1. Disabled controls are exempt. Boundary checks depend on whether the boundary identifies the control. Ratios cover the audited surfaces; test keyboard focus and real usage too. <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">Text contrast guidance</a> · <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">Non-text contrast guidance</a>.</p>
+              </section>
               <div class="field">
                 <label for="bdVariant">Variant to edit</label>
                 <select id="bdVariant">
@@ -372,28 +440,28 @@
                 <label for="bdPaddingX">
                   Horizontal padding ·
                   <output id="bdPaddingXOut">
-                    18px
+                    16px
                   </output>
                 </label>
-                <input id="bdPaddingX" max="36" min="8" step="2" type="range" value="18" />
+                <input id="bdPaddingX" max="36" min="8" step="2" type="range" value="16" />
               </div>
               <div class="field">
                 <label for="bdPaddingY">
                   Vertical padding ·
                   <output id="bdPaddingYOut">
-                    12px
+                    8px
                   </output>
                 </label>
-                <input id="bdPaddingY" max="22" min="6" step="1" type="range" value="12" />
+                <input id="bdPaddingY" max="22" min="6" step="1" type="range" value="8" />
               </div>
               <div class="field">
                 <label for="bdMinHeight">
                   Minimum height ·
                   <output id="bdMinHeightOut">
-                    44px
+                    48px
                   </output>
                 </label>
-                <input id="bdMinHeight" max="64" min="36" step="2" type="range" value="44" />
+                <input id="bdMinHeight" max="64" min="36" step="2" type="range" value="48" />
               </div>
               <div class="field">
                 <label for="bdRadius">
@@ -497,9 +565,9 @@
                   <div class="field">
                     <label for="bdFocus">Focus ring colour</label>
                     <div class="fieldline">
-                      <input id="bdFocus" type="color" value="#b45309" />
+                      <input id="bdFocus" type="color" value="#b86c20" />
                       <output id="bdFocusOut">
-                        #B45309
+                        #B86C20
                       </output>
                     </div>
                   </div>
@@ -529,19 +597,23 @@
               </details>
               <p class="journey-tip">
                 <strong>Try it:</strong>
-                Select each state, compare the state matrix, then use Tab to test actual keyboard focus. The matrix simulates hover/focus for comparison; actual behaviour uses native selectors.
-              </p>
-              <p class="journey-tip">
-                <strong>Contrast check:</strong>
-                <output id="bdContrast" role="status">
-                  Select a button state
-                </output>
+                Choose a variant and state in the review above, adjust its colours, and recheck both themes. Compare the state matrix and use Tab to test actual keyboard focus. The matrix simulates hover/focus; actual behaviour uses native selectors.
               </p>
               <button class="ghost" id="bdJump" type="button">View button laboratory →</button>
               <p class="journey-tip"><strong>Before moving on:</strong> Each variant has a clear purpose; its text, interaction states, focus and target area have been reviewed.</p>
             </div>
-            <div class="journey-pane" data-journey-pane="5" hidden="">
-              <h3 class="journey-stage-title">6. Review, export and implement</h3>
+            <div class="journey-pane" data-journey-pane="5" hidden>
+              <h3 class="journey-stage-title">6. Layout, spacing and surfaces</h3>
+              <p class="help">Set the spacing unit, corners, borders and grid rules. Multiples follow the spacing unit; compare cards and page sections in the centre lessons.</p>
+              <div id="jLayoutControls"></div>
+            </div>
+            <div class="journey-pane" data-journey-pane="6" hidden>
+              <h3 class="journey-stage-title">7. Accessibility and interaction</h3>
+              <p class="help">Configure focus, control size, link cues and motion. Use the centre state explorer and contrast report to evaluate the results, then test with a keyboard.</p>
+              <div id="jAccessibilityControls"></div>
+            </div>
+            <div class="journey-pane" data-journey-pane="7" hidden="">
+              <h3 class="journey-stage-title">8. Review, export and implement</h3>
               <p class="help">Review the design, save a portable backup, and test the exported code in its destination.</p>
               <details class="learning-note build-guide">
                 <summary>What should a complete handoff include?</summary>
@@ -616,7 +688,7 @@
               <button id="jBack" type="button">← Back</button>
               <button id="jNext" type="button">Next →</button>
             </div>
-            <div class="journey-status" id="jProgress" role="status">Step 1 of 6</div>
+            <div class="journey-status" id="jProgress" role="status">Step 1 of 8</div>
             <div class="local-projects">
               <hr />
               <h3>My local projects</h3>
@@ -679,7 +751,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="accent">Featured accent (choose from example palette)</label>
+                <label for="accent">Featured accent (choose from Brand Palette)</label>
                 <div class="fieldline">
                   <input id="accent" type="color" value="#cbdb2a" />
                   <output id="accentOut">
@@ -688,7 +760,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="brandAccent">Example accent swatch</label>
+                <label for="brandAccent">Accent brand swatch</label>
                 <select id="brandAccent">
                   <option value="">Custom accent (use picker above)</option>
                   <option value="#00BADC">Teal · #00BADC</option>
@@ -701,12 +773,12 @@
                   <option value="#FFEF00">Yellow · #FFEF00</option>
                 </select>
                 <p class="help">
-                  The example accent swatches provide a fixed reference. Generated tints and shades extend your project palette.
+                  Brand swatches are project references. Generated tints and shades follow your Main Palette role choices.
                 </p>
               </div>
               <hr />
               <div class="field">
-                <label for="font">Font family</label>
+                <label for="font">System body font</label>
                 <select id="font">
                   <option value="Arial, Helvetica, sans-serif">Arial · sans-serif (system font)</option>
                   <option value="Georgia, 'Times New Roman', serif">Georgia · serif</option>
@@ -790,7 +862,7 @@
               <p class="help">
                 Expand a category to tune the system. All controls update live previews and exported CSS. Component states are simulated for teaching.
               </p>
-              <details open="">
+              <details>
                 <summary>Interaction states</summary>
                 <div class="group-body">
                   <div class="field">
@@ -819,7 +891,7 @@
                   <div class="field">
                     <label for="advHeight">Control height</label>
                     <div class="inline-range">
-                      <input id="advHeight" max="64" min="34" type="range" value="42" />
+                      <input id="advHeight" max="64" min="34" type="range" value="48" />
                       <output id="advHeightOut">
                       </output>
                     </div>
@@ -831,7 +903,7 @@
                 <summary>Semantic colours and feedback</summary>
                 <div class="group-body">
                   <p class="control-hint">
-                    These editable semantic roles are distinct from the fixed example palette reference swatches. They set the
+                    These editable semantic roles are distinct from your Brand Palette reference swatches. They set the
                     <strong>light theme</strong>
                     feedback colours; the dark theme keeps its own preset values. Success, warning and error also need meaningful text; a focus colour must contrast with adjacent surfaces.
                   </p>
@@ -919,7 +991,7 @@
                   <div class="field">
                     <label for="advGap">Grid gap (px)</label>
                     <div class="inline-range">
-                      <input id="advGap" max="32" min="4" type="range" value="12" />
+                      <input id="advGap" max="32" min="4" type="range" value="24" />
                       <output id="advGapOut">
                       </output>
                     </div>
@@ -961,11 +1033,60 @@
         </aside>
         <div class="studio-right">
           <main id="main">
+              <details class="studio-section" id="studio-section-4" open>
+              <summary><h2>1. Responsive page preview</h2></summary>
+              <section class="panel">
+                <div class="section-head">
+                  <div>
+
+                    <p class="help">Browse the generated home page. Design changes update this preview and the Live CSS/HTML Inspector together.</p>
+                  </div>
+                  <div class="preview-controls">
+                    <label class="preview-theme" for="previewTheme">Page theme
+                      <select id="previewTheme"><option value="light">Light</option><option value="dark">Dark</option></select>
+                    </label>
+                    <div aria-label="Preview width" class="tabs" role="group">
+                    <button aria-pressed="false" class="tab" data-width="mobile" type="button">390 px</button>
+                    <button aria-pressed="false" class="tab" data-width="tablet" type="button">768 px</button>
+                    <button aria-pressed="false" class="tab" data-width="desktop" type="button">1280 px</button>
+                    <button aria-pressed="true" class="tab" data-width="fluid" type="button">Fluid</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="preview-shell" id="previewShell" role="region" aria-label="Responsive page viewport" tabindex="0">
+                  <div class="preview-frame" data-width="fluid" id="previewFrame">
+                    <iframe id="previewPage" title="Live generated home page" sandbox="allow-same-origin allow-forms" srcdoc="<!doctype html><html lang='en'><head><meta charset='utf-8'></head><body></body></html>"></iframe>
+                  </div>
+                </div>
+                <p class="help">
+                  Use the page navigation or scroll inside the preview to browse. Fixed presets keep their selected width; scroll horizontally when the viewport is wider than this pane. Fluid fills the available space.
+                </p>
+                <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
+                <p class="help"
+                   id="responsiveTypeReadout"
+                   role="status"
+                   aria-live="polite"></p>
+
+              <details class="learning-note">
+                <summary>Why test between device sizes?</summary>
+                <div class="learning-content">
+                  <p>A responsive layout adapts to available space, not a list of devices. These width presets are checkpoints; Fluid helps you explore the space your browser provides.</p>
+                  <ul>
+                    <li><strong>Grid</strong> arranges rows and columns; <code>auto-fit</code> fits as many tracks as space permits, while <code>minmax()</code> bounds their size.</li>
+                    <li>The preview renders the generated HTML and CSS inside its own viewport, including the same viewport-relative type sizes and media queries as the downloaded page.</li>
+                    <li>Inspect long labels, wrapping, reading order and controls. Horizontal scrolling inside this inspection panel is intentional; the finished page should reflow.</li>
+                  </ul>
+                  <p><strong>Try it:</strong> change grid minimum width and gap in wizard step 6, Layout. Find where a card needs to wrap, then test just above and below that width.</p>
+                  <p class="learning-reference">Read more: <a href="https://web.dev/learn/design">web.dev: responsive design</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Basic_concepts">MDN: CSS Grid</a>.</p>
+                </div>
+              </details>
+              </section>
+            </details>
             <nav aria-label="Design system sections" class="studio-section-nav">
-              <a href="#brandPalette">01 &middot; Palette</a>
-              <a href="#studio-section-1">02 &middot; Colour</a>
-              <a href="#studio-section-2">03 &middot; Typography</a>
-              <a href="#studio-section-4">04 &middot; Responsive</a>
+              <a href="#studio-section-4">01 &middot; Responsive</a>
+              <a href="#brandPalette">02 &middot; Palette</a>
+              <a href="#studio-section-1">03 &middot; Colour</a>
+              <a href="#studio-section-2">04 &middot; Typography</a>
               <a href="#buttonDesignLab">05 &middot; Buttons</a>
               <a href="#studio-section-3">06 &middot; Components</a>
               <a href="#stateExplorer">07 &middot; States</a>
@@ -980,45 +1101,57 @@
               <p class="help">Select a section heading to expand or collapse it. Navigation links open the section you choose.</p>
             </div>
             <details class="studio-section" id="brandPalette">
-              <summary><h2>1. Example colour palette</h2></summary>
+              <summary><h2>2. Brand Colour Palette</h2></summary>
               <section class="panel">
               <div class="section-head">
                 <div>
 
                   <p class="help">
-                    An illustrative palette with fixed HEX values. Three primary colours and eight accent colours. These are
-                    <strong>brand swatches</strong>
-                    , not interchangeable CSS semantic roles.
+                    These are your project's named brand colours. Choose a Main Palette role below, then click any swatch to apply that colour. The responsive preview, generated CSS and guided controls update together.
                   </p>
                 </div>
-                <button class="ghost" id="restoreDefaults" type="button">Restore example defaults</button>
+                <button class="ghost" id="brandEditPalette" type="button">Edit Brand Palette</button>
               </div>
-              <h3>Primary brand colours</h3>
-              <div class="brand-grid" id="brandPrimary"></div>
-              <h3>Accent brand colours</h3>
-              <div class="brand-grid" id="brandAccents"></div>
+              <h3>Current Main Palette</h3>
+              <dl id="brandRoleAssignments" class="brand-role-assignments">
+                <div><dt>Primary UI colour</dt><dd><span class="brand-palette-chip" data-role-chip="primary" aria-hidden="true"></span><span id="brandCurrentPrimary"></span></dd></div>
+                <div><dt>Supporting colour</dt><dd><span class="brand-palette-chip" data-role-chip="secondary" aria-hidden="true"></span><span id="brandCurrentSecondary"></span></dd></div>
+                <div><dt>Accent colour</dt><dd><span class="brand-palette-chip" data-role-chip="accent" aria-hidden="true"></span><span id="brandCurrentAccent"></span></dd></div>
+              </dl>
+              <div class="field brand-role-picker">
+                <label for="brandApplyRole">Choose the UI role to change</label>
+                <select id="brandApplyRole" aria-describedby="brandApplyHelp">
+                  <option value="primary">Primary UI colour</option>
+                  <option value="secondary">Supporting colour</option>
+                  <option value="accent">Accent colour</option>
+                </select>
+              </div>
+              <p class="help" id="brandApplyHelp">Every swatch can be used for any role. Selecting a role prepares the action; clicking a swatch applies its HEX value. Check contrast in both themes.</p>
+              <p class="help" id="brandFeedback" role="status">Choose a role, then click a swatch below.</p>
+              <div class="brand-grid" id="brandSwatches" role="group" aria-label="Brand colours to apply to a Main Palette role"></div>
 
               <details class="learning-note">
                 <summary>Why separate palette swatches from colour roles?</summary>
                 <div class="learning-content">
                   <p>A swatch records a colour; a semantic role describes its job. The same blue can support several roles, and a role can use a different shade in dark mode.</p>
                   <ul>
-                    <li><strong>Foundation:</strong> a reference value such as <code>--primary-500</code>.</li>
+                    <li><strong>Brand reference:</strong> a named colour such as <code>--brand-blue</code>, edited in the Brand Palette.</li>
+                    <li><strong>Foundation:</strong> a generated ramp value such as <code>--primary-500</code>, based on the Main Palette choice.</li>
                     <li><strong>Semantic:</strong> <code>--primary</code> for an action background and <code>--on-primary</code> for its text.</li>
                     <li><strong>Component:</strong> <code>--button-primary-bg</code> for one button variant. Inspect component tokens too when customizing buttons.</li>
                   </ul>
-                  <p><strong>Try it:</strong> choose a swatch, switch themes, and compare the semantic tokens. Check foreground and background together.</p>
+                  <p><strong>Try it:</strong> choose Supporting colour, then click a swatch. Check the Current Main Palette summary and the secondary actions in the responsive preview. Switch themes and compare foreground/background contrast. Fixed Button Wizard overrides keep their own colours until edited.</p>
                   <p class="learning-reference">Read more: <a href="https://designsystem.digital.gov/design-tokens/">USWDS design tokens</a>.</p>
                 </div>
               </details>
 
               <p class="help">
-                This studio uses an illustrative example palette. Adapt the colours and tokens to your own project requirements.
+                Applying a swatch copies its HEX into one UI role. Editing or removing a brand reference later preserves that role's current colour; click a swatch again to apply a new value. Use Edit Brand Palette to change the named references.
               </p>
             </section>
             </details>
             <details class="studio-section" id="studio-section-1">
-              <summary><h2>2. Colour systems</h2></summary>
+              <summary><h2>3. Colour systems</h2></summary>
               <section class="panel">
               <div class="section-head">
                 <div>
@@ -1144,12 +1277,63 @@
               </section>
             </details>
             <details class="studio-section" id="studio-section-2">
-              <summary><h2>3. Typography studio</h2></summary>
+              <summary><h2>4. Typography studio</h2></summary>
               <section class="panel">
 
               <p class="help">
                 A modular scale multiplies or divides the base size by the selected ratio. Compare roles and inspect fluid heading CSS.
               </p>
+              <div id="fontControls" class="font-controls">
+                <h3>Fonts and CDN integration</h3>
+                <div class="field">
+                  <label for="fontSource">Font source</label>
+                  <select id="fontSource" aria-describedby="fontSourceHelp">
+                    <option value="system">System fonts (offline)</option>
+                    <option value="google">Google Fonts (CDN)</option>
+                  </select>
+                  <p id="fontSourceHelp" class="help">Google Fonts mode contacts fonts.googleapis.com and fonts.gstatic.com. System fonts work offline. Font choices are saved with your project.</p>
+                </div>
+                <div id="fontSystemOptions" class="field">
+                  <label for="fontSystemHeading">System heading font</label>
+                  <select id="fontSystemHeading"></select>
+                  <p class="help">Choose the system body font in the left controls or guided builder.</p>
+                </div>
+                <div id="fontGoogleOptions" hidden>
+                  <div class="grid2">
+                    <div class="field"><label for="fontGoogleBody">Body font</label><select id="fontGoogleBody"></select></div>
+                    <div class="field"><label for="fontGoogleHeading">Heading font</label><select id="fontGoogleHeading"></select></div>
+                  </div>
+                  <fieldset class="font-weights" aria-describedby="fontWeightsHelp">
+                    <legend>Font weights to include</legend>
+                    <div class="font-weight-options">
+                      <label for="fontWeight400"><input id="fontWeight400" type="checkbox" value="400">400 Regular</label>
+                      <label for="fontWeight500"><input id="fontWeight500" type="checkbox" value="500">500 Medium</label>
+                      <label for="fontWeight600"><input id="fontWeight600" type="checkbox" value="600">600 Semibold</label>
+                      <label for="fontWeight700"><input id="fontWeight700" type="checkbox" value="700">700 Bold</label>
+                      <label for="fontWeight800"><input id="fontWeight800" type="checkbox" value="800">800 Extra bold</label>
+                      <label for="fontWeight900"><input id="fontWeight900" type="checkbox" value="900">900 Black</label>
+                    </div>
+                  </fieldset>
+                  <p id="fontWeightsHelp" class="help"></p>
+                </div>
+                <label class="font-fallback" for="fontFallback"><input id="fontFallback" type="checkbox" disabled>Show fallback fonts in previews</label>
+                <p class="help">Comparison only: exports keep the selected fonts. Check heading wraps, button widths and page layout.</p>
+                <p id="fontLoadStatus" class="help font-status" role="status">Using system fonts. No external font requests.</p>
+                <button id="fontRetry" type="button" class="ghost" hidden>Retry font loading</button>
+                <details class="learning-note">
+                  <summary>How do CDN fonts work?</summary>
+                  <div class="learning-content">
+                    <p>The HTML link requests a stylesheet from Google. That stylesheet supplies <code>@font-face</code> rules; the browser then downloads font files for the styles and characters it needs. No JavaScript font loader or API key is needed for these curated choices.</p>
+                    <p><code>preconnect</code> prepares the stylesheet and font-file connections. The font-file connection uses <code>crossorigin</code>. <code>display=swap</code> shows fallback text while a web font loads; text may reflow when it arrives.</p>
+                    <p>Weights such as 400, 600 and 700 describe regular, semibold and bold. Request the weights your page uses. The fallback stack lets text remain readable when a font is unavailable. These examples follow your selections and appear in the Live CSS/HTML Inspector.</p>
+                    <h4>HTML: place in the head</h4>
+                    <pre class="font-code"><code id="fontHtmlCode"></code></pre>
+                    <h4>CSS: assign heading and body families</h4>
+                    <pre class="font-code"><code id="fontCssCode"></code></pre>
+                    <p class="learning-reference">Read the <a href="https://developers.google.com/fonts/docs/css2">Google Fonts CSS API guide</a>. Inter, Source Sans 3 and Literata use the SIL Open Font License; see the <a href="https://github.com/google/fonts">Google Fonts catalogue and licences</a>.</p>
+                  </div>
+                </details>
+              </div>
               <div class="grid2">
               <div class="field">
                 <label for="typoHeadingTracking">Heading letter spacing (em) <output id="typoHeadingTrackingOut">-0.02em</output></label>
@@ -1304,74 +1488,6 @@
                   </ul>
                   <p><strong>Check:</strong> long headings, readable paragraphs, missing-font fallbacks and 200% text resize. A visual H1 size does not replace a meaningful HTML heading structure.</p>
                   <p class="learning-reference">Read more: <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/clamp">MDN: clamp()</a> and <a href="https://www.w3.org/WAI/tutorials/page-structure/headings/">W3C: heading structure</a>.</p>
-                </div>
-              </details>
-              </section>
-            </details>
-              <details class="studio-section" id="studio-section-4">
-              <summary><h2>4. Responsive page preview</h2></summary>
-              <section class="panel">
-                <div class="section-head">
-                  <div>
-
-                    <p class="help">The inner demo uses a mobile-first auto-fit CSS Grid and fluid heading sizes.</p>
-                  </div>
-                  <div aria-label="Preview width" class="tabs" role="group">
-                    <button aria-pressed="false" class="tab" data-width="mobile" type="button">375 px</button>
-                    <button aria-pressed="false" class="tab" data-width="tablet" type="button">768 px</button>
-                    <button aria-pressed="true" class="tab" data-width="desktop" type="button">1280 px</button>
-                    <button aria-pressed="false" class="tab" data-width="fluid" type="button">Fluid</button>
-                  </div>
-                </div>
-                <div class="preview-shell" id="previewShell">
-                  <div class="preview-frame" data-width="desktop" id="previewFrame">
-                    <div class="eyebrow">Community events example</div>
-                    <h3>Discover what's happening</h3>
-                    <p class="muted">
-                      A sample interface using the current colour, typography, spacing and radius tokens. Resize the preview to test wrapping and layout.
-                    </p>
-                    <div class="preview-grid">
-                      <article class="preview-card">
-                        <span class="badge">Workshop</span>
-                        <h3>Design fundamentals</h3>
-                        <p class="mini muted">Explore colour, typography and visual hierarchy.</p>
-                        <button class="demo-btn" type="button">View details</button>
-                      </article>
-                      <article class="preview-card">
-                        <span class="badge">Community</span>
-                        <h3>Open house</h3>
-                        <p class="mini muted">Meet people and exchange ideas.</p>
-                        <button class="demo-btn secondary" type="button">Learn more</button>
-                      </article>
-                      <article class="preview-card">
-                        <span class="badge">Technology</span>
-                        <h3>Build a website</h3>
-                        <p class="mini muted">Apply reusable tokens to responsive components.</p>
-                        <button class="demo-btn outline" type="button">Explore</button>
-                      </article>
-                    </div>
-                  </div>
-                </div>
-                <p class="help">
-                  Fixed presets keep their selected width; scroll inside the preview when needed. Use browser device emulation to test the exported page at other widths.
-                </p>
-                <p class="help" id="previewWidthStatus" role="status" aria-live="polite"></p>
-                <p class="help"
-                   id="responsiveTypeReadout"
-                   role="status"
-                   aria-live="polite"></p>
-
-              <details class="learning-note">
-                <summary>Why test between device sizes?</summary>
-                <div class="learning-content">
-                  <p>A responsive layout adapts to available space, not a list of devices. These width presets are checkpoints; Fluid helps you explore the space your browser provides.</p>
-                  <ul>
-                    <li><strong>Grid</strong> arranges rows and columns; <code>auto-fit</code> fits as many tracks as space permits, while <code>minmax()</code> bounds their size.</li>
-                    <li>The preview uses container-relative heading sizes; the exported page uses viewport-relative sizes. Test the export in an actual browser viewport too.</li>
-                    <li>Inspect long labels, wrapping, reading order and controls. Horizontal scrolling inside this inspection panel is intentional; the finished page should reflow.</li>
-                  </ul>
-                  <p><strong>Try it:</strong> change grid minimum width and gap in Advanced Parameters. Find where a card needs to wrap, then test just above and below that width.</p>
-                  <p class="learning-reference">Read more: <a href="https://web.dev/learn/design">web.dev: responsive design</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Basic_concepts">MDN: CSS Grid</a>.</p>
                 </div>
               </details>
               </section>
@@ -1757,7 +1873,7 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Example brand tokens are fixed references; generated colour ramps are teaching derivatives.</p>
+                <p class="help">Theme-dependent semantic tokens appear separately for light and dark. Brand tokens reflect the project's Brand Palette; generated colour ramps follow the Main Palette role choices.</p>
 
               <details class="learning-note">
                 <summary>Why name tokens by purpose?</summary>
@@ -1768,7 +1884,7 @@
                     <li>The catalogue reads generated CSS declarations. Some values are resolved colours rather than alias references; matching values do not imply a live dependency.</li>
                     <li>Check the scope shown in each description. A dark-theme declaration can replace a base value with the same name.</li>
                   </ul>
-                  <p><strong>Try it:</strong> filter for ?button? or ?hover?, change a colour, and compare the catalogue with Live CSS. Clear the filter before exporting a complete CSV.</p>
+                  <p><strong>Try it:</strong> filter for “button” or “hover”, change a colour, and compare the catalogue with the CSS tab in the Live CSS/HTML Inspector. Clear the filter before exporting a complete CSV.</p>
                   <p class="learning-reference">Read more: <a href="https://designsystem.digital.gov/design-tokens/">USWDS: using design tokens</a>.</p>
                 </div>
               </details>
@@ -1776,21 +1892,30 @@
             </details>
               <div class="footer">Design System Studio V4.1 · standalone design toolkit · no external dependencies</div>
             </main>
-            <aside aria-label="Live generated CSS" class="studio-code-dock">
+            <aside aria-label="Live generated CSS and HTML" class="studio-code-dock">
               <div class="studio-dock-header">
                 <div>
-                  <strong>Live CSS inspector</strong>
+                  <strong>Live CSS/HTML Inspector</strong>
                   <p>Updates as you change the parameters</p>
                 </div>
                 <button id="dockCopy" type="button">Copy CSS</button>
+              </div>
+              <div class="studio-dock-tabs" role="tablist" aria-label="Inspector code language">
+                <button id="dockTabCss" type="button" role="tab" aria-selected="true" aria-controls="dockCss">CSS</button>
+                <button id="dockTabHtml" type="button" role="tab" aria-selected="false" aria-controls="dockCss" tabindex="-1">HTML</button>
+              </div>
+              <div class="studio-dock-theme">
+                <label for="dockTheme">Page theme</label>
+                <select id="dockTheme" aria-describedby="dockThemeHelp"><option value="light">Light</option><option value="dark">Dark</option></select>
+                <small id="dockThemeHelp">Shared with the preview. CSS includes both themes.</small>
               </div>
               <div class="studio-dock-actions">
                 <button id="dockDownload" type="button">Download tokens.css</button>
                 <button aria-expanded="true" id="dockToggle" type="button">Collapse code</button>
               </div>
-              <pre aria-label="Generated CSS code" id="dockCss" tabindex="0"></pre>
-              <p class="studio-dock-note">
-                Foundation → semantic → component rules. Generated ramps extend the example palette with tints and shades.
+              <pre aria-label="Generated CSS code" aria-labelledby="dockTabCss" aria-describedby="dockNote" role="tabpanel" id="dockCss" tabindex="0"></pre>
+              <p class="studio-dock-note" id="dockNote">
+                Brand → semantic → component rules. Save tokens.css beside the sample index.html.
               </p>
             </aside>
           </div>
@@ -1822,17 +1947,24 @@
 
 
       <script src="src/js/studio-registry.js?v=20261019-typography" defer></script>
-      <script src="src/js/core-state.js?v=20261019-typography" defer></script>
-      <script src="src/js/css-dock.js?v=20261019-typography" defer></script>
-      <script src="src/js/advanced-params.js?v=20261019-typography" defer></script>
-      <script src="src/js/journey-library.js?v=20261019-typography" defer></script>
-      <script src="src/js/button-design.js?v=20261019-typography" defer></script>
-      <script src="src/js/oklch-lab.js?v=20261019-typography" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261019-typography" defer></script>
+      <script src="src/js/brand-palette.js?v=20261019-swatch-actions" defer></script>
+      <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
+      <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
+      <script src="src/js/core-state.js?v=20261020-reaudit" defer></script>
+      <script src="src/js/css-dock.js?v=20261019-grid-spacing" defer></script>
+      <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
+      <script src="src/js/journey-library.js?v=20261020-learning" defer></script>
+      <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261019-footer-links" defer></script>
+      <script src="src/js/responsive-preview.js?v=20261019-fonts" defer></script>
+      <script src="src/js/oklch-lab.js?v=20261019-audit" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261020-learning" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
-      <script src="src/js/contrast-audit.js?v=20261019-typography" defer></script>
-      <script src="src/js/colour-repair.js?v=20261019-typography" defer></script>
+      <script src="src/js/contrast-audit.js?v=20261019-brand-palette" defer></script>
+      <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>
+      <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
-      <script src="src/js/section-accordions.js?v=20261019-collapsed" defer></script>
+      <script src="src/js/section-accordions.js?v=20261020-reaudit" defer></script>
+      <script src="src/js/studio-learning.js?v=20261020-learning" defer></script>
     </body>
   </html>

@@ -16,7 +16,7 @@ Hue is angular, chroma is radial, and lightness is an independent axis. */
   const wheelCache = new Map();
 
   function inGamut(l, c, h) {
-    return oklchRgb(l, c, h).every(v => Number.isFinite(v) && v >= 0 && v <= 1);
+    return oklchInGamut(oklchRgb(l, c, h));
   }
 
   function renderWheel() {

@@ -1,0 +1,51 @@
+.brand-palette-list {
+  list-style: none;
+  padding: 0;
+  margin-block: 0;
+  max-height: 14rem;
+  overflow: auto;
+  font-size: .8rem;
+}
+.brand-palette-list li { display: flex; align-items: center; gap: 8px; padding-block: 4px; overflow-wrap: anywhere; }
+.brand-palette-chip { flex: none; width: 24px; height: 24px; border: 1px solid var(--text-muted); border-radius: 4px; }
+.brand-palette-row { display: grid; gap: 8px; padding-block: 16px; border-bottom: 1px solid var(--border); }
+.brand-palette-row label { display: grid; gap: 4px; }
+.brand-palette-row input[type="text"] { width: 100%; min-width: 0; }
+#jBrandEditor { max-height: 28rem; overflow: auto; padding: 8px; }
+.journey-pane[data-journey-pane="1"] > h4,
+.journey-pane[data-journey-pane="1"] > p.help { margin: 0; }
+.journey-pane[data-journey-pane="1"] > .main-palette-title { margin-top: 16px; }
+
+.brand-role-assignments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+.brand-role-assignments > div { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.brand-role-assignments dt { font-weight: 700; margin-bottom: 8px; }
+.brand-role-assignments dd { display: flex; align-items: center; gap: 8px; margin: 0; overflow-wrap: anywhere; }
+.brand-role-picker { width: min(100%, 24rem); }
+#brandPalette .section-head { margin-bottom: 16px; }
+#brandSwatches { gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+#brandSwatches .brand-swatch { display: grid; grid-template-rows: 1fr auto; min-width: 0; }
+.brand-swatch > .brand-swatch-apply {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+}
+.brand-swatch-apply .brand-swatch-color { display: block; height: 64px; }
+.brand-swatch-apply .brand-swatch-info { padding: 16px; gap: 8px; font-size: .875rem; overflow-wrap: anywhere; }
+.brand-swatch-action { text-decoration: underline; text-underline-offset: .2em; font-weight: 600; }
+.brand-swatch-apply:hover .brand-swatch-action { text-decoration-thickness: 2px; }
+.brand-swatch:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
+.brand-swatch-apply > .brand-swatch-usage { display: block; margin: 0; padding: 8px 16px 16px; font-size: .8rem; overflow-wrap: anywhere; }
+.brand-swatch[data-current="true"] { border-color: var(--text); }
+.brand-swatch[data-current="true"] .brand-swatch-usage { font-weight: 700; }

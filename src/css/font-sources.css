@@ -1,0 +1,18 @@
+/* Project fonts affect specimens and components; studio controls retain their font. */
+.type-row .sample, .bd-button, .preview-card, #advDemoInput, #advDemoButton {
+  font-family: var(--font-body, var(--font-ui));
+}
+.type-row .sample[data-font-role="heading"], .preview-card h3 {
+  font-family: var(--font-heading, var(--font-ui));
+}
+.font-controls { margin-block: 24px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.font-controls h3 { margin-top: 0; }
+.font-controls [hidden] { display: none; }
+.font-weights { min-width: 0; margin: 16px 0 8px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.font-weights legend { font-weight: 600; }
+.font-weight-options { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.font-weight-options label, .font-fallback { display: inline-flex; align-items: center; gap: 8px; }
+.font-weight-options input, .font-fallback input { width: auto; }
+.font-code { max-width: 100%; max-height: 220px; overflow: auto; padding: 16px; font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-muted); border-radius: 8px; }
+.font-status { margin-block: 8px; }
+.font-status[data-state="error"] { color: var(--danger); }

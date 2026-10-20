@@ -487,7 +487,7 @@ p {
 }
 
 .preview-frame[data-width="mobile"] {
-  width: 375px
+  width: 390px
 }
 
 .preview-frame[data-width="tablet"] {
@@ -859,8 +859,7 @@ summary {
   filter: brightness(.86)
 }
 
-.state-tile[data-state=disabled] .demo-btn,
-.state-tile[data-state=loading] .demo-btn {
+.state-tile[data-state=disabled] .demo-btn {
   opacity: .55;
   cursor: not-allowed
 }
@@ -882,10 +881,6 @@ summary {
 
 .state-tile[data-state=readonly] .demo-input {
   background: var(--surface-muted)
-}
-
-.state-tile[data-state=loading] .demo-btn::after {
-  content: '  ◌'
 }
 
 .state-tile[data-state=focus] .demo-input {
@@ -1051,7 +1046,7 @@ summary {
 }
 
 #studio-section-4 .preview-frame[data-width="mobile"] {
-  width: 375px;
+  width: 390px;
 }
 
 #studio-section-4 .preview-frame[data-width="tablet"] {

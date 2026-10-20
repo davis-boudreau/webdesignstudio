@@ -105,12 +105,12 @@
           for (const st of textStates) {
             const bg = st === 'hover' ? c.hover : st === 'active' ? c.active : base;
             const fg = st === 'hover' ? c.hoverText : st === 'active' ? c.activeText : c.fg;
-            const alpha = st === 'disabled' ? .55 : st === 'loading' ? .8 : 1;
+            const alpha = st === 'disabled' ? .55 : 1;
             const disabled = st === 'disabled';
             add(theme, 'Button Laboratory: text', title(variant), st, host,
               blend(fg, surround, alpha), blend(bg, surround, alpha), disabled ? null : 4.5,
               disabled ? 'Native disabled control: contrast exemption; ratio shown for information.' :
-                st === 'loading' ? 'Matrix simulation uses 0.8 opacity. A busy button is not automatically disabled.' :
+                st === 'loading' ? 'Busy controls keep full opacity, with a progress indicator and Processing label. Busy alone does not disable an action.' :
                 st === 'focus' ? 'Text stays the default colour; focus ring checked separately.' :
                 st === 'selected' ? 'Toggle text stays the default colour; selection ring checked separately.' : 'Resolved button colours on the named surrounding surface.');
             if (st === 'loading')
@@ -136,14 +136,14 @@
       }
 
       // These formulas follow the state explorer CSS: active filters the
-      // whole button; disabled/loading opacity blends it onto the tile.
+      // whole button; disabled opacity blends it onto the tile.
       for (const st of explorerStates) {
-        const faded = st === 'disabled' || st === 'loading';
+        const faded = st === 'disabled';
         const bg = st === 'hover' ? r['primary-hover'] : st === 'active' ? brighten(r.primary, .86) : r.primary;
         const fg = st === 'active' ? brighten(r['on-primary'], .86) : r['on-primary'];
         add(theme, 'General components and form states', 'State Explorer button text', st, 'surface',
-          blend(fg, r.surface, faded ? .55 : 1), blend(bg, r.surface, faded ? .55 : 1), faded ? null : 4.5,
-          faded ? 'Explorer disables its loading/disabled button; inactive-control exemption applies.' : 'Includes active brightness filtering; states without their own text style retain default colours.');
+          blend(fg, r.surface, faded ? .55 : 1), blend(bg, r.surface, faded ? .55 : 1), faded || st === 'loading' ? null : 4.5,
+          faded || st === 'loading' ? 'Explorer disables this control; inactive-control exemption applies. Busy controls retain full opacity.' : 'Includes active brightness filtering; states without their own text style retain default colours.');
         const inputBg = st === 'readonly' ? r['surface-muted'] : r.surface;
         // button:disabled has opacity; the explorer input does not.
         add(theme, 'General components and form states', 'State Explorer input text', st, 'input background', r.text, inputBg, st === 'disabled' ? null : 4.5,
@@ -167,7 +167,7 @@
             blend(r[text], r.surface, (configuration.opacity ?? adv.opacity) / 100), blend(bg, r.surface, (configuration.opacity ?? adv.opacity) / 100), 4.5,
             `Whole-component opacity ${configuration.opacity ?? adv.opacity}%, composited onto an opaque --surface. Other backgrounds require a separate check.`);
 
-      const swatches = [...EXAMPLE_PALETTE.primary, ...EXAMPLE_PALETTE.accent,
+      const swatches = [...DSStudio.brandPalette.normalize(foundation.brandPalette).map(item => [`Brand: ${item.name} (--brand-${item.id})`, item.hex]),
         ...Object.entries({ primary: p, secondary: s, accent: a }).flatMap(([name, ramp]) =>
           steps.map(step => [`${name}-${step}`, ramp[step]]))];
       for (const [name, hex] of swatches)
@@ -234,7 +234,12 @@
     }));
   }
 
-  function refresh() { rows = collect(); render(); window.dssSyncSemanticEditor?.(); }
+  function refresh() {
+    rows = collect();
+    render();
+    window.dssSyncSemanticEditor?.();
+    DSStudio.emit('contrast:updated');
+  }
   function schedule() {
     if (queued) return;
     queued = true;

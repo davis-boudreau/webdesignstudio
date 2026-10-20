@@ -1,9 +1,8 @@
 'use strict';
 /* STATE: all user-editable foundation values live in one plain object.
 JSON import validates fields; exporting never executes imported code. */
-/* BRAND SOURCE OF TRUTH: illustrative colours for the example preset.
-The palette is immutable in this example preset. You can experiment
-with editable interface colours without changing the reference swatch list. */
+/* Seed colours for new projects. Project-specific brand references are stored
+   separately from the main primary/secondary/accent UI role anchors. */
 const EXAMPLE_PALETTE = {
   primary: [
     ['White', '#FFFFFF'],
@@ -23,16 +22,7 @@ const EXAMPLE_PALETTE = {
 };
 
 function renderBrand() {
-  const make = (items, role) => items.map(([name, hex]) => `<div class="brand-swatch"><div class="brand-swatch-color" style="background:${hex}"></div><div class="brand-swatch-info"><strong>${name}</strong><code>${hex}</code><button type="button" data-brand-role="${role}" data-brand-hex="${hex}" aria-label="Use ${name} as ${role} colour">Use as ${role==='accent'?'accent':'UI primary'}</button></div></div>`).join('');
-  $('brandPrimary').innerHTML = make(EXAMPLE_PALETTE.primary, 'primary');
-  $('brandAccents').innerHTML = make(EXAMPLE_PALETTE.accent, 'accent');
-  document.querySelectorAll('[data-brand-role]').forEach(btn => btn.addEventListener('click', () => {
-    const role = btn.dataset.brandRole;
-    state[role] = btn.dataset.brandHex.toLowerCase();
-    $(role).value = state[role];
-    apply();
-    announce('Selected example palette swatch as an editable UI role.');
-  }));
+  DSStudio.brandPalette.render();
 }
 const DEFAULT = {
   project: 'My Project',
@@ -41,10 +31,13 @@ const DEFAULT = {
   primary: '#004780',
   secondary: '#495965',
   accent: '#cbdb2a',
+  brandPalette: DSStudio.brandPalette.defaults(),
   font: 'Arial, Helvetica, sans-serif',
+  fontSettings: DSStudio.fonts.defaults(),
   base: 16,
   ratio: 1.25,
   leading: 1.55,
+  headingLeading: 1.18,
   headingTracking: -.02,
   bodyTracking: 0,
   spacing: 4,
@@ -55,6 +48,7 @@ let state = {
   },
   codeTab = 'css';
 const $ = id => document.getElementById(id);
+const SPACING_STEPS = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24];
 const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950],
   mixes = [.95, .85, .7, .5, .25, 0, -.1, -.25, -.4, -.65, -.85];
 const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
@@ -107,9 +101,15 @@ function oklchRgb(L, C, h) {
   return [(4.0767416621 * l - 3.3077115913 * m + .2309699292 * s), (-1.2684380046 * l + 2.6097574011 * m - .3413193965 * s), (-.0041960863 * l - .7034186147 * m + 1.707614701 * s)].map(linearToSrgb);
 }
 
+// Matrix round-off can put an sRGB boundary channel a fraction outside 0..1.
+// Do not reduce the chroma of valid saturated colours for that numerical noise.
+function oklchInGamut(rgb) {
+  return rgb.every(v => Number.isFinite(v) && v >= -1e-5 && v <= 1 + 1e-5);
+}
+
 function oklchHex(L, C, h) {
   let vals = oklchRgb(L, C, h);
-  for (let i = 0; i < 32 && vals.some(v => v < 0 || v > 1 || !Number.isFinite(v)); i++) {
+  for (let i = 0; i < 32 && !oklchInGamut(vals); i++) {
     C *= .88;
     vals = oklchRgb(L, C, h);
   }
@@ -216,6 +216,7 @@ function apply() {
   root.style.setProperty('--font-ui', state.font);
   root.style.setProperty('--base-size', state.base + 'px');
   root.style.setProperty('--body-leading', state.leading);
+  root.style.setProperty('--heading-leading', state.headingLeading);
   root.style.setProperty('--heading-letter-spacing', state.headingTracking + 'em');
   root.style.setProperty('--body-letter-spacing', state.bodyTracking + 'em');
   root.style.setProperty('--space-unit', state.spacing + 'px');
@@ -227,7 +228,7 @@ function apply() {
   $('rampMethodLabel').textContent = state.method === 'mix' ? 'RGB mix' : 'OKLCH';
   ['primary', 'secondary', 'accent'].forEach(k => $(k + 'Out').textContent = state[k].toUpperCase());
   ['base', 'ratio', 'leading', 'spacing', 'radius'].forEach(k => $(k + 'Out').textContent = state[k] + (k === 'base' || k === 'spacing' || k === 'radius' ? 'px' : ''));
-  $('brandAccent').value = EXAMPLE_PALETTE.accent.some(([, hex]) => hex.toLowerCase() === state.accent.toLowerCase()) ? state.accent.toUpperCase() : '';
+  $('brandAccent').value = state.brandPalette.some(item => item.group === 'accent' && item.hex === state.accent.toUpperCase()) ? state.accent.toUpperCase() : '';
   renderRamps({
     primary: p,
     secondary: s,
@@ -284,7 +285,7 @@ function fluidTypePx(step, viewport) {
   return round(Math.max(min, Math.min(full, min + (full - min) * (viewport - minWidth) / (maxWidth - minWidth))), 1);
 }
 
-function fluidTypeCss(step, unit = 'vw') {
+function fluidTypeCss(step, unit = 'vw', viewportInset = 0) {
   const {
     full,
     min
@@ -295,27 +296,16 @@ function fluidTypeCss(step, unit = 'vw') {
   const slope = (full - min) / (maxWidth - minWidth) * 100;
   const offset = min - slope * minWidth / 100;
   // rem offsets scale with user root font preferences; 16px is the nominal root.
-  return `clamp(${round(min/16,5)}rem, calc(${round(offset/16,5)}rem + ${round(slope,5)}${unit}), ${round(full/16,5)}rem)`;
+  const inset = viewportInset ? ` + ${round(slope * viewportInset / 100,5)}px` : '';
+  return `clamp(${round(min/16,5)}rem, calc(${round(offset/16,5)}rem + ${round(slope,5)}${unit}${inset}), ${round(full/16,5)}rem)`;
 }
 
 function syncFluidTypography() {
   const frame = $('previewFrame');
   if (!frame) return;
-  for (const [key, step] of [
-      ['display', 5],
-      ['h1', 4],
-      ['h2', 3],
-      ['body', 0],
-      ['small', -1]
-    ]) {
-    frame.style.setProperty('--preview-type-' + key, fluidTypeCss(step, 'cqi'));
-  }
-  frame.style.setProperty('--preview-leading', state.leading);
-  frame.style.setProperty('--preview-font', state.font);
-  frame.style.setProperty('--preview-heading-tracking', state.headingTracking + 'em');
-  frame.style.setProperty('--preview-body-tracking', state.bodyTracking + 'em');
+  // The sample now has its own viewport and uses the actual exported vw sizes.
   const width = frame.dataset.width === 'fluid' ? Math.round(frame.getBoundingClientRect().width) : ({
-    mobile: 375,
+    mobile: 390,
     tablet: 768,
     desktop: 1280
   })[frame.dataset.width] || 1280;
@@ -343,17 +333,17 @@ function renderType() {
         n: -1
       }].map(o => {
         const px = fluidTypePx(o.n, viewport);
-        return `<div class="type-row"><small>${o.role}<br>${px}px<br>${round(px/16,4)}rem</small><div class="sample" style="font-size:${px}px;letter-spacing:${o.n>0?state.headingTracking:state.bodyTracking}em;line-height:${o.n>0?1.18:state.leading};font-weight:${o.n>0?700:400}">${o.role==='Body'?'Build a clear and readable interface.':o.role==='Small'?'Labels and supporting details':'Design for people'}</div></div>`;
+        return `<div class="type-row"><small>${o.role}<br>${px}px<br>${round(px/16,4)}rem</small><div class="sample" data-font-role="${o.n>0?'heading':'body'}" style="font-size:${px}px;letter-spacing:${o.n>0?state.headingTracking:state.bodyTracking}em;line-height:${o.n>0?state.headingLeading:state.leading};font-weight:${o.n>0?'var(--demo-heading-weight, 700)':400}">${o.role==='Body'?'Build a clear and readable interface.':o.role==='Small'?'Labels and supporting details':'Design for people'}</div></div>`;
       }).join('');
     };
   spec('mobileType', 375);
   spec('desktopType', 1280);
-  $('typeLadder').innerHTML = sz.map(o => `<div class="type-row"><small>${o.name}<br>${round(o.size,2)}px<br>${round(o.size/16,4)}rem</small><div class="sample" style="font-size:${o.size}px;letter-spacing:${o.step>0?state.headingTracking:state.bodyTracking}em;line-height:1.2">Aa Bb Cc — Typography</div></div>`).join('');
+  $('typeLadder').innerHTML = sz.map(o => `<div class="type-row"><small>${o.name}<br>${round(o.size,2)}px<br>${round(o.size/16,4)}rem</small><div class="sample" data-font-role="${o.step>0?'heading':'body'}" style="font-size:${o.size}px;letter-spacing:${o.step>0?state.headingTracking:state.bodyTracking}em;line-height:${o.step>0?state.headingLeading:state.leading};font-weight:${o.step>0?'var(--demo-heading-weight, 700)':400}">Aa Bb Cc — Typography</div></div>`).join('');
   syncFluidTypography();
 }
 
 function renderSpacing() {
-  $('spacingBars').innerHTML = [1, 2, 3, 4, 6, 8, 12].map(n => `<div class="space-row"><span>space-${n}<br>${n*state.spacing}px</span><i style="width:${n*state.spacing*2}px"></i></div>`).join('');
+  $('spacingBars').innerHTML = SPACING_STEPS.map(n => `<div class="space-row"><span>space-${n}<br>${n*state.spacing}px</span><i style="width:${n*state.spacing}px;max-width:calc(100% - 88px);flex-shrink:0"></i></div>`).join('');
 }
 
 function renderContrast(roles) {
@@ -381,12 +371,8 @@ function cssExport() {
     s,
     a,
     roles
-  } = palette();
-  const other = state.theme === 'light' ? 'dark' : 'light';
-  const saved = state.theme;
-  state.theme = other;
-  const opposite = palette().roles;
-  state.theme = saved;
+  } = palette('light');
+  const darkRoles = palette('dark').roles;
   const foundation = Object.entries({
     primary: p,
     secondary: s,
@@ -394,14 +380,18 @@ function cssExport() {
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
   const semantic = r => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).join('\n');
   const sz = sizes();
-  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* EXAMPLE PALETTE: fixed reference colours. */\n  --example-white: #FFFFFF;\n  --example-blue: #004780;\n  --example-dark-grey: #495965;\n  --example-accent-teal: #00BADC;\n  --example-accent-turquoise: #5FC5BF;\n  --example-accent-orange: #F37327;\n  --example-accent-blue: #2B71B9;\n  --example-accent-green: #CBDB2A;\n  --example-accent-fuchsia: #EF426F;\n  --example-accent-light-blue: #57B7E7;\n  --example-accent-yellow: #FFEF00;\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-ui: ${state.font};\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
+  const fonts = DSStudio.fonts.resolve();
+  // The default 4px unit provides an 8px rhythm and 4px fine adjustments.
+  const spacing = SPACING_STEPS
+    .map(n => `  --space-${n}: calc(var(--space-unit) * ${n});`).join("\n");
+  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(state.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
---text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: 1.18;\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n  --space-2: calc(var(--space-unit) * 2);\n  --space-4: calc(var(--space-unit) * 4);\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(saved==='light'?roles:opposite)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(saved==='dark'?roles:opposite)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { letter-spacing: var(--heading-letter-spacing); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { width: min(100% - 2rem, 72rem); margin-inline: auto; }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
+--text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: ${state.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n${spacing}\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: 72rem; margin-inline: auto; padding-inline: var(--space-4); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
 .heading-1 { font-size: var(--text-h1); line-height: var(--heading-leading); }
 .heading-2 { font-size: var(--text-h2); line-height: var(--heading-leading); }
-.small-text { font-size: var(--text-small); }\n.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: var(--space-4); }\n.card { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;
+.small-text { font-size: var(--text-small); }\n.card-grid { display: grid; }\n.card { padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;
 }
 
 function htmlExport() {
@@ -417,7 +407,7 @@ hijacking button clicks. */
 function projectJson() {
   return JSON.stringify({
     schemaVersion: 2,
-    brandReference: "Studio example palette",
+    brandReference: "Project Brand Palette",
     clampConfig: { ...clampConfig },
     ...state
   }, null, 2);
@@ -428,7 +418,8 @@ function codeContent() {
 }
 
 function renderCode() {
-  $('codeView').textContent = codeContent();
+  const content = codeContent();
+  if ($('codeView').textContent !== content) $('codeView').textContent = content;
   [
     ['viewCss', 'css'],
     ['viewJson', 'json'],
@@ -485,10 +476,13 @@ function importConfig(obj) {
   if (['light', 'dark'].includes(obj.theme)) n.theme = obj.theme;
   if (['mix', 'oklch'].includes(obj.method)) n.method = obj.method;
   if (['Arial, Helvetica, sans-serif', "Georgia, 'Times New Roman', serif", 'Verdana, Geneva, sans-serif', 'system-ui, sans-serif'].includes(obj.font)) n.font = obj.font;
+  n.fontSettings = DSStudio.fonts.normalize(obj.fontSettings);
+  n.brandPalette = DSStudio.brandPalette.normalize(obj.brandPalette);
   for (const [k, min, max] of [
       ['base', 14, 22],
       ['ratio', 1.05, 1.5],
       ['leading', 1.3, 1.9],
+      ['headingLeading', 1, 1.6],
       ['headingTracking', -.05, .1],
       ['bodyTracking', -.02, .12],
       ['spacing', 3, 8],
@@ -527,7 +521,6 @@ $('brandAccent').addEventListener('change', e => {
     apply();
   }
 });
-$('restoreDefaults').addEventListener('click', () => resetStudio('Example defaults restored.'));
 $('themeToggle').addEventListener('click', () => {
   state.theme = state.theme === 'light' ? 'dark' : 'light';
   apply();
@@ -565,7 +558,7 @@ $('copyCode').addEventListener('click', async () => {
     announce('Clipboard unavailable; select code and copy manually.');
   }
 });
-$('downloadCode').addEventListener('click', () => download(codeTab === 'css' ? 'tokens.css' : codeTab === 'json' ? 'design-system-studio.json' : 'example.html', codeContent(), codeTab === 'css' ? 'text/css' : codeTab === 'json' ? 'application/json' : 'text/html'));
+$('downloadCode').addEventListener('click', () => download(codeTab === 'css' ? 'tokens.css' : codeTab === 'json' ? 'design-system-studio.json' : 'index.html', codeContent(), codeTab === 'css' ? 'text/css' : codeTab === 'json' ? 'application/json' : 'text/html'));
 [
   ['viewCss', 'css'],
   ['viewJson', 'json'],
@@ -588,28 +581,29 @@ codeTabs.forEach((id, index) => $(id).addEventListener('keydown', event => {
 }));
 /* FIX: only the width tab buttons. The old selector "[data-width]" also matched the preview frame itself,
 so clicking anywhere inside the preview un-pressed every width tab. */
-function updateResponsivePreview(w) {
+function syncResponsivePreview() {
   const frame = $('previewFrame'),
     shell = $('previewShell'),
     status = $('previewWidthStatus');
-  frame.dataset.width = w;
-  document.querySelectorAll('.tabs [data-width]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.width === w)));
-  // On narrower screens, keep the real preview width and allow horizontal scrolling.
-  const sync = () => {
-    const overflows = frame.getBoundingClientRect().width > shell.clientWidth - 24;
-    shell.dataset.previewOverflow = String(overflows);
-    status.textContent = w === 'fluid' ? 'Fluid preview: fills the available preview area.' :
-      `${({mobile:375,tablet:768,desktop:1280})[w]} px viewport` + (overflows ? ' — scroll horizontally to inspect the full-width page.' : ' — fully visible.');
-  };
-  requestAnimationFrame(() => {
-    sync();
-    syncFluidTypography();
-  });
+  const width = frame.dataset.width;
+  const overflows = frame.getBoundingClientRect().width > shell.clientWidth - 24;
+  shell.dataset.previewOverflow = String(overflows);
+  status.textContent = width === 'fluid' ? 'Fluid preview: fills the available preview area.' :
+    `${({mobile:390,tablet:768,desktop:1280})[width]} px viewport` + (overflows ? ' — scroll horizontally to inspect the full-width page.' : ' — fully visible.');
+  syncFluidTypography();
+}
+
+function updateResponsivePreview(width) {
+  if (!['mobile', 'tablet', 'desktop', 'fluid'].includes(width)) return;
+  $('previewFrame').dataset.width = width;
+  document.querySelectorAll('.tabs [data-width]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.width === width)));
+  const shell = $('previewShell');
   shell.scrollLeft = 0;
+  syncResponsivePreview();
 }
 document.querySelectorAll('.tabs [data-width]').forEach(btn => btn.addEventListener('click', () => updateResponsivePreview(btn.dataset.width)));
 updateResponsivePreview($('previewFrame').dataset.width);
-window.addEventListener('resize', () => syncFluidTypography());
+window.addEventListener('resize', syncResponsivePreview);
 renderBrand();
 syncControls();
 apply();

@@ -1,4 +1,14 @@
-/* V2.5: parameters remain on the left, live examples and CSS remain visible on the right. */
+/* Fixed desktop side panes; the centre consumes the remaining viewport width. */
+:root {
+  --studio-controls-width: 310px;
+  --studio-inspector-width: 380px;
+}
+
+.shell {
+  width: 100%;
+  padding-inline: clamp(12px, 2vw, 28px);
+}
+
 .skip-link {
   position: fixed;
   top: 8px;
@@ -43,7 +53,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(255px, 310px) minmax(0, 1fr);
+  grid-template-columns: var(--studio-controls-width) minmax(0, 1fr);
   align-items: start;
   gap: 16px
 }
@@ -51,7 +61,7 @@
 .studio-right {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 34%);
+  grid-template-columns: minmax(0, 1fr) var(--studio-inspector-width);
   gap: 14px;
   align-items: start
 }
@@ -91,6 +101,7 @@
 }
 
 .studio-dock-header button,
+.studio-dock-tabs button,
 .studio-dock-actions button {
   font-size: .78rem;
   padding: 6px 9px;
@@ -101,6 +112,24 @@
   cursor: pointer
 }
 
+.studio-dock-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px 0;
+}
+
+.studio-dock-tabs button {
+  flex: 1;
+  border-radius: 7px 7px 0 0;
+  border-bottom: 3px solid transparent;
+}
+
+.studio-dock-tabs button[aria-selected="true"] {
+  background: var(--surface);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
 .studio-dock-actions {
   display: flex;
   gap: 8px;
@@ -108,6 +137,20 @@
   padding: 8px 12px;
   border-bottom: 1px solid var(--border)
 }
+
+.studio-dock-theme {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 12px;
+  font-size: .78rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.studio-dock-theme label { font-weight: 600; }
+.studio-dock-theme small { grid-column: 1 / -1; color: var(--text-muted); }
+.studio-dock-theme select { min-width: 0; padding: 6px 9px; }
 
 #dockCss {
   margin: 0;
@@ -167,7 +210,7 @@
 
 #main>section,
 #main>.studio-section {
-  scroll-margin-top: 125px
+  scroll-margin-top: var(--studio-section-scroll-offset, 125px)
 }
 
 .section-actions { margin-bottom: 14px; }
@@ -177,7 +220,7 @@
 .studio-section > summary h2 { display: inline; margin: 0; font-size: 1.15rem; }
 .studio-section > .panel { margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; }
 
-@media(max-width:1500px) {
+@media(max-width:1280px) {
   .studio-right {
     grid-template-columns: minmax(0, 1fr)
   }

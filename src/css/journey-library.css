@@ -1,4 +1,11 @@
 /* V2.7: guided journey, progressive disclosure and local project library. */
+.studio-lesson { margin-bottom: 24px; padding: 16px; border: 1px solid var(--border); border-inline-start: 4px solid var(--primary); border-radius: 8px; background: var(--surface-muted); }
+.studio-lesson h3 { margin-top: 0; }
+.studio-lesson code { overflow-wrap: anywhere; }
+.studio-journey .clamp-grid, .studio-journey .grid2 { grid-template-columns: minmax(0, 1fr); }
+.studio-journey details { min-width: 0; }
+.studio-journey input[type=range] { margin-inline: 0; max-width: 100%; }
+.studio-journey [hidden] { display: none !important; }
 .studio-journey {
   border: 2px solid var(--primary, #004780);
   background: var(--surface, #fff)

@@ -7,13 +7,13 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     variant: 'primary',
     size: 'md',
     selectedState: 'default',
-    padX: 18,
-    padY: 12,
-    minHeight: 44,
+    padX: 16,
+    padY: 8,
+    minHeight: 48,
     radius: 8,
     border: 1,
     weight: 600,
-    focus: '#B45309',
+    focus: '#B86C20',
     focusWidth: 3,
     motion: 150,
     mobileFull: false,
@@ -206,8 +206,8 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     const disabled = st === 'disabled' ? ' disabled' : '';
     const pressed = st === 'selected' ? ' aria-pressed="true"' : '';
     const busy = st === 'loading' ? ' aria-busy="true"' : '';
-    const sim = real ? '' : ` data-sim="${st}"`;
-    const label = st === 'loading' ? 'Processing…' : st === 'selected' ? 'Toggle setting' : `${names[v]} action`;
+    const sim = real && st === 'focus' ? '' : ` data-sim="${st}"`;
+    const label = st === 'loading' ? 'Processing…' : `${names[v]} action`;
     return `<button type="button" class="bd-button" style="${esc(style)}"${sim}${disabled}${pressed}${busy}>${esc(label)}</button>`;
   }
 
@@ -249,14 +249,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   }
 
   function render() {
-    const cc = colors(b.variant);
-    const bg = b.selectedState === 'hover' ? cc.hover : b.selectedState === 'active' ? cc.active : cc.bg === 'transparent' ? (state.theme === 'dark' ? '#142434' : '#FFFFFF') : cc.bg;
-    const fg = b.selectedState === 'hover' ? cc.hoverText : b.selectedState === 'active' ? cc.activeText : cc.fg;
-    const r = ratio(fg, bg);
-    $('bdContrast').textContent = `${r.toFixed(2)}:1 — ${r>=4.5?'PASS AA text':'REVIEW: below 4.5:1'}`;
     state.buttonDesign = JSON.parse(JSON.stringify(b));
     $('bdContext').textContent = `${names[b.variant]} · ${b.size.toUpperCase()} · ${b.selectedState}`;
-    $('bdDescription').textContent = explain[b.selectedState];
+    $('bdDescription').textContent = explain[b.selectedState] + (b.selectedState === 'disabled' ? ' This state example is unavailable; explain the prerequisite beside disabled actions in your application.' : '');
     $('bdSingle').innerHTML = btn(b.variant, b.selectedState, b.size, state.theme, true);
     $('bdThemes').innerHTML = ['light', 'dark'].map(m => `<div class="bd-theme-card" data-mode="${m}"><strong>${m==='light'?'Light':'Dark'} preview</strong>${btn(b.variant,b.selectedState,b.size,m)}</div>`).join('');
     $('bdMatrix').innerHTML = stateGroups.map(group => `<section class="bd-state-group" aria-label="${group.title}"><div class="bd-state-group-heading"><h4>${group.title}</h4><p class="help">${group.description}</p></div>${group.items.map(st=>`<section class="bd-state-section" aria-label="${stateLabels[st]}"><div class="bd-state-section-head"><h5>${stateLabels[st]}</h5><p class="help">${esc(explain[st])}</p></div>${colorGroups.map(type=>`<div class="bd-color-group"><h6>${type.title}</h6><div class="bd-state-grid">${type.variants.map(v=>`<div class="bd-cell"><strong>${names[v]}</strong><span class="bd-source-label">${esc(sourceLabel(v))}</span>${btn(v,st,'md',state.theme)}</div>`).join('')}</div></div>`).join('')}</section>`).join('')}</section>`).join('');
@@ -289,12 +284,15 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     root.style.setProperty('--demo-accent-active-text', accent.activeText);
   }
 
-  function buttonCSS() {
+  function buttonColourCSS() {
     const variants = mode => Object.keys(names).map(v => {
       const c = colors(v, mode);
       return `  /* ${names[v]} variant colours */\n  --button-${v}-source: ${baseFor(v)};\n  --button-${v}-bg: ${c.bg};\n  --button-${v}-text: ${c.fg};\n  --button-${v}-border: ${c.border};\n  --button-${v}-hover: ${c.hover};\n  --button-${v}-active: ${c.active};\n  --button-${v}-hover-text: ${c.hoverText};\n  --button-${v}-active-text: ${c.activeText};`;
     }).join('\n');
     return `/* Design System Studio V4.1 · Button component CSS\n   FOUNDATION → COMPONENT TOKENS → STATES.\n   Verify text contrast in each theme and state. */\n:root {\n  --button-pad-x: ${b.padX}px;\n  --button-pad-y: ${b.padY}px;\n  --button-min-height: ${b.minHeight}px;\n  --button-radius: ${b.radius}px;\n  --button-border-width: ${b.border}px;\n  --button-font-weight: ${b.weight};\n  --button-focus: ${b.focus};\n  --button-focus-width: ${b.focusWidth}px;\n  --button-motion: ${b.motion}ms;\n${variants('light')}\n}\n[data-theme="dark"] {\n${variants('dark')}\n}\n/* Base component: reusable for all variants. */\n.ds-button {\n  display: inline-flex; align-items: center; justify-content: center;\n  gap: .5em; min-height: var(--button-min-height);\n  padding: var(--button-pad-y) var(--button-pad-x);\n  border: var(--button-border-width) solid transparent;\n  border-radius: var(--button-radius);\n  font: inherit; font-weight: var(--button-font-weight);\n  cursor: pointer; text-align: center;\n  transition: background-color var(--button-motion), border-color var(--button-motion);\n}\n/* Size variants scale the same foundation dimensions. */\n.ds-button--sm { min-height: calc(var(--button-min-height) * .8); padding: calc(var(--button-pad-y) * .8) calc(var(--button-pad-x) * .8); font-size: .875rem; }\n.ds-button--lg { min-height: calc(var(--button-min-height) * 1.22); padding: calc(var(--button-pad-y) * 1.22) calc(var(--button-pad-x) * 1.22); font-size: 1.125rem; }\n${Object.keys(names).map(v=>`/* ${names[v]} variant and its interactive states. */\n.ds-button--${v} { background: var(--button-${v}-bg); color: var(--button-${v}-text); border-color: var(--button-${v}-border); }\n.ds-button--${v}:hover:not(:disabled) { background: var(--button-${v}-hover); color: var(--button-${v}-hover-text); }\n.ds-button--${v}:active:not(:disabled) { background: var(--button-${v}-active); color: var(--button-${v}-active-text); }`).join('\n')}\n/* Real keyboard focus, not just the preview simulation. */\n.ds-button:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }\n/* Native disabled attribute prevents activation. */\n.ds-button:disabled { opacity: .55; cursor: not-allowed; }\n/* aria-pressed is only for persistent toggle buttons. */\n.ds-button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--button-focus); }\n/* aria-busy requires JavaScript behaviour and status announcements. */\n.ds-button[aria-busy="true"] { cursor: progress; }\n${b.mobileFull?'/* Optional mobile full-width action. */\n@media (max-width: 40rem) { .ds-button--mobile-full { width: 100%; } }\n':''}/* Honour user reduced-motion preferences. */\n@media (prefers-reduced-motion: reduce) { .ds-button { transition: none; } }\n`;
+  }
+  function buttonCSS() {
+    return buttonColourCSS() + `\n:root { --button-progress-animation: ${adv.reduce ? 'none' : 'dss-button-progress'}; }\n` + DSStudio.buttonStates.css('.ds-button, .button', 'data-preview-state');
   }
   // Keep existing JSON/project save mechanisms by storing settings inside the shared state.
   const oldImport = importConfig;
@@ -308,14 +306,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   cssExport = function() {
     return oldCss() + '\n' + buttonCSS();
   };
-  /* FIX: when "Full-width on narrow screens" is on, the example HTML now actually uses the class the CSS defines. */
-  const oldHtml = htmlExport;
-  htmlExport = function() {
-    let html = oldHtml();
-    const sizeClass = b.size === 'md' ? '' : ` ds-button--${b.size}`;
-    const extra = b.mobileFull ? ' ds-button--mobile-full' : '';
-    return html.replace('<\/main>', `<section class="card"><h2>Button system</h2><div class="button-row">${Object.keys(names).map(v=>`<button class="ds-button ds-button--${v}${sizeClass}${extra}" type="button">${names[v]} action</button>`).join('')}<\/div><\/section>\n<\/main>`);
-  };
+  // sample-homepage.js reads shared button settings for generated HTML.
   for (const id of ['bdVariant', 'bdSize', 'bdState', 'bdPaddingX', 'bdPaddingY', 'bdMinHeight', 'bdRadius', 'bdBorder', 'bdWeight', 'bdFocus', 'bdFocusWidth', 'bdMotion', 'bdMobileFull', 'bdHover', 'bdActive', 'bdText', 'bdHoverText', 'bdActiveText', 'bdDefaultBg', 'bdBorderColor', 'bdSource', 'bdCustom']) $(id).addEventListener('input', e => {
     const key = {
       bdVariant: 'variant',
@@ -387,6 +378,14 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
       Object.fromEntries(Object.keys(names).map(variant => [variant, colors(variant, theme, settings, foundation)]))
     ]))
   });
+  window.dssSelectButtonState = (variant, selectedState) => {
+    if (!Object.prototype.hasOwnProperty.call(names, variant) || !states.includes(selectedState)) return;
+    b.variant = variant;
+    b.selectedState = selectedState;
+    controls();
+    render();
+    window.dssAutosave?.();
+  };
   window.dssSetButtonContrastColour = (variant, property, value) => {
     if (!validColor(value) || !Object.prototype.hasOwnProperty.call(names, variant)) return;
     if (property === 'focus') b.focus = value;

@@ -2,6 +2,18 @@
 /* Native disclosures keep section navigation useful when panels are closed. */
 (() => {
   const sections = [...document.querySelectorAll('#main > .studio-section')];
+  const header = document.querySelector('.topbar');
+  const navigation = document.querySelector('.studio-section-nav');
+  function syncScrollOffset() {
+    const style = getComputedStyle(navigation);
+    const navigationBottom = style.position === 'sticky' ? (parseFloat(style.top) || 0) + navigation.getBoundingClientRect().height : 0;
+    document.documentElement.style.setProperty('--studio-section-scroll-offset', `${Math.ceil(Math.max(header.getBoundingClientRect().height, navigationBottom)) + 8}px`);
+  }
+  const offsetObserver = new ResizeObserver(syncScrollOffset);
+  offsetObserver.observe(header);
+  offsetObserver.observe(navigation);
+  window.addEventListener('resize', syncScrollOffset);
+  syncScrollOffset();
   function reveal(id, scroll = true) {
     const target = document.getElementById(id);
     if (!target) return;

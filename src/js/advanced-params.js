@@ -5,7 +5,7 @@ against white, which fails the 3:1 non-text contrast minimum for focus indicator
 const ADV_DEFAULT = {
   state: 'default',
   focus: 3,
-  height: 42,
+  height: 48,
   weight: 700,
   measure: 65,
   tracking: -2,
@@ -13,7 +13,7 @@ const ADV_DEFAULT = {
   shadow: 'none',
   opacity: 100,
   columns: 210,
-  gap: 12,
+  gap: 24,
   align: 'stretch',
   reduce: false,
   underline: true,
@@ -93,7 +93,8 @@ function applyAdvanced() {
     '--demo-grid-min': adv.columns + 'px',
     '--demo-grid-gap': adv.gap + 'px',
     '--demo-align': adv.align,
-    '--demo-motion': (adv.reduce ? 0 : adv.motion) + 'ms'
+    '--demo-motion': (adv.reduce ? 0 : adv.motion) + 'ms',
+    '--button-progress-animation': adv.reduce ? 'none' : 'dss-button-progress'
   };
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   const roles = palette().roles;
@@ -118,6 +119,19 @@ function applyAdvanced() {
   for (const id of ['stateButtonTile', 'stateInputTile']) document.getElementById(id).dataset.state = adv.state;
   btn.disabled = ['disabled', 'loading'].includes(adv.state);
   btn.setAttribute('aria-busy', String(adv.state === 'loading'));
+  btn.textContent = adv.state === 'loading' ? 'Processing…' : 'Register for an event';
+  btn.setAttribute('aria-describedby', 'advButtonHelp');
+  let help = document.getElementById('advButtonHelp');
+  if (!help) {
+    help = document.createElement('p');
+    help.id = 'advButtonHelp';
+    help.className = 'help';
+    btn.after(help);
+  }
+  help.textContent = adv.state === 'disabled' ? 'Unavailable in this state example. Explain any prerequisite beside a disabled action in your application.' :
+    adv.state === 'loading' ? 'Processing example: duplicate actions are blocked. Announce completion in application code.' :
+      adv.state === 'selected' ? 'Toggle example: the checkmark and aria-pressed indicate selection. Keep the label the same when toggling off.' : '';
+  help.hidden = !help.textContent;
   inp.setAttribute('aria-describedby', 'advInputHelp');
   inp.disabled = adv.state === 'disabled';
   inp.readOnly = adv.state === 'readonly';
@@ -164,12 +178,12 @@ document.getElementById('resetAdvanced').addEventListener('click', () => {
 /* Wrap existing exports without changing V2.5 foundation/semantic logic. */
 const oldCssExport = cssExport;
 cssExport = function() {
-  return oldCssExport() + `\n/* V2.6: ADVANCED COMPONENT TOKENS. Feedback colours live in the theme blocks above. */\n:root {\n  --focus-width: ${adv.focus}px;\n  --control-height: ${adv.height}px;\n  --border-width: ${adv.border}px;\n  --heading-weight: ${adv.weight};\n  --reading-measure: ${adv.measure}ch;\n  --heading-tracking: ${state.headingTracking}em;\n  --grid-card-min: ${adv.columns}px;\n  --grid-gap: ${adv.gap}px;\n  --grid-align: ${adv.align};\n  --surface-opacity: ${adv.opacity/100};\n  --elevation: ${({none:'none',subtle:'0 2px 8px #00000018',medium:'0 6px 20px #00000028',strong:'0 12px 32px #00000040'})[adv.shadow]};\n  --motion-duration: ${adv.reduce?0:adv.motion}ms;\n}\n/* Interactive states: visible focus is essential for keyboard navigation. */\n.button { min-height: var(--control-height); border-width: var(--border-width); transition: background var(--motion-duration), transform var(--motion-duration); }\n.button:hover:not(:disabled) { background: var(--primary-hover); }\n.button:active:not(:disabled) { transform: translateY(2px); }\n.button:focus-visible, .input:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n.button:disabled { opacity: .55; cursor: not-allowed; }\n.button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--primary); }\n.input { min-height: var(--control-height); border: var(--border-width) solid var(--control-border); }\n.input[aria-invalid="true"] { border-color: var(--danger); }\n.input:read-only { background: var(--surface-muted); }\n.card { box-shadow: var(--elevation); border-width: var(--border-width); opacity: var(--surface-opacity); }\n.card-grid { align-items: var(--grid-align); gap: var(--grid-gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); }\n.page-title { font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); }\np { max-width: var(--reading-measure); }\na { text-decoration: ${adv.underline?'underline':'none'}; }\n@media (prefers-reduced-motion: reduce) { .button { transition: none; } }\n`
+  return oldCssExport() + `\n/* V2.6: ADVANCED COMPONENT TOKENS. Feedback colours live in the theme blocks above. */\n:root {\n  --focus-width: ${adv.focus}px;\n  --control-height: ${adv.height}px;\n  --border-width: ${adv.border}px;\n  --heading-weight: ${adv.weight};\n  --reading-measure: ${adv.measure}ch;\n  --heading-tracking: ${state.headingTracking}em;\n  --grid-card-min: ${adv.columns}px;\n  --grid-gap: ${adv.gap}px;\n  --grid-align: ${adv.align};\n  --surface-opacity: ${adv.opacity/100};\n  --elevation: ${({none:'none',subtle:'0 2px 8px #00000018',medium:'0 6px 20px #00000028',strong:'0 12px 32px #00000040'})[adv.shadow]};\n  --motion-duration: ${adv.reduce?0:adv.motion}ms;\n}\n/* Interactive states: visible focus is essential for keyboard navigation. */\n.button { min-height: var(--control-height); border-width: var(--border-width); transition: background var(--motion-duration), transform var(--motion-duration); }\n.button:hover:not(:disabled) { background: var(--primary-hover); }\n.button:active:not(:disabled) { transform: translateY(2px); }\n.button:focus-visible, .input:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n.button:disabled { opacity: .55; cursor: not-allowed; }\n.button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--primary); }\n.input { min-height: var(--control-height); border: var(--border-width) solid var(--control-border); }\n.input[aria-invalid="true"] { border-color: var(--danger); }\n.input[readonly] { background: var(--surface-muted); }\n.card { box-shadow: var(--elevation); border-width: var(--border-width); opacity: var(--surface-opacity); }\n.card-grid { align-items: var(--grid-align); gap: var(--grid-gap); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); }\n.page-title { font-weight: var(--heading-weight); letter-spacing: var(--heading-tracking); }\np { max-width: var(--reading-measure); }\na { text-decoration: ${adv.underline?'underline':'none'}; }\n@media (prefers-reduced-motion: reduce) { .button { transition: none; } }\n`
 };
 projectJson = function() {
   return JSON.stringify({
     schemaVersion: 2.9,
-    brandReference: 'Studio example palette',
+    brandReference: 'Project Brand Palette',
     clampConfig: { ...clampConfig },
     ...state,
     advanced: adv

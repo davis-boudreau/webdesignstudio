@@ -75,7 +75,7 @@
 }
 
 .bd-button:focus-visible {
-  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #b45309);
+  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #b86c20);
   outline-offset: 3px
 }
 
@@ -89,7 +89,7 @@
 }
 
 .bd-button[data-sim=focus] {
-  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #b45309);
+  outline: var(--bd-focus-width, 3px) solid var(--bd-focus, #b86c20);
   outline-offset: 3px
 }
 
@@ -98,7 +98,6 @@
 }
 
 .bd-button[data-sim=loading] {
-  opacity: .8;
   cursor: progress
 }
 
@@ -108,7 +107,7 @@
 }
 
 .bd-button[data-sim=selected] {
-  box-shadow: 0 0 0 2px var(--bd-focus, #b45309)
+  box-shadow: 0 0 0 2px var(--bd-focus, #b86c20)
 }
 
 /* FIX: hover/active simulations already use the exact hover/active colours inline.
@@ -124,3 +123,89 @@ The old brightness() filter darkened them a second time, so the preview did not 
     transition: none !important
   }
 }
+
+.bd-review,
+.bd-review-selection {
+  min-width: 0;
+  margin-block: 16px;
+}
+
+.bd-review-variant {
+  padding: 0;
+  margin-block: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bd-review-variant > summary {
+  padding: 8px;
+  background: var(--surface-muted);
+}
+
+.bd-review-variant > summary small {
+  font-weight: normal;
+}
+
+.bd-review-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: .75rem;
+}
+
+.bd-review-table th,
+.bd-review-table td {
+  padding: 4px;
+  text-align: left;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--border);
+}
+
+.bd-review-table th:first-child { width: 50%; }
+.bd-review-table tbody th { padding: 8px 4px 8px 8px; }
+.bd-review-table td { white-space: nowrap; overflow-wrap: normal; }
+
+.bd-review-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.bd-review-table button {
+  width: 100%;
+  min-height: 40px;
+  padding: 4px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.bd-review-table .is-selected button {
+  border-color: currentColor;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+.bd-review-table [data-result="review"] { font-weight: 700; }
+.bd-review-selection h4 { margin-block: 0 8px; }
+.bd-review-theme h5 { font-size: .875rem; margin-block: 16px 8px; }
+.bd-review-pair {
+  padding: 8px;
+  margin-block: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+}
+
+.bd-review-pair p { margin-block: 8px; }
+.bd-review-pair button { max-width: 100%; white-space: normal; }
+.bd-review-pair[data-result="review"] { border-inline-start: 4px solid currentColor; }

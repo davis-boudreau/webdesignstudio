@@ -1,33 +1,32 @@
-/* V4.1: cqi units resolve against the simulated device, not the outer browser. */
-#previewFrame {
-  container-type: inline-size;
-  font-family: var(--preview-font, Arial, sans-serif);
-  font-size: var(--preview-type-body, 16px);
-  line-height: var(--preview-leading, 1.5);
-  letter-spacing: var(--preview-body-tracking, 0em);
+/* The generated document owns its typography, media queries and scrolling. */
+#studio-section-4 .preview-frame {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  transition: none;
 }
 
-#previewFrame>h3 {
-  letter-spacing: var(--preview-heading-tracking, -.02em);
-  font-size: var(--preview-type-display, 32px);
-  line-height: 1.18;
+#previewPage {
+  display: block;
+  width: 100%;
+  height: clamp(420px, 72vh, 860px);
+  border: 0;
+  background: var(--surface);
 }
 
-#previewFrame .preview-card h3 {
-  letter-spacing: var(--preview-heading-tracking, -.02em);
-  font-size: var(--preview-type-h2, 22px);
-  line-height: 1.18;
+.preview-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
 }
 
-#previewFrame .mini,
-#previewFrame .eyebrow {
-  font-size: var(--preview-type-small, 13px);
+.preview-controls .tabs { flex-wrap: wrap; }
+.preview-controls .tab[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
 }
-
-#previewFrame p:not(.mini) {
-  font-size: var(--preview-type-body, 16px);
-}
-
-#responsiveTypeReadout {
-  font-weight: 650;
-}
+.preview-theme { display: grid; gap: 4px; font-size: .78rem; font-weight: 600; }
+.preview-theme select { min-width: 100px; padding: 6px 9px; }
+#responsiveTypeReadout { font-weight: 650; }

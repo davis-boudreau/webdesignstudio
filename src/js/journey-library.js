@@ -32,18 +32,19 @@ Browser storage may be unavailable in private or restricted contexts. */
   }
 
   function showStep(n) {
-    step = Math.max(0, Math.min(5, n));
+    const labels = ['Start', 'Palette', 'Typography', 'Components', 'Buttons', 'Layout', 'Accessibility', 'Deliver'];
+    step = Math.max(0, Math.min(labels.length - 1, n));
     document.querySelectorAll('[data-journey-pane]').forEach(p => p.hidden = Number(p.dataset.journeyPane) !== step);
     document.querySelectorAll('[data-journey-step]').forEach(b => {
       const i = Number(b.dataset.journeyStep);
       if (i === step) b.setAttribute('aria-current', 'step');
       else b.removeAttribute('aria-current');
-      b.classList.toggle('is-complete', i < step)
     });
     el('jBack').disabled = step === 0;
-    el('jNext').hidden = step === 5;
-    el('jProgress').textContent = `Step ${step+1} of 6 · ${['Start','Palette','Typography','Components','Buttons','Deliver'][step]}`;
+    el('jNext').hidden = step === labels.length - 1;
+    el('jProgress').textContent = `Step ${step+1} of ${labels.length} · ${labels[step]}`;
   }
+  window.dssShowWizardStep = showStep;
 
   function syncJourney() {
     for (const [id, key] of Object.entries(bindings)) {
@@ -205,7 +206,14 @@ Browser storage may be unavailable in private or restricted contexts. */
   });
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || '{}');
-    if (saved && typeof saved === 'object' && !Array.isArray(saved)) projects = saved;
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      // A damaged entry must not stop startup or hide other recoverable projects.
+      projects = Object.fromEntries(Object.entries(saved).filter(([, entry]) =>
+        entry && typeof entry === 'object' && !Array.isArray(entry) &&
+        typeof entry.name === 'string' && typeof entry.updated === 'string' &&
+        Number.isFinite(Date.parse(entry.updated)) && entry.data &&
+        typeof entry.data === 'object' && !Array.isArray(entry.data)));
+    }
   } catch (err) {
     notify('Local storage unavailable. JSON export still works.');
   }

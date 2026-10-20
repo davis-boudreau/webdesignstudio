@@ -108,7 +108,7 @@
 
   function open(targets, row = null) {
     if (!targets.length) return;
-    session = { targets: copy(targets), row, revision: projectJson() };
+    session = { targets: copy(targets), row, revision: projectJson(), opener: document.activeElement };
     get('repairTitle').textContent = row ? `Edit colour: ${row.name}` : 'Edit semantic colour';
     get('repairTarget').replaceChildren(...targets.map((item, index) => new Option(item.label, index)));
     selectTarget();
@@ -125,7 +125,12 @@
     if (button) { get('repairHex').value = button.dataset.suggestColour; preview(); }
   });
   get('repairCancel').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => { session = null; });
+  dialog.addEventListener('close', () => {
+    const opener = session?.opener;
+    session = null;
+    if (opener?.isConnected && opener.getClientRects().length) opener.focus();
+    else get('contrastSummary').focus();
+  });
   get('repairApply').addEventListener('click', () => {
     const colour = get('repairHex').value.trim().toUpperCase();
     if (!validHex(colour)) return;
@@ -145,7 +150,6 @@
     } else window.dssSetButtonContrastColour(selected.variant, selected.property, colour);
     dialog.close();
     syncEditor();
-    get('contrastSummary').focus();
     announce(`Applied ${colour} to ${selected.label}.`);
   });
 
@@ -153,16 +157,50 @@
     const theme = get('semanticTheme').value, key = get('semanticRole').value;
     get('semanticCurrent').textContent = `${palette(theme).roles[key]} · ${state.semanticOverrides?.[theme]?.[key] ? 'custom override' : 'generated / base value'}`;
     get('semanticReset').disabled = !state.semanticOverrides?.[theme]?.[key];
+    const guidedKey = get('jSemanticRole').value;
+    const colour = palette(state.theme).roles[guidedKey];
+    get('jSemanticCurrent').textContent = `${state.theme === 'dark' ? 'Dark' : 'Light'}: ${colour} · ${state.semanticOverrides?.[state.theme]?.[guidedKey] ? 'custom override' : 'generated / base value'}`;
+    get('jSemanticSwatch').style.backgroundColor = colour;
+    get('jSemanticHelp').textContent = roleDescriptions[guidedKey][1];
+    get('jSemanticReset').disabled = !state.semanticOverrides?.[state.theme]?.[guidedKey];
   }
+  const roleDescriptions = {
+    background: ['Page background', 'The canvas behind the page content.'],
+    surface: ['Surface', 'Cards, header, footer and form surfaces.'],
+    'surface-muted': ['Muted surface', 'Subtle grouped content and read-only fields.'],
+    text: ['Body text', 'Default readable text on page and surface colours.'],
+    'text-muted': ['Muted text', 'Secondary descriptions and supporting copy.'],
+    border: ['Decorative border', 'Separators and card edges; form controls use a separate border.'],
+    'control-border': ['Control border', 'Visible input and select boundaries.'],
+    primary: ['Primary action', 'The main action and ordinary link colour. Button wizard settings can override component colours.'],
+    'on-primary': ['Text on primary', 'Text placed on the primary action background.'],
+    'primary-hover': ['Primary hover', 'The semantic primary action hover background.'],
+    secondary: ['Supporting action', 'The supporting action background.'],
+    'on-secondary': ['Text on supporting', 'Text placed on the supporting action background.'],
+    accent: ['Accent', 'Highlights and the sample mobile menu icon.'],
+    'on-accent': ['Text on accent', 'Text placed on the accent background.'],
+    success: ['Success', 'Positive feedback; accompany meaning with words or an icon.'],
+    warning: ['Warning', 'Caution feedback; accompany meaning with words or an icon.'],
+    danger: ['Error / danger', 'Error feedback and invalid controls; explain the problem in text.'],
+    focus: ['Keyboard focus', 'The semantic keyboard outline. Buttons and header navigation use the Button Design Wizard focus setting.']
+  };
+  get('jSemanticRole').replaceChildren(...SEMANTIC_COLOUR_KEYS.map(key => new Option(`${roleDescriptions[key][0]} (--${key})`, key)));
+  get('jSemanticRole').value = 'text';
+  get('jSemanticRole').addEventListener('change', syncEditor);
+  get('jSemanticEdit').addEventListener('click', () => open([semanticTarget(state.theme, get('jSemanticRole').value)]));
+  function resetRole(theme, key) {
+    if (state.semanticOverrides?.[theme]) delete state.semanticOverrides[theme][key];
+    apply(); syncAdvanced(); syncEditor();
+    announce(`Restored the generated ${theme} --${key} colour.`);
+  }
+  get('jSemanticReset').addEventListener('click', () => resetRole(state.theme, get('jSemanticRole').value));
   get('semanticRole').replaceChildren(...SEMANTIC_COLOUR_KEYS.map(key => new Option(`--${key}`, key)));
   get('semanticRole').value = 'control-border';
   for (const id of ['semanticTheme', 'semanticRole']) get(id).addEventListener('change', syncEditor);
   get('semanticEdit').addEventListener('click', () => open([semanticTarget(get('semanticTheme').value, get('semanticRole').value)]));
   get('semanticReset').addEventListener('click', () => {
     const theme = get('semanticTheme').value, key = get('semanticRole').value;
-    if (state.semanticOverrides?.[theme]) delete state.semanticOverrides[theme][key];
-    apply(); syncAdvanced(); syncEditor();
-    announce(`Restored the generated ${theme} --${key} colour.`);
+    resetRole(theme, key);
   });
   get('semanticEditor').addEventListener('toggle', syncEditor);
   window.dssSyncSemanticEditor = syncEditor;
