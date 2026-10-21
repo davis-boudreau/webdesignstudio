@@ -4,8 +4,8 @@ Updated: 20 October 2026 (America/Halifax).
 
 ## Current objective
 
-Start with only **1. Responsive page preview** expanded in the centre pane;
-keep all other centre sections collapsed.
+Reimagine the generated sample as a creative web design tutorial, retaining the
+studio theme and connecting responsive CSS Grid lessons to live design choices.
 The initial audit began at commit
 `6163ada` (`improved UX/UI`) with a clean working tree; its changes are still local.
 
@@ -46,12 +46,12 @@ See `docs/AUDIT_BASELINE_2026-10-19.md` for evidence and remaining coverage gaps
 ## Verification
 
 - `python scripts/check_structure.py`: 30 referenced assets verified.
-- `python scripts/browser_review.py`: **484/484 passed** in headless Chrome on
+- `python scripts/browser_review.py`: **544/544 passed** in headless Chrome on
   Windows; no captured startup or interaction JavaScript errors.
 - `python scripts/button_states_review.py`: **12/12 passed** (5 reduced-motion,
-  7 forced-colour checks), repeated against the final follow-up audit code.
+  7 forced-colour checks), repeated against the Web Design Field Guide sample.
 - `python scripts/font_cdn_review.py`: **9/9 passed** using real Google font
-  stylesheet/font downloads and standalone exported HTML, repeated in this audit.
+  stylesheet/font downloads and standalone exported HTML, repeated for the field guide.
 - `git diff --check`: passed.
 
 ## Themes and linked responsive preview completed
@@ -488,6 +488,96 @@ Verification for this preference change: **484/484 browser checks passed**, no
 captured runtime errors; structure verified **30 assets** and diff check passed.
 The optional media/font results above are from the preceding audit, not rerun for
 this HTML startup-default change.
+
+## Minor Third default
+
+- Changed the foundation ratio from 1.25 to 1.2; the existing preset matching
+  selects Minor Third in both wizard and calculator. Updated CSS/HTML fallback
+  values, explanatory default examples and affected asset query versions.
+- Startup, New project, Reset and imports without a ratio use Minor Third.
+  Explicit saved ratios, including Major Third 1.25, remain unchanged.
+- Added five regressions for initial synchronization/export, reset, new projects,
+  old explicit ratios and missing-ratio imports. Updated default ladder checks
+  to expect 19.2 px / 1.2 rem above the 16 px base. User snapshots were not edited.
+- Verification: **489/489 browser checks passed**, no captured runtime errors;
+  structure verified **30 assets** and `git diff --check` passed. Optional media
+  and live-font checks remain the preceding audit's results, not rerun here.
+
+## Resource-table link states
+
+- Extended the existing generated header-link selectors to include the resource
+  table. All three Explore links are plain by default, underline on hover, use a
+  stronger underline while pressed and share the button keyboard focus ring.
+  Generated exports and the responsive page preview consume the same CSS.
+- Added 14 regressions for all three links, both general underline settings,
+  light/dark themes and 320/1440 px widths: default decoration, unchanged hover
+  geometry, pressed cue and real focus-visible outline. Pointer-state cascade
+  checks use equal-specificity class substitution, as in the existing nav tests.
+- Refreshed the sample generator asset version and documentation. Resource hrefs
+  retain their existing section destinations; user snapshots were not edited.
+- Verification: **503/503 browser checks passed**, no captured runtime errors;
+  structure verified **30 assets** and diff check passed. Optional media/font
+  checks remain the preceding audit's results, not rerun for these link styles.
+
+## Wizard navigation/content division
+
+- Added a 2 px theme-aware divider below the eight step buttons, with 16 px
+  padding above the divider and 24 px separation before the selected step content.
+  It applies across all wizard steps and uses the existing border token.
+- Refreshed the wizard stylesheet cache version. No new tests were added for this
+  presentation-only change; the existing browser suite is used for regressions.
+- Verification: **503/503 browser checks passed**, no captured runtime errors;
+  structure verified **30 assets** and diff check passed. Visually reviewed the
+  divider on a light desktop and a dark 390 px phone layout in isolated Chrome.
+  Optional media/font checks were not repeated for this spacing/divider change.
+
+## Persistent section menu above the preview
+
+- Moved the existing 1–11 menu and Expand/Collapse controls to the start of the
+  centre pane, before Responsive page preview. The preview remains the first
+  learning section and the only expanded disclosure on startup.
+- Kept the menu sticky at every breakpoint, including phones, and positioned it
+  using the measured app-header height. The same measurement includes the menu
+  when calculating section scroll offsets so destination headings stay visible.
+  Horizontal overflow remains inside the menu; link targets are at least 44 px
+  tall and retain native keyboard/fragment navigation.
+- Extended checks for startup order, sticky/header geometry, heading visibility,
+  horizontal overflow and reaching the last menu item with keyboard focus across
+  320, 390, 768, 1280, 1440 and 2560 px. Refreshed affected asset cache versions.
+- Verification: **518/518 browser checks passed**, no captured runtime errors;
+  structure verified **30 assets** and diff check passed. Visually reviewed the
+  desktop preview and a scrolled dark-phone lesson with the menu pinned below
+  the header. Optional media/font checks remain the earlier audit results.
+
+## Web Design Field Guide sample
+
+- Replaced the generic service-site content with a coherent web design tutorial:
+  welcoming hero, semantic-structure introduction, six lesson cards, Grid and
+  type/colour workshops, field notes, review checklist, practice question form
+  and interface/state lab. Header now labels the existing services anchor Lessons;
+  footer stays Home/About/Resources/Contact. Stable IDs preserve preview behaviour.
+- Drew self-contained palette-aware SVG browser and grid illustrations. Kept the
+  bounded illustration cache, adding border colour to its key. No new assets or
+  runtime network dependencies; existing optional Google Fonts behaviour remains.
+- Added a twelve-track grid exercise (8/4 and 4/4/4 spans), a matching native
+  CSS-recipe disclosure and tablet-stacked example/notes composition. The demo
+  becomes one column at 48rem and consumes the saved grid-gap token. Six lesson
+  cards retain the existing minimum-width/container-query grid controls.
+- Added live base/ratio/leading readouts and semantic palette swatches/HEX values.
+  Lessons link to real page examples. All eight main sections retain wizard-driven
+  Primary/Secondary action pairs; the form remains an explicitly static practice.
+- Updated browser expectations for eight sections, added tutorial content, grid
+  bounds/spans at eight widths, live readout/gap and lesson-destination coverage.
+  Existing layout, theme, footer, state, form preservation and resource-link tests
+  remain. Updated generator cache version, README, architecture and changelog.
+  User snapshots `test.html` and `tokens.css` remain untouched.
+
+- Final verification: **544/544 browser**, **12/12 accessibility-mode** and
+  **9/9 real-font checks passed**, with no captured runtime errors. Structure
+  verified **30 assets** and diff check passed. Visually reviewed the exported
+  desktop hero, six-card lesson board and grid workshop, plus the dark 390 px
+  stacked grid. The CSS recipe includes all demonstrated spans and the narrow
+  media rule. No screenshot comparison baseline or deployment was added.
 
 ## Open work / next session
 

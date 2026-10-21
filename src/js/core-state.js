@@ -35,7 +35,7 @@ const DEFAULT = {
   font: 'Arial, Helvetica, sans-serif',
   fontSettings: DSStudio.fonts.defaults(),
   base: 16,
-  ratio: 1.25,
+  ratio: 1.2,
   leading: 1.55,
   headingLeading: 1.18,
   headingTracking: -.02,

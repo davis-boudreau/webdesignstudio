@@ -5,7 +5,7 @@ and use locally available fonts. Arial is the default system font. */
   /* FOUNDATION: reusable measurements */
   --font-ui: Arial, Helvetica, sans-serif;
   --base-size: 16px;
-  --type-ratio: 1.25;
+  --type-ratio: 1.2;
   --body-leading: 1.55;
   --heading-leading: 1.18;
   --heading-letter-spacing: -.02em;

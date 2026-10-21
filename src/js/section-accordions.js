@@ -5,9 +5,11 @@
   const header = document.querySelector('.topbar');
   const navigation = document.querySelector('.studio-section-nav');
   function syncScrollOffset() {
+    const headerHeight = Math.ceil(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--studio-header-height', `${headerHeight}px`);
     const style = getComputedStyle(navigation);
     const navigationBottom = style.position === 'sticky' ? (parseFloat(style.top) || 0) + navigation.getBoundingClientRect().height : 0;
-    document.documentElement.style.setProperty('--studio-section-scroll-offset', `${Math.ceil(Math.max(header.getBoundingClientRect().height, navigationBottom)) + 8}px`);
+    document.documentElement.style.setProperty('--studio-section-scroll-offset', `${Math.ceil(Math.max(headerHeight, navigationBottom)) + 8}px`);
   }
   const offsetObserver = new ResizeObserver(syncScrollOffset);
   offsetObserver.observe(header);

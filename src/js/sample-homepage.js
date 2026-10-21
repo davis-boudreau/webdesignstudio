@@ -5,20 +5,38 @@
   // A bounded cache avoids repeatedly encoding unchanged SVGs during live edits.
   const illustrations = new Map();
   function illustration(r, detail = false) {
-    const key = JSON.stringify([detail, r.primary, r.secondary, r.accent, r.surface, r['surface-muted'], r.text]);
+    const key = JSON.stringify([detail, r.primary, r.secondary, r.accent, r.surface, r['surface-muted'], r.text, r.border]);
     if (illustrations.has(key)) return illustrations.get(key);
+    const columns = Array.from({ length: 12 }, (_, i) => `<rect x="${96 + i * 64}" y="174" width="52" height="414" rx="6" fill="${r.primary}" opacity=".1"/>`).join('');
     const scene = detail ? `
-  <rect x="140" y="150" width="480" height="350" rx="28" fill="${r.primary}"/>
-  <circle cx="620" cy="260" r="150" fill="${r.accent}"/>
-  <path d="M140 500L380 240L620 500Z" fill="${r.secondary}"/>
-  <rect x="230" y="530" width="570" height="24" rx="12" fill="${r.text}" opacity=".15"/>` : `
-  <circle cx="720" cy="190" r="115" fill="${r.accent}"/>
-  <path d="M0 480Q210 310 490 455T960 400V720H0Z" fill="${r.secondary}"/>
-  <path d="M250 550V270A170 170 0 0 1 590 270V550Z" fill="${r.surface}"/>
-  <path d="M310 550V290A110 110 0 0 1 530 290V550Z" fill="${r.primary}"/>
-  <path d="M0 610Q300 475 570 570T960 520V720H0Z" fill="${r.primary}"/>
-  <path d="M365 720Q590 590 420 455" fill="none" stroke="${r.accent}" stroke-width="65"/>
-  <path d="M790 510V345M790 400L745 365M790 440L840 395" fill="none" stroke="${r.text}" stroke-width="13" stroke-linecap="round"/>`;
+  <rect x="56" y="56" width="848" height="608" rx="28" fill="${r.surface}" stroke="${r.border}" stroke-width="2"/>
+  <text x="96" y="126" fill="${r.text}" font-family="Arial, sans-serif" font-size="30" font-weight="700">A little structure. A lot of possibility.</text>
+  ${columns}
+  <rect x="96" y="198" width="372" height="152" rx="12" fill="${r.primary}"/>
+  <rect x="492" y="198" width="372" height="152" rx="12" fill="${r.secondary}"/>
+  <rect x="96" y="374" width="240" height="128" rx="12" fill="${r.accent}"/>
+  <rect x="360" y="374" width="240" height="128" rx="12" fill="${r.primary}"/>
+  <rect x="624" y="374" width="240" height="128" rx="12" fill="${r.secondary}"/>
+  <path d="M96 548H864" stroke="${r.text}" stroke-width="8" stroke-linecap="round" opacity=".25"/>
+  <text x="96" y="626" fill="${r.text}" font-family="Arial, sans-serif" font-size="26">12 tracks / flexible spans / one shared rhythm</text>` : `
+  <circle cx="818" cy="114" r="100" fill="${r.accent}" opacity=".55"/>
+  <rect x="56" y="64" width="848" height="592" rx="28" fill="${r.surface}" stroke="${r.border}" stroke-width="2"/>
+  <path d="M58 126H902" stroke="${r.border}" stroke-width="2"/>
+  <circle cx="94" cy="96" r="9" fill="${r.primary}"/>
+  <circle cx="124" cy="96" r="9" fill="${r.secondary}"/>
+  <circle cx="154" cy="96" r="9" fill="${r.accent}"/>
+  <rect x="96" y="166" width="48" height="40" rx="8" fill="${r.primary}"/>
+  <path d="M168 186H346M678 186H734M762 186H852" stroke="${r.text}" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+  <rect x="96" y="246" width="768" height="238" rx="16" fill="${r['surface-muted']}"/>
+  <path d="M128 290H380M128 328H346" stroke="${r.primary}" stroke-width="20" stroke-linecap="round"/>
+  <path d="M128 372H394M128 398H350" stroke="${r.text}" stroke-width="9" stroke-linecap="round" opacity=".45"/>
+  <rect x="128" y="430" width="126" height="24" rx="6" fill="${r.primary}"/>
+  <rect x="274" y="430" width="108" height="24" rx="6" fill="${r.secondary}"/>
+  <rect x="512" y="274" width="316" height="180" rx="12" fill="${r.surface}"/>
+  <rect x="536" y="298" width="124" height="132" rx="8" fill="${r.primary}"/>
+  <rect x="676" y="298" width="128" height="56" rx="8" fill="${r.accent}"/>
+  <rect x="676" y="370" width="128" height="60" rx="8" fill="${r.secondary}"/>
+  ${[96, 360, 624].map((x, i) => `<rect x="${x}" y="512" width="240" height="98" rx="12" fill="${r['surface-muted']}"/><rect x="${x + 20}" y="532" width="32" height="32" rx="8" fill="${[r.primary, r.secondary, r.accent][i]}"/><path d="M${x + 72} 546H${x + 214}" stroke="${r.text}" stroke-width="9" stroke-linecap="round" opacity=".45"/>`).join('')}`;
     const source = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720"><rect width="960" height="720" fill="${r['surface-muted']}"/>${scene}</svg>`);
     if (illustrations.size >= 8) illustrations.delete(illustrations.keys().next().value);
@@ -50,16 +68,16 @@ ${indent}</div>`;
     const actionExample = `<p class="small-text">Current action state: ${escapeHtml(interaction)}.</p><div class="button-row">${interaction === 'selected' ? `<button class="${buttonClass(variant)}" type="button" aria-pressed="false" aria-describedby="sample-action-help">Email updates</button>` : ''}<button class="${buttonClass(variant)} sample-selected-action" type="button" data-preview-state="${escapeHtml(interaction)}" aria-describedby="sample-action-help"${actionAttributes}>${actionLabel}</button></div><p id="sample-action-help" class="small-text">${actionHint}</p>`;
     const fieldAttributes = `${adv.state === 'disabled' ? ' disabled' : ''}${adv.state === 'readonly' ? ' readonly' : ''}${adv.state === 'invalid' ? ' aria-invalid="true"' : ''}`;
     const emailHelp = adv.state === 'invalid' ? 'Enter an email address in the format name@example.com.' :
-      adv.state === 'success' ? 'Your email address looks good.' : 'We will only use your email to reply to your enquiry.';
-    const headerLinks = [['home', 'Home'], ['about', 'About'], ['services', 'Services'], ['resources', 'Resources'], ['contact', 'Contact']]
+      adv.state === 'success' ? 'Your email address looks good.' : 'Use a sample address while exploring this practice form.';
+    const headerLinks = [['home', 'Home'], ['about', 'About'], ['services', 'Lessons'], ['resources', 'Resources'], ['contact', 'Contact']]
       .map(([id, label]) => `          <li><a href="#${id}">${label}</a></li>`).join('\n');
     return `<!doctype html>
 <html lang="en" data-theme="${state.theme}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A welcoming home page for ${project}.">
-  <title>${project} — Home</title>
+  <meta name="description" content="Learn web design with ${project}: practical lessons in HTML, responsive CSS Grid, typography, colour and accessible components.">
+  <title>${project} — Web Design Field Guide</title>
 ${DSStudio.fonts.htmlLinks()}  <!-- Save the exported CSS alongside this file. -->
   <link rel="stylesheet" href="tokens.css">
 </head>
@@ -95,92 +113,148 @@ ${headerLinks}
   <main id="main-content" class="container" tabindex="-1">
     <section id="home" class="sample-grid sample-hero" aria-labelledby="hero-title">
       <div>
-        <p class="sample-eyebrow">Welcome to ${project}</p>
-        <h1 id="hero-title" class="page-title">Make room for your next big idea.</h1>
-        <p class="sample-lead">Thoughtful services, useful resources and a team that cares. Let’s turn what comes next into something worth sharing.</p>
+        <p class="sample-eyebrow">${project} / Web Design Field Guide</p>
+        <h1 id="hero-title" class="page-title">A better web starts with one good decision.</h1>
+        <p class="sample-lead">Learn by making. Turn a simple page into a thoughtful design system with practical lessons in layout, type, colour and accessible interfaces.</p>
         <div class="button-row sample-section-actions">
-          <a class="${buttonClass('primary')}" href="#services">Explore our services</a>
-          <a class="${buttonClass('secondary')}" href="#contact">Let’s talk <span aria-hidden="true">↗</span></a>
+          <a class="${buttonClass('primary')}" href="#services">Find your first lesson</a>
+          <a class="${buttonClass('secondary')}" href="#grid-lab">Explore the live grid <span aria-hidden="true">↘</span></a>
         </div>
         <dl class="sample-stats">
-          <div><dt>People first</dt><dd>Every step of the way</dd></div>
-          <div><dt>Built together</dt><dd>From idea to impact</dd></div>
+          <div><dt>6 practical lessons</dt><dd>From structure to review</dd></div>
+          <div><dt>1 living system</dt><dd>Small decisions, shared rules</dd></div>
         </dl>
       </div>
       <figure class="sample-hero-image">
-        <img src="${illustration(roles)}" width="960" height="720" alt="An open archway and a winding path through a colourful landscape.">
-        <figcaption>A new perspective starts with an open door.</figcaption>
+        <img src="${illustration(roles)}" width="960" height="720" alt="A browser wireframe with a header, a two-column hero, lesson cards and palette-coloured layout blocks.">
+        <figcaption>Sketch the page. Connect the decisions. Make it your own.</figcaption>
       </figure>
     </section>
     <section id="about" class="sample-section sample-grid sample-split" aria-labelledby="about-title">
       <figure class="sample-about-image">
-        <img src="${illustration(roles, true)}" width="960" height="720" loading="lazy" alt="A circle, triangle and rectangle arranged as a balanced composition.">
-        <figcaption>Different strengths. One shared direction.</figcaption>
+        <img src="${illustration(roles, true)}" width="960" height="720" loading="lazy" alt="Twelve grid tracks supporting two equal panels and a row of three cards.">
+        <figcaption>One grid can support many compositions.</figcaption>
       </figure>
       <div>
-        <p class="sample-eyebrow">A little about us</p>
-        <h2 id="about-title" class="heading-1">Good work begins with good connections.</h2>
-        <p>We bring curiosity, care and clear thinking to every project. Your goals shape the journey; our experience helps you find a way forward.</p>
-        <blockquote><p>“The best results happen when everyone has a place at the table.”</p><cite>The ${project} team</cite></blockquote>
-${sectionActions(['#services', 'Explore our services'], ['#contact', 'Start a conversation'], '        ')}
+        <p class="sample-eyebrow">About this practice space</p>
+        <h2 id="about-title" class="heading-1">Start with structure. Add intention.</h2>
+        <p>You do not need a perfect mockup to begin. Start with meaningful content, give it a clear hierarchy, then create a few rules you can reuse.</p>
+        <ol class="sample-method"><li><strong>Structure:</strong> use header, main, sections and footer to describe the page.</li><li><strong>Hierarchy:</strong> give headings, body copy and actions distinct jobs.</li><li><strong>Consistency:</strong> connect repeated choices with design tokens.</li></ol>
+        <blockquote><p>One layout. A handful of tokens. A system you can explain.</p><cite>Your goal for this field guide</cite></blockquote>
+${sectionActions(['#services', 'Browse the lessons'], ['#grid-lab', 'See the grid in action'], '        ')}
       </div>
     </section>
     <section id="services" class="sample-section" aria-labelledby="services-title">
-      <div class="sample-section-heading"><p class="sample-eyebrow">What we do</p><h2 id="services-title" class="heading-1">Support for every next step.</h2><p>Start with a question. Leave with a clear direction.</p></div>
+      <div class="sample-section-heading"><p class="sample-eyebrow">Your learning path</p><h2 id="services-title" class="heading-1">Six small lessons. A stronger foundation.</h2><p>Follow the sequence or choose the skill you want to practise next. Every lesson leads to an example on this page.</p></div>
       <div class="sample-grid card-grid">
-        <article class="card"><span class="sample-badge">Discover</span><h3 class="heading-2">Strategy &amp; direction</h3><p>Find the opportunity, focus your priorities and build a plan that fits.</p><ul><li>Research and discovery</li><li>Practical roadmaps</li><li>Collaborative workshops</li></ul><a class="${buttonClass('text')}" href="#contact">Plan your next step →</a></article>
-        <article class="card"><span class="sample-badge">Create</span><h3 class="heading-2">Design &amp; experience</h3><p>Make every interaction feel clear, welcoming and easy to use.</p><ul><li>Visual identity</li><li>Accessible experiences</li><li>Content that connects</li></ul><a class="${buttonClass('text')}" href="#contact">Bring an idea to life →</a></article>
-        <article class="card"><span class="sample-badge">Grow</span><h3 class="heading-2">Build &amp; improve</h3><p>Put your ideas into practice, learn from the results and keep moving.</p><ul><li>Thoughtful delivery</li><li>Team enablement</li><li>Continuous improvement</li></ul><a class="${buttonClass('text')}" href="#contact">Build something lasting →</a></article>
+        <article class="card sample-lesson-card"><span class="sample-badge">01 / Structure</span><h3 class="heading-2">Give content a home.</h3><p>Use semantic HTML to organize a page before styling it.</p><ul><li>One clear page heading</li><li>Useful landmarks and section names</li></ul><a class="${buttonClass('text')}" href="#about">Start with structure →</a></article>
+        <article class="card sample-lesson-card"><span class="sample-badge">02 / Layout</span><h3 class="heading-2">Think in flexible grids.</h3><p>Build relationships between columns, gaps and available space.</p><ul><li>Twelve tracks, flexible spans</li><li>A layout that adapts to content</li></ul><a class="${buttonClass('text')}" href="#grid-lab">Explore CSS Grid →</a></article>
+        <article class="card sample-lesson-card"><span class="sample-badge">03 / Typography</span><h3 class="heading-2">Make the next line inviting.</h3><p>Build hierarchy with a small, repeatable type scale.</p><ul><li>Readable body text and line-height</li><li>Headings that respond to width</li></ul><a class="${buttonClass('text')}" href="#type-lab">Practise typography →</a></article>
+        <article class="card sample-lesson-card"><span class="sample-badge">04 / Colour</span><h3 class="heading-2">Give every colour a job.</h3><p>Separate brand references from interface roles and states.</p><ul><li>Primary, Supporting and Accent</li><li>Text, surfaces and contrast</li></ul><a class="${buttonClass('text')}" href="#colour-lab">Read the palette →</a></article>
+        <article class="card sample-lesson-card"><span class="sample-badge">05 / Components</span><h3 class="heading-2">Design beyond the default.</h3><p>Make actions, progress and feedback understandable.</p><ul><li>Hover, focus and pressed cues</li><li>Labels and meaningful feedback</li></ul><a class="${buttonClass('text')}" href="#components">Try the interface lab →</a></article>
+        <article class="card sample-lesson-card"><span class="sample-badge">06 / Review</span><h3 class="heading-2">Test the in-between.</h3><p>Check real content at widths between your favourite presets.</p><ul><li>Narrow layouts and long labels</li><li>Keyboard and contrast review</li></ul><a class="${buttonClass('text')}" href="#resources">Open the checklist →</a></article>
       </div>
-${sectionActions(['#contact', 'Discuss your project'], ['#resources', 'Browse resources'])}
+${sectionActions(['#grid-lab', 'Start the layout exercise'], ['#resources', 'Browse the field notes'])}
+    </section>
+    <section id="grid-lab" class="sample-section" aria-labelledby="grid-title">
+      <div class="sample-section-heading"><p class="sample-eyebrow">The layout workshop</p><h2 id="grid-title" class="heading-1">Same grid. Different possibilities.</h2><p>A grid gives content a shared structure. Resize this page and watch the wide layout become a single, readable flow.</p></div>
+      <div class="sample-grid sample-workshop-grid">
+        <figure class="card sample-grid-figure">
+          <div class="sample-grid-tracks" aria-hidden="true">${Array.from({ length: 12 }, () => '<span></span>').join('')}</div>
+          <div class="sample-grid-demo">
+            <div class="sample-demo-header"><strong>Header</strong><small>All 12 columns</small></div>
+            <div class="sample-demo-main"><strong>Room for the main idea.</strong><p>The most important content gets the most space.</p><small>Desktop: 8 of 12 columns</small></div>
+            <div class="sample-demo-aside"><strong>A useful aside.</strong><p>Keep related notes close.</p><small>Desktop: 4 of 12 columns</small></div>
+            <div class="sample-demo-card"><strong>Learn</strong><small>Desktop: 4 columns</small></div>
+            <div class="sample-demo-card"><strong>Build</strong><small>Desktop: 4 columns</small></div>
+            <div class="sample-demo-card"><strong>Reflect</strong><small>Desktop: 4 columns</small></div>
+            <div class="sample-demo-footer"><strong>Footer</strong><small>One complete row</small></div>
+          </div>
+          <figcaption>Wide screens: 12 equal tracks. Small screens: one readable column.</figcaption>
+        </figure>
+        <aside class="card sample-lab-notes" aria-labelledby="grid-notes-title">
+          <span class="sample-badge">Try this</span><h3 id="grid-notes-title" class="heading-2">Give the layout some room.</h3><ol><li>Compare the page at phone and desktop widths.</li><li>Find the 8 / 4 split and the three equal cards.</li><li>Change the grid gap in the studio, then compare again.</li></ol>
+          <details class="sample-code-solution"><summary>See the grid recipe</summary><pre><code>.sample-grid-demo {
+  display: grid;
+  grid-template-columns:
+    repeat(12, minmax(0, 1fr));
+  gap: var(--grid-gap);
+}
+
+/* Wide view: main / aside */
+.sample-demo-main { grid-column: span 8; }
+.sample-demo-aside { grid-column: span 4; }
+.sample-demo-card { grid-column: span 4; }
+.sample-demo-header, .sample-demo-footer {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 48rem) {
+  .sample-grid-demo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sample-demo-main, .sample-demo-aside,
+  .sample-demo-card { grid-column: auto; }
+}</code></pre></details>
+        </aside>
+      </div>
+${sectionActions(['#type-lab', 'Explore type and colour'], ['#resources', 'Check your layout'])}
+    </section>
+    <section id="type-lab" class="sample-section" aria-labelledby="type-title">
+      <div class="sample-section-heading"><p class="sample-eyebrow">The visual language workshop</p><h2 id="type-title" class="heading-1">Make the important thing easy to find.</h2><p>Use type to create hierarchy and colour to reinforce purpose. The examples below follow your current design decisions.</p></div>
+      <div class="sample-grid sample-split">
+        <article class="card sample-type-specimen"><p class="sample-eyebrow">An exercise in hierarchy</p><h3 class="heading-1">Space to think.<br>Room to create.</h3><p>Good typography guides a reader from the big idea to the useful details. Keep the message clear, the measure comfortable and the next action easy to find.</p><dl class="sample-type-settings"><div><dt>Body size</dt><dd>${state.base}px</dd></div><div><dt>Scale ratio</dt><dd>${state.ratio}</dd></div><div><dt>Body line-height</dt><dd>${state.leading}</dd></div></dl></article>
+        <article id="colour-lab" class="card sample-colour-lab" aria-labelledby="colour-title"><span class="sample-badge">Colour with purpose</span><h3 id="colour-title" class="heading-2">A palette becomes a language.</h3><p>These are interface roles, not a list of interchangeable paint colours. Check each foreground against its actual background in both themes.</p><ul class="sample-token-palette"><li><span class="sample-palette-dot sample-palette-dot--primary" aria-hidden="true"></span><span><strong>Primary</strong><small>Main actions and links</small></span><code>${roles.primary}</code></li><li><span class="sample-palette-dot sample-palette-dot--secondary" aria-hidden="true"></span><span><strong>Supporting</strong><small>Supporting actions</small></span><code>${roles.secondary}</code></li><li><span class="sample-palette-dot sample-palette-dot--accent" aria-hidden="true"></span><span><strong>Accent</strong><small>Highlights and details</small></span><code>${roles.accent}</code></li></ul><p class="small-text">Add words, shape or an icon whenever colour communicates meaning.</p></article>
+      </div>
+${sectionActions(['#components', 'Explore component states'], ['#contact', 'Ask a design question'])}
     </section>
     <section id="resources" class="sample-section" aria-labelledby="resources-title">
-      <div class="sample-section-heading"><p class="sample-eyebrow">Useful by design</p><h2 id="resources-title" class="heading-1">A head start on what’s next.</h2></div>
+      <div class="sample-section-heading"><p class="sample-eyebrow">Keep these field notes close</p><h2 id="resources-title" class="heading-1">A little guidance for your next build.</h2><p>Start small, review the details and leave yourself a clear next step.</p></div>
       <div class="sample-grid sample-split">
         <div class="sample-table-wrap" role="region" aria-label="Resource library" tabindex="0">
-          <table><caption>Resources for your next project</caption><thead><tr><th scope="col">Resource</th><th scope="col">Format</th><th scope="col">Explore</th></tr></thead><tbody>
-            <tr><th scope="row">Getting started</th><td><span class="sample-badge">Guide</span></td><td><a href="#getting-started">Read the guide</a></td></tr>
-            <tr><th scope="row">Working together</th><td><span class="sample-badge">Checklist</span></td><td><a href="#working-together">See the checklist</a></td></tr>
-            <tr><th scope="row">Your next conversation</th><td><span class="sample-badge">Support</span></td><td><a href="#contact">Ask a question</a></td></tr>
+          <table><caption>Resources for your next website</caption><thead><tr><th scope="col">Resource</th><th scope="col">Format</th><th scope="col">Explore</th></tr></thead><tbody>
+            <tr><th scope="row">Build your first page</th><td><span class="sample-badge">Guide</span></td><td><a href="#getting-started">Read the guide</a></td></tr>
+            <tr><th scope="row">Review your design</th><td><span class="sample-badge">Checklist</span></td><td><a href="#working-together">See the checklist</a></td></tr>
+            <tr><th scope="row">A question worth asking</th><td><span class="sample-badge">Practice</span></td><td><a href="#contact">Ask a question</a></td></tr>
           </tbody></table>
         </div>
         <div class="sample-faq">
-          <details id="getting-started" open><summary>Where should I start?</summary><p>Tell us what you want to achieve. We’ll help you explore your options and choose a useful first step.</p></details>
-          <details id="working-together"><summary>How do we work together?</summary><p>We agree on your goals, keep communication open and review progress together. You’ll know what’s happening and what comes next.</p></details>
-          <details><summary>Can we start small?</summary><p>Absolutely. A focused first project is a good way to learn, build confidence and decide where to go next.</p></details>
+          <details id="getting-started" open><summary>How do I use this field guide?</summary><p>Choose a lesson, inspect the example, then change one design decision in the studio. Compare the preview with the generated HTML and CSS. Write down what changed and why it helped.</p></details>
+          <details id="working-together"><summary>What belongs in my review checklist?</summary><p>Check a narrow viewport, long headings, keyboard focus, form labels and text contrast in both themes. Test intermediate widths too. Record anything that still needs a human review before sharing your work.</p></details>
+          <details><summary>Can I learn from the exported page?</summary><p>Yes. Save the HTML and its companion CSS together, open the page and trace a component class back to its design tokens. The grid, native menu and examples work without a JavaScript framework.</p></details>
         </div>
       </div>
-      <aside class="sample-notice" aria-label="Getting started tip"><strong>A useful first step.</strong> Bring your questions, a rough idea or a challenge you haven’t quite put into words. We’ll start there.</aside>
-${sectionActions(['#contact', 'Ask a question'], ['#components', 'Explore components'])}
+      <aside class="sample-notice" aria-label="Practice tip"><strong>Change one decision at a time.</strong> Compare before and after, test at another width, and write down the reason for your choice.</aside>
+${sectionActions(['#contact', 'Bring a design question'], ['#components', 'Explore the interface lab'])}
     </section>
     <section id="contact" class="sample-section sample-grid sample-split" aria-labelledby="contact-title">
-      <div><p class="sample-eyebrow">Let’s make a start</p><h2 id="contact-title" class="heading-1">What are you thinking about?</h2><p>A fresh idea, a better experience or a problem worth solving. We’d love to hear about it.</p></div>
+      <div><p class="sample-eyebrow">A space for your next question</p><h2 id="contact-title" class="heading-1">What would you like to figure out?</h2><p>A layout that will not quite fit? A type scale that feels too loud? Describe the decision you are practising, what you tried and what you noticed.</p><p class="small-text">Use this practice form to explore labels, validation and field states. It has no message-delivery backend.</p></div>
       <form class="card sample-form" action="#contact" method="get" aria-describedby="contact-note">
         <div><label for="contact-name">Your name</label><input class="input" id="contact-name" name="name" autocomplete="name" placeholder="Alex Morgan" required></div>
         <div><label for="contact-email">Email address</label><input class="input" type="email" id="contact-email" name="email" autocomplete="email" placeholder="alex@example.com" aria-describedby="contact-email-help"${fieldAttributes} required><small id="contact-email-help"${adv.state === 'invalid' ? ' class="sample-error"' : ''}>${emailHelp}</small></div>
-        <div><label for="contact-service">What can we help with?</label><select class="input" id="contact-service" name="service"><option value="">Choose a service</option><option>Strategy &amp; direction</option><option>Design &amp; experience</option><option>Build &amp; improve</option></select></div>
-        <fieldset><legend>How would you like to start?</legend><label class="sample-choice"><input type="radio" name="start" value="conversation" checked> A conversation</label><label class="sample-choice"><input type="radio" name="start" value="workshop"> A workshop</label></fieldset>
-        <div><label for="contact-message">A little about your idea</label><textarea class="input" id="contact-message" name="message" rows="4" placeholder="Here’s what we have in mind…"></textarea></div>
-        <label class="sample-choice"><input type="checkbox" name="copy" value="yes"> I’d like a copy of my enquiry.</label>
+        <div><label for="contact-service">What are you practising?</label><select class="input" id="contact-service" name="service"><option value="">Choose a topic</option><option>Semantic HTML</option><option>Responsive CSS Grid</option><option>Typography and colour</option><option>Accessible components</option></select></div>
+        <fieldset><legend>How would you like to practise?</legend><label class="sample-choice"><input type="radio" name="start" value="conversation" checked> A quick question</label><label class="sample-choice"><input type="radio" name="start" value="workshop"> A guided exercise</label></fieldset>
+        <div><label for="contact-message">What have you tried?</label><textarea class="input" id="contact-message" name="message" rows="4" placeholder="I am trying to… Here is what I noticed…"></textarea></div>
+        <label class="sample-choice"><input type="checkbox" name="copy" value="yes"> Include a copy in this practice request.</label>
         <div class="button-row sample-section-actions">
-          <button class="${buttonClass('primary')}" type="submit">Preview enquiry</button>
-          <a class="${buttonClass('secondary')}" href="#services">Review our services</a>
+          <button class="${buttonClass('primary')}" type="submit">Preview my question</button>
+          <a class="${buttonClass('secondary')}" href="#services">Revisit the lessons</a>
         </div>
         <p id="contact-note" class="small-text">This is a sample form. No message is sent; submitting returns to this page.</p>
       </form>
     </section>
     <section id="components" class="sample-section" aria-labelledby="components-title">
-      <div class="sample-section-heading"><p class="sample-eyebrow">The little details</p><h2 id="components-title" class="heading-1">A consistent experience, everywhere.</h2><p>Clear actions, helpful feedback and familiar controls.</p></div>
+      <div class="sample-section-heading"><p class="sample-eyebrow">The interface lab</p><h2 id="components-title" class="heading-1">Small details. A more usable interface.</h2><p>Compare action priorities, look for non-colour state cues and explore native form controls. These examples follow the settings in your Button Design Wizard.</p></div>
       <div class="sample-grid card-grid">
         <article class="card"><h3 class="heading-2">Actions that feel familiar</h3><div class="button-row">${['primary', 'secondary', 'accent', 'outline', 'text'].map(v => `<button class="${buttonClass(v)}" type="button">${v[0].toUpperCase() + v.slice(1)} action</button>`).join('')}</div>${actionExample}</article>
         <article class="card"><h3 class="heading-2">Helpful feedback</h3><p class="sample-feedback sample-feedback--success"><strong>Success.</strong> You’re ready for the next step.</p><p class="sample-feedback sample-feedback--warning"><strong>One more thing.</strong> Review your details before continuing.</p><p class="sample-feedback sample-feedback--danger"><strong>Something needs attention.</strong> Check the highlighted field.</p></article>
-        <article class="card"><h3 class="heading-2">Progress at a glance</h3><label for="sample-progress">Project checklist — 3 of 4 complete</label><progress id="sample-progress" value="3" max="4">75%</progress><label for="sample-range">How much support do you need?</label><input id="sample-range" type="range" min="1" max="5" value="3"><label for="sample-reference">Your reference</label><input class="input" id="sample-reference" value="PROJECT-001" readonly><label for="sample-unavailable">Available after your first visit</label><input class="input" id="sample-unavailable" value="Not available yet" disabled></article>
+        <article class="card"><h3 class="heading-2">Progress at a glance</h3><label for="sample-progress">Practice checklist — 3 of 4 complete</label><progress id="sample-progress" value="3" max="4">75%</progress><label for="sample-range">Your confidence with CSS Grid</label><input id="sample-range" type="range" min="1" max="5" value="3"><label for="sample-reference">Lesson reference</label><input class="input" id="sample-reference" value="LESSON-001" readonly><label for="sample-unavailable">Available after your review</label><input class="input" id="sample-unavailable" value="Not available yet" disabled></article>
       </div>
-${sectionActions(['#contact', 'Start a conversation'], ['#home', 'Back to top'])}
+${sectionActions(['#contact', 'Ask a design question'], ['#grid-lab', 'Return to the grid'])}
     </section>
   </main>
   <footer class="sample-footer">
-    <div class="container sample-footer-inner"><div><a class="sample-brand" href="#home">${project}</a><p class="small-text">Good people. Thoughtful work. A shared way forward.</p><small>© ${project}. All rights reserved.</small></div><nav aria-label="Footer navigation"><ul class="sample-nav"><li><a href="#home">Home</a></li><li><a href="#about">About</a></li><li><a href="#resources">Resources</a></li><li><a href="#contact">Contact</a></li></ul></nav></div>
+    <div class="container sample-footer-inner"><div><a class="sample-brand" href="#home">${project}</a><p class="small-text">Learn by building. Design with intention. Share what you discover.</p><small>© ${project}. A web design practice space.</small></div><nav aria-label="Footer navigation"><ul class="sample-nav"><li><a href="#home">Home</a></li><li><a href="#about">About</a></li><li><a href="#resources">Resources</a></li><li><a href="#contact">Contact</a></li></ul></nav></div>
   </footer>
 </body>
 </html>
@@ -211,10 +285,10 @@ ${sectionActions(['#contact', 'Start a conversation'], ['#home', 'Back to top'])
 .sample-brand-title { min-width: 0; font-family: var(--font-heading); font-size: var(--text-h2); line-height: var(--heading-leading); letter-spacing: var(--heading-letter-spacing); overflow-wrap: anywhere; }
 .sample-nav { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); padding: 0; margin: 0; list-style: none; }
 .sample-nav a { font-weight: 600; }
-.sample-header .sample-nav a { text-decoration: none; text-underline-offset: .2em; text-decoration-thickness: .1em; }
-.sample-header .sample-nav a:hover { text-decoration-line: underline; }
-.sample-header .sample-nav a:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }
-.sample-header .sample-nav a:active { text-decoration-line: underline; text-decoration-thickness: .2em; }
+:is(.sample-header .sample-nav, .sample-table-wrap) a { text-decoration: none; text-underline-offset: .2em; text-decoration-thickness: .1em; }
+:is(.sample-header .sample-nav, .sample-table-wrap) a:hover { text-decoration-line: underline; }
+:is(.sample-header .sample-nav, .sample-table-wrap) a:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }
+:is(.sample-header .sample-nav, .sample-table-wrap) a:active { text-decoration-line: underline; text-decoration-thickness: .2em; }
 .sample-menu { display: none; }
 .sample-menu summary { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-width: 48px; min-height: 48px; padding: var(--space-2); border: 0; border-radius: var(--radius-base); background: transparent; color: var(--text); font: inherit; font-weight: 700; cursor: pointer; list-style: none; }
 .sample-menu summary::-webkit-details-marker { display: none; }
@@ -250,6 +324,37 @@ ${['primary', 'secondary', 'accent', 'outline', 'text'].map(v => `.sample-select
 .sample-section-heading { max-width: 44rem; margin-bottom: var(--space-8); }
 .sample-section-heading > :last-child, .sample-home .card > :last-child, .sample-form > :last-child { margin-bottom: 0; }
 .sample-home .card ul { padding-inline-start: var(--space-6); margin-block: var(--space-4); }
+.sample-lesson-card { display: flex; flex-direction: column; align-items: flex-start; }
+.sample-lesson-card > .ds-button { margin-top: auto; }
+.sample-method, .sample-lab-notes ol { padding-inline-start: var(--space-6); margin-block: var(--space-6); }
+.sample-workshop-grid > .sample-grid-figure { grid-column: span 8; }
+.sample-workshop-grid > .sample-lab-notes { grid-column: span 4; }
+.sample-grid-tracks { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--space-1); margin-bottom: var(--space-4); }
+.sample-grid-tracks span { min-width: 0; height: var(--space-4); border-radius: var(--radius-base); background: var(--primary); opacity: .25; }
+.sample-grid-demo { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--grid-gap); }
+.sample-grid-demo > div { min-width: 0; padding: var(--space-4); border-radius: var(--radius-base); overflow-wrap: anywhere; }
+.sample-grid-demo p { margin: var(--space-2) 0; }
+.sample-grid-demo small { display: block; margin-top: var(--space-1); }
+.sample-demo-header, .sample-demo-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); background: var(--primary); color: var(--on-primary); }
+.sample-demo-main { grid-column: span 8; background: var(--surface-muted); }
+.sample-demo-aside { grid-column: span 4; background: var(--accent); color: var(--on-accent); }
+.sample-demo-card { grid-column: span 4; border: var(--border-width) solid var(--border); background: var(--surface); }
+.sample-code-solution { padding-top: var(--space-4); border-top: var(--border-width) solid var(--border); }
+.sample-code-solution summary { cursor: pointer; font-weight: 600; }
+.sample-code-solution pre { max-width: 100%; margin: var(--space-4) 0 0; padding: var(--space-4); white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-small); border-radius: var(--radius-base); background: var(--surface-muted); }
+.sample-type-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); margin: var(--space-6) 0 0; padding-top: var(--space-4); border-top: var(--border-width) solid var(--border); }
+.sample-type-settings dt { font-size: var(--text-small); color: var(--text-muted); }
+.sample-type-settings dd { margin: var(--space-2) 0 0; font-size: var(--text-h2); font-weight: var(--heading-weight); overflow-wrap: anywhere; }
+.sample-home .card .sample-token-palette { display: grid; gap: var(--space-4); padding: 0; margin: var(--space-6) 0; list-style: none; }
+.sample-token-palette li { display: grid; grid-template-columns: var(--space-8) minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); min-width: 0; }
+.sample-token-palette li + li { margin-top: 0; }
+.sample-token-palette span, .sample-token-palette code { min-width: 0; overflow-wrap: anywhere; }
+.sample-token-palette small { display: block; color: var(--text-muted); }
+.sample-token-palette code { font-size: var(--text-small); }
+.sample-palette-dot { width: var(--space-8); aspect-ratio: 1; border: var(--border-width) solid var(--border); border-radius: var(--radius-base); }
+.sample-palette-dot--primary { background: var(--primary); }
+.sample-palette-dot--secondary { background: var(--secondary); }
+.sample-palette-dot--accent { background: var(--accent); }
 .sample-home li + li { margin-top: var(--space-2); }
 .sample-home .sample-nav li + li { margin-top: 0; }
 .sample-badge { display: inline-block; padding: var(--space-1) var(--space-2); margin-bottom: var(--space-4); border-radius: var(--radius-base); background: var(--accent); color: var(--on-accent); font-size: var(--text-small); font-weight: 600; }
@@ -294,6 +399,10 @@ ${['primary', 'secondary', 'accent', 'outline', 'text'].map(v => `.sample-select
   .sample-hero { padding-block: var(--space-20); }
   .sample-section { padding-block: var(--space-16); }
 }
+@media (max-width: 64rem) {
+  .sample-home .sample-workshop-grid { grid-template-columns: minmax(0, 1fr); }
+  .sample-workshop-grid > .sample-grid-figure, .sample-workshop-grid > .sample-lab-notes { grid-column: auto; }
+}
 /* Keep the card minimum/gap controls effective within the 12-column page. */
 @container sample-content (width < ${threeCards}px) {
   .sample-home .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -311,6 +420,10 @@ ${['primary', 'secondary', 'accent', 'outline', 'text'].map(v => `.sample-select
   .sample-menu { display: block; flex: none; }
   .sample-hero-image { max-width: 36rem; }
   .sample-about-image { max-width: 32rem; }
+  .sample-grid-demo { grid-template-columns: minmax(0, 1fr); }
+  .sample-demo-main, .sample-demo-aside, .sample-demo-card { grid-column: auto; }
+  .sample-token-palette li { grid-template-columns: var(--space-8) minmax(0, 1fr); }
+  .sample-token-palette code { grid-column: 2; }
 }
 `;
   }

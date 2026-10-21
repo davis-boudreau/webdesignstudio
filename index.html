@@ -5,9 +5,9 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Design System Studio V4.1</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261019-state-practices">
-    <link rel="stylesheet" href="src/css/layout.css?v=20261020-reaudit">
-    <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-learning">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261020-minor-third">
+    <link rel="stylesheet" href="src/css/layout.css?v=20261020-section-menu">
+    <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-wizard-divider">
     <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-state-practices">
     <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-typography">
@@ -185,7 +185,7 @@
                   <dl>
                     <dt>Font family</dt><dd>A font stack is an ordered set of fallbacks. System choices use installed fonts. Optional Google Fonts in the Typography studio load web fonts and show the matching HTML and CSS.</dd>
                     <dt>Body size</dt><dd>The base for the scale. Start with the 16 px example, then judge your content, audience and font. A slider value alone does not establish readability.</dd>
-                    <dt>Scale ratio</dt><dd>Choose a named interval such as Minor Second or Major Third, or use a custom ratio. It multiplies each successive level: 16 px at 1.25 produces 20 px, 25 px and 31.25 px. A larger ratio creates more dramatic size differences.</dd>
+                    <dt>Scale ratio</dt><dd>Choose a named interval such as Minor Second or Major Third, or use a custom ratio. It multiplies each successive level: 16 px at the default Minor Third ratio (1.2) produces 19.2 px, 23.04 px and about 27.65 px. A larger ratio creates more dramatic size differences.</dd>
                     <dt>Line height</dt><dd>A unitless multiplier: 16 px text at 1.5 uses a 24 px line box. Give paragraphs breathing room without separating related lines too far.</dd>
                     <dt>Letter spacing</dt><dd>Heading and body spacing use em, so each adjustment scales with the text size. Check actual fonts and long labels; large negative values can crowd letters.</dd>
                     <dt>Fluid headings</dt><dd>The Typography studio lets you tune minimum/maximum viewports and the mobile heading percentage. Body and small text stay constant in this tool; larger headings use bounded fluid sizes.</dd>
@@ -223,9 +223,9 @@
                          min="1.05"
                          step="any"
                          type="range"
-                         value="1.25" />
+                         value="1.2" />
                   <output id="jRatioOut">
-                    1.25
+                    1.2
                   </output>
                 </div>
               </div>
@@ -803,9 +803,9 @@
                          min="1.05"
                          step="any"
                          type="range"
-                         value="1.25" />
+                         value="1.2" />
                   <output id="ratioOut">
-                    1.25
+                    1.2
                   </output>
                 </div>
               </div>
@@ -1033,6 +1033,24 @@
         </aside>
         <div class="studio-right">
           <main id="main">
+            <nav aria-label="Design system sections" class="studio-section-nav">
+              <a href="#studio-section-4">01 &middot; Responsive</a>
+              <a href="#brandPalette">02 &middot; Palette</a>
+              <a href="#studio-section-1">03 &middot; Colour</a>
+              <a href="#studio-section-2">04 &middot; Typography</a>
+              <a href="#buttonDesignLab">05 &middot; Buttons</a>
+              <a href="#studio-section-3">06 &middot; Components</a>
+              <a href="#stateExplorer">07 &middot; States</a>
+              <a href="#studio-section-5">08 &middot; Accessibility</a>
+              <a href="#studio-section-6">09 &middot; Inspect &amp; export</a>
+              <a href="#studio-section-7">10 &middot; Workflow</a>
+              <a href="#studio-section-8">11 &middot; Token catalogue</a>
+            </nav>
+            <div class="section-actions" role="group" aria-label="Section visibility">
+              <button type="button" id="expandSections" class="ghost">Expand all sections</button>
+              <button type="button" id="collapseSections" class="ghost">Collapse all sections</button>
+              <p class="help">Select a section heading to expand or collapse it. Navigation links open the section you choose.</p>
+            </div>
               <details class="studio-section" id="studio-section-4" open>
               <summary><h2>1. Responsive page preview</h2></summary>
               <section class="panel">
@@ -1082,24 +1100,6 @@
               </details>
               </section>
             </details>
-            <nav aria-label="Design system sections" class="studio-section-nav">
-              <a href="#studio-section-4">01 &middot; Responsive</a>
-              <a href="#brandPalette">02 &middot; Palette</a>
-              <a href="#studio-section-1">03 &middot; Colour</a>
-              <a href="#studio-section-2">04 &middot; Typography</a>
-              <a href="#buttonDesignLab">05 &middot; Buttons</a>
-              <a href="#studio-section-3">06 &middot; Components</a>
-              <a href="#stateExplorer">07 &middot; States</a>
-              <a href="#studio-section-5">08 &middot; Accessibility</a>
-              <a href="#studio-section-6">09 &middot; Inspect &amp; export</a>
-              <a href="#studio-section-7">10 &middot; Workflow</a>
-              <a href="#studio-section-8">11 &middot; Token catalogue</a>
-            </nav>
-            <div class="section-actions" role="group" aria-label="Section visibility">
-              <button type="button" id="expandSections" class="ghost">Expand all sections</button>
-              <button type="button" id="collapseSections" class="ghost">Collapse all sections</button>
-              <p class="help">Select a section heading to expand or collapse it. Navigation links open the section you choose.</p>
-            </div>
             <details class="studio-section" id="brandPalette">
               <summary><h2>2. Brand Colour Palette</h2></summary>
               <section class="panel">
@@ -1368,12 +1368,12 @@
                     <p class="help">Base font and modular ratio use the Studio's existing controls.</p>
                     <div class="field"><label for="clampScalePreset">Named type scale</label><select id="clampScalePreset"></select></div>
                     <label for="clampBase">
-                      Base size: <output id="clampBaseOut">16px</output></label><input id="clampBase" type="range" min="14" max="22" step="1" value="16"><label for="clampRatio">Scale ratio: <output id="clampRatioOut">1.25</output></label><input id="clampRatio"
+                      Base size: <output id="clampBaseOut">16px</output></label><input id="clampBase" type="range" min="14" max="22" step="1" value="16"><label for="clampRatio">Scale ratio: <output id="clampRatioOut">1.2</output></label><input id="clampRatio"
        type="range"
        min="1.05"
        max="1.5"
        step="any"
-       value="1.25"><label for="clampRole">Typography level</label><select id="clampRole">
+       value="1.2"><label for="clampRole">Typography level</label><select id="clampRole">
                       <option value="5">Display</option>
                       <option value="4">H1</option>
                       <option value="3" selected>H2</option>
@@ -1480,7 +1480,7 @@
               <details class="learning-note">
                 <summary>Why use a type scale and fluid sizes?</summary>
                 <div class="learning-content">
-                  <p>A scale creates repeatable visual hierarchy: a 16 px base with a 1.25 ratio gives 20 px, 25 px and 31.25 px steps. Choose sizes for real content, rather than using every step.</p>
+                  <p>A scale creates repeatable visual hierarchy: a 16 px base with the default Minor Third ratio (1.2) gives 19.2 px, 23.04 px and about 27.65 px steps. Choose sizes for real content, rather than using every step.</p>
                   <ul>
                     <li><code>clamp(minimum, preferred, maximum)</code> bounds a fluid size. Here the mobile multiplier affects Display, H1 and H2; body and small text stay constant.</li>
                     <li><code>rem</code> follows the root font size. The calculation assumes a nominal 16 px root; viewport units alone do not follow a user's text-size preference.</li>
@@ -1950,12 +1950,12 @@
       <script src="src/js/brand-palette.js?v=20261019-swatch-actions" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/core-state.js?v=20261020-reaudit" defer></script>
+      <script src="src/js/core-state.js?v=20261020-minor-third" defer></script>
       <script src="src/js/css-dock.js?v=20261019-grid-spacing" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/journey-library.js?v=20261020-learning" defer></script>
       <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/sample-homepage.js?v=20261019-footer-links" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261020-field-guide" defer></script>
       <script src="src/js/responsive-preview.js?v=20261019-fonts" defer></script>
       <script src="src/js/oklch-lab.js?v=20261019-audit" defer></script>
       <script src="src/js/token-catalogue.js?v=20261020-learning" defer></script>
@@ -1964,7 +1964,7 @@
       <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
-      <script src="src/js/section-accordions.js?v=20261020-reaudit" defer></script>
+      <script src="src/js/section-accordions.js?v=20261020-section-menu" defer></script>
       <script src="src/js/studio-learning.js?v=20261020-learning" defer></script>
     </body>
   </html>

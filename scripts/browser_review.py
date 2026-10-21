@@ -37,7 +37,8 @@ app.onload = async () => {
   const saved = () => Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects')))[0].data;
   const wait = (ms=100) => new Promise(resolve => setTimeout(resolve,ms));
   test('No startup JavaScript errors', () => !w.__reviewErrors.length);
-  test('Responsive page preview is the only expanded centre section at startup', () => d.querySelector('#main > :first-child').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(el=>el.open===(el.id==='studio-section-4')));
+  test('Startup selects Minor Third 1.2 throughout the typography controls and export', () => evaluate('state.ratio===1.2 && cssExport().includes("--type-ratio: 1.2;")') && ['jScalePreset','clampScalePreset'].every(id=>d.getElementById(id).value==='minor-third') && ['ratio','jRatio','clampRatio'].every(id=>d.getElementById(id).value==='1.2'));
+  test('Section menu precedes the preview, the only expanded centre section at startup', () => d.querySelector('#main > :first-child').classList.contains('studio-section-nav') && d.querySelector('#main > .studio-section').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(el=>el.open===(el.id==='studio-section-4')));
   test('Only Responsive page preview starts expanded throughout the studio', () => [...d.querySelectorAll('details')].every(el=>el.open===(el.id==='studio-section-4')));
   test('Preview initially fills the centre pane in Fluid mode', () => d.getElementById('previewFrame').dataset.width==='fluid' && d.querySelector('button[data-width="fluid"]').getAttribute('aria-pressed')==='true');
   test('Eight wizard steps separate configuration from eleven centre lessons', () => d.querySelectorAll('[data-journey-step]').length===8 && d.querySelectorAll('[data-journey-pane]').length===8 && d.querySelectorAll('#main > .studio-section > .panel > .studio-lesson').length===11 && d.getElementById('jProgress').textContent.includes('of 8'));
@@ -512,10 +513,11 @@ app.onload = async () => {
   input('ratio',1.29); await wait();
   test('Manual ratio selects Custom in both preset controls', () => d.getElementById('jScalePreset').value==='custom' && d.getElementById('clampScalePreset').value==='custom');
   reset(); await wait();
+  test('Reset restores Minor Third without changing responsive heading limits', () => evaluate('state.ratio===1.2 && clampConfig.mobileFactor===.82') && d.getElementById('jScalePreset').value==='minor-third' && d.getElementById('clampScalePreset').value==='minor-third');
   test('Typography ladder displays matching PX and REM values', () => {
     const base=d.querySelectorAll('#typeLadder .type-row small')[2].textContent;
     const step=d.querySelectorAll('#typeLadder .type-row small')[3].textContent;
-    return base.includes('16px') && base.includes('1rem') && step.includes('20px') && step.includes('1.25rem');
+    return base.includes('16px') && base.includes('1rem') && step.includes('19.2px') && step.includes('1.2rem');
   });
   test('Mobile and desktop specimens also include REM values', () => d.querySelector('#mobileType small').textContent.includes('rem') && d.querySelector('#desktopType small').textContent.includes('rem'));
   input('typoHeadingTracking',.03); input('typoBodyTracking',.02); await wait();
@@ -707,7 +709,7 @@ app.onload = async () => {
   const sampleDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
   test('Sample home page has header, main, footer, hero and a single headline', () => !!sampleDoc.querySelector('body > header nav') && !!sampleDoc.querySelector('body > main') && !!sampleDoc.querySelector('body > footer nav') && !!sampleDoc.querySelector('#home .sample-lead') && sampleDoc.querySelectorAll('h1').length===1);
   test('Every sample navigation and action anchor reaches an existing section', () => [...sampleDoc.querySelectorAll('a[href^="#"]')].every(link=>sampleDoc.getElementById(link.hash.slice(1))));
-  test('Every main section offers primary and secondary actions matching the wizard variants', () => [...sampleDoc.querySelectorAll('main > section')].length===6 && [...sampleDoc.querySelectorAll('main > section')].every(section=>{
+  test('Every main section offers primary and secondary actions matching the wizard variants', () => [...sampleDoc.querySelectorAll('main > section')].length===8 && [...sampleDoc.querySelectorAll('main > section')].every(section=>{
     const rows=section.querySelectorAll('.sample-section-actions');
     return rows.length===1 && rows[0].children.length===2 && rows[0].firstElementChild.matches('.ds-button--primary') && rows[0].lastElementChild.matches('a.ds-button--secondary[href]') && (section.id==='contact'?rows[0].firstElementChild.matches('form button[type="submit"]'):rows[0].firstElementChild.matches('a[href]'));
   }));
@@ -721,6 +723,16 @@ app.onload = async () => {
     return images.length>=2 && images.every(img=>img.alt && img.getAttribute('width') && img.src.startsWith('data:image/svg+xml')) && decodeURIComponent(images[0].src).includes(evaluate('palette().roles.primary')) && !sampleDoc.querySelector('script');
   });
   test('Sample home page showcases actions, cards, forms, table, FAQ and progress', () => ['.card','.ds-button--primary','.ds-button--secondary','.ds-button--accent','.ds-button--outline','.ds-button--text','form input[type="email"]','select','textarea','input[type="radio"]','input[type="checkbox"]','input[type="range"]','input[readonly]','input[disabled]','table caption','details summary','progress','blockquote'].every(selector=>sampleDoc.querySelector(selector)));
+  test('Field guide offers six lesson cards with real practice destinations', () => {
+    const cards=[...sampleDoc.querySelectorAll('#services .sample-lesson-card')];
+    return sampleDoc.title.includes('Web Design Field Guide') && cards.length===6 && cards.every(card=>sampleDoc.getElementById(card.querySelector('a').hash.slice(1))) && sampleDoc.querySelector('header a[href="#services"]').textContent==='Lessons';
+  });
+  test('Grid workshop includes twelve tracks, seven layout regions and an inspectable CSS recipe', () => sampleDoc.querySelectorAll('.sample-grid-tracks > span').length===12 && sampleDoc.querySelectorAll('.sample-grid-demo > div').length===7 && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('repeat(12, minmax(0, 1fr))') && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('grid-column: 1 / -1;') && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('.sample-demo-card { grid-column: span 4; }') && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('@media (max-width: 48rem)'));
+  test('Type and colour examples describe the actual selected design settings', () => {
+    const values=[...sampleDoc.querySelectorAll('.sample-type-settings dd')].map(item=>item.textContent);
+    const colours=[...sampleDoc.querySelectorAll('.sample-token-palette code')].map(item=>item.textContent);
+    return JSON.stringify(values)===JSON.stringify(evaluate('[state.base+"px",String(state.ratio),String(state.leading)]')) && JSON.stringify(colours)===JSON.stringify(evaluate('[palette().roles.primary,palette().roles.secondary,palette().roles.accent]'));
+  });
   test('Sample IDs and labelled controls are valid', () => {
     const ids=[...sampleDoc.querySelectorAll('[id]')].map(el=>el.id);
     return ids.length===new Set(ids).size && [...sampleDoc.querySelectorAll('label[for]')].every(label=>sampleDoc.getElementById(label.htmlFor));
@@ -794,6 +806,10 @@ app.onload = async () => {
       const win=doc.defaultView;
       return [...doc.querySelectorAll('.sample-header .sample-nav a')].every(link=>win.getComputedStyle(link).textDecorationLine==='none') && win.getComputedStyle(doc.querySelector('.sample-footer .sample-nav a')).textDecorationLine===(underline?'underline':'none');
     }));
+    test('All resource table links start plain with general underlines '+underline+' in export and preview', () => [gridDoc(),previewDoc()].every(doc=>{
+      const links=[...doc.querySelectorAll('.sample-table-wrap a')];
+      return links.length===3 && links.every(link=>doc.defaultView.getComputedStyle(link).textDecorationLine==='none');
+    }));
   }
   reset(); await wait(); await loadGridPage();
   for (const theme of ['light','dark']) {
@@ -824,6 +840,25 @@ app.onload = async () => {
           const passes=gridDoc().activeElement===link && link.matches(':focus-visible') && focus.outlineStyle==='solid' && focus.outlineWidth===root.getPropertyValue('--button-focus-width').trim() && focus.outlineColor===expected && focus.outlineOffset==='3px';
           link.blur(); return passes;
         });
+        const resources=[...gridDoc().querySelectorAll('.sample-table-wrap a')];
+        test(theme+' resource links underline on hover without resizing at '+width+'px', () => resources.every(resource=>{
+          const before=resource.getBoundingClientRect(); resource.classList.add('review-hover');
+          const computed=gridWindow().getComputedStyle(resource), after=resource.getBoundingClientRect();
+          const passes=computed.textDecorationLine==='underline' && Math.abs(before.width-after.width)<1 && Math.abs(before.height-after.height)<1;
+          resource.classList.remove('review-hover'); return passes;
+        }));
+        test(theme+' resource links have a stronger pressed underline at '+width+'px', () => resources.every(resource=>{
+          const normal=parseFloat(gridWindow().getComputedStyle(resource).textDecorationThickness);
+          resource.classList.add('review-active'); const computed=gridWindow().getComputedStyle(resource);
+          const passes=computed.textDecorationLine==='underline' && parseFloat(computed.textDecorationThickness)>normal;
+          resource.classList.remove('review-active'); return passes;
+        }));
+        test(theme+' resource links retain the shared keyboard focus ring at '+width+'px', () => resources.every(resource=>{
+          resource.focus(); const computed=gridWindow().getComputedStyle(resource), root=gridWindow().getComputedStyle(gridDoc().documentElement);
+          const expected=evaluate(`'rgb('+hexRgb('${root.getPropertyValue('--button-focus').trim()}').join(', ')+')'`);
+          const passes=gridDoc().activeElement===resource && resource.matches(':focus-visible') && computed.outlineStyle==='solid' && computed.outlineWidth===root.getPropertyValue('--button-focus-width').trim() && computed.outlineColor===expected && computed.outlineOffset==='3px';
+          resource.blur(); return passes;
+        }));
       } finally { style.textContent=original; }
     }
   }
@@ -855,7 +890,7 @@ app.onload = async () => {
       });
     } finally { style.textContent=original; gridDoc().documentElement.dataset.theme='light'; }
   });
-  for (const width of [320,390,600,768,1280,1440]) {
+  for (const width of [320,390,600,768,900,1024,1280,1440]) {
     gridPage.style.width=width+'px'; await wait();
     test('Grid and spacing fit the generated page at '+width+'px', () => {
       const doc=gridDoc(), cards=[...doc.querySelectorAll('#services .card')], row=doc.querySelector('#services .card-grid').getBoundingClientRect();
@@ -863,9 +898,17 @@ app.onload = async () => {
       const firstRow=cards.filter(card=>Math.abs(card.getBoundingClientRect().top-cards[0].getBoundingClientRect().top)<1);
       return doc.documentElement.scrollWidth<=width+1 && firstRow.length===expected && cards.every(card=>card.getBoundingClientRect().left>=row.left-1 && card.getBoundingClientRect().right<=row.right+1) && (width>768 || gridStyle('.sample-hero').gridTemplateColumns.split(' ').length===1);
     });
+    test('Tutorial grid adapts spans and keeps every region in bounds at '+width+'px', () => {
+      const doc=gridDoc(), demo=doc.querySelector('.sample-grid-demo'), bounds=demo.getBoundingClientRect(), figure=doc.querySelector('.sample-grid-figure').getBoundingClientRect(), notes=doc.querySelector('.sample-lab-notes').getBoundingClientRect();
+      const columns=gridStyle('.sample-grid-demo').gridTemplateColumns.split(' ').length;
+      const gap=parseFloat(gridStyle('.sample-grid-demo').columnGap), main=doc.querySelector('.sample-demo-main').getBoundingClientRect(), aside=doc.querySelector('.sample-demo-aside').getBoundingClientRect(), cards=[...doc.querySelectorAll('.sample-demo-card')];
+      const spans=width<=768?[...demo.children].every(region=>Math.abs(region.getBoundingClientRect().width-bounds.width)<1):Math.abs(main.width-aside.width*2-gap)<1 && Math.abs(cards.reduce((total,card)=>total+card.getBoundingClientRect().width,0)+gap*2-bounds.width)<1;
+      return columns===(width<=768?1:12) && spans && (width<=1024?notes.top>figure.bottom:notes.left>figure.right) && [...demo.children].every(region=>{const box=region.getBoundingClientRect();return box.left>=bounds.left-1 && box.right<=bounds.right+1 && region.scrollWidth<=region.clientWidth+1;});
+    });
   }
   gridPage.style.width='768px'; input('advColumns',320); input('advGap',32); await loadGridPage();
   test('Card minimum width and gutter controls still change responsive column counts', () => gridStyle('.card-grid').gridTemplateColumns.split(' ').length===2 && gridStyle('.card-grid').columnGap==='32px');
+  test('Tutorial grid uses the configured grid gap', () => gridStyle('.sample-grid-demo').gap==='32px');
   gridPage.style.width='320px'; await wait();
   test('Large custom gutters and card minimums collapse without mobile overflow', () => gridStyle('.card-grid').gridTemplateColumns.split(' ').length===1 && gridDoc().documentElement.scrollWidth<=320);
   evaluate('importConfig({spacing:3,advanced:{gap:12,height:42},buttonDesign:{padX:18,padY:12,minHeight:44}})');
@@ -874,6 +917,11 @@ app.onload = async () => {
   gridPage.remove();
   reset(); await wait();
   const actionDocument=previewDoc(), actionProject=evaluate('projectJson()');
+  for (const link of [...previewDoc().querySelectorAll('.sample-lesson-card a')]) {
+    const target=previewDoc().getElementById(link.getAttribute('href').slice(1));
+    link.click(); await wait(20);
+    test('Field-guide lesson link to '+link.getAttribute('href')+' browses its live example', () => previewDoc()===actionDocument && previewDoc().activeElement===target && Math.abs(target.getBoundingClientRect().top-24)<2 && evaluate('projectJson()')===actionProject);
+  }
   for (const link of [...previewDoc().querySelectorAll('.sample-section-actions a')]) {
     const target=previewDoc().getElementById(link.getAttribute('href').slice(1));
     link.click(); await wait(20);
@@ -912,6 +960,11 @@ app.onload = async () => {
   test('Imported theme reaches both selectors and the generated preview', () => d.getElementById('dockTheme').value==='light' && d.getElementById('previewTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light' && previewDoc().title.includes('Imported theme'));
   input('jProject','Live preview'); input('jPrimary','#294f77'); input('bdSize','lg'); await wait();
   test('Preview imagery and component classes follow live project changes', () => previewDoc().querySelector('.sample-brand').textContent.includes('Live preview') && decodeURIComponent(previewDoc().querySelector('img').src).includes(evaluate('palette().roles.primary')) && !!previewDoc().querySelector('.ds-button--lg') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
+  test('Tutorial palette readouts and swatches follow live semantic roles', () => {
+    const expected=evaluate('[palette().roles.primary,palette().roles.secondary,palette().roles.accent]');
+    return [...previewDoc().querySelectorAll('.sample-token-palette li')].every((item,i)=>item.querySelector('code').textContent===expected[i] && previewWindow().getComputedStyle(item.querySelector('.sample-palette-dot')).backgroundColor===evaluate(`'rgb('+hexRgb('${expected[i]}').join(', ')+')'`));
+  });
+  test('Tutorial typography readouts follow live wizard settings', () => JSON.stringify([...previewDoc().querySelectorAll('.sample-type-settings dd')].map(item=>item.textContent))===JSON.stringify(evaluate('[state.base+"px",String(state.ratio),String(state.leading)]')));
   const browsingDoc=previewDoc(), studioHash=w.location.hash;
   previewDoc().querySelector('header a[href="#resources"]').click(); await wait();
   test('Sample navigation scrolls within the generated page without opening the studio inside it', () => previewDoc()===browsingDoc && previewWindow().scrollY>0 && Math.abs(previewDoc().getElementById('resources').getBoundingClientRect().top-24)<2 && previewWindow().location.href.startsWith('about:srcdoc') && w.location.hash===studioHash);
@@ -1042,7 +1095,7 @@ app.onload = async () => {
     // Resolve live styles without transition timing affecting the sampled colour.
     const motion=previewDoc().createElement('style'); motion.textContent='.ds-button { transition: none !important; }'; previewDoc().head.append(motion);
     const secondaryActions=()=>[...previewDoc().querySelectorAll('.sample-section-actions > :last-child')];
-    test(theme+' secondary custom base colour updates every page action pair', () => secondaryActions().length===6 && secondaryActions().every(action=>action.matches('a.ds-button--secondary') && previewWindow().getComputedStyle(action).backgroundColor==='rgb(181, 34, 102)'));
+    test(theme+' secondary custom base colour updates every page action pair', () => secondaryActions().length===8 && secondaryActions().every(action=>action.matches('a.ds-button--secondary') && previewWindow().getComputedStyle(action).backgroundColor==='rgb(181, 34, 102)'));
     test(theme+' secondary edits keep primary actions and the outline example independent', () => previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(0, 71, 128)' && !!previewDoc().querySelector('#components .ds-button--outline'));
     input('bdCustom','#196b63'); await wait();
     test(theme+' repeated custom colour edits reach the live page without a palette change', () => secondaryActions().every(action=>previewWindow().getComputedStyle(action).backgroundColor==='rgb(25, 107, 99)') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
@@ -1202,11 +1255,15 @@ app.onload = async () => {
   d.documentElement.style.scrollBehavior='auto';
   d.documentElement.style.overflowAnchor='none';
   w.scrollTo({top:w.scrollY,behavior:'instant'});
-  for (const width of [320,390,1440]) {
+  for (const width of [320,390,768,1280,1440,2560]) {
     app.style.width=width+'px'; await wait();
     const section=d.getElementById('studio-section-1'); section.open=true;
     await wait();
     section.scrollIntoView({block:'start',behavior:'instant'}); await wait();
+    test('Section menu stays visible beneath the sticky header at '+width+'px', () => {
+      const nav=d.querySelector('.studio-section-nav'), box=nav.getBoundingClientRect(), header=d.querySelector('.topbar').getBoundingClientRect();
+      return w.getComputedStyle(nav).position==='sticky' && box.top>=header.bottom-1 && box.top<=header.bottom+2 && box.bottom<w.innerHeight && nav.querySelectorAll('a').length===11 && [...nav.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44) && d.documentElement.scrollWidth<=w.innerWidth+1;
+    });
     test('Section navigation keeps headings below the sticky header at '+width+'px', () => {
       const header=d.querySelector('.topbar').getBoundingClientRect();
       const nav=d.querySelector('.studio-section-nav'), sticky=w.getComputedStyle(nav).position==='sticky';
@@ -1215,9 +1272,21 @@ app.onload = async () => {
       if (top>=bottom+7 && section.querySelector('summary').getBoundingClientRect().bottom<=w.innerHeight) return true;
       throw Error(JSON.stringify({width,top,bottom,header:header.bottom,nav:nav.getBoundingClientRect().bottom,offset:w.getComputedStyle(d.documentElement).getPropertyValue('--studio-section-scroll-offset')}));
     });
+    test('Keyboard focus can reveal the last section-menu link at '+width+'px', () => {
+      const nav=d.querySelector('.studio-section-nav'), last=nav.querySelector('a:last-child');
+      last.focus(); const box=last.getBoundingClientRect(), bounds=nav.getBoundingClientRect();
+      const passes=d.activeElement===last && box.left>=bounds.left && box.right<=bounds.right && d.documentElement.scrollWidth<=w.innerWidth+1;
+      last.blur(); nav.scrollLeft=0; return passes;
+    });
   }
   d.documentElement.style.removeProperty('scroll-behavior');
   d.documentElement.style.removeProperty('overflow-anchor');
+  evaluate('importConfig({ratio:1.25})'); await wait();
+  test('Previously saved Major Third projects retain their explicit scale', () => evaluate('state.ratio===1.25') && d.getElementById('jScalePreset').value==='major-third');
+  evaluate('importConfig({})'); await wait();
+  test('Projects without a ratio inherit the Minor Third default', () => evaluate('state.ratio===1.2') && d.getElementById('clampScalePreset').value==='minor-third');
+  input('jRatio',1.4); d.getElementById('jNewLocal').click(); await wait();
+  test('New project starts with Minor Third after a custom scale', () => evaluate('state.ratio===1.2') && d.getElementById('jScalePreset').value==='minor-third');
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
 };

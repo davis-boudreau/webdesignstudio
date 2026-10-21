@@ -12,13 +12,18 @@ The inspector stacks at 1280 px and below; all panes stack at 900 px and below.
 On a normal load, only **1. Responsive page preview** is expanded in the centre
 pane, in Fluid mode. All other centre sections start collapsed. The preview stays
 synchronized with wizard edits even when you collapse it.
+The **1–11 section menu** sits above the responsive preview and stays pinned below
+the app header while you browse the centre lessons, including on phones. Scroll
+the menu horizontally when needed; keyboard focus reveals offscreen links.
 
 The **Live CSS/HTML Inspector** switches between generated styles and a complete
-sample home page. Both update with your selections. Copy or download the selected
-tab; save `index.html` and `tokens.css` together to view the page. Its illustrations
+Web Design Field Guide home page. Both update with your selections. Copy or
+download the selected tab; save `index.html` and `tokens.css` together to view the page. Its illustrations
 are embedded and follow your palette. The static sample includes navigation,
-hero/about imagery, service cards, a resource table, FAQs, a sample contact form,
-button variants, feedback and progress controls. The form has no message delivery.
+browser/grid illustrations, six lesson cards, a responsive layout workshop with
+an inspectable CSS recipe, live type/palette examples, resource checklists, FAQs
+and a practice question form. The interface lab includes button variants,
+feedback and progress controls. The form has no message delivery.
 Project brand colour tokens use the `--brand-*` prefix.
 
 The **left pane configures** the system through eight wizard steps: Project,
@@ -35,6 +40,8 @@ theme; button colours also select their variant. Derived ramps, type sizes,
 spacing multiples and aliases are labelled and configured through their source
 decisions. They stay consistent rather than becoming independent overrides.
 Heading line-height is now configurable and saved with the project.
+New projects and Reset use **Minor Third · 1.2** as the named type scale.
+Saved/imported projects retain their explicitly chosen ratio.
 
 See [the teaching and token-configuration review](docs/TOKEN_CONFIGURATION_2026-10-20.md)
 for the complete coverage map and the reasoning behind this organization.
@@ -95,10 +102,17 @@ Step 5 explains the state best practices. Toggle examples keep their label betwe
 off/on and use `aria-pressed`; application code must implement the toggle action.
 Loading workflows also need duplicate-action protection and status announcements.
 The generated home page remains a static demonstration.
+Header navigation and resource-table links share the same states: plain at rest,
+underlined on hover, a stronger underline while pressed, and a visible keyboard
+focus ring. These rules are shared by the responsive preview and exported CSS.
 
 The generated page uses a responsive 12-column grid: six-column halves for hero
 and split sections, four-column cards on wide screens, then two or one card per
 row as space allows. Card breakpoints use the selected minimum width and gap.
+The tutorial workshop demonstrates an 8/4 main/aside split and three equal cards,
+then switches to a single-column flow on phones. Its outer example/notes layout
+stacks on tablets. Lesson links navigate to real examples on the same page;
+type and colour readouts reflect the current wizard selections in each theme.
 Default spacing follows an 8 px rhythm with 4 px fine spacing, 24 px gutters and
 card padding, and 48 px minimum controls. The existing 4 px foundation unit drives
 spacing tokens; saved custom spacing and component dimensions remain editable.

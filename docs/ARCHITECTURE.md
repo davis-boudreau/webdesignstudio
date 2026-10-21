@@ -151,9 +151,21 @@ heading leading and tracking, and can wrap beside the mobile menu.
 The generated container includes its gutters in a 72rem maximum border-box width.
 Gutters are 16 px on narrow screens and 32 px from 64rem at defaults. Hero/split
 rows use 12 tracks with children spanning six; card rows span four per card.
+The generated sample is a Web Design Field Guide: six lesson cards, a layout
+workshop, typography/semantic-palette exercises, resource checklists, practice
+question form and the component/state gallery. Existing section/form IDs remain
+stable, including `services` for the Lessons destination. Browser/wireframe SVGs
+replace the generic landscape illustrations and remain embedded/palette-aware.
+
 The named `sample-content` inline-size container lets card rows switch to two/one
 columns using thresholds calculated from `adv.columns` and `adv.gap`. Split rows
 stack at 48rem. Responsive layouts therefore retain the existing card controls.
+The new `grid-lab` workshop demonstrates twelve tracks with 8/4 and 4/4/4 spans;
+the demo uses `--grid-gap` and becomes one column at 48rem. The outer 8/4
+example/notes layout stacks at 64rem. A native disclosure exposes the matching
+CSS recipe. `type-lab` renders base/ratio/leading readouts and a nested
+`colour-lab` renders resolved semantic role values and swatches, so changing
+wizard settings updates both explanation and rendered styles through exports.
 
 The default 4 px foundation unit provides 8 px spacing steps plus 4 px fine
 adjustments. Section padding changes in discrete token steps; typography remains
@@ -169,7 +181,7 @@ adds only selected-state simulations. Both code panels retain their text nodes
 when the generated string is unchanged, preserving selections during such updates.
 
 Save `index.html` beside `tokens.css`. The HTML stays static: native navigation,
-disclosures and form controls work without JavaScript, and the sample enquiry form
+disclosures and form controls work without JavaScript, and the practice question form
 has no delivery backend. Fixed reference palette values now export as `--brand-*`;
 the catalogue and CSV use the same names. Existing consumers of `--example-*` must
 update their references when adopting the new CSS export.
@@ -300,13 +312,17 @@ using a 16px root, while exports retain relative fluid sizes and em spacing.
 
 The centre pane uses native `details` wrappers with the original section IDs.
 `dssRevealSection()` opens destinations for shortcuts; fragment navigation opens
-closed ancestors. The responsive preview remains the first centre-pane element,
+closed ancestors. The sticky section menu and expand/collapse controls precede
+the responsive preview, which remains the first centre learning section,
 configured in Fluid mode and initially expanded. All other centre sections and
 wizard disclosures start collapsed. Section IDs stay stable
 while displayed numbers follow the new order. A direct fragment link opens its
 destination. Opening/resizing the responsive section refreshes its width readout.
 Section scroll margins follow measured header/navigation heights rather than a
 fixed desktop offset, preserving heading visibility when the mobile header wraps.
+The same measured header height positions the section menu below the topbar on
+all breakpoints. The menu keeps horizontal overflow local and exposes links with
+at least 44 px height; native keyboard focus scrolls offscreen items into view.
 
 ## Future extension points
 

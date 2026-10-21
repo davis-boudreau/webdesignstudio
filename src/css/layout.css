@@ -180,7 +180,7 @@
 
 .studio-section-nav {
   position: sticky;
-  top: 58px;
+  top: var(--studio-header-height, 68px);
   z-index: 4;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -193,6 +193,10 @@
 }
 
 .studio-section-nav a {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 44px;
   font-size: .77rem;
   text-decoration: none;
   white-space: nowrap;
@@ -232,9 +236,6 @@
     grid-row: 1
   }
 
-  .studio-section-nav {
-    top: 0
-  }
 }
 
 @media(max-width:900px) {
@@ -260,7 +261,4 @@
     flex-wrap: wrap
   }
 
-  .studio-section-nav {
-    position: static
-  }
 }

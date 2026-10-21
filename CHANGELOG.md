@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Changed
+- Reimagined the generated home page as a Web Design Field Guide: six navigable lesson cards, responsive CSS Grid workshop/recipe, live typography and palette exercises, tutorial resources and practice form, with palette-aware browser/grid illustrations. Preserved themes, wizard-driven components and existing navigation/form IDs.
+- Moved the 1–11 section navigation and visibility controls above the responsive preview. The menu stays sticky beneath the measured app header at every breakpoint, with horizontally scrollable links and larger targets.
+- Added a full-width divider and extra spacing below the wizard step buttons to separate navigation from the selected step's configuration content.
+- Applied the established header-link states to all three resource-table links: plain at rest, underlined on hover, stronger underline while pressed, and the shared keyboard focus ring in generated CSS and the responsive preview.
+- Changed the default named type scale to Minor Third (1.2) for startup, new projects and reset; preserved explicit saved/imported ratios and updated the default scale examples.
 - Corrected teaching examples found in the follow-up audit: the spacing chart now uses the exported spacing scale, typography ladder line-height follows heading/body settings, and heading specimens/ladder follow the selected weight.
 - Made section navigation scroll offsets follow the actual sticky header height so wrapped phone headers do not cover lesson headings.
 - Set startup to expand only 1. Responsive page preview in Fluid mode; other centre sections start collapsed. Preview updates continue while it is closed. Refreshed startup and preview lifecycle checks.
