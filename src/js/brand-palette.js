@@ -160,7 +160,7 @@
         if (button) assign(targetRole, button.dataset.brandHex, 'brandFeedback');
       });
       get('brandEditPalette').addEventListener('click', () => {
-        document.querySelector('[data-journey-step="1"]').click();
+        document.querySelector('[data-journey-step="4"]').click();
         editor.closest('details').open = true;
         const input = editor.querySelector('input'); input.focus(); input.scrollIntoView({ block: 'center', behavior: 'instant' });
       });

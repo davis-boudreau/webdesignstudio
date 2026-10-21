@@ -27,11 +27,13 @@ function renderBrand() {
 const DEFAULT = {
   project: 'My Project',
   theme: 'light',
+  sampleMode: 'advanced',
   method: 'mix',
   primary: '#004780',
   secondary: '#495965',
   accent: '#cbdb2a',
   brandPalette: DSStudio.brandPalette.defaults(),
+  designProcess: DSStudio.process.defaults(),
   font: 'Arial, Helvetica, sans-serif',
   fontSettings: DSStudio.fonts.defaults(),
   base: 16,
@@ -474,10 +476,12 @@ function importConfig(obj) {
   for (const k of ['primary', 'secondary', 'accent'])
     if (validHex(obj[k])) n[k] = obj[k].toLowerCase();
   if (['light', 'dark'].includes(obj.theme)) n.theme = obj.theme;
+  if (['basic', 'advanced'].includes(obj.sampleMode)) n.sampleMode = obj.sampleMode;
   if (['mix', 'oklch'].includes(obj.method)) n.method = obj.method;
   if (['Arial, Helvetica, sans-serif', "Georgia, 'Times New Roman', serif", 'Verdana, Geneva, sans-serif', 'system-ui, sans-serif'].includes(obj.font)) n.font = obj.font;
   n.fontSettings = DSStudio.fonts.normalize(obj.fontSettings);
   n.brandPalette = DSStudio.brandPalette.normalize(obj.brandPalette);
+  n.designProcess = DSStudio.process.normalize(obj.designProcess);
   for (const [k, min, max] of [
       ['base', 14, 22],
       ['ratio', 1.05, 1.5],

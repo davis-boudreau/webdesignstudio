@@ -5,12 +5,12 @@
 `studio-learning.js` registers last and reorganizes existing control nodes after
 the other modules initialize. It preserves their IDs, event handlers and state
 paths while placing font, responsive, layout and accessibility settings inside
-the eight-step wizard. Hidden compatibility nodes retain legacy module bindings.
-The main pane adds eleven lessons with token relationships, exercises and
+the eleven-step wizard. Hidden compatibility nodes retain legacy module bindings.
+The main pane adds fifteen lessons with token relationships, exercises and
 configuration shortcuts. Interactive comparison and experiment controls remain.
 
 The journey exposes `dssShowWizardStep()` for catalogue/lesson navigation and
-derives its progress from eight explicit step labels. Navigation alone does not
+derives its progress from eleven explicit step labels. Navigation alone does not
 mark previous steps complete. Each wizard step links to a related centre lesson;
 startup expands only Responsive page preview.
 
@@ -40,7 +40,7 @@ the existing default. No arbitrary imported CSS overrides were introduced.
 | Markup | `index.html` | Sections, landmarks, asset manifest |
 | Tokens & base | `src/css/base-tokens.css`, `layout.css` | `:root` custom properties, themes, page layout |
 | Core | `src/js/studio-registry.js`, `core-state.js` | Registry/events, state, CSS and HTML export |
-| Features | `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `sample-homepage`, `responsive-preview`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
+| Features | `design-process`, `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `sample-homepage`, `basic-homepage`, `responsive-preview`, `website-export`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
 
 Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`.
 
@@ -67,6 +67,40 @@ Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start
 
 Feature scripts still share globals (notably `cssExport` is wrapped by advanced and button modules). Migrating each to `DSStudio.register` and replacing wrappers with `exportCss()` contributions remains a roadmap item. Converting to native ES modules (`<script type="module">`) is the natural next step once globals are gone; a bundler such as Vite can be added then without changing the module shape.
 
+## Project planning workflow
+
+`design-process.js` loads after the registry/font helpers and before core state.
+Its `DSStudio.process` API provides fresh defaults, normalization, a bounded
+sitemap parser, shared artifact HTML and artifact CSS. `state.designProcess` holds
+plain text audience/goal/scope/success/constraints, a multiline two-level page map,
+`split`/`stack` wireframe arrangement, wireframe notes, prototype task and notes.
+Imports bound text lengths and accept only the two arrangements; missing or invalid
+planning objects receive starter data. Empty draft strings remain empty. No plan
+text becomes executable markup, a URL, a CSS declaration or a token.
+
+The eleven wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,
+Typography, Components, Buttons, Layout, Accessibility and Deliver. Existing control
+and centre IDs remain stable; numeric wizard indices and token-source routes move
+by three after the old first stage. Four new native centre disclosures follow the
+preview hub, bringing the centre navigation to fifteen lessons. Startup still
+expands only the responsive preview; navigation does not imply task completion.
+
+The module's initializer binds planning inputs through the existing `apply()` /
+`renderCode()` / autosave paths. It wraps the CSS generator for shared artifact
+styles and the renderer for synchronized controls/lessons. Markup caches preserve
+unchanged artifact nodes and focus through unrelated palette changes. Editing
+replaces the planning object rather than mutating defaults. Existing JSON, local
+project save/load/import/reset and New flows include this optional data; the JSON
+schema version stays 2 because earlier loaders can ignore the new field.
+
+The static sample adds a planning section, Process navigation and four lesson
+cards before the design-system lessons. Studio and sample call the same artifact
+helpers with distinct ID prefixes. Wireframes inherit brief/map content; prototype
+screens link Discover, Choose and Review with native fragments, with no application
+backend or script requirement. The sandboxed live preview uses its existing
+fragment handler. Planning data describes a project; it does not rewrite the
+field guide's main navigation or generate a finished custom website.
+
 ## Live CSS/HTML Inspector and sample page
 
 `brand-palette.js` loads after the registry and before core state. Its defaults
@@ -76,7 +110,7 @@ stores `brandPalette` entries `{id, name, hex, group}`: unique safe token IDs,
 Normalization accepts 1–24 valid entries and supplies starter references for
 missing/empty/invalid older data. New projects keep the existing `--brand-*` IDs.
 
-The registered module adds step-2 editing and full-brand dropdowns for all three
+The registered module adds step-5 editing and full-brand dropdowns for all three
 Main Palette roles. Selections copy HEX values through the existing core inputs;
 they are independent assignments rather than persistent bindings to reference IDs.
 Picker/advanced/OKLCH changes synchronize the matching option or Custom choice.
@@ -119,7 +153,7 @@ page. The page reads current shared state, advanced settings and serialized butt
 settings, including theme, size, full-width and selected state. Embedded SVG images
 use resolved palette colours; no remote images or extra asset downloads are needed.
 
-Every main section has a `sample-section-actions` pair. Shared generation keeps
+Every main section, including the planning workshop, has a `sample-section-actions` pair. Shared generation keeps
 the primary/secondary classes, selected size and mobile full-width behavior aligned;
 destinations and labels follow each section's context. Hero/about pairs sit in
 their text columns; services/resources/components pairs follow the section content
@@ -151,7 +185,7 @@ heading leading and tracking, and can wrap beside the mobile menu.
 The generated container includes its gutters in a 72rem maximum border-box width.
 Gutters are 16 px on narrow screens and 32 px from 64rem at defaults. Hero/split
 rows use 12 tracks with children spanning six; card rows span four per card.
-The generated sample is a Web Design Field Guide: six lesson cards, a layout
+The generated sample is a Web Design Field Guide: ten lesson cards, a layout
 workshop, typography/semantic-palette exercises, resource checklists, practice
 question form and the component/state gallery. Existing section/form IDs remain
 stable, including `services` for the Lessons destination. Browser/wireframe SVGs
@@ -166,6 +200,18 @@ example/notes layout stacks at 64rem. A native disclosure exposes the matching
 CSS recipe. `type-lab` renders base/ratio/leading readouts and a nested
 `colour-lab` renders resolved semantic role values and swatches, so changing
 wizard settings updates both explanation and rendered styles through exports.
+
+The same layout workshop includes `flex-lab`: wrapping topic rows, a fixed marker
+beside growing/shrinking text, and a normal-flow/Grid/Flexbox comparison. The
+`flexRecipe` constant supplies both the inspectable recipe and exported CSS.
+Lesson cards use its column layout with an auto top margin on the final action,
+inside the existing Grid. Flex rows consume the saved grid gap and spacing tokens;
+no additional settings, scripts or network calls are needed by the exported page.
+
+`oklch-lab.js` keeps uncommitted exploration separate from foundation state. Load
+reloads the current selected role; Reset selected role to default commits that
+role's `DEFAULT` anchor through the same helper as Apply, then reloads the wheel.
+The other anchors and project brand references are preserved.
 
 The default 4 px foundation unit provides 8 px spacing steps plus 4 px fine
 adjustments. Section padding changes in discrete token steps; typography remains
@@ -199,6 +245,65 @@ states, focus and scroll position. Parent-owned event handlers keep fragment
 navigation within the generated page, reveal linked FAQs and prevent sample form
 submission from navigating or sending data. The document's own viewport controls
 its media queries and vw typography at 390/768/1280 px or the actual Fluid width.
+
+## Basic and Advanced sample modes
+
+`state.sampleMode` is a validated `advanced` / `basic` enum, defaulting to Advanced
+for existing projects, startup, New and Reset. It participates in the existing
+project JSON and local save/load flows. Invalid imported modes fall back to
+Advanced. No separate palette or project state is introduced for Basic.
+
+`basic-homepage.js` registers after the Advanced sample generator and before the
+responsive-preview module. Its initializer captures the full Advanced HTML/CSS
+functions and wraps the existing public generators to select the current mode.
+Advanced output is unchanged. Basic produces a small semantic HTML page and a
+complete dedicated stylesheet with a subset of shared foundation/semantic tokens,
+rather than including the Advanced gallery, workshops or unused component CSS.
+The token catalogue continues to read the selected CSS generator.
+
+Basic renders header/logo/wrapping nav, hero, three Grid cards, a native-validation
+sign-up form and footer with a real Back to top fragment. It uses the current
+project name, theme, curated/system font settings, scale/leading/tracking, heading
+weight, radius, semantic palette, grid gap/card minimum and focus width. Other
+advanced component simulations do not turn Basic navigation/forms into state demos.
+Imported project text is escaped. The static form has no sign-up backend; the
+preview intercepts its submission and announces that no account was created.
+
+Mode controls are an ARIA tab group with Arrow/Home/End navigation, roving tab
+stops and a labelled shared panel containing the independent CSS/HTML tabs.
+`basic-homepage.css` styles only this studio wrapper. All code/copy/download
+surfaces continue to call the same generators, including the explicit website
+file actions. Inspector copy feedback verifies both mode and language after an
+asynchronous clipboard result, avoiding feedback for a subsequently selected mode.
+
+The responsive renderer preserves forms/disclosures/focus/scroll through same-mode
+updates and starts a fresh browsing session when mode changes, so unrelated form
+values do not cross between samples. Both modes remain static, script-free exports
+and share the existing optional font-link and preview-only fallback behaviour.
+
+## Standalone website download actions
+
+`website-export.js` initializes after the sample/preview modules. Its explicit
+HTML/CSS actions sit above the responsive viewport and in Deliver. Both read the
+current `htmlExport()` / `cssExport()` at click time, so there is no parallel sample
+or cached export snapshot. Files are always named `index.html` and `tokens.css`,
+matching the existing relative stylesheet link. Deliver's CSS action previously
+used `design-system-tokens.css`; it now uses the shared handler and matching name.
+JSON export filenames and project data are unchanged.
+
+The preview card's View HTML/CSS actions select the existing centre inspector's
+language tab, reveal it and focus its code panel. Downloads remain two separate
+user actions. Shared visible feedback says a download was requested and explains
+how to save the pair; the application does not claim browser/OS saving succeeded.
+`website-export.css` styles only studio controls and is not needed by the sample.
+The static page retains its native menu/disclosures, embedded illustrations and
+form demonstration. Google font links remain conditional on the saved font source.
+
+The browser suite captures each file action and verifies exact contents and MIME
+types, source shortcuts and unchanged settings. It also loads the captured HTML
+with a separate Blob stylesheet (rather than inline CSS), then checks component
+presence, reflow and native menu/FAQ behaviour in both themes. Actual download
+permission/save-dialog behaviour remains a manual browser check.
 
 ## Contrast inventory
 
@@ -243,7 +348,7 @@ Semantic overrides live in `state.semanticOverrides.light/dark`, accept only
 known HEX-valued roles on import, and flow through preview and export via
 `resolvedSemanticRoles()`. `--control-border` follows `--border` until explicitly
 overridden, allowing input boundaries to differ from decorative separators.
-The step-4 guided semantic editor uses the active preview theme and the same
+The step-7 guided semantic editor uses the active preview theme and the same
 role list, colour-repair dialog and reset operation as the centre editor.
 `dssSyncSemanticEditor()` refreshes both entry points after contrast updates,
 imports and resets; it preserves each role selection. Guided edits show a
@@ -251,7 +356,7 @@ swatch, HEX value, purpose and generated/custom status without duplicating state
 Button previews accept copied settings and foundation values; the commit API
 updates the selected variant's actual settings and existing controls.
 
-The registered `button-contrast` module adds the step-5 review for all five button
+The registered `button-contrast` module adds the step-8 review for all five button
 variants and seven states, with both theme results. It consumes the inventory's
 `contrast:updated` event and read-only snapshot instead of duplicating contrast
 calculations. Each state/theme result aggregates required text and indicator

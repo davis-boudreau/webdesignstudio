@@ -32,7 +32,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   }
 
   function showStep(n) {
-    const labels = ['Start', 'Palette', 'Typography', 'Components', 'Buttons', 'Layout', 'Accessibility', 'Deliver'];
+    const labels = ['Brief', 'Architecture', 'Wireframe', 'Prototype', 'Palette', 'Typography', 'Components', 'Buttons', 'Layout', 'Accessibility', 'Deliver'];
     step = Math.max(0, Math.min(labels.length - 1, n));
     document.querySelectorAll('[data-journey-pane]').forEach(p => p.hidden = Number(p.dataset.journeyPane) !== step);
     document.querySelectorAll('[data-journey-step]').forEach(b => {
@@ -194,12 +194,12 @@ Browser storage may be unavailable in private or restricted contexts. */
   });
   document.querySelectorAll('.readiness-item').forEach(box => box.addEventListener('change', () => {
     const count = document.querySelectorAll('.readiness-item:checked').length;
-    el('readinessStatus').textContent = `${count} of 6 checks completed. These are self-reported, not automated accessibility tests.`;
+    const total = document.querySelectorAll('.readiness-item').length;
+    el('readinessStatus').textContent = `${count} of ${total} checks completed. These are self-reported, not automated accessibility tests.`;
   }));
   el('jBack').addEventListener('click', () => showStep(step - 1));
   el('jNext').addEventListener('click', () => showStep(step + 1));
   document.querySelectorAll('[data-journey-step]').forEach(b => b.addEventListener('click', () => showStep(Number(b.dataset.journeyStep))));
-  el('jExportCss').addEventListener('click', () => download('design-system-tokens.css', cssExport(), 'text/css'));
   el('jExportJson').addEventListener('click', () => download('design-system-project.json', JSON.stringify(serialize(), null, 2), 'application/json'));
   el('jViewCss').addEventListener('click', () => {
     window.dssRevealSection('studio-section-6');

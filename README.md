@@ -12,27 +12,71 @@ The inspector stacks at 1280 px and below; all panes stack at 900 px and below.
 On a normal load, only **1. Responsive page preview** is expanded in the centre
 pane, in Fluid mode. All other centre sections start collapsed. The preview stays
 synchronized with wizard edits even when you collapse it.
-The **1–11 section menu** sits above the responsive preview and stays pinned below
+The **1–15 section menu** sits above the responsive preview and stays pinned below
 the app header while you browse the centre lessons, including on phones. Scroll
 the menu horizontally when needed; keyboard focus reveals offscreen links.
+
+The **Live CSS/HTML Inspector** has **Advanced / Basic** sample tabs above its
+independent **CSS / HTML** language tabs. Advanced keeps the full field guide.
+Basic provides a minimal responsive homepage: logo and wrapping navigation, hero,
+three CSS Grid cards, a labelled static sign-up form and a footer with Back to top.
+Its shorter, commented CSS teaches Flexbox, Grid, spacing, typography and focus.
+
+The selected sample drives the live preview, code panels, copy actions and all
+HTML/CSS downloads. Save the matching `index.html` and `tokens.css` together.
+The mode travels with project JSON and local saves; older projects and Reset use
+Advanced. The Basic form demonstrates browser validation and has no sign-up
+service. Basic uses foundation colours, fonts, radius, grid gap/card minimum and
+focus settings; advanced button-state simulations and planning workshops belong
+to the Advanced sample. Changing modes starts a fresh preview browsing session.
 
 The **Live CSS/HTML Inspector** switches between generated styles and a complete
 Web Design Field Guide home page. Both update with your selections. Copy or
 download the selected tab; save `index.html` and `tokens.css` together to view the page. Its illustrations
 are embedded and follow your palette. The static sample includes navigation,
-browser/grid illustrations, six lesson cards, a responsive layout workshop with
-an inspectable CSS recipe, live type/palette examples, resource checklists, FAQs
+browser/grid illustrations, ten lesson cards, saved project-planning artifacts,
+a responsive Grid/Flexbox workshop with an inspectable CSS recipe, live type/palette examples, resource checklists, FAQs
 and a practice question form. The interface lab includes button variants,
 feedback and progress controls. The form has no message delivery.
 Project brand colour tokens use the `--brand-*` prefix.
 
-The **left pane configures** the system through eight wizard steps: Project,
-Palette, Typography, Components, Buttons, Layout, Accessibility and Deliver.
+To download the responsive static website, use **Download this responsive website**
+above the preview, or the **Deliver** wizard step:
+
+1. Select **Download HTML (index.html)**.
+2. Select **Download CSS (tokens.css)**.
+3. Save both files in one folder and open `index.html` in a browser.
+
+The CSS file includes tokens, components and responsive page rules. **View HTML
+code** and **View CSS code** open the matching live source under Inspect and export.
+Downloads use the same generators as the preview and reflect current settings.
+The static menu and FAQ disclosures need no JavaScript. Images are embedded;
+system fonts work offline. Optional Google Fonts still require their CDN. Forms
+are demonstrations with no message delivery.
+
+
+The **left pane configures** the system through eleven wizard steps: Project Brief,
+Information Architecture, Wireframing, Prototyping, Palette, Typography, Components,
+Buttons, Layout, Accessibility and Deliver.
 Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
 component examples, token relationships and practice exercises; each section
 links to its wizard settings, and each step links back to a centre lesson.
 Interactive labs remain available for experiments and contrast review.
+
+The four planning lessons come before palette design. Record audience, main task,
+scope, success signal and constraints. Write a content map with up to twelve
+entries (`Lessons > Layout` creates a child), compare split/stacked wireframes,
+and follow a linked Discover, Choose and Review prototype. Save observations and
+revise before styling. The prototype is a low-detail navigation exercise with no
+submission backend. The brief and architecture feed the wireframe and prototype;
+they are project notes, not generated CSS tokens.
+
+Planning fields travel in local saves, project JSON and the HTML sample. Older
+projects receive editable starter planning data. The sample remains a teaching
+field guide rather than automatically becoming your finished website. Exported
+planning artifacts and prototype links work locally without JavaScript.
+
 
 Every row in the **Design token catalogue** includes **Configure source**, which
 opens and focuses the relevant wizard control. Theme roles select the matching
@@ -63,7 +107,7 @@ The centre-pane **2. Brand Colour Palette** shows current Main Palette assignmen
 Choose **the UI role to change**, then click any swatch card to set Primary UI,
 Supporting or Accent colour. Each card names its action and lists the roles using
 that colour; a status message confirms the result. The preview, guided dropdowns,
-CSS and active local save update together. **Edit Brand Palette** opens the step-2
+CSS and active local save update together. **Edit Brand Palette** opens the step-5
 editor and keeps project settings intact.
 
 In wizard step **4**, **Semantic colour roles** shows all theme roles with readable
@@ -98,7 +142,7 @@ include nearby explanations. The default warm focus colour is checked against
 both themes; saved custom focus colours remain editable.
 
 The studio specimens, State Explorer and exported buttons share these cues.
-Step 5 explains the state best practices. Toggle examples keep their label between
+Step 8 explains the state best practices. Toggle examples keep their label between
 off/on and use `aria-pressed`; application code must implement the toggle action.
 Loading workflows also need duplicate-action protection and status announcements.
 The generated home page remains a static demonstration.

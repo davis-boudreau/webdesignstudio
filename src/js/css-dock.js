@@ -15,7 +15,8 @@
     live.setAttribute('aria-labelledby', language === 'css' ? tabs[0] : tabs[1]);
     $('dockDownload').textContent = 'Download ' + (language === 'css' ? 'tokens.css' : 'index.html');
     $('dockCopy').textContent = 'Copy ' + language.toUpperCase();
-    $('dockNote').textContent = language === 'css' ?
+    $('dockNote').textContent = state.sampleMode === 'basic' ?
+      `Basic ${language.toUpperCase()}: the minimal responsive homepage shown in the preview. Save index.html beside tokens.css.` : language === 'css' ?
       'Brand → semantic → component rules for light and dark themes. Save tokens.css beside index.html.' :
       `The ${state.theme} home page, also shown in the responsive preview. Save index.html beside tokens.css; images are embedded.`;
     tabs.forEach((id, index) => {
@@ -54,12 +55,12 @@
     });
   });
   $('dockCopy').addEventListener('click', async () => {
-    const selectedLanguage = language;
+    const selectedLanguage = language, selectedMode = state.sampleMode;
     try {
       await navigator.clipboard.writeText(content());
-      if (language === selectedLanguage) $('dockCopy').textContent = 'Copied!';
+      if (language === selectedLanguage && state.sampleMode === selectedMode) $('dockCopy').textContent = 'Copied!';
     } catch {
-      if (language === selectedLanguage) $('dockCopy').textContent = 'Select code to copy';
+      if (language === selectedLanguage && state.sampleMode === selectedMode) $('dockCopy').textContent = 'Select code to copy';
     }
     clearTimeout(copyTimer);
     copyTimer = setTimeout(() => $('dockCopy').textContent = 'Copy ' + language.toUpperCase(), 1800);

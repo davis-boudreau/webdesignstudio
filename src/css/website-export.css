@@ -1,0 +1,5 @@
+.website-export { min-width: 0; margin-block: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface-muted); }
+.website-export h3 { margin-top: 0; }
+.website-export .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+.website-export button { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.website-export > :last-child { margin-bottom: 0; }

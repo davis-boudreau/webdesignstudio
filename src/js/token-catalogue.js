@@ -12,30 +12,30 @@ No separate hardcoded values: the table stays synchronized with the export. */
   const sourceFor = row => {
     const name = row.name;
     const source = (step, control, mode = 'Direct setting', extra = {}) => ({ step, control, mode, ...extra });
-    if (name.startsWith('--brand-')) return source(1, 'jBrandEditor', 'Brand reference', { brand: name.slice(8) });
+    if (name.startsWith('--brand-')) return source(4, 'jBrandEditor', 'Brand reference', { brand: name.slice(8) });
     const ramp = name.match(/^--(primary|secondary|accent)-\d+$/);
-    if (ramp) return source(1, 'j'+ramp[1][0].toUpperCase()+ramp[1].slice(1), 'Derived from the Main Palette anchor and ramp method');
-    if (SEMANTIC_COLOUR_KEYS.includes(name.slice(2))) return source(3, 'jSemanticRole', 'Theme role / optional override', { semantic: name.slice(2) });
+    if (ramp) return source(4, 'j'+ramp[1][0].toUpperCase()+ramp[1].slice(1), 'Derived from the Main Palette anchor and ramp method');
+    if (SEMANTIC_COLOUR_KEYS.includes(name.slice(2))) return source(6, 'jSemanticRole', 'Theme role / optional override', { semantic: name.slice(2) });
     const button = name.match(/^--button-(primary|secondary|accent|outline|text)-(source|bg|text|border|hover|active|hover-text|active-text)$/);
-    if (button) return source(4, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
+    if (button) return source(7, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
     const settings = {
-      '--font-body':[2,'fontSource'], '--font-heading':[2,'fontSource'], '--font-ui':[2,'fontSource','Alias of the body font'],
-      '--font-size-base':[2,'jBase'], '--type-ratio':[2,'jRatio'], '--body-leading':[2,'jLeading'], '--heading-leading':[2,'jHeadingLeading'],
-      '--heading-letter-spacing':[2,'jHeadingTracking'], '--body-letter-spacing':[2,'jBodyTracking'], '--heading-tracking':[2,'jHeadingTracking','Alias of heading letter spacing'],
-      '--space-unit':[5,'jSpacing'], '--radius-base':[5,'jRadius'], '--focus-width':[6,'advFocus'], '--control-height':[6,'advHeight'],
-      '--border-width':[5,'advBorder'], '--heading-weight':[2,'advWeight'], '--reading-measure':[2,'advMeasure'],
-      '--grid-card-min':[5,'advColumns'], '--grid-gap':[5,'advGap'], '--grid-align':[5,'advAlign'],
-      '--surface-opacity':[5,'advOpacity'], '--elevation':[5,'advShadow'], '--motion-duration':[6,'advMotion'],
-      '--button-pad-x':[4,'bdPaddingX'], '--button-pad-y':[4,'bdPaddingY'], '--button-min-height':[4,'bdMinHeight'],
-      '--button-radius':[4,'bdRadius'], '--button-border-width':[4,'bdBorder'], '--button-font-weight':[4,'bdWeight'],
-      '--button-focus':[4,'bdFocus'], '--button-focus-width':[4,'bdFocusWidth'], '--button-motion':[4,'bdMotion'],
-      '--button-progress-animation':[6,'advReduce','Derived from reduced-motion configuration']
+      '--font-body':[5,'fontSource'], '--font-heading':[5,'fontSource'], '--font-ui':[5,'fontSource','Alias of the body font'],
+      '--font-size-base':[5,'jBase'], '--type-ratio':[5,'jRatio'], '--body-leading':[5,'jLeading'], '--heading-leading':[5,'jHeadingLeading'],
+      '--heading-letter-spacing':[5,'jHeadingTracking'], '--body-letter-spacing':[5,'jBodyTracking'], '--heading-tracking':[5,'jHeadingTracking','Alias of heading letter spacing'],
+      '--space-unit':[8,'jSpacing'], '--radius-base':[8,'jRadius'], '--focus-width':[9,'advFocus'], '--control-height':[9,'advHeight'],
+      '--border-width':[8,'advBorder'], '--heading-weight':[5,'advWeight'], '--reading-measure':[5,'advMeasure'],
+      '--grid-card-min':[8,'advColumns'], '--grid-gap':[8,'advGap'], '--grid-align':[8,'advAlign'],
+      '--surface-opacity':[8,'advOpacity'], '--elevation':[8,'advShadow'], '--motion-duration':[9,'advMotion'],
+      '--button-pad-x':[7,'bdPaddingX'], '--button-pad-y':[7,'bdPaddingY'], '--button-min-height':[7,'bdMinHeight'],
+      '--button-radius':[7,'bdRadius'], '--button-border-width':[7,'bdBorder'], '--button-font-weight':[7,'bdWeight'],
+      '--button-focus':[7,'bdFocus'], '--button-focus-width':[7,'bdFocusWidth'], '--button-motion':[7,'bdMotion'],
+      '--button-progress-animation':[9,'advReduce','Derived from reduced-motion configuration']
     };
     if (settings[name]) return source(...settings[name]);
-    if (/^--space-\d+$/.test(name)) return source(5,'jSpacing','Derived multiple of the spacing unit');
-    if (/^--text-step-\d+$/.test(name)) return source(2,'jBase','Derived from base size and type ratio');
-    if (/^--text-(body|small)$/.test(name)) return source(2,'jBase','Derived from base size and type ratio');
-    if (/^--text-(display|h1|h2)$/.test(name)) return source(2,'clampFactor','Derived from base size, ratio and responsive limits');
+    if (/^--space-\d+$/.test(name)) return source(8,'jSpacing','Derived multiple of the spacing unit');
+    if (/^--text-step-\d+$/.test(name)) return source(5,'jBase','Derived from base size and type ratio');
+    if (/^--text-(body|small)$/.test(name)) return source(5,'jBase','Derived from base size and type ratio');
+    if (/^--text-(display|h1|h2)$/.test(name)) return source(5,'clampFactor','Derived from base size, ratio and responsive limits');
     return null;
   };
   window.dssTokenSource = sourceFor;

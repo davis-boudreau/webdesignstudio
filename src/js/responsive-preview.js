@@ -8,7 +8,7 @@
       const frame = document.getElementById('previewPage');
       const theme = document.getElementById('previewTheme');
       const wired = new WeakSet();
-      let queued = false, renderedDocument = null, previousHtml = '', previousCss = '';
+      let queued = false, renderedDocument = null, previousHtml = '', previousCss = '', previousMode = '';
 
       function wire(doc) {
         if (wired.has(doc)) return;
@@ -31,8 +31,8 @@
         });
         doc.addEventListener('submit', event => {
           event.preventDefault();
-          const note = doc.getElementById('contact-note');
-          if (note) note.textContent = 'This is a sample form. No enquiry has been sent.';
+          const note = doc.getElementById('contact-note') || doc.getElementById('basic-signup-note');
+          if (note) note.textContent = state.sampleMode === 'basic' ? 'This is a static sign-up demonstration. No account has been created.' : 'This is a sample form. No enquiry has been sent.';
         });
       }
 
@@ -77,7 +77,7 @@
         }
         const html = htmlExport(), css = cssExport() + DSStudio.fonts.previewCss();
         if (html !== previousHtml) {
-          const saved = capture(doc);
+          const saved = previousMode === state.sampleMode ? capture(doc) : null;
           const parsed = new DOMParser().parseFromString(html, 'text/html');
           parsed.querySelector('link[rel="stylesheet"][href="tokens.css"]')?.remove();
           // Font requests are managed independently so fallback comparison stays preview-only.
@@ -94,12 +94,14 @@
           }
           doc.head.replaceChildren(...[...parsed.head.childNodes].map(node => doc.importNode(node, true)), ...fontLinks);
           doc.body.replaceChildren(...[...parsed.body.childNodes].map(node => doc.importNode(node, true)));
-          restore(doc, saved);
+          if (saved) restore(doc, saved);
+          else doc.defaultView.scrollTo(0, 0);
         } else if (css !== previousCss) {
           doc.getElementById('dssPreviewStyles').textContent = css;
         }
         previousHtml = html;
         previousCss = css;
+        previousMode = state.sampleMode;
         DSStudio.fonts.syncPreview(doc);
         syncResponsivePreview();
       }

@@ -1,11 +1,11 @@
 # Project progress
 
-Updated: 20 October 2026 (America/Halifax).
+Updated: 21 October 2026 (America/Halifax).
 
 ## Current objective
 
-Reimagine the generated sample as a creative web design tutorial, retaining the
-studio theme and connecting responsive CSS Grid lessons to live design choices.
+Provide independent Basic and Advanced samples in the Live CSS/HTML Inspector,
+keeping the selected HTML/CSS, preview, downloads and saved projects synchronized.
 The initial audit began at commit
 `6163ada` (`improved UX/UI`) with a clean working tree; its changes are still local.
 
@@ -578,6 +578,181 @@ this HTML startup-default change.
   desktop hero, six-card lesson board and grid workshop, plus the dark 390 px
   stacked grid. The CSS recipe includes all demonstrated spans and the narrow
   media rule. No screenshot comparison baseline or deployment was added.
+
+## OKLCH role reset and Flexbox lesson (21 October 2026)
+
+- Added "Reset selected role to default" beside the OKLCH Apply/Load controls.
+  It restores only the selected Primary/Supporting/Accent starter anchor, reloads
+  the wheel and uses the same control, preview, export and save path as Apply.
+  Load continues to discard an unapplied experiment; nearby help explains both.
+  Brand reference edits and other role assignments are preserved.
+- Expanded the existing layout workshop with Flexbox topic wrapping, fixed-marker /
+  flexible-text rows, main/cross-axis explanations and column card interiors.
+  A comparison table explains normal flow, Grid and Flexbox, including nesting.
+  The displayed Flexbox recipe and generated CSS share one source. Lesson 02,
+  the practice-form topic and HTML description now include Flexbox.
+- Kept existing section IDs and eight main sections. Existing previews and HTML/CSS
+  downloads receive the lesson automatically. Refreshed both changed JS asset
+  versions; user snapshots `test.html` and `tokens.css` were not edited.
+- Added 18 browser checks for all three role resets, repeat resets, state/control /
+  preview/export/save agreement, shared recipe/gap and Flexbox geometry at
+  320/390/768/1280/1440 px in both themes.
+- Commands run: `python scripts/check_structure.py` (**30 assets verified**),
+  `python scripts/browser_review.py` (**562/562 passed**, no captured errors),
+  and `git diff --check` (passed). Chrome initially could not create a temporary
+  profile in the sandbox; the suite succeeded with elevated execution using its
+  isolated profile. Intermediate runs caught test-file encoding changes, corrected
+  before the final pass. No product failures remained.
+- Ran temporary Python/local-server/headless-Chrome screenshot helpers and inspected
+  the light desktop and exact 390 px dark Flexbox lesson. The attempted colour-panel
+  screenshots did not reach the expanded panel; visual review of the reset control
+  remains a manual gap. Automated studio checks still pass at 320 px.
+- Optional real-font and accessibility-mode suites were not rerun; their preceding
+  results are historical. Manual keyboard/screen-reader, Firefox/Safari and real
+  pointer/touch checks remain open. No commits, pushes or deployments were made.
+- Next step: manually review the reset controls in the expanded Colour lesson,
+  then continue the broader verification/CI work listed below.
+
+## Project planning before palette (21 October 2026)
+
+- Expanded the wizard to eleven stages: Project Brief, Information Architecture,
+  Wireframing, Prototyping, Palette, Typography, Components, Buttons, Layout,
+  Accessibility and Deliver. Added four corresponding centre lessons after the
+  responsive-preview hub and before palette; the menu now has fifteen lessons.
+  Kept the preview as the only initially expanded centre section and preserved
+  existing control/section IDs. Updated all numeric wizard routes and shortcuts.
+- Added the registered `design-process` module and studio stylesheet. Planning
+  records audience, main task, scope, success signal, constraints, a two-level
+  content map, split/stack wireframe arrangement, hierarchy notes, prototype task
+  and observations. The brief/map feed the wireframe and linked Discover, Choose
+  and Review screens. Native fragment navigation works in the studio, sandboxed
+  preview and static exported page; the prototype has no application backend.
+- Planning uses shared state, Apply/render/autosave and existing JSON/local-project
+  flows. Imported values are type/length/enum validated; architecture is limited
+  to twelve entries, two levels and 64-character labels. Empty drafts stay empty.
+  Plan text is escaped. Older projects receive fresh starter planning data without
+  changing their explicit palette. UI edits do not mutate defaults. Reuse unchanged
+  artifact nodes to preserve focus through unrelated design changes.
+- Updated the generated field guide with a Process destination, shared planning
+  artifacts, ten ordered lesson cards, related form topics and workflow guidance.
+  Nine main sections retain Primary/Secondary action pairs. The sample remains a
+  teaching field guide; planning data does not generate a finished custom website.
+  Updated delivery guidance and the eight-item self-assessment, source routing,
+  runtime cache versions, README, architecture and changelog. User snapshots
+  `test.html` and `tokens.css` were not edited.
+- Added planning regressions for stage order and reciprocal navigation, local
+  autosave/project switching, JSON and actual file-input imports, legacy/malformed
+  data, length bounds, safe rendering, default/reset independence, prototype
+  links/focus, shared inspector/export/preview content and both themes at
+  320/390/768/1440 px. Existing layout/state/library/font-fixture checks remain.
+- Final commands: `python scripts/check_structure.py` (**32 assets verified**),
+  `python scripts/browser_review.py` (**615/615 passed**, no captured JavaScript
+  errors), and `git diff --check` (passed). Browser runs used elevated execution
+  for isolated temporary Chrome profiles. Increased the virtual-time budget to
+  45 seconds and process timeout to 90 seconds for the longer interaction suite.
+- Intermediate checks exposed harness issues rather than remaining product
+  failures: stale section/action counts, a 1440 px test iframe affecting narrow
+  studio measurements, and file I/O outlasting a fixed virtual wait. Updated
+  expectations, resized the test iframe and waited for file-input cleanup.
+  Focused temporary-harness checks also passed **2/2** for direct 390 px startup.
+- Ran temporary local-server/headless-Chrome screenshot helpers. Visually reviewed
+  the desktop brief/editor, light desktop wireframe/prototype/lesson board and
+  exact 390 px dark exported wireframe/prototype. The attempted mobile studio
+  screenshot captured before initialization; it is not visual-review evidence.
+  Automated direct-mobile initialization and narrow planning-editor checks pass.
+- Optional real-font and accessibility-mode suites were not rerun; previous
+  results above remain historical. Manual keyboard, screen-reader, zoom, complete
+  mobile-studio visual review and Firefox/Safari checks remain open. No commits,
+  pushes, deployments, runtime dependencies or new network requests were added.
+- Next step: walk through the planning flow with a real project/audience, review
+  the mobile studio and keyboard/screen-reader experience, then continue CI work.
+
+## Explicit standalone website downloads (21 October 2026)
+
+- Added a clear download card above the responsive page viewport with separate
+  HTML (`index.html`) and complete CSS (`tokens.css`) actions, plus View HTML/CSS
+  shortcuts into the existing live code panel. Added the HTML action to Deliver
+  and moved its CSS action to the shared handler, correcting the old stylesheet
+  filename mismatch. Both files can now be saved together without renaming.
+- Added the registered `website-export` module and studio-only stylesheet. All
+  downloads evaluate the existing generators at click time; the sample, preview,
+  inspector and files remain one source of truth. Export/view actions do not
+  alter saved project data. Feedback says a download was requested rather than
+  claiming the browser saved a file successfully.
+- Explained the included header/mobile menu, hero, images, cards, Grid/Flexbox,
+  forms, table, FAQs, component states and footer. Included same-folder/open-file
+  instructions and existing static-form / optional-font behaviour. Updated
+  README, architecture, changelog, delivery guidance and the affected asset query
+  version. No generated snapshot overwrites: `test.html` and `tokens.css` remain
+  user-owned files.
+- Added 20 browser checks, including every explicit action's filename/MIME/exact
+  contents, code selection/reveal/focus and unchanged settings. Loaded captured
+  HTML using a separate Blob stylesheet, with no injected style or script nodes,
+  and verified components, 320/768/1440 px reflow and native mobile-menu/FAQ/form
+  validation behaviour in both themes.
+- Commands run: `python scripts/check_structure.py` (**34 assets verified**),
+  `python scripts/browser_review.py` (**635/635 passed**, no captured JavaScript
+  errors), and `git diff --check` (passed). Chrome used elevated execution for
+  its isolated temporary profile. No browser-suite failures in this session.
+- Temporary local-server/headless-Chrome screenshots were captured and inspected
+  for the light desktop and exact 390 px dark download card. Applied the existing
+  ghost-button class after visual review for consistent studio controls; that
+  presentation-only adjustment was checked structurally, without rerunning the
+  already passing full suite.
+- Actual browser download/save-dialog permissions and manual keyboard/screen-reader,
+  zoom and cross-browser checks remain open. Previous optional font/media results
+  are historical and were not repeated. No new runtime dependencies, network
+  requests, commits, pushes or deployments were introduced.
+- Next step: use both download buttons in an interactive browser, save the pair
+  into one folder and confirm the local file workflow on the target computer.
+
+## Basic / Advanced Inspector samples (21 October 2026)
+
+- Added independent Advanced/Basic tabs above the existing CSS/HTML tabs, with
+  Arrow/Home/End navigation, one tab stop per group and labelled nested panels.
+  Advanced remains the startup/reset/legacy-project default and retains its exact
+  generated HTML/CSS. The Basic sample is intentionally smaller and uses its own
+  complete stylesheet instead of shipping unused Advanced gallery/workshop CSS.
+- Added the registered `basic-homepage` module after the Advanced generator and
+  before the responsive preview, plus studio-only mode-control CSS. Basic includes
+  logo/wrapping navigation, hero, three generated Grid cards, a labelled static
+  sign-up form with required name/email/consent and a footer with navigation and
+  a real Back to top destination. It includes a skip link and visible focus styles.
+  Exported HTML has no scripts, inline styles or runtime libraries.
+- Basic HTML/CSS share current project name/theme, font settings, type scale,
+  leading/tracking/heading weight, semantic colours, radius, grid gap/card minimum
+  and focus width. Advanced state demonstrations/planning artifacts stay in the
+  Advanced sample. Imports escape project text and validate the saved `sampleMode`
+  enum; missing/invalid modes use Advanced. Selection travels through JSON/local
+  saves and all existing code, copy, preview and download paths.
+- Preview refreshes preserve form state within a mode and start fresh when switching
+  samples, preventing unrelated input/focus/scroll state from crossing modes.
+  Basic preview submissions use native validation and display static-demo feedback
+  without navigation or an account backend. The exported static form returns to
+  the page using native GET behaviour; help instructs using sample details.
+- Updated Inspector notes and download-card descriptions, README, architecture,
+  changelog and affected runtime cache versions. Asynchronous clipboard feedback
+  now verifies both selected mode and language before reporting success/failure.
+  User snapshots `test.html` and `tokens.css` remain untouched.
+- Added 40 browser checks for mode defaults/keyboard controls, exact Advanced
+  preservation, Basic semantic structure and safe rendering, persistence/imports,
+  selected code/copy/download agreement, live settings, form validation and
+  preservation, clean mode transitions and external-stylesheet rendering. Checked
+  Basic reflow at 320/390/768/1440 px in both themes, real native Back to top links,
+  visible skip links and focus outlines.
+- Commands run: `python scripts/check_structure.py` (**36 assets verified**),
+  `python scripts/browser_review.py` (**675/675 passed**, no captured JavaScript
+  errors), and `git diff --check` (passed). Chrome used elevated execution with
+  isolated temporary profiles. The suite passed on its first run for this change.
+- Ran temporary local-server/headless-Chrome screenshot helpers and inspected the
+  light desktop Basic page, exact 390 px dark header/hero/Grid/form/footer and the
+  desktop Inspector with Basic/HTML selected. No visual baseline was added.
+- Actual browser download/save-dialog behaviour, manual keyboard/screen-reader/zoom
+  reviews and Firefox/Safari remain open. Previous optional real-font and media
+  suite results are historical; those suites were not rerun. No dependencies,
+  new network requests, commits, pushes or deployments were introduced.
+- Next step: try the Basic file pair and keyboard journey in an interactive browser,
+  then continue the manual accessibility and CI work below.
 
 ## Open work / next session
 

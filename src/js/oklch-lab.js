@@ -108,9 +108,9 @@ Hue is angular, chroma is radial, and lightness is an independent axis. */
     dragging = false;
   });
   get('oklchReset').addEventListener('click', loadRole);
-  get('oklchApply').addEventListener('click', () => {
+  function commitRole(hex, reset = false) {
     const role = get('oklchRole').value;
-    state[role] = oklchHex(L, C, H * Math.PI / 180).toLowerCase();
+    state[role] = hex.toLowerCase();
     syncControls();
     apply();
     // The guided wizard maintains its own controls; synchronize them too.
@@ -121,7 +121,15 @@ Hue is angular, chroma is radial, and lightness is an independent axis. */
       if (out) out.textContent = state[role].toUpperCase();
     }
     const status = get('liveStatus');
-    if (status) status.textContent = `Updated ${role} to ${state[role].toUpperCase()}`;
+    const label = get('oklchRole').selectedOptions[0].textContent;
+    if (status) status.textContent = `${reset ? 'Reset' : 'Updated'} ${label} to ${state[role].toUpperCase()}`;
+  }
+  get('oklchApply').addEventListener('click', () => {
+    commitRole(oklchHex(L, C, H * Math.PI / 180));
+  });
+  get('oklchDefault').addEventListener('click', () => {
+    commitRole(DEFAULT[get('oklchRole').value], true);
+    loadRole();
   });
   loadRole();
 })();

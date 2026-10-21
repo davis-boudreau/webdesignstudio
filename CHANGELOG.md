@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Changed
+- Added independent Advanced/Basic sample tabs to the Live CSS/HTML Inspector. Basic supplies a compact responsive header/nav/logo, hero, Grid cards, static sign-up and footer/Back to top with its own commented CSS. The selected mode follows preview/code/downloads and is validated/persisted with projects; Advanced stays the default.
+- Added explicit separate HTML/CSS website download actions above the responsive preview and in Deliver, with matching code shortcuts. Deliver now downloads `tokens.css` to match the generated HTML's stylesheet link. Both files share the live preview generators.
+- Added project brief, information architecture, wireframing and prototyping before palette design: eleven wizard stages, fifteen centre lessons, validated saved planning data, shared live/exported artifacts and a ten-lesson HTML field guide. Updated navigation, token-source routes and learning shortcuts; older projects receive starter planning data.
 - Reimagined the generated home page as a Web Design Field Guide: six navigable lesson cards, responsive CSS Grid workshop/recipe, live typography and palette exercises, tutorial resources and practice form, with palette-aware browser/grid illustrations. Preserved themes, wizard-driven components and existing navigation/form IDs.
 - Moved the 1–11 section navigation and visibility controls above the responsive preview. The menu stays sticky beneath the measured app header at every breakpoint, with horizontally scrollable links and larger targets.
 - Added a full-width divider and extra spacing below the wizard step buttons to separate navigation from the selected step's configuration content.
