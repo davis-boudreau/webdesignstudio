@@ -41,13 +41,13 @@ app.onload = async () => {
   test('Section menu precedes the preview, the only expanded centre section at startup', () => d.querySelector('#main > :first-child').classList.contains('studio-section-nav') && d.querySelector('#main > .studio-section').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(el=>el.open===(el.id==='studio-section-4')));
   test('Only Responsive page preview starts expanded throughout the studio', () => [...d.querySelectorAll('details')].every(el=>el.open===(el.id==='studio-section-4')));
   test('Preview initially fills the centre pane in Fluid mode', () => d.getElementById('previewFrame').dataset.width==='fluid' && d.querySelector('button[data-width="fluid"]').getAttribute('aria-pressed')==='true');
-  test('Eleven wizard steps connect project planning to fifteen centre lessons', () => d.querySelectorAll('[data-journey-step]').length===11 && d.querySelectorAll('[data-journey-pane]').length===11 && d.querySelectorAll('#main > .studio-section > .panel > .studio-lesson').length===15 && d.getElementById('jProgress').textContent.includes('of 11'));
+  test('Twelve wizard steps connect project planning to sixteen centre lessons', () => d.querySelectorAll('[data-journey-step]').length===12 && d.querySelectorAll('[data-journey-pane]').length===12 && d.querySelectorAll('#main > .studio-section > .panel > .studio-lesson').length===16 && d.getElementById('jProgress').textContent.includes('of 12'));
   test('Every exported token has a configuration source inside the wizard', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
     const source=w.dssTokenSource(row), control=source && d.getElementById(source.control);
     return control && control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step);
   }));
   test('Derived token families identify their foundation instead of arbitrary overrides', () => ['--space-6','--primary-700','--text-step-4','--text-h1','--font-ui','--heading-tracking','--button-progress-animation'].every(name=>/Derived|Alias/.test(w.dssTokenSource({name}).mode)));
-  test('Font, responsive, layout and interaction settings now live in their wizard steps', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',8],['advBorder',8],['jSpacing',8],['advState',9],['advReduce',9]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]').dataset.journeyPane===String(step)));
+  test('Font, responsive, layout and interaction settings now live in their wizard steps', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]').dataset.journeyPane===String(step)));
   d.getElementById('studio-section-4').open=false;
   d.querySelector('[data-journey-step="5"]').click(); input('jBase',18); await wait();
   const closedPreviewDoc=previewDoc();
@@ -542,7 +542,7 @@ app.onload = async () => {
   d.getElementById('clampReset').click(); await wait();
   test('Reset responsive limits preserves letter spacing', () => evaluate('clampConfig.mobileFactor===.82 && state.headingTracking===.025'));
   const sections=[...d.querySelectorAll('#main > .studio-section')];
-  test('Every centre-pane section has a native heading accordion', () => sections.length===15 && sections.every(el=>el.tagName==='DETAILS' && el.querySelector(':scope > summary > h2')));
+  test('Every centre-pane section has a native heading accordion', () => sections.length===16 && sections.every(el=>el.tagName==='DETAILS' && el.querySelector(':scope > summary > h2')));
   const beforeCollapse=evaluate('projectJson()');
   d.getElementById('collapseSections').click(); await wait();
   test('Collapse all closes only the centre sections without changing the design', () => sections.every(el=>!el.open) && evaluate('projectJson()')===beforeCollapse);
@@ -1257,11 +1257,11 @@ app.onload = async () => {
   reset(); app.style.width='1440px'; await wait();
   test('Reset restores the swatch target and current-role feedback', () => d.getElementById('brandApplyRole').value==='primary' && d.getElementById('brandCurrentPrimary').textContent.includes('#004780') && swatch('blue').dataset.current==='true');
   reset(); await wait(); input('tokenSearch','');
-  d.querySelector('[data-journey-step="10"]').click();
-  test('Wizard reaches its eleventh step and returns without implying completed checks', () => !d.querySelector('[data-journey-pane="10"]').hidden && d.getElementById('jNext').hidden && d.getElementById('jProgress').textContent.includes('Step 11 of 11') && !d.querySelector('.journey-steps .is-complete'));
+  d.querySelector('[data-journey-step="11"]').click();
+  test('Wizard reaches its twelfth step and returns without implying completed checks', () => !d.querySelector('[data-journey-pane="11"]').hidden && d.getElementById('jNext').hidden && d.getElementById('jProgress').textContent.includes('Step 12 of 12') && !d.querySelector('.journey-steps .is-complete'));
   d.getElementById('jBack').click();
-  test('Back navigation reaches accessibility and restores Next', () => !d.querySelector('[data-journey-pane="9"]').hidden && !d.getElementById('jNext').hidden);
-  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',8],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',6],['--button-secondary-hover-text','Dark','bdHoverText',7],['--brand-blue','Light / base',null,4]]) {
+  test('Back navigation reaches accessibility and restores Next', () => !d.querySelector('[data-journey-pane="10"]').hidden && !d.getElementById('jNext').hidden);
+  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',6],['--button-secondary-hover-text','Dark','bdHoverText',7],['--brand-blue','Light / base',null,4]]) {
     d.getElementById('studio-section-8').open=true;
     const button=d.querySelector(`[data-token-name="${name}"][data-token-scope="${scope}"]`);
     button.click(); await wait();
@@ -1300,7 +1300,7 @@ app.onload = async () => {
   });
   for (const theme of ['light','dark']) {
     input('jTheme',theme); app.style.width='320px';
-    for (const step of [5,8,9,10]) {
+    for (const step of [5,8,9,10,11]) {
       d.querySelector(`[data-journey-step="${step}"]`).click();
       d.querySelectorAll(`[data-journey-pane="${step}"] details:not([hidden])`).forEach(details=>details.open=true);
       await wait();
@@ -1325,7 +1325,7 @@ app.onload = async () => {
     section.scrollIntoView({block:'start',behavior:'instant'}); await wait();
     test('Section menu stays visible beneath the sticky header at '+width+'px', () => {
       const nav=d.querySelector('.studio-section-nav'), box=nav.getBoundingClientRect(), header=d.querySelector('.topbar').getBoundingClientRect();
-      return w.getComputedStyle(nav).position==='sticky' && box.top>=header.bottom-1 && box.top<=header.bottom+2 && box.bottom<w.innerHeight && nav.querySelectorAll('a').length===15 && [...nav.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44) && d.documentElement.scrollWidth<=w.innerWidth+1;
+      return w.getComputedStyle(nav).position==='sticky' && box.top>=header.bottom-1 && box.top<=header.bottom+2 && box.bottom<w.innerHeight && nav.querySelectorAll('a').length===16 && [...nav.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44) && d.documentElement.scrollWidth<=w.innerWidth+1;
     });
     test('Section navigation keeps headings below the sticky header at '+width+'px', () => {
       const header=d.querySelector('.topbar').getBoundingClientRect();

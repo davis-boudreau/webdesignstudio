@@ -1,0 +1,7 @@
+#responsiveDesign .responsive-guide { display: grid; gap: 16px; }
+#responsiveDesign pre { max-width: 100%; padding: 16px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-muted); border-radius: var(--radius-base); }
+#responsiveDesign li { margin-block: 8px; }
+.process-brief-guide { padding-inline-start: 24px; }
+.process-brief-guide li { margin-bottom: 12px; }
+.process-brief-template { padding: 16px; background: var(--surface-muted); border-inline-start: 3px solid var(--primary); overflow-wrap: anywhere; }
+.process-brief-draft { margin-top: 24px; }

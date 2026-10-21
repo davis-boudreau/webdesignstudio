@@ -32,7 +32,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   }
 
   function showStep(n) {
-    const labels = ['Brief', 'Architecture', 'Wireframe', 'Prototype', 'Palette', 'Typography', 'Components', 'Buttons', 'Layout', 'Accessibility', 'Deliver'];
+    const labels = ['Brief', 'Architecture', 'Wireframe', 'Prototype', 'Palette', 'Typography', 'Components', 'Buttons', 'Layout', 'Responsive', 'Accessibility', 'Deliver'];
     step = Math.max(0, Math.min(labels.length - 1, n));
     document.querySelectorAll('[data-journey-pane]').forEach(p => p.hidden = Number(p.dataset.journeyPane) !== step);
     document.querySelectorAll('[data-journey-step]').forEach(b => {

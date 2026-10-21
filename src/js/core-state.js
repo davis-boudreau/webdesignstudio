@@ -34,6 +34,7 @@ const DEFAULT = {
   accent: '#cbdb2a',
   brandPalette: DSStudio.brandPalette.defaults(),
   designProcess: DSStudio.process.defaults(),
+  responsiveDesign: DSStudio.responsive.defaults(),
   font: 'Arial, Helvetica, sans-serif',
   fontSettings: DSStudio.fonts.defaults(),
   base: 16,
@@ -390,7 +391,7 @@ function cssExport() {
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
---text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: ${state.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n${spacing}\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: 72rem; margin-inline: auto; padding-inline: var(--space-4); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
+--text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: ${state.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n${spacing}\n${DSStudio.responsive.tokens()}\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding-inline: var(--page-gutter); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
 .heading-1 { font-size: var(--text-h1); line-height: var(--heading-leading); }
 .heading-2 { font-size: var(--text-h2); line-height: var(--heading-leading); }
 .small-text { font-size: var(--text-small); }\n.card-grid { display: grid; }\n.card { padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;
@@ -482,6 +483,7 @@ function importConfig(obj) {
   n.fontSettings = DSStudio.fonts.normalize(obj.fontSettings);
   n.brandPalette = DSStudio.brandPalette.normalize(obj.brandPalette);
   n.designProcess = DSStudio.process.normalize(obj.designProcess);
+  n.responsiveDesign = DSStudio.responsive.normalize(obj.responsiveDesign);
   for (const [k, min, max] of [
       ['base', 14, 22],
       ['ratio', 1.05, 1.5],

@@ -226,7 +226,7 @@ ${sectionActions(['#grid-lab', 'Start the layout exercise'], ['#resources', 'Bro
   grid-column: 1 / -1;
 }
 
-@media (max-width: 48rem) {
+@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
   .sample-grid-demo {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -475,16 +475,16 @@ ${flexRecipe}
 .sample-feedback--danger { border-inline-start-color: var(--danger); }
 .sample-footer-inner { align-items: start; padding-block: var(--space-8); }
 .sample-footer p { margin-top: var(--space-2); color: var(--text-muted); }
-@media (min-width: 48rem) {
+@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
   .sample-section { padding-block: var(--space-12); }
 }
-@media (min-width: 64rem) {
-  .sample-home .container { padding-inline: var(--space-8); }
+@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
+  .sample-home .container { padding-inline: var(--page-gutter-wide); }
   .sample-logo { width: var(--space-16); }
   .sample-hero { padding-block: var(--space-20); }
   .sample-section { padding-block: var(--space-16); }
 }
-@media (max-width: 64rem) {
+@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
   .sample-home .sample-workshop-grid { grid-template-columns: minmax(0, 1fr); }
   .sample-workshop-grid > .sample-grid-figure, .sample-workshop-grid > .sample-lab-notes { grid-column: auto; }
 }
@@ -496,7 +496,7 @@ ${flexRecipe}
 @container sample-content (width < ${twoCards}px) {
   .sample-home .card-grid { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 48rem) {
+@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
   .sample-home .sample-hero, .sample-home .sample-split { grid-template-columns: minmax(0, 1fr); }
   .sample-hero > *, .sample-split > * { grid-column: auto; }
   .sample-header-inner { align-items: center; flex-direction: row; flex-wrap: nowrap; }

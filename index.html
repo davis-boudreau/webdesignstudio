@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261021-process">
     <link rel="stylesheet" href="src/css/website-export.css?v=20261021-downloads">
+    <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261021-basic">
     <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
   </head>
@@ -57,7 +58,7 @@
             <div class="journey-kicker">Start here · Minimum viable design system</div>
             <h2 id="journeyTitle">Build your design system</h2>
             <p class="help">
-              Plan your project and configure its design system through eleven steps in this wizard. Use the centre lessons to learn, compare examples and explain your decisions; inspect the generated HTML and CSS on the right. Derived ramps, scales and aliases follow their foundation settings.
+              Plan your project and configure its design system through twelve steps in this wizard. Use the centre lessons to learn, compare examples and explain your decisions; inspect the generated HTML and CSS on the right. Derived ramps, scales and aliases follow their foundation settings.
             </p>
             <div aria-label="Builder steps" class="journey-steps" role="group">
               <button data-journey-step="0" type="button">1 &middot; Brief</button>
@@ -69,8 +70,9 @@
               <button data-journey-step="6" type="button">7 &middot; Components</button>
               <button data-journey-step="7" type="button">8 &middot; Buttons</button>
               <button data-journey-step="8" type="button">9 &middot; Layout</button>
-              <button data-journey-step="9" type="button">10 &middot; Accessibility</button>
-              <button data-journey-step="10" type="button">11 &middot; Deliver</button>
+              <button data-journey-step="9" type="button">10 &middot; Responsive</button>
+              <button data-journey-step="10" type="button">11 &middot; Accessibility</button>
+              <button data-journey-step="11" type="button">12 &middot; Deliver</button>
             </div>
             <div class="journey-pane" data-journey-pane="0">
               <h3 class="journey-stage-title">1. Write the project brief</h3>
@@ -100,11 +102,11 @@
                   <option value="custom">Custom &middot; adapt the starter project</option>
                 </select>
               </div>
-              <div class="field process-editor"><label for="plan-audience">Audience</label><textarea id="plan-audience" data-process-field="audience" maxlength="600" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-goal">Main audience task</label><textarea id="plan-goal" data-process-field="goal" maxlength="600" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-scope">Project scope</label><textarea id="plan-scope" data-process-field="scope" maxlength="1200" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-success">Success signal</label><textarea id="plan-success" data-process-field="success" maxlength="600" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-constraints">Constraints and requirements</label><textarea id="plan-constraints" data-process-field="constraints" maxlength="1200" rows="3"></textarea></div>
+              <div class="field process-editor"><label for="plan-audience">Audience</label><textarea id="plan-audience" data-process-field="audience" placeholder="Who will use this website?" maxlength="600" rows="3"></textarea></div>
+              <div class="field process-editor"><label for="plan-goal">Main audience task</label><textarea id="plan-goal" data-process-field="goal" placeholder="What is their main task?" maxlength="600" rows="3"></textarea></div>
+              <div class="field process-editor"><label for="plan-scope">Project scope</label><textarea id="plan-scope" data-process-field="scope" placeholder="Which pages or features are needed first?" maxlength="1200" rows="3"></textarea></div>
+              <div class="field process-editor"><label for="plan-success">Success signal</label><textarea id="plan-success" data-process-field="success" placeholder="How will you know the website helps?" maxlength="600" rows="3"></textarea></div>
+              <div class="field process-editor"><label for="plan-constraints">Constraints and requirements</label><textarea id="plan-constraints" data-process-field="constraints" placeholder="What limits or requirements must you consider?" maxlength="1200" rows="3"></textarea></div>
               <p class="journey-tip">
                 <strong>Your goal:</strong>
                 Identify the website and its audience. Start with the example project, then adapt the design to your own project.
@@ -635,16 +637,27 @@
             </div>
             <div class="journey-pane" data-journey-pane="8" hidden>
               <h3 class="journey-stage-title">9. Layout, spacing and surfaces</h3>
-              <p class="help">Set the spacing unit, corners, borders and grid rules. Multiples follow the spacing unit; compare cards and page sections in the centre lessons.</p>
+              <p class="help">Set the spacing unit, corners and borders. Configure grid wrapping in the Responsive phase. Multiples follow the spacing unit; compare cards and page sections in the centre lessons.</p>
               <div id="jLayoutControls"></div>
             </div>
             <div class="journey-pane" data-journey-pane="9" hidden>
-              <h3 class="journey-stage-title">10. Accessibility and interaction</h3>
+              <h3 class="journey-stage-title">10. Responsive rules and breakpoints</h3>
+              <p class="help">Start narrow. Add a layout change when content needs it, rather than targeting a device name. These settings apply to Basic and Advanced exports, not the studio panels.</p>
+              <div class="field"><label for="responsive-stack">Narrow layout cutoff <output id="responsive-stackOut"></output></label><input id="responsive-stack" data-responsive-field="stack" type="range" min="480" max="960" step="16"></div>
+              <div class="field"><label for="responsive-wide">Wide layout starts <output id="responsive-wideOut"></output></label><input id="responsive-wide" data-responsive-field="wide" type="range" min="800" max="1600" step="16"></div>
+              <div class="field"><label for="responsive-maxWidth">Maximum page width <output id="responsive-maxWidthOut"></output></label><input id="responsive-maxWidth" data-responsive-field="maxWidth" type="range" min="960" max="1600" step="16"></div>
+              <div class="field"><label for="responsive-gutter">Standard side gutters <output id="responsive-gutterOut"></output></label><input id="responsive-gutter" data-responsive-field="gutter" type="range" min="8" max="48" step="4"></div>
+              <div class="field"><label for="responsive-wideGutter">Wide side gutters <output id="responsive-wideGutterOut"></output></label><input id="responsive-wideGutter" data-responsive-field="wideGutter" type="range" min="8" max="64" step="4"></div>
+              <p class="help">At or below the narrow cutoff, main sections stack. At or above the wide start, wide gutters apply. The wide start stays at least 160px beyond the narrow cutoff. Gutters are independent of the spacing unit.</p>
+              <p class="journey-tip"><strong>Try it:</strong> compare both samples just below and above your cutoffs. Check labels, navigation, forms and content order. Grid minimum and gap below control card wrapping independently.</p>
+            </div>
+            <div class="journey-pane" data-journey-pane="10" hidden>
+              <h3 class="journey-stage-title">11. Accessibility and interaction</h3>
               <p class="help">Configure focus, control size, link cues and motion. Use the centre state explorer and contrast report to evaluate the results, then test with a keyboard.</p>
               <div id="jAccessibilityControls"></div>
             </div>
-            <div class="journey-pane" data-journey-pane="10" hidden="">
-              <h3 class="journey-stage-title">11. Review, export and implement</h3>
+            <div class="journey-pane" data-journey-pane="11" hidden="">
+              <h3 class="journey-stage-title">12. Review, export and implement</h3>
               <p class="help">Review the design, save a portable backup, and test the exported code in its destination.</p>
               <details class="learning-note build-guide">
                 <summary>What should a complete handoff include?</summary>
@@ -684,7 +697,7 @@
                   </label>
                   <label>
                     <input class="readiness-item" type="checkbox" />
-                    I tested responsive cards/forms and keyboard focus.
+                    I checked breakpoints, responsive cards/forms and keyboard focus.
                   </label>
                   <label>
                     <input class="readiness-item" type="checkbox" />
@@ -700,7 +713,7 @@
                 </p>
               </div>
               <div class="journey-mini">
-                <span>Brief</span><span>Architecture</span><span>Wireframe</span><span>Prototype</span>
+                <span>Brief</span><span>Architecture</span><span>Wireframe</span><span>Prototype</span><span>Responsive</span>
                 <span>✓ Colour</span>
                 <span>✓ Typography</span>
                 <span>✓ Spacing</span>
@@ -723,7 +736,7 @@
               <button id="jBack" type="button">← Back</button>
               <button id="jNext" type="button">Next →</button>
             </div>
-            <div class="journey-status" id="jProgress" role="status">Step 1 of 11</div>
+            <div class="journey-status" id="jProgress" role="status">Step 1 of 12</div>
             <div class="local-projects">
               <hr />
               <h3>My local projects</h3>
@@ -1079,11 +1092,12 @@
               <a href="#studio-section-2">08 &middot; Typography</a>
               <a href="#buttonDesignLab">09 &middot; Buttons</a>
               <a href="#studio-section-3">10 &middot; Components</a>
-              <a href="#stateExplorer">11 &middot; States</a>
-              <a href="#studio-section-5">12 &middot; Accessibility</a>
-              <a href="#studio-section-6">13 &middot; Inspect &amp; export</a>
-              <a href="#studio-section-7">14 &middot; Workflow</a>
-              <a href="#studio-section-8">15 &middot; Token catalogue</a>
+              <a href="#responsiveDesign">11 &middot; Responsive</a>
+              <a href="#stateExplorer">12 &middot; States</a>
+              <a href="#studio-section-5">13 &middot; Accessibility</a>
+              <a href="#studio-section-6">14 &middot; Inspect &amp; export</a>
+              <a href="#studio-section-7">15 &middot; Workflow</a>
+              <a href="#studio-section-8">16 &middot; Token catalogue</a>
             </nav>
             <div class="section-actions" role="group" aria-label="Section visibility">
               <button type="button" id="expandSections" class="ghost">Expand all sections</button>
@@ -1147,7 +1161,7 @@
                     <li>The preview renders the generated HTML and CSS inside its own viewport, including the same viewport-relative type sizes and media queries as the downloaded page.</li>
                     <li>Inspect long labels, wrapping, reading order and controls. Horizontal scrolling inside this inspection panel is intentional; the finished page should reflow.</li>
                   </ul>
-                  <p><strong>Try it:</strong> change grid minimum width and gap in wizard step 9, Layout. Find where a card needs to wrap, then test just above and below that width.</p>
+                  <p><strong>Try it:</strong> change grid minimum width and gap in wizard step 10, Responsive. Find where a card needs to wrap, then test just above and below that width.</p>
                   <p class="learning-reference">Read more: <a href="https://web.dev/learn/design">web.dev: responsive design</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Grid_layout/Basic_concepts">MDN: CSS Grid</a>.</p>
                 </div>
               </details>
@@ -1699,8 +1713,21 @@
               </details>
               </section>
             </details>
+              <details class="studio-section" id="responsiveDesign">
+              <summary><h2>11. Responsive design</h2></summary>
+              <section class="panel">
+                <section class="studio-lesson"><h3>Let content decide when the layout changes.</h3><p>Begin with a readable narrow layout. Increase the available space and add a breakpoint when navigation crowds, a line becomes too long or columns need to change.</p><p><strong>Practice:</strong> test below, at and above each cutoff. Keep the task, reading order and controls usable as the page changes.</p><button type="button" class="ghost" data-configure-step="9">Configure in wizard &middot; step 10</button></section>
+                <div class="responsive-guide">
+                  <p id="responsiveLessonViewport" class="help"></p>
+                  <ul><li><strong>Breakpoints:</strong> change the main composition. They are content decisions, not fixed phone/tablet labels.</li><li><strong>Container and gutters:</strong> limit line length and keep content away from the edges.</li><li><strong>Grid:</strong> card minimum width and gap can change column count before a page breakpoint.</li><li><strong>Fluid content:</strong> use flexible widths, wrapping text and images with proportional height. Typography limits remain in the Typography phase.</li><li><strong>Review:</strong> start at 320px, test intermediate widths, zoom and keyboard use. Keep the same meaningful HTML reading order.</li></ul>
+                  <h3>Read the current responsive rules</h3><pre><code id="responsiveRecipe"></code></pre>
+                  <p class="help">The 390/768/1280 preview buttons are fixed test widths, not the saved breakpoints. Use Fluid and resize the browser to explore the spaces between them.</p>
+                  <p class="learning-reference">Learn more: <a href="https://web.dev/learn/design/media-queries">web.dev: content-led media queries</a>.</p>
+                </div>
+              </section>
+            </details>
               <details class="studio-section" id="stateExplorer">
-              <summary><h2>11. Component state explorer</h2></summary>
+              <summary><h2>12. Component state explorer</h2></summary>
               <section class="panel">
                 <div class="section-head">
                   <div>
@@ -1741,7 +1768,7 @@
               </section>
             </details>
               <details class="studio-section" id="studio-section-5">
-              <summary><h2>12. Accessibility quick checks</h2></summary>
+              <summary><h2>13. Accessibility quick checks</h2></summary>
               <section class="panel">
 
                 <p class="help">
@@ -1830,7 +1857,7 @@
               </section>
             </details>
               <details class="studio-section" id="studio-section-6">
-              <summary><h2>13. Inspect and export</h2></summary>
+              <summary><h2>14. Inspect and export</h2></summary>
               <section class="panel">
 
                 <p class="help">
@@ -1887,7 +1914,7 @@
               </section>
             </details>
               <details class="studio-section" id="studio-section-7">
-              <summary><h2>14. Design workflow</h2></summary>
+              <summary><h2>15. Design workflow</h2></summary>
               <section class="panel">
 
                 <p class="help">Build a small system, test it with realistic content, then record the decisions someone else needs to use it.</p>
@@ -1918,7 +1945,7 @@
               </section>
             </details>
               <details class="studio-section" id="studio-section-8">
-              <summary><h2>15. Design token catalogue</h2></summary>
+              <summary><h2>16. Design token catalogue</h2></summary>
               <section class="panel">
                 <div class="section-head">
                   <div>
@@ -2032,24 +2059,25 @@
       <script src="src/js/brand-palette.js?v=20261021-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261021-process" defer></script>
-      <script src="src/js/core-state.js?v=20261021-basic" defer></script>
+      <script src="src/js/design-process.js?v=20261021-responsive" defer></script>
+      <script src="src/js/responsive-design.js?v=20261021-responsive" defer></script>
+      <script src="src/js/core-state.js?v=20261021-responsive" defer></script>
       <script src="src/js/css-dock.js?v=20261021-basic" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
-      <script src="src/js/journey-library.js?v=20261021-downloads" defer></script>
+      <script src="src/js/journey-library.js?v=20261021-responsive" defer></script>
       <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/sample-homepage.js?v=20261021-process" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261021-basic" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261021-responsive" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261021-responsive" defer></script>
       <script src="src/js/responsive-preview.js?v=20261021-basic" defer></script>
       <script src="src/js/website-export.js?v=20261021-downloads" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261021-process" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261021-responsive" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
       <script src="src/js/contrast-audit.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
       <script src="src/js/section-accordions.js?v=20261020-section-menu" defer></script>
-      <script src="src/js/studio-learning.js?v=20261021-process" defer></script>
+      <script src="src/js/studio-learning.js?v=20261021-responsive" defer></script>
     </body>
   </html>

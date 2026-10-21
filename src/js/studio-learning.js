@@ -43,7 +43,7 @@ DSStudio.register({
     sync();
 
     // The old parameter groups already validate, save and synchronize themselves.
-    for (const [step, id] of [[5,'advWeight'], [8,'advBorder'], [8,'advColumns'], [9,'advState'], [9,'advReduce']])
+    for (const [step, id] of [[5,'advWeight'], [8,'advBorder'], [9,'advColumns'], [10,'advState'], [10,'advReduce']])
       pane(step).append(get(id).closest('details'));
     for (const id of ['jSpacing', 'jRadius']) pane(8).prepend(get(id).closest('.field'));
     // Keep compatibility controls in the wizard, without two visible editors for
@@ -65,11 +65,11 @@ DSStudio.register({
       ['studio-section-2',5,'Typography creates hierarchy', 'Font family, scale, line-height and tracking work together. Fluid headings interpolate between viewport limits while body text remains readable.', '--font-size-base + --type-ratio → --text-h1 → heading', 'Compare mobile and desktop specimens. Move the calculator viewport slider and explain where the size stops growing.'],
       ['buttonDesignLab',7,'Buttons communicate actions and states', 'Component tokens apply foundation choices to a specific control. Labels, shape, underlines and focus cues communicate more than colour alone.', '--primary → --button-primary-bg → .ds-button--primary', 'Compare one variant across hover, pressed, focus, selected and loading states. Test a real button with the keyboard.'],
       ['studio-section-3',8,'Spacing, surfaces and responsive layout', 'A shared spacing unit creates related gaps and padding. Grid constraints decide when cards wrap; surfaces and borders clarify groups.', '--space-unit → --space-6 → card padding; --grid-gap → card gutters', 'Compare spacing bars with card padding. Resize the page and find the width where the card grid changes columns.'],
-      ['stateExplorer',9,'Native behaviour and visual feedback', 'Focus, disabled, invalid and read-only are different behaviours. A simulation teaches appearance; native HTML supplies real interaction.', '--focus + --focus-width → keyboard outline', 'Compare simulated states, then use Tab on real controls. Explain why read-only text still needs readable contrast.'],
-      ['studio-section-5',9,'Evaluate accessibility in context', 'Contrast belongs to a foreground/background pair. Check each theme and state, then review keyboard behaviour and meaning without colour.', '--text on --surface; --control-border beside --background', 'Filter required contrast problems. Preview a repair and check whether it creates new problems before applying.'],
-      ['studio-section-6',10,'Deliver the decisions, not just a screenshot', 'CSS implements the tokens; sample HTML demonstrates their use; JSON preserves editable project settings.', 'Project settings → tokens.css + index.html + project JSON', 'Export CSS and HTML together. Identify one component class and trace its values back to the catalogue.'],
+      ['stateExplorer',10,'Native behaviour and visual feedback', 'Focus, disabled, invalid and read-only are different behaviours. A simulation teaches appearance; native HTML supplies real interaction.', '--focus + --focus-width → keyboard outline', 'Compare simulated states, then use Tab on real controls. Explain why read-only text still needs readable contrast.'],
+      ['studio-section-5',10,'Evaluate accessibility in context', 'Contrast belongs to a foreground/background pair. Check each theme and state, then review keyboard behaviour and meaning without colour.', '--text on --surface; --control-border beside --background', 'Filter required contrast problems. Preview a repair and check whether it creates new problems before applying.'],
+      ['studio-section-6',11,'Deliver the decisions, not just a screenshot', 'CSS implements the tokens; sample HTML demonstrates their use; JSON preserves editable project settings.', 'Project settings → tokens.css + index.html + project JSON', 'Export CSS and HTML together. Identify one component class and trace its values back to the catalogue.'],
       ['studio-section-7',0,'Explain and review your decisions', 'A design system records reusable choices and the reasons behind them. Evaluate the result with real content before extending it.', 'Audience → design decision → token → component → review', 'Write one reason for your palette, typography and layout choices, then list what still needs human testing.'],
-      ['studio-section-8',10,'Read the token catalogue', 'Direct tokens store a decision. Derived tokens are calculated scales or aliases; configure their source to keep the system consistent.', '--space-unit → --space-2, --space-4, --space-6', 'Choose Configure source beside a token. Change its wizard setting and compare the catalogue, preview and exported CSS.']
+      ['studio-section-8',11,'Read the token catalogue', 'Direct tokens store a decision. Derived tokens are calculated scales or aliases; configure their source to keep the system consistent.', '--space-unit → --space-2, --space-4, --space-6', 'Choose Configure source beside a token. Change its wizard setting and compare the catalogue, preview and exported CSS.']
     ];
     for (const [id, step, title, explanation, chain, exercise] of lessons) {
       const lesson = document.createElement('section');
@@ -77,7 +77,7 @@ DSStudio.register({
       lesson.innerHTML = `<h3>${title}</h3><p>${explanation}</p><p><code>${chain}</code></p><p><strong>Practice:</strong> ${exercise}</p><button type="button" class="ghost" data-configure-step="${step}">Configure in wizard · step ${step + 1}</button>`;
       get(id).querySelector(':scope > .panel').prepend(lesson);
     }
-    const topics = ['process-brief','process-ia','process-wireframe','process-prototype','brandPalette','studio-section-2','studio-section-1','buttonDesignLab','studio-section-3','stateExplorer','studio-section-6'];
+    const topics = ['process-brief','process-ia','process-wireframe','process-prototype','brandPalette','studio-section-2','studio-section-1','buttonDesignLab','studio-section-3','responsiveDesign','stateExplorer','studio-section-6'];
     topics.forEach((id, step) => {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'ghost';

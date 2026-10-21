@@ -89,6 +89,7 @@ ${DSStudio.fonts.htmlLinks()}  <link rel="stylesheet" href="tokens.css">
    1. Shared design values. 2. Page foundations. 3. Layout and components.
    The optional Google font links live in the HTML. No JavaScript is required. */
 :root {
+${DSStudio.responsive.tokens()}
   --font-body: ${fonts.body};
   --font-heading: ${fonts.heading};
   --text-body: ${state.base}px;
@@ -123,7 +124,7 @@ a { color: var(--primary); text-underline-offset: .2em; }
 a:hover { text-decoration-thickness: .15em; }
 :focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 4px; }
 section, #top, #main-content { scroll-margin-top: 1rem; }
-.container { width: min(100%, 72rem); margin-inline: auto; padding-inline: 1rem; }
+.container { width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding-inline: var(--page-gutter); }
 .section { padding-block: clamp(2.5rem, 6vw, 5rem); }
 .container, .card, .brand { overflow-wrap: anywhere; }
 .skip-link { position: absolute; top: -10rem; left: 1rem; padding: 1rem; background: var(--surface); z-index: 1; }
@@ -161,8 +162,12 @@ small { display: block; margin-top: .5rem; color: var(--text-muted); }
 .site-footer { border-top: 1px solid var(--border); background: var(--surface); }
 .site-footer p { margin-bottom: 0; }
 
+@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
+  .container { padding-inline: var(--page-gutter-wide); }
+}
+
 /* A narrow viewport keeps the source reading order and a single form column. */
-@media (max-width: 48rem) {
+@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
   .header-inner { align-items: flex-start; flex-direction: column; }
   .signup-layout { grid-template-columns: minmax(0, 1fr); }
 }

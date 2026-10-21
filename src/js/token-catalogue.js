@@ -19,17 +19,18 @@ No separate hardcoded values: the table stays synchronized with the export. */
     const button = name.match(/^--button-(primary|secondary|accent|outline|text)-(source|bg|text|border|hover|active|hover-text|active-text)$/);
     if (button) return source(7, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
     const settings = {
+      '--page-max-width':[9,'responsive-maxWidth'], '--page-gutter':[9,'responsive-gutter'], '--page-gutter-wide':[9,'responsive-wideGutter'],
       '--font-body':[5,'fontSource'], '--font-heading':[5,'fontSource'], '--font-ui':[5,'fontSource','Alias of the body font'],
       '--font-size-base':[5,'jBase'], '--type-ratio':[5,'jRatio'], '--body-leading':[5,'jLeading'], '--heading-leading':[5,'jHeadingLeading'],
       '--heading-letter-spacing':[5,'jHeadingTracking'], '--body-letter-spacing':[5,'jBodyTracking'], '--heading-tracking':[5,'jHeadingTracking','Alias of heading letter spacing'],
-      '--space-unit':[8,'jSpacing'], '--radius-base':[8,'jRadius'], '--focus-width':[9,'advFocus'], '--control-height':[9,'advHeight'],
+      '--space-unit':[8,'jSpacing'], '--radius-base':[8,'jRadius'], '--focus-width':[10,'advFocus'], '--control-height':[10,'advHeight'],
       '--border-width':[8,'advBorder'], '--heading-weight':[5,'advWeight'], '--reading-measure':[5,'advMeasure'],
-      '--grid-card-min':[8,'advColumns'], '--grid-gap':[8,'advGap'], '--grid-align':[8,'advAlign'],
-      '--surface-opacity':[8,'advOpacity'], '--elevation':[8,'advShadow'], '--motion-duration':[9,'advMotion'],
+      '--grid-card-min':[9,'advColumns'], '--grid-gap':[9,'advGap'], '--grid-align':[9,'advAlign'],
+      '--surface-opacity':[8,'advOpacity'], '--elevation':[8,'advShadow'], '--motion-duration':[10,'advMotion'],
       '--button-pad-x':[7,'bdPaddingX'], '--button-pad-y':[7,'bdPaddingY'], '--button-min-height':[7,'bdMinHeight'],
       '--button-radius':[7,'bdRadius'], '--button-border-width':[7,'bdBorder'], '--button-font-weight':[7,'bdWeight'],
       '--button-focus':[7,'bdFocus'], '--button-focus-width':[7,'bdFocusWidth'], '--button-motion':[7,'bdMotion'],
-      '--button-progress-animation':[9,'advReduce','Derived from reduced-motion configuration']
+      '--button-progress-animation':[10,'advReduce','Derived from reduced-motion configuration']
     };
     if (settings[name]) return source(...settings[name]);
     if (/^--space-\d+$/.test(name)) return source(8,'jSpacing','Derived multiple of the spacing unit');
