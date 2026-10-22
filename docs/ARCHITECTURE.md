@@ -5,12 +5,12 @@
 `studio-learning.js` registers last and reorganizes existing control nodes after
 the other modules initialize. It preserves their IDs, event handlers and state
 paths while placing font, responsive, layout and accessibility settings inside
-the eleven-step wizard. Hidden compatibility nodes retain legacy module bindings.
-The main pane adds fifteen lessons with token relationships, exercises and
+the twelve-step wizard. Hidden compatibility nodes retain legacy module bindings.
+The main pane adds sixteen lessons with token relationships, exercises and
 configuration shortcuts. Interactive comparison and experiment controls remain.
 
 The journey exposes `dssShowWizardStep()` for catalogue/lesson navigation and
-derives its progress from eleven explicit step labels. Navigation alone does not
+derives its progress from twelve explicit step labels. Navigation alone does not
 mark previous steps complete. Each wizard step links to a related centre lesson;
 startup expands only Responsive page preview.
 
@@ -40,7 +40,7 @@ the existing default. No arbitrary imported CSS overrides were introduced.
 | Markup | `index.html` | Sections, landmarks, asset manifest |
 | Tokens & base | `src/css/base-tokens.css`, `layout.css` | `:root` custom properties, themes, page layout |
 | Core | `src/js/studio-registry.js`, `core-state.js` | Registry/events, state, CSS and HTML export |
-| Features | `design-process`, `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `sample-homepage`, `basic-homepage`, `responsive-preview`, `website-export`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
+| Features | `responsive-design`, `design-process`, `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `sample-homepage`, `basic-homepage`, `responsive-preview`, `website-export`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
 
 Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`.
 
@@ -72,17 +72,18 @@ Feature scripts still share globals (notably `cssExport` is wrapped by advanced 
 `design-process.js` loads after the registry/font helpers and before core state.
 Its `DSStudio.process` API provides fresh defaults, normalization, a bounded
 sitemap parser, shared artifact HTML and artifact CSS. `state.designProcess` holds
-plain text audience/goal/scope/success/constraints, a multiline two-level page map,
+plain text goal/audience/scope/content/constraints/delivery/success, a multiline
+two-level page map,
 `split`/`stack` wireframe arrangement, wireframe notes, prototype task and notes.
 Imports bound text lengths and accept only the two arrangements; missing or invalid
 planning objects receive starter data. Empty draft strings remain empty. No plan
 text becomes executable markup, a URL, a CSS declaration or a token.
 
-The eleven wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,
-Typography, Components, Buttons, Layout, Accessibility and Deliver. Existing control
+The twelve wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,
+Typography, Components, Buttons, Layout, Responsive, Accessibility and Deliver. Existing control
 and centre IDs remain stable; numeric wizard indices and token-source routes move
 by three after the old first stage. Four new native centre disclosures follow the
-preview hub, bringing the centre navigation to fifteen lessons. Startup still
+preview hub, bringing the centre navigation to sixteen lessons. Startup still
 expands only the responsive preview; navigation does not imply task completion.
 
 The module's initializer binds planning inputs through the existing `apply()` /
@@ -182,7 +183,7 @@ desktop at the default spacing unit, and uses
 primary/on-primary colours and the shared radius. The title consumes `--text-h2`,
 heading leading and tracking, and can wrap beside the mobile menu.
 
-The generated container includes its gutters in a 72rem maximum border-box width.
+The generated container includes its gutters in a configurable maximum border-box width (72rem by default).
 Gutters are 16 px on narrow screens and 32 px from 64rem at defaults. Hero/split
 rows use 12 tracks with children spanning six; card rows span four per card.
 The generated sample is a Web Design Field Guide: ten lesson cards, a layout
@@ -193,10 +194,10 @@ replace the generic landscape illustrations and remain embedded/palette-aware.
 
 The named `sample-content` inline-size container lets card rows switch to two/one
 columns using thresholds calculated from `adv.columns` and `adv.gap`. Split rows
-stack at 48rem. Responsive layouts therefore retain the existing card controls.
+stack at the configured narrow cutoff (48rem by default). Responsive layouts therefore retain the existing card controls.
 The new `grid-lab` workshop demonstrates twelve tracks with 8/4 and 4/4/4 spans;
-the demo uses `--grid-gap` and becomes one column at 48rem. The outer 8/4
-example/notes layout stacks at 64rem. A native disclosure exposes the matching
+the demo uses `--grid-gap` and becomes one column at the narrow cutoff. The outer 8/4
+example/notes layout stacks at the wide cutoff (64rem by default). A native disclosure exposes the matching
 CSS recipe. `type-lab` renders base/ratio/leading readouts and a nested
 `colour-lab` renders resolved semantic role values and swatches, so changing
 wizard settings updates both explanation and rendered styles through exports.
@@ -246,6 +247,73 @@ navigation within the generated page, reveal linked FAQs and prevent sample form
 submission from navigating or sending data. The document's own viewport controls
 its media queries and vw typography at 390/768/1280 px or the actual Fluid width.
 
+## Responsive design phase and training brief
+
+`responsive-design.js` loads before core state to supply `DSStudio.responsive`.
+`state.responsiveDesign` stores nominal-pixel `stack`, `wide`, `maxWidth`, `gutter`
+and `wideGutter` values. Defaults are 768/1024/1152/16/32. Imports accept finite
+numbers, bound and round them, and keep `wide >= stack + 160`; malformed or missing
+objects receive fresh defaults. Sliders use 1px increments so valid imported values
+remain representable without browser range-step rounding. UI mutations replace
+objects and do not mutate defaults.
+
+The new wizard phase is index 9, after Layout; Accessibility and Deliver move to
+10/11. Grid minimum/gap/alignment controls move from Layout to Responsive. Catalogue
+routes follow these controls and the three new page tokens. The new centre lesson
+is `responsiveDesign`; existing anchors remain stable and numbering is refreshed.
+
+Both generators use the same page width/gutter tokens and literal `rem` media-query
+lengths (nominal pixels / 16). CSS variables cannot supply media-query conditions.
+Advanced's split/header/Grid workshop cutoffs and wide styling, Basic's header/form
+stacking/wide gutters, and planning wireframes follow the saved cutoffs. Responsive
+page controls do not change studio pane breakpoints, fixed preview presets, fluid
+font limits or the independently configured mobile button behaviour. Card wrapping
+still follows container/card constraints rather than a universal page breakpoint.
+The lesson uses the actual iframe `matchMedia()` results and `innerWidth`, so its
+readout follows CSS even with scrollbar/default-font differences.
+
+The Project Brief artifact teaches seven website-project prompts: purpose,
+audience, pages/features, content, design requirements, delivery and success.
+It includes a fill-in template and a static café example, plus optional website
+planning reading from Smashing Magazine. The shared `briefFields` definition generates the seven numbered wizard fields,
+the lesson checklist and saved-draft labels in the same order. Content and Delivery
+are additive string fields (1,200 characters each); the original goal/audience/
+scope/constraints/success keys remain. Legacy combined notes are kept verbatim
+within their original bounds; new fields default empty rather than guessing how
+to split text. Normalization validates types/lengths for all seven fields.
+New default brief answers are empty, with prompt placeholders in the wizard.
+Existing answers are normalized/preserved and shown in an optional draft disclosure.
+Shared artifacts carry this guide into Advanced exports. Preview disclosures are
+preserved by stable ID/summary keys rather than array index: inserting a draft
+must not shift the saved open state of a FAQ or mobile menu.
+
+## Architecture-linked sitemap and Basic lists
+
+Basic adds a fourth main section containing titled unordered/ordered/description
+list examples. Its card grid uses the saved minimum and gap rules. Both samples
+have a footer Sitemap navigation generated by `DSStudio.process.sitemapHtml()`.
+The full map sits in a closed native `details` element so the 38-topic Advanced
+inventory does not dominate the footer. Its summary remains visible and keyboard
+operable without scripts. Identity and a shorter Explore navigation form the top
+row; copyright and Back to top form the bottom row. Shared Grid/Flexbox rules
+stack these rows at the saved narrow breakpoint. Both headers expose `#top`.
+The shared, fixed inventories in `design-process.js` map all major sections and
+content groups, including each Basic card/list and Advanced lesson/workshop.
+Stable authored IDs identify these destinations; imported labels never become URLs.
+Matching ignores case, spacing and hyphens; Basic also accepts Features and Signup.
+Unknown labels remain escaped text marked Planned page; an empty map is explicit.
+
+`samplePages(mode)` generates the complete two-level plan. `currentPlan()` resolves
+an untouched canonical Basic/Advanced inventory or the exact legacy six-entry
+starter to the selected sample's inventory. It leaves custom plans unchanged,
+including empty plans. Resolution is pure: stored planning data is preserved;
+preview, editor, centre artifacts and HTML exports all use the resolved plan.
+The restore button explicitly replaces custom entries with the selected inventory.
+The parser allows 64 entries, two levels and 64 characters per label; the text
+field/normalizer cap input at 8,400 characters. Footer links use only fixed IDs.
+JSON/local project flows retain custom edits. Main navigation remains a shorter
+selection of destinations rather than duplicating the entire content inventory.
+
 ## Basic and Advanced sample modes
 
 `state.sampleMode` is a validated `advanced` / `basic` enum, defaulting to Advanced
@@ -253,19 +321,26 @@ for existing projects, startup, New and Reset. It participates in the existing
 project JSON and local save/load flows. Invalid imported modes fall back to
 Advanced. No separate palette or project state is introduced for Basic.
 
-`basic-homepage.js` registers after the Advanced sample generator and before the
-responsive-preview module. Its initializer captures the full Advanced HTML/CSS
-functions and wraps the existing public generators to select the current mode.
-Advanced output is unchanged. Basic produces a small semantic HTML page and a
-complete dedicated stylesheet with a subset of shared foundation/semantic tokens,
-rather than including the Advanced gallery, workshops or unused component CSS.
-The token catalogue continues to read the selected CSS generator.
+`sample-system.js` registers before both sample generators. It captures the
+shared foundation/component CSS generator after planning styles initialize and
+provides common button classes, header navigation text/state styles, footer HTML
+and footer CSS. Header links use Advanced's semibold/plain-at-rest treatment in
+both modes, independently of general link underlining. Both modes therefore
+export the same foundation ramps, semantic roles, typography, spacing, responsive
+settings, card/control appearance and Button Design rules. Basic adds its simple
+page layout; Advanced adds its gallery/workshop layout. Basic no longer recreates
+a partial set of tokens or hard-codes body/heading sizes, spacing, measure,
+control dimensions, border widths or card effects. Global link focus follows the
+saved focus width, while buttons retain their component focus settings.
 
-Basic renders header/logo/wrapping nav, hero, three Grid cards, a native-validation
-sign-up form and footer with a real Back to top fragment. It uses the current
-project name, theme, curated/system font settings, scale/leading/tracking, heading
-weight, radius, semantic palette, grid gap/card minimum and focus width. Other
-advanced component simulations do not turn Basic navigation/forms into state demos.
+`basic-homepage.js` registers after the Advanced generator and before the preview.
+It wraps the public HTML/CSS functions to select the current mode; all inspector,
+copy, preview and download paths continue through those functions. Basic renders
+header/logo/wrapping navigation, hero, three Grid cards, three semantic list cards,
+a native-validation sign-up form and the shared footer. The two samples use the
+same heading sizes at each hierarchy level and the same saved button size/mobile
+width classes. Advanced interaction simulations remain gallery demonstrations;
+Basic keeps usable native form controls and ordinary page actions.
 Imported project text is escaped. The static form has no sign-up backend; the
 preview intercepts its submission and announces that no account was created.
 

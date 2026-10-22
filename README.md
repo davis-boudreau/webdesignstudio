@@ -12,23 +12,63 @@ The inspector stacks at 1280 px and below; all panes stack at 900 px and below.
 On a normal load, only **1. Responsive page preview** is expanded in the centre
 pane, in Fluid mode. All other centre sections start collapsed. The preview stays
 synchronized with wizard edits even when you collapse it.
-The **1–15 section menu** sits above the responsive preview and stays pinned below
+The **1–16 section menu** sits above the responsive preview and stays pinned below
 the app header while you browse the centre lessons, including on phones. Scroll
 the menu horizontally when needed; keyboard focus reveals offscreen links.
 
 The **Live CSS/HTML Inspector** has **Advanced / Basic** sample tabs above its
 independent **CSS / HTML** language tabs. Advanced keeps the full field guide.
 Basic provides a minimal responsive homepage: logo and wrapping navigation, hero,
-three CSS Grid cards, a labelled static sign-up form and a footer with Back to top.
+three CSS Grid cards, a three-column lists lesson, a labelled static sign-up form
+and a footer with Back to top and an Architecture-driven sitemap.
 Its shorter, commented CSS teaches Flexbox, Grid, spacing, typography and focus.
 
 The selected sample drives the live preview, code panels, copy actions and all
 HTML/CSS downloads. Save the matching `index.html` and `tokens.css` together.
 The mode travels with project JSON and local saves; older projects and Reset use
 Advanced. The Basic form demonstrates browser validation and has no sign-up
-service. Basic uses foundation colours, fonts, radius, grid gap/card minimum and
-focus settings; advanced button-state simulations and planning workshops belong
-to the Advanced sample. Changing modes starts a fresh preview browsing session.
+service. Basic and Advanced use the same generated design system: colours,
+fluid type,
+spacing, reading width, corners, card appearance, controls, buttons and responsive
+settings. Basic keeps a simpler page layout; planning workshops and state
+demonstrations belong to Advanced. Changing modes starts a fresh preview
+browsing session.
+
+**Architecture is the sitemap plan.** The starter maps all sections and content
+groups in the selected Basic or Advanced sample, including cards, lessons and
+workshop topics. Both sample footers use this map, with links to existing content.
+The full map
+is expandable; identity, key links and Back to top stay readily available.
+The original six-entry starter upgrades automatically. Complete sample maps
+follow mode changes; custom edits are preserved. **Use complete Basic/Advanced
+sitemap** restores the selected inventory. Use `Parent > Child` for two levels,
+up to 64 entries and 64 characters per label. New, unbuilt entries are marked
+**Planned page**. This is a single-page content map: main navigation can show a
+shorter selection of key destinations. Basic's lists demonstrate `ul`, `ol` and
+`dl`, with three titled cards side by side when space allows.
+
+The **Project brief** lesson teaches seven website-specific basics: purpose,
+audience, pages/features, content, design requirements, delivery and success.
+A fill-in template and a small café example show how to write a short brief. The
+wizard uses the same seven numbered fields, labels and prompts, in the same
+order as the lesson. Content and Delivery have their own saved fields. Older
+combined notes are preserved in Pages and features / Design and requirements;
+separate them into the new fields as needed. Answers remain under **Your draft
+brief** and are never replaced by the example.
+
+The **Responsive** phase follows Layout. Choose the narrow stacking cutoff, wide
+spacing start, maximum page width and standard/wide side gutters; these apply to
+both samples and their exports. Card minimum/gap controls now live in this phase.
+The corresponding lesson shows the current rules and preview media-query state.
+The wide start stays at least 160px after the narrow cutoff. Gutters are independent
+of the spacing unit. Typography limits and accessibility settings stay in their
+own phases. Preview presets are fixed test widths, not saved breakpoints.
+
+Choose breakpoints when content needs to change, following
+[web.dev's responsive-design guidance](https://web.dev/learn/design/media-queries).
+The brief lesson includes optional further reading from
+[Smashing Magazine's website-planning guide](https://www.smashingmagazine.com/2018/02/comprehensive-website-planning-guide-part1/).
+
 
 The **Live CSS/HTML Inspector** switches between generated styles and a complete
 Web Design Field Guide home page. Both update with your selections. Copy or
@@ -55,9 +95,9 @@ system fonts work offline. Optional Google Fonts still require their CDN. Forms
 are demonstrations with no message delivery.
 
 
-The **left pane configures** the system through eleven wizard steps: Project Brief,
+The **left pane configures** the system through twelve wizard steps: Project Brief,
 Information Architecture, Wireframing, Prototyping, Palette, Typography, Components,
-Buttons, Layout, Accessibility and Deliver.
+Buttons, Layout, Responsive, Accessibility and Deliver.
 Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
 component examples, token relationships and practice exercises; each section

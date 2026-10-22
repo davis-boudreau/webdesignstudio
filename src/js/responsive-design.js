@@ -28,9 +28,12 @@
         apply();
       });
       function viewport() {
-        const width = document.getElementById('previewPage').contentDocument?.documentElement.clientWidth || 0;
+        const view = document.getElementById('previewPage').contentWindow;
+        const width = view?.innerWidth || 0;
         const r = settings();
-        document.getElementById('responsiveLessonViewport').textContent = width ? `Current preview: ${width}px. ${width <= r.stack ? 'Narrow: main sections stack.' : 'Main sections can sit side by side.'} ${width >= r.wide ? 'Wide side gutters apply.' : 'Standard side gutters apply.'} Cards can wrap earlier when their container is too narrow.` : 'Open the responsive preview to compare widths.';
+        const narrow = view?.matchMedia(`(max-width: ${rem(r.stack)})`).matches;
+        const wide = view?.matchMedia(`(min-width: ${rem(r.wide)})`).matches;
+        document.getElementById('responsiveLessonViewport').textContent = width ? `Current preview: ${width}px. ${narrow ? 'Narrow: main sections stack.' : 'Main sections can sit side by side.'} ${wide ? 'Wide side gutters apply.' : 'Standard side gutters apply.'} Cards can wrap earlier when their container is too narrow.` : 'Open the responsive preview to compare widths.';
       }
       function sync() {
         const r = settings();

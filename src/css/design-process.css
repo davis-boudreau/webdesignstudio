@@ -1,4 +1,6 @@
 /* Studio planning controls; shared artifact CSS comes from design-process.js. */
+#plan-brief-fields { display: grid; gap: 1.25rem; min-width: 0; }
+#plan-brief-fields .help { margin: 0; }
 .process-editor textarea { width: 100%; min-height: 7rem; resize: vertical; }
 .process-editor input, .process-editor select { max-width: 100%; min-width: 0; }
 .process-editor .field { min-width: 0; }

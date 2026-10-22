@@ -4,8 +4,8 @@ Updated: 21 October 2026 (America/Halifax).
 
 ## Current objective
 
-Provide independent Basic and Advanced samples in the Live CSS/HTML Inspector,
-keeping the selected HTML/CSS, preview, downloads and saved projects synchronized.
+Align the left-pane brief wizard with the approved seven-question centre
+lesson, keeping saved projects and generated drafts consistent.
 The initial audit began at commit
 `6163ada` (`improved UX/UI`) with a clean working tree; its changes are still local.
 
@@ -753,6 +753,222 @@ this HTML startup-default change.
   new network requests, commits, pushes or deployments were introduced.
 - Next step: try the Basic file pair and keyboard journey in an interactive browser,
   then continue the manual accessibility and CI work below.
+
+## Responsive phase, brief training and Basic lists/sitemap (21 October 2026)
+
+- Added phase 10, Responsive, between Layout and Accessibility: twelve wizard
+  phases and sixteen centre lessons. Moved grid minimum/gap/alignment controls
+  into this phase, updated token/lesson routes and retained stable section IDs.
+  Added five validated project settings for narrow cutoff, wide spacing start,
+  page maximum and standard/wide gutters, with 768/1024/1152/16/32 defaults.
+- Both samples, exported styles, Advanced Grid recipe and planning wireframes
+  consume these shared decisions. Three page tokens route to Responsive and are
+  classified as Layout. Breakpoints export as literal rem media-query lengths;
+  variable-based container lengths remain separate. Preview presets, fluid type
+  bounds, studio pane widths and component-specific button settings stay separate.
+- New lesson explains content-led breakpoints, containers, wrapping, flexible
+  images and boundary checks, with a current recipe and real iframe matchMedia
+  readout. Ordered/bounded imports and 1px slider increments preserve exact valid
+  lengths. UI changes use existing Apply/render/autosave and JSON/local flows.
+- Replaced the prefilled Project Brief lesson with five plain-language questions
+  and a fill-in sentence. New brief fields start empty with prompts. Imported
+  answers remain available in an optional Your draft brief disclosure. Guidance
+  follows web.dev media-query and GOV.UK user-needs primary sources, linked from
+  the lessons and README.
+- Basic now has four main sections: hero, features, lists and static sign-up.
+  The lists section demonstrates titled ul/ol/dl examples side by side when space
+  permits and stacks at narrow widths. Header/footer navigation includes Lists.
+- Clarified that Architecture's Pages and content groups is the sitemap plan.
+  Its existing two-level parser now also supplies Basic's footer sitemap. Known
+  built-section labels become actual fragment links; other entries are escaped
+  text with Planned page markers. Empty plans show an explicit empty state while
+  ordinary footer navigation continues to reach every built section. Architecture
+  edits update the centre map, footer, Inspector and downloaded HTML together.
+- Preserved preview disclosure state by stable IDs/summary keys rather than array
+  position, preventing the first added brief draft from transferring a FAQ's open
+  state to a different disclosure. Added a regression for draft insertion.
+- Commands run: `python scripts/check_structure.py` (**38 assets verified**),
+  `python scripts/browser_review.py` (**736/736 passed**, no captured JavaScript
+  errors), and `git diff --check` (passed). A focused temporary browser harness
+  passed **1/1** after the final page-token classification refinement. Chrome used
+  elevated execution with isolated temporary profiles. Increased suite allowances
+  to 60 seconds virtual time / 120 seconds process time for the longer sequence.
+- Current browser coverage includes both themes/modes immediately below/at/above
+  custom cutoffs, gutters/page width, exact import values, malformed data, save /
+  round trips / reset, brief instructions and preserved drafts, list semantics,
+  responsive geometry, sitemap live edits/empty state/safe text and valid links.
+  The first expanded run was 733/734: its security assertion expected a literal
+  greater-than character that the documented hierarchy delimiter consumes. Corrected
+  the assertion while retaining DOM-injection and destination safety checks.
+- Ran temporary local-server/headless-Chrome screenshot helpers; inspected the
+  desktop Responsive editor/lesson, simple brief guide, desktop list cards and
+  exact 390 px dark footer sitemap. No visual-comparison baseline was added.
+- Intermediate work was committed by the user as `62924b5` while this task was in
+  progress. The final checks above validate the completed work, including later
+  local changes. No commits, pushes or deployments were made by this assistant.
+  User snapshots `test.html` and `tokens.css` remain untouched.
+- Previous optional media/real-font checks remain historical and were not rerun.
+  Manual screen-reader, keyboard/zoom, Firefox/Safari and actual download-dialog
+  checks remain open. No new runtime dependencies or network requests were added.
+- Next step: try a real Architecture plan and both exported samples, then complete
+  the manual accessibility and CI work below.
+
+## Complete sample content maps (21 October 2026)
+
+- Replaced the six-entry starter with complete Basic (11 entries) and Advanced
+  (38 entries) inventories. Maps include all main sections and article groups: Basic cards/lists and
+  Advanced planning stages, ten lessons, layout/visual workshops, resources and
+  components. Added fixed destination IDs and an Advanced footer sitemap.
+- Architecture, wireframe/prototype topic labels, both footer maps and generated
+  HTML resolve the same selected-sample plan. Untouched complete maps follow the
+  mode; the exact old starter upgrades automatically. Custom/empty maps remain
+  unchanged across mode switches and JSON round trips. The explicit restore
+  button replaces a custom map with the current sample inventory.
+- Kept destinations restricted to fixed IDs and escaped unknown labels. Raised
+  limits to 64 entries / 8,400 characters (two levels, 64 characters per label).
+  Updated training copy, README, architecture notes, changelog and asset versions.
+- Added browser regressions for complete destination coverage in both modes,
+  matching editor/centre/footer maps, custom preservation/round trips, restore,
+  legacy starter upgrades and the expanded parser bound. Existing responsive
+  checks now run against the populated Basic sitemap.
+- Current verification: `python scripts/check_structure.py` passed (38 assets);
+  `git diff --check` passed (existing CRLF normalization notices only).
+  First browser run completed at 778/781, including duplicate table-ID and
+  complete-map coverage failures. Split the layout-comparison/resource-library
+  IDs and included the layout-comparison entry. The second run passed 781/782;
+  its remaining assertion still expected the old four-link footer. Updated that
+  assertion to check the five footer shortcuts separately from the full sitemap.
+  Final `python scripts/browser_review.py` passed **782/782**, with no
+  interaction JavaScript errors. All three required checks passed on the final
+  implementation; browser checks used an isolated temporary Chrome profile.
+- Manual visual, keyboard, screen-reader and Firefox/Safari checks were not run
+  for this change. Earlier visual checks above belong to the previous task.
+- Next step: review the complete maps with real training content and complete
+  the manual accessibility/cross-browser checks. No commits or deployments made.
+
+## Shared sample system and footer review (21 October 2026)
+
+- Confirmed Basic maintained a separate, partial token/CSS generator and fixed
+  body/heading sizes, spacing, reading measure, control sizes and card appearance.
+  Added `sample-system.js` to capture the existing shared foundation/component
+  generator before the sample layouts, with common button classes/footer output.
+  Script order remains dependency-safe; there are no new runtime dependencies.
+- Both samples now use the same generated ramps, semantic/theme roles, fluid
+  typography and spacing tokens, reading width, card borders/shadow/opacity,
+  control dimensions/focus, grid alignment and Button Design settings. Basic's
+  HTML stays simple. It now uses shared `ds-button` classes and labelled `.input`
+  controls; its layout CSS consumes tokens rather than overriding system values.
+  General link focus also follows the saved focus width in both exports.
+- Replaced duplicate footer implementations with shared identity/Explore rows,
+  a closed native expandable sitemap and a copyright/Back to top row. Added
+  Advanced's `#top` destination. The full maps and custom plans remain intact;
+  shorter footer links remain visible. Rows use the saved responsive cutoff,
+  gutters, type, borders and spacing. Footer link weight is now shared too.
+- Added regressions comparing actual computed Basic/Advanced styles under default
+  and edited/imported settings in both themes, standalone and live preview;
+  covered custom button colours/dimensions, footer disclosure and all footer
+  target sizes/overflow at 320, 390 and 1440 px. Updated prior assertions for the
+  shared system CSS and expandable sitemap. Updated asset versions and docs.
+- Current checks: `python scripts/check_structure.py` passed (39 assets),
+  `git diff --check` passed (existing CRLF normalization notices only).
+  Initial expanded `python scripts/browser_review.py` passed **804/804**, no
+  interaction errors. The final run, including the footer weight adjustment and
+  custom button colour assertions, also passed **804/804**, with no interaction
+  JavaScript errors.
+- `python scripts/button_states_review.py` passed **5/5 reduced-motion** and
+  **7/7 forced-colour** checks using isolated temporary Chrome profiles.
+- Generated and visually inspected temporary screenshots for both modes: 1440 px
+  light desktop and exact 390 px dark phone. Footer identity, links, disclosure
+  and bottom rows fit; final link-weight consistency was corrected afterward.
+  Screenshots are temporary local artifacts, not committed visual baselines.
+- Manual keyboard-only, screen-reader, zoom and Firefox/Safari review remain open;
+  passing the automated suite does not establish full accessibility. Root user
+  snapshots `tokens.css` and `test.html` were not edited. No commits/deployments.
+- Next step: review with real training content and complete the manual
+  accessibility/cross-browser checks.
+
+## Header navigation consistency (21 October 2026)
+
+- Confirmed Basic header links inherited normal body weight/general underlining,
+  while Advanced explicitly used weight 600 and plain links at rest.
+- Moved Advanced's header navigation text, hover/pressed underlines and component
+  focus ring into shared sample foundation CSS, targeting both headers. Advanced
+  resource-table styles remain separate. Basic keeps its wrapping layout and
+  Advanced keeps its native mobile menu; text treatment now has one source.
+- Refreshed sample-system/sample-homepage asset versions. Added browser checks
+  comparing navigation fonts/decoration across modes, both themes, default and
+  edited/imported settings, live previews and standalone exports, including
+  visible links and focus rings at 320, 390 and 1440 px.
+- Current checks: `python scripts/check_structure.py` passed (39 assets) and
+  `git diff --check` passed (existing CRLF normalization notices only).
+  Required `python scripts/browser_review.py` passed **852/852**, with no
+  interaction JavaScript errors, using an isolated temporary Chrome profile.
+- No button component rules changed; prior reduced-motion/forced-colour results
+  above are historical for this task. Manual keyboard-only, screen-reader and
+  cross-browser review were not performed for this small text-style change.
+  User root snapshots remain untouched. No commits or deployments.
+- Next step: verify navigation in the user's preview and complete the manual
+  accessibility/cross-browser review.
+
+## Website-project brief lesson (21 October 2026)
+
+- Replaced the generic user-needs guide with seven website-project prompts:
+  purpose/main action, audience, first-release pages/features and exclusions,
+  content and its owner, design/technical/accessibility requirements, delivery
+  (deadline, budget/time, handover, approval and maintenance), and a success check.
+- Added a fill-in template and a clearly labelled static cafe website example.
+  The example explains three pages, no online ordering, owner-supplied content,
+  branding, phone/keyboard use, delivery and a visitor task. It does not fill in
+  or overwrite a learner's saved answers. Unknowns can be marked to confirm.
+- Reviewed the old GOV.UK user-needs page, Smashing Magazine's website-planning
+  guide (Ben Seigel, needs assessment/client brief) and Figma's design-brief guide.
+  The lesson now stands alone and links to Smashing Magazine as optional website
+  planning reading. No remote content is loaded into the runtime.
+- Updated stage introduction/practice, wizard labels/placeholders/scope help,
+  generated Advanced lesson, README, architecture notes, changelog and asset
+  version. Existing audience/goal/scope/success/constraints data and limits remain.
+- `python scripts/check_structure.py` passed (39 assets); `git diff --check`
+  passed (existing CRLF notices only). Full `python scripts/browser_review.py`
+  passed **853/853**, with no interaction JavaScript errors.
+- After final wording/label corrections, ran a temporary focused harness through
+  the same browser runner: **7/7** passed for seven prompts, accent/apostrophe
+  rendering, wizard labels, source replacement, saved-field preservation,
+  matching Advanced export and the lesson at 320 px. Added the final wording
+  assertion to the tracked regression suite afterward; that extra assertion was
+  covered by the focused run, not the earlier 853-check full run.
+- Manual keyboard/screen-reader, visual screenshot and cross-browser reviews were
+  not run for this lesson change. Previous screenshot results remain historical.
+  No root snapshots, commits, deployments or runtime dependencies were changed.
+- Next step: try writing a brief for a real small website with the revised guide.
+
+## Seven-field brief wizard alignment (21 October 2026)
+
+- Replaced the five combined brief editors with seven numbered fields in the
+  approved lesson order: Purpose, Audience, Pages and features, Content, Design
+  and requirements, Delivery, Success. Labels and full question text now match
+  the centre lesson exactly. Updated guidance and completion prompts accordingly.
+- Added one `briefFields` definition for field keys, labels, prompts and limits.
+  It generates the wizard, lesson checklist and saved draft, preventing separate
+  wording/order from drifting again. Added spacing for the generated editor group
+  and refreshed affected JS/CSS query versions.
+- Added Content and Delivery to normalized project planning data (empty defaults,
+  string-only values, 1,200-character bounds). Kept original goal/audience/scope/
+  constraints/success keys. Legacy combined notes remain in their original fields;
+  no guessed splitting or automatic overwrite. Shared state makes new answers
+  follow JSON, local projects, the centre draft, Advanced preview and HTML export.
+- Extended existing autosave, project-switch/file-import and JSON round-trip tests
+  with Content/Delivery values. Added parity/order/prompt checks, legacy combined
+  note preservation, new field limits/type validation, escaping and reset checks.
+  Draft assertions now select a named field rather than assuming Audience is first.
+- Current verification: `python scripts/check_structure.py` passed (39 assets),
+  `git diff --check` passed (CRLF normalization notices only). Required browser
+  suite is running; final result pending.
+- Captured and inspected temporary 1440 px/390 px screenshots. Desktop Purpose,
+  Audience and Pages/features editors have readable spacing; the narrow wizard
+  introduction/navigation fits. These are temporary checks, not screenshot baselines.
+- Manual keyboard/screen-reader, full form visual and cross-browser review remain
+  open. No network dependencies, root snapshots, commits or deployments changed.
+- Next step: record browser results and try a complete brief in the aligned wizard.
 
 ## Open work / next session
 

@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Changed
+- Aligned the brief wizard with the approved seven-question lesson using one shared definition for order, labels, prompts and saved drafts. Added dedicated Content/Delivery fields while retaining legacy notes and project round trips.
+- Reworked Project Brief around seven website-project basics, a fill-in template and a café example; replaced the general GOV.UK source with optional website-planning reading and aligned wizard prompts without changing saved fields.
+- Matched Basic header navigation to Advanced: shared semibold text, plain links at rest, hover/pressed underlines and focus rings in both preview and exported CSS.
+- Unified Basic and Advanced foundation/component exports so Basic follows the saved system typography, spacing, cards, controls and buttons. Redesigned both footers with shared responsive identity/navigation rows, an expandable sitemap and Back to top.
+- Replaced the six-entry starter sitemap with complete Basic/Advanced content inventories, shared by Architecture and both sample footers. Preserved custom plans, upgraded the old starter, added a restore action and expanded the safe entry limit to 64.
+- Added a Responsive phase and centre lesson for content-led breakpoints, page width and gutters across both samples; moved grid controls into the phase and kept saved values validated/exported. Simplified Project Brief into a five-question guide with an optional preserved draft.
+- Added three titled semantic list examples to Basic and linked its footer sitemap to the Architecture plan, with working links only for built sections and explicit Planned page labels for other entries.
 - Added independent Advanced/Basic sample tabs to the Live CSS/HTML Inspector. Basic supplies a compact responsive header/nav/logo, hero, Grid cards, static sign-up and footer/Back to top with its own commented CSS. The selected mode follows preview/code/downloads and is validated/persisted with projects; Advanced stays the default.
 - Added explicit separate HTML/CSS website download actions above the responsive preview and in Deliver, with matching code shortcuts. Deliver now downloads `tokens.css` to match the generated HTML's stylesheet link. Both files share the live preview generators.
 - Added project brief, information architecture, wireframing and prototyping before palette design: eleven wizard stages, fifteen centre lessons, validated saved planning data, shared live/exported artifacts and a ten-lesson HTML field guide. Updated navigation, token-source routes and learning shortcuts; older projects receive starter planning data.

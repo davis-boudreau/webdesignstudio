@@ -42,6 +42,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   window.dssTokenSource = sourceFor;
 
   const describe = (name, type) => {
+    if (name.startsWith('--page-')) return 'Responsive page maximum width or side gutter; configure in the Responsive phase.';
     if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Extra character spacing in em, relative to the element font size.';
     if (name.startsWith('--brand-')) return 'Project Brand Palette reference; choose separately for a Main Palette UI role.';
     if (/^--(primary|secondary|accent)-\d+$/.test(name))
@@ -69,7 +70,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
     if (name.startsWith('--button-')) return 'Button component';
     if (/^--(font|text-|type-ratio|body-leading|heading-leading|heading-weight|reading-measure)/.test(name)) return 'Typography';
     if (/^--(space|radius)/.test(name)) return 'Spacing & shape';
-    if (name.startsWith('--grid-')) return 'Layout';
+    if (name.startsWith('--grid-') || name.startsWith('--page-')) return 'Layout';
     if (/^--(elevation|surface-opacity|border-width|control-height)/.test(name)) return 'Surface & controls';
     if (name === '--motion-duration') return 'Motion';
     return SEMANTIC_COLOUR_KEYS.includes(name.slice(2)) ? 'Semantic colours' : 'Interaction';

@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/design-process.css?v=20261021-process">
+    <link rel="stylesheet" href="src/css/design-process.css?v=20261021-brief-alignment">
     <link rel="stylesheet" href="src/css/website-export.css?v=20261021-downloads">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261021-basic">
@@ -76,15 +76,15 @@
             </div>
             <div class="journey-pane" data-journey-pane="0">
               <h3 class="journey-stage-title">1. Write the project brief</h3>
-              <p class="help">Record who the website is for, what they need to do and how you will know the design helps. Your later architecture, layout and palette choices should support this purpose.</p>
+              <p class="help">Agree the website's purpose, audience, first-release pages and features, content, requirements and delivery plan. Keep the brief short; use it to guide your sitemap and design choices.</p>
               <details class="learning-note build-guide">
                 <summary>What should I decide before changing styles?</summary>
                 <div class="learning-content">
                   <dl>
                     <dt>Project name</dt><dd>Use a descriptive name so you can recognize saved designs and exports. This name is not a website address.</dd>
                     <dt>Starting preset</dt><dd>Example supplies a complete starting design. Choosing it again restores defaults; save or export work you want to keep first. Custom keeps your current choices for adaptation.</dd>
-                    <dt>Audience and task</dt><dd>Use the brief fields below to record the audience and task: ?Help community members find an event and register.? Identify one main action and the content people need to complete it.</dd>
-                    <dt>Scope</dt><dd>Start with a palette, type scale, spacing rules and a few components. A design system also needs usage guidance and testing; generated tokens are the starting point.</dd>
+                    <dt>Audience and task</dt><dd>Use Purpose and Audience below to name the main visitor action and who needs it. For example: help community members find an event and register.</dd>
+                    <dt>Website scope</dt><dd>List the pages, features and content needed for the first release, plus anything excluded. Use Content for the materials and their owner, Design and requirements for brand and technical needs, and Delivery for timing, budget, handover and approval.</dd>
                   </dl>
                   <p>The selected step marks your place in the builder; it does not validate your design. You can revisit any step.</p>
                   <p class="learning-reference">See <a href="#studio-section-7">Design workflow</a> for the full process.</p>
@@ -102,21 +102,17 @@
                   <option value="custom">Custom &middot; adapt the starter project</option>
                 </select>
               </div>
-              <div class="field process-editor"><label for="plan-audience">Audience</label><textarea id="plan-audience" data-process-field="audience" placeholder="Who will use this website?" maxlength="600" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-goal">Main audience task</label><textarea id="plan-goal" data-process-field="goal" placeholder="What is their main task?" maxlength="600" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-scope">Project scope</label><textarea id="plan-scope" data-process-field="scope" placeholder="Which pages or features are needed first?" maxlength="1200" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-success">Success signal</label><textarea id="plan-success" data-process-field="success" placeholder="How will you know the website helps?" maxlength="600" rows="3"></textarea></div>
-              <div class="field process-editor"><label for="plan-constraints">Constraints and requirements</label><textarea id="plan-constraints" data-process-field="constraints" placeholder="What limits or requirements must you consider?" maxlength="1200" rows="3"></textarea></div>
+              <div id="plan-brief-fields"></div>
               <p class="journey-tip">
                 <strong>Your goal:</strong>
-                Identify the website and its audience. Start with the example project, then adapt the design to your own project.
+                Answer the seven prompts in the same order as the Project brief lesson. Keep each answer short and mark unknowns as to confirm.
               </p>
-              <p class="journey-tip"><strong>Before moving on:</strong> You can name the audience, main task and one reason for adapting the example.</p>
+              <p class="journey-tip"><strong>Before moving on:</strong> You can explain the purpose, audience, scope, content, design requirements, delivery plan and success check.</p>
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden>
               <h3 class="journey-stage-title">2. Map the information architecture</h3>
               <p class="help">Inventory the content, group it around audience tasks and choose labels people understand. The live sitemap below the centre lesson shows your relationships.</p>
-              <div class="field process-editor"><label for="plan-pages">Pages and content groups</label><textarea id="plan-pages" data-process-field="pages" maxlength="1600" rows="5" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">Use one entry per line, up to 12 entries. Write Lessons &gt; Layout for a child page. The map supports two levels and labels up to 64 characters. Labels are plain text, not URLs.</p></div>
+              <div class="field process-editor"><label for="plan-pages">Pages and content groups (sitemap)</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">The complete map follows the Basic or Advanced sample selected in the inspector. Edit it to plan your own content; custom edits are kept when switching samples. Use one entry per line, up to 64 entries, with Parent &gt; Child for two levels and labels up to 64 characters. Labels are plain text, not URLs. The centre lesson and footer share this plan; only existing content becomes a link.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample sitemap</button></div>
               <p class="journey-tip"><strong>Before moving on:</strong> Can someone predict where to find the information needed for the main task?</p>
             </div>
             <div class="journey-pane" data-journey-pane="2" hidden>
@@ -643,11 +639,11 @@
             <div class="journey-pane" data-journey-pane="9" hidden>
               <h3 class="journey-stage-title">10. Responsive rules and breakpoints</h3>
               <p class="help">Start narrow. Add a layout change when content needs it, rather than targeting a device name. These settings apply to Basic and Advanced exports, not the studio panels.</p>
-              <div class="field"><label for="responsive-stack">Narrow layout cutoff <output id="responsive-stackOut"></output></label><input id="responsive-stack" data-responsive-field="stack" type="range" min="480" max="960" step="16"></div>
-              <div class="field"><label for="responsive-wide">Wide layout starts <output id="responsive-wideOut"></output></label><input id="responsive-wide" data-responsive-field="wide" type="range" min="800" max="1600" step="16"></div>
-              <div class="field"><label for="responsive-maxWidth">Maximum page width <output id="responsive-maxWidthOut"></output></label><input id="responsive-maxWidth" data-responsive-field="maxWidth" type="range" min="960" max="1600" step="16"></div>
-              <div class="field"><label for="responsive-gutter">Standard side gutters <output id="responsive-gutterOut"></output></label><input id="responsive-gutter" data-responsive-field="gutter" type="range" min="8" max="48" step="4"></div>
-              <div class="field"><label for="responsive-wideGutter">Wide side gutters <output id="responsive-wideGutterOut"></output></label><input id="responsive-wideGutter" data-responsive-field="wideGutter" type="range" min="8" max="64" step="4"></div>
+              <div class="field"><label for="responsive-stack">Narrow layout cutoff <output id="responsive-stackOut"></output></label><input id="responsive-stack" data-responsive-field="stack" type="range" min="480" max="960" step="1"></div>
+              <div class="field"><label for="responsive-wide">Wide layout starts <output id="responsive-wideOut"></output></label><input id="responsive-wide" data-responsive-field="wide" type="range" min="800" max="1600" step="1"></div>
+              <div class="field"><label for="responsive-maxWidth">Maximum page width <output id="responsive-maxWidthOut"></output></label><input id="responsive-maxWidth" data-responsive-field="maxWidth" type="range" min="960" max="1600" step="1"></div>
+              <div class="field"><label for="responsive-gutter">Standard side gutters <output id="responsive-gutterOut"></output></label><input id="responsive-gutter" data-responsive-field="gutter" type="range" min="8" max="48" step="1"></div>
+              <div class="field"><label for="responsive-wideGutter">Wide side gutters <output id="responsive-wideGutterOut"></output></label><input id="responsive-wideGutter" data-responsive-field="wideGutter" type="range" min="8" max="64" step="1"></div>
               <p class="help">At or below the narrow cutoff, main sections stack. At or above the wide start, wide gutters apply. The wide start stays at least 160px beyond the narrow cutoff. Gutters are independent of the spacing unit.</p>
               <p class="journey-tip"><strong>Try it:</strong> compare both samples just below and above your cutoffs. Check labels, navigation, forms and content order. Grid minimum and gap below control card wrapping independently.</p>
             </div>
@@ -2059,19 +2055,20 @@
       <script src="src/js/brand-palette.js?v=20261021-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261021-responsive" defer></script>
-      <script src="src/js/responsive-design.js?v=20261021-responsive" defer></script>
+      <script src="src/js/design-process.js?v=20261021-brief-alignment" defer></script>
+      <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/core-state.js?v=20261021-responsive" defer></script>
       <script src="src/js/css-dock.js?v=20261021-basic" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/journey-library.js?v=20261021-responsive" defer></script>
       <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/sample-homepage.js?v=20261021-responsive" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261021-responsive" defer></script>
-      <script src="src/js/responsive-preview.js?v=20261021-basic" defer></script>
+      <script src="src/js/sample-system.js?v=20261021-navigation" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261021-navigation" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261021-shared-samples" defer></script>
+      <script src="src/js/responsive-preview.js?v=20261021-responsive" defer></script>
       <script src="src/js/website-export.js?v=20261021-downloads" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261021-responsive" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
       <script src="src/js/contrast-audit.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>

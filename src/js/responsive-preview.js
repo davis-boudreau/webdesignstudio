@@ -36,6 +36,15 @@
         });
       }
 
+      function detailsByKey(doc) {
+        const counts = new Map();
+        return [...doc.querySelectorAll('details')].map(detail => {
+          const label = detail.id ? 'id:'+detail.id : 'summary:'+detail.querySelector('summary')?.textContent;
+          const occurrence = counts.get(label) || 0;
+          counts.set(label, occurrence+1);
+          return [label+':'+occurrence, detail];
+        });
+      }
       function capture(doc) {
         const controls = [...doc.querySelectorAll('input, select, textarea')];
         return {
@@ -44,7 +53,7 @@
           activeControl: controls.indexOf(doc.activeElement),
           controls: controls.map(control => ({ id: control.id, name: control.name,
             type: control.type, value: control.value, checked: control.checked })),
-          details: [...doc.querySelectorAll('details')].map(detail => detail.open)
+          details: detailsByKey(doc).map(([key,detail]) => [key,detail.open])
         };
       }
 
@@ -56,9 +65,9 @@
           control.value = old.value;
           if (['checkbox', 'radio'].includes(control.type)) control.checked = old.checked;
         });
-        doc.querySelectorAll('details').forEach((detail, index) => {
-          if (index < saved.details.length) detail.open = saved.details[index];
-        });
+        const disclosures = new Map(saved.details);
+        for (const [key,detail] of detailsByKey(doc))
+          if (disclosures.has(key)) detail.open = disclosures.get(key);
         const active = doc.getElementById(saved.activeId) || controls[saved.activeControl];
         active?.focus({ preventScroll: true });
         doc.defaultView.scrollTo(saved.x, saved.y);
