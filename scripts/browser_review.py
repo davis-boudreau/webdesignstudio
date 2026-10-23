@@ -1405,7 +1405,7 @@ app.onload = async () => {
   input('plan-audience',hostile); input('plan-pages',hostile+' > Child'); input('plan-prototypeNotes',hostile); await wait();
   test('Planning text is escaped in studio lessons, exports and the live sample', () => {
     const exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return !d.querySelector('[data-process-artifact] img, [data-process-artifact] script') && !exported.querySelector('#design-process img, #design-process script') && !previewDoc().querySelector('#design-process img, #design-process script') && d.querySelector('#process-brief dd').textContent===hostile && exported.querySelector('#brief-lab dd').textContent===hostile && !w.planExecuted;
+    return !d.querySelector('[data-process-artifact] img, [data-process-artifact] script') && !exported.querySelector('#design-process img, #design-process script') && !previewDoc().querySelector('#design-process img, #design-process script') && d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent===hostile && exported.querySelector('#brief-lab [data-brief-field="audience"] dd').textContent===hostile && !w.planExecuted;
   });
   reset(); await wait();
   test('Editing planning never mutates the starter defaults; reset restores every field', () => evaluate('JSON.stringify(state.designProcess)===JSON.stringify(DSStudio.process.defaults()) && JSON.stringify(DEFAULT.designProcess)===JSON.stringify(DSStudio.process.defaults())'));
@@ -1481,6 +1481,11 @@ app.onload = async () => {
   test('Basic selection synchronizes inspector, preview and central exports while retaining the language tab', () => evaluate('state.sampleMode')==='basic' && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('codeView').textContent===evaluate('codeContent()') && previewDoc().querySelector('.feature-grid') && !previewDoc().querySelector('#design-process'));
   test('Basic exports shared system foundations without the Advanced gallery styles', () => evaluate('cssExport()').length<advancedCss.length && evaluate('cssExport()').includes('--space-unit:') && evaluate('cssExport()').includes('--button-pad-x:') && evaluate('cssExport()').includes('repeat(auto-fit, minmax(') && !evaluate('cssExport()').includes('.sample-grid-demo'));
   const basicDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+  test('Basic hero embeds the same accessible offline illustration as Advanced and the live inspector', () => {
+    const image=basicDoc.querySelector('#home img'), advanced=new w.DOMParser().parseFromString(advancedHtml,'text/html').querySelector('#home img');
+    const live=previewDoc().querySelector('#home img');
+    return image && image.getAttribute('src')===advanced.getAttribute('src') && image.getAttribute('src').startsWith('data:image/svg+xml;') && image.alt.length>0 && image.width===960 && image.height===720 && live.complete && live.naturalWidth===960 && live.getAttribute('src')===image.getAttribute('src') && d.getElementById('dockCss').textContent===evaluate('htmlExport()');
+  });
   test('Basic HTML has exactly four main sections, one heading, logo/nav, hero, three cards, signup and footer', () => basicDoc.querySelectorAll('main > section').length===4 && basicDoc.querySelectorAll('h1').length===1 && basicDoc.querySelector('header .logo[aria-hidden="true"]') && basicDoc.querySelector('header nav[aria-label]') && basicDoc.querySelector('#home .button') && basicDoc.querySelectorAll('.feature-grid article').length===3 && basicDoc.querySelector('#signup form') && basicDoc.querySelector('footer nav[aria-label]') && basicDoc.querySelector('footer a[href="#top"]'));
   test('Basic HTML IDs, fragment destinations and form labels resolve without scripts or inline styles', () => {
     const ids=[...basicDoc.querySelectorAll('[id]')].map(el=>el.id);
@@ -1508,7 +1513,12 @@ app.onload = async () => {
     test('Basic '+language+' copy and inspector download match the visible code', () => basicCopied===d.getElementById('dockCss').textContent && basicFiles.at(-1).content===basicCopied && basicFiles.at(-1).name===(language==='html'?'index.html':'tokens.css'));
   }
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:originalClipboard}); w.download=originalDownload;
+  const initialBasicImage=previewDoc().querySelector('#home img').getAttribute('src');
   input('jProject','Harbour learning club'); input('jBase',18); input('jPrimary','#196b63'); input('advGap',32); await wait();
+  test('Basic hero illustration follows live palette edits and HTML exports', () => {
+    const live=previewDoc().querySelector('#home img'), exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#home img');
+    return live.complete && live.naturalWidth===960 && live.getAttribute('src')!==initialBasicImage && live.getAttribute('src')===exported.getAttribute('src') && decodeURIComponent(live.getAttribute('src')).includes(evaluate('palette().roles.primary'));
+  });
   test('Basic design settings update its HTML, CSS, preview and source descriptions', () => previewDoc().querySelector('.brand').textContent.includes('Harbour learning club') && previewWindow().getComputedStyle(previewDoc().body).fontSize==='18px' && previewWindow().getComputedStyle(previewDoc().querySelector('.feature-grid')).gap==='32px' && d.getElementById('websiteSampleDescription').textContent.startsWith('Basic') && d.getElementById('dockNote').textContent.startsWith('Basic CSS'));
   const basicForm=previewDoc().querySelector('form');
   test('Basic signup has required name/email/consent and native invalid-input checks', () => !basicForm.checkValidity() && ['signup-name','signup-email'].every(id=>previewDoc().getElementById(id).required) && basicForm.querySelector('input[type="checkbox"]').required);
@@ -1529,8 +1539,16 @@ app.onload = async () => {
     basicPage.src=htmlUrl;
     await new Promise(resolve=>{basicPage.onload=resolve;if(!basicPage.isConnected)d.body.append(basicPage);});
     const pd=basicPage.contentDocument, pw=basicPage.contentWindow;
+    test(theme+' Basic standalone hero loads its current theme illustration without external assets', () => {
+      const image=pd.querySelector('#home img');
+      return image.complete && image.naturalWidth===960 && image.naturalHeight===720 && image.alt.length>0 && image.getAttribute('src')===evaluate('DSStudio.samples.illustration(palette().roles)');
+    });
     for (const width of [320,390,768,1440]) {
       basicPage.style.width=width+'px'; await wait();
+      test(theme+' Basic hero image and text reflow at '+width+'px', () => {
+        const layout=pd.querySelector('.hero-layout'), text=layout.firstElementChild.getBoundingClientRect(), image=pd.querySelector('#home img').getBoundingClientRect();
+        return pw.getComputedStyle(layout).gridTemplateColumns.split(' ').length===(width<=768?1:2) && image.width>0 && Math.abs(image.width/image.height-4/3)<.01 && image.right<=width+1 && (width<=768 ? image.top>=text.bottom : image.left>=text.right);
+      });
       test(theme+' Basic standalone page reflows with its separate stylesheet at '+width+'px', () => {
         const grid=pd.querySelector('.feature-grid'), cards=[...grid.children], first=cards[0].getBoundingClientRect();
         const columns=cards.filter(card=>Math.abs(card.getBoundingClientRect().top-first.top)<1).length;
@@ -1549,7 +1567,7 @@ app.onload = async () => {
   evaluate('importConfig({sampleMode:"basic",project:"<img src=x onerror=alert(1)>"})');
   test('Basic escapes imported project text in its title and brand', () => {
     const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return !page.querySelector('img,script') && page.querySelector('.brand').textContent.includes('<img src=x onerror=alert(1)>');
+    return page.querySelectorAll('img').length===1 && page.querySelector('#home img').getAttribute('src').startsWith('data:image/svg+xml;') && !page.querySelector('script,[onerror]') && page.querySelector('.brand').textContent.includes('<img src=x onerror=alert(1)>');
   });
   evaluate('importConfig({})'); await wait();
   test('Legacy projects without a sample mode retain Advanced', () => evaluate('state.sampleMode')==='advanced' && d.getElementById('dockModeAdvanced').getAttribute('aria-selected')==='true');

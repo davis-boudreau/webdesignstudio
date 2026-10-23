@@ -1,11 +1,11 @@
 # Project progress
 
-Updated: 21 October 2026 (America/Halifax).
+Updated: 23 October 2026 (America/Halifax).
 
 ## Current objective
 
-Align the left-pane brief wizard with the approved seven-question centre
-lesson, keeping saved projects and generated drafts consistent.
+Add an offline hero illustration to the Basic sample, matching Advanced's
+palette-aware image in live previews and generated website files.
 The initial audit began at commit
 `6163ada` (`improved UX/UI`) with a clean working tree; its changes are still local.
 
@@ -969,6 +969,33 @@ this HTML startup-default change.
 - Manual keyboard/screen-reader, full form visual and cross-browser review remain
   open. No network dependencies, root snapshots, commits or deployments changed.
 - Next step: record browser results and try a complete brief in the aligned wizard.
+
+## Basic hero image (23 October 2026)
+
+- Added Advanced's embedded 960 x 720 SVG illustration to the Basic hero through
+  the shared `DSStudio.samples.illustration` helper. Its bounded cache and current
+  palette/theme roles are reused; no network requests or extra export files.
+- Basic uses two equal Grid columns with the saved gap, stacking text before the
+  image at the saved responsive cutoff. Added descriptive alt text, intrinsic
+  dimensions, fluid image sizing and the shared corner radius. Updated sample
+  descriptions, architecture notes and affected JavaScript cache versions.
+- Added 12 regressions for shared image/inspector/export agreement, live palette
+  edits, standalone image loading in both themes and hero geometry at
+  320/390/768/1440 px. Updated the hostile-project assertion to allow only the
+  intended embedded image while still rejecting injected markup/event handlers.
+- First browser attempt was blocked by sandbox access to Chrome's temporary
+  profile; reran outside the sandbox using the existing isolated-profile harness.
+  First full result: **871/872**, no captured JavaScript errors. All new hero
+  checks passed. The failure was an older brief-escaping assertion selecting the
+  first field after the seven-field reorder; corrected it to select Audience by
+  its field name. Final full rerun: **872/872 passed**, with no captured
+  JavaScript errors.
+- `python scripts/check_structure.py`: **39 assets verified**.
+  `git diff --check`: passed. Browser output captured in the ignored temporary
+  `.basic-hero-review.log` while running; no root sample snapshots were edited.
+- Manual visual, keyboard, screen-reader and cross-browser checks were not run
+  for this change; automated tests do not establish full accessibility.
+- Next step: review the Basic hero in the UI and complete manual browser checks.
 
 ## Open work / next session
 

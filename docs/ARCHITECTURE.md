@@ -336,11 +336,16 @@ saved focus width, while buttons retain their component focus settings.
 `basic-homepage.js` registers after the Advanced generator and before the preview.
 It wraps the public HTML/CSS functions to select the current mode; all inspector,
 copy, preview and download paths continue through those functions. Basic renders
-header/logo/wrapping navigation, hero, three Grid cards, three semantic list cards,
+header/logo/wrapping navigation, hero with an embedded illustration, three Grid cards, three semantic list cards,
 a native-validation sign-up form and the shared footer. The two samples use the
 same heading sizes at each hierarchy level and the same saved button size/mobile
 width classes. Advanced interaction simulations remain gallery demonstrations;
 Basic keeps usable native form controls and ordinary page actions.
+Advanced exposes its cached SVG generator as `DSStudio.samples.illustration`;
+Basic reuses it with the active palette roles. The hero uses two equal Grid
+columns, stacking text before the image at the saved responsive stack cutoff.
+Image dimensions reserve its 4:3 ratio; the exported data URL needs no extra file
+or network request.
 Imported project text is escaped. The static form has no sign-up backend; the
 preview intercepts its submission and announces that no account was created.
 

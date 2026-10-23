@@ -512,6 +512,7 @@ ${flexRecipe}
     id: 'sample-homepage',
     title: 'Sample home page',
     init() {
+      DSStudio.samples.illustration = illustration;
       const previousCss = cssExport;
       cssExport = () => previousCss() + '\n' + homepageCss() + DSStudio.samples.footerCss();
       htmlExport = homepageHtml;

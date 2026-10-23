@@ -34,11 +34,16 @@ ${DSStudio.fonts.htmlLinks()}  <link rel="stylesheet" href="tokens.css">
   <main id="main-content" tabindex="-1">
     <!-- One page heading introduces the main idea and next action. -->
     <section class="hero" id="home" aria-labelledby="hero-title">
-      <div class="container">
-        <p class="eyebrow">Small steps. Useful skills.</p>
-        <h1 id="hero-title">Start small. Build something useful.</h1>
-        <p class="intro">Learn how clear content, thoughtful layout and a few shared styles can turn a simple page into a welcoming website.</p>
-        <a class="button ${DSStudio.samples.buttonClass()}" href="#features">Explore the essentials</a>
+      <div class="container hero-layout">
+        <div>
+          <p class="eyebrow">Small steps. Useful skills.</p>
+          <h1 id="hero-title">Start small. Build something useful.</h1>
+          <p class="intro">Learn how clear content, thoughtful layout and a few shared styles can turn a simple page into a welcoming website.</p>
+          <a class="button ${DSStudio.samples.buttonClass()}" href="#features">Explore the essentials</a>
+        </div>
+        <figure class="hero-image">
+          <img src="${DSStudio.samples.illustration(palette().roles)}" width="960" height="720" alt="A browser wireframe with a header, a two-column hero, lesson cards and palette-coloured layout blocks.">
+        </figure>
       </div>
     </section>
 
@@ -113,6 +118,10 @@ nav { min-width: 0; max-width: 100%; }
 .nav-list { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: 0; padding: 0; list-style: none; }
 .nav-list a { display: inline-flex; align-items: center; min-height: 44px; }
 .hero { padding-block: var(--space-12); background: var(--surface-muted); }
+.hero-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--grid-gap); align-items: center; }
+.hero-layout > * { min-width: 0; }
+.hero-image { margin: 0; }
+.hero-image img { display: block; width: 100%; height: auto; border-radius: var(--radius-base); }
 .eyebrow { font-size: var(--text-small); font-weight: var(--heading-weight); letter-spacing: .08em; text-transform: uppercase; }
 .intro { font-size: var(--text-h2); }
 .button { max-width: 100%; overflow-wrap: anywhere; }
@@ -147,7 +156,7 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
 }
 @media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
   .header-inner { align-items: flex-start; flex-direction: column; }
-  .signup-layout { grid-template-columns: minmax(0, 1fr); }
+  .hero-layout, .signup-layout { grid-template-columns: minmax(0, 1fr); }
 }
 ` + DSStudio.samples.footerCss();
   }
@@ -167,8 +176,8 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
           tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
         });
         document.getElementById('dockSamplePanel').setAttribute('aria-labelledby', tabs[basic ? 1 : 0]);
-        document.getElementById('sampleModeHelp').textContent = basic ? 'Basic: header, hero, Grid cards, three list types, static sign-up and footer sitemap. Uses your shared typography, spacing, colours, components, buttons and responsive settings.' : 'Advanced: the full field guide, planning workshops and component/state gallery.';
-        document.getElementById('websiteSampleDescription').textContent = basic ? 'Basic static homepage: logo and navigation, hero, responsive Grid cards, three list examples, static sign-up form and footer sitemap with Back to top.' : 'Advanced static homepage: header and mobile menu, hero, images, cards, Grid/Flexbox layouts, forms, table, FAQs, component states and footer.';
+        document.getElementById('sampleModeHelp').textContent = basic ? 'Basic: header, hero with embedded image, Grid cards, three list types, static sign-up and footer sitemap. Uses your shared typography, spacing, colours, components, buttons and responsive settings.' : 'Advanced: the full field guide, planning workshops and component/state gallery.';
+        document.getElementById('websiteSampleDescription').textContent = basic ? 'Basic static homepage: logo and navigation, hero with embedded image, responsive Grid cards, three list examples, static sign-up form and footer sitemap with Back to top.' : 'Advanced static homepage: header and mobile menu, hero, images, cards, Grid/Flexbox layouts, forms, table, FAQs, component states and footer.';
       }
       tabs.forEach((id, index) => {
         const tab = document.getElementById(id);
