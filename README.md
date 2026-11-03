@@ -6,6 +6,24 @@ No build step or framework. System fonts work offline by default. Optional Googl
 Fonts mode loads stylesheets and fonts from Google's CDN; project files and
 browser-saved projects stay local.
 
+Start with **First steps with Basic** for four short exercises: change an action
+colour, adjust reusable spacing, test a narrow layout, and export/reopen the page.
+This selects Basic and opens existing controls without resetting your design.
+Exercise progress is self-reported for the current session, independently of
+saved project data. The full twelve-stage project journey remains available.
+
+The sticky **Build / Preview / Code / Beginner steps** shortcuts keep each part
+of the workspace reachable on smaller screens. Code retains the selected language
+and study section. In Basic, **Example, rule and tokens** connects an example to
+its exact generated CSS rule, live token declarations and Configure actions.
+**Find rule in CSS** opens the complete stylesheet so shared rules are available.
+You can select an example from a list or turn on **Select in preview**; its next
+example click is inspected instead of performing the normal action. Selection
+ends after that click, on Escape, or when switching to Advanced.
+
+The learner trial is prepared in [LEARNER_TRIAL.md](docs/LEARNER_TRIAL.md), with
+tasks and an observation sheet. No participant trial has been run yet.
+
 The studio fills the window. On desktop, the controls stay 310 px wide and the
 inspector stays 380 px wide while the centre pane takes the remaining space.
 The inspector stacks at 1280 px and below; all panes stack at 900 px and below.

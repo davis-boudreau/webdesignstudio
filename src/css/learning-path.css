@@ -1,0 +1,36 @@
+/* Workspace chrome stays separate from generated website CSS. */
+.beginner-entry button, #beginnerPath button, .workspace-navigation button, .example-connections button { font: inherit; padding: 8px 12px; min-height: 44px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); cursor: pointer; }
+#beginnerStart { background: var(--primary); color: var(--on-primary); font-weight: 600; }
+#beginnerPath[hidden] { display: none; }
+.studio-introduction { padding-block: 14px; }
+.studio-introduction h1 { font-size: clamp(1.35rem, 2vw, 2rem); line-height: 1.2; margin: 0 0 8px; }
+.studio-introduction > p { margin: 0 0 10px; }
+.beginner-entry { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+#beginnerPath { margin-top: 12px; padding: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-base); }
+#beginnerPath > summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+#beginnerPath select { max-width: 100%; min-height: 44px; font: inherit; }
+#beginnerReference .dock-start { max-height: 320px; }
+.workspace-navigation { position: sticky; top: var(--studio-header-height, 76px); z-index: 7; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 6px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.workspace-navigation button { min-height: 44px; padding: 8px 12px; }
+.workspace-navigation .help { margin: 0 6px; }
+.studio-section-nav { top: calc(var(--studio-header-height, 76px) + var(--workspace-nav-height, 58px) + 4px); }
+.example-connections { margin: 8px 12px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; flex: none; }
+.example-connections[hidden] { display: none; }
+.example-connections > summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+.example-connections label { display: block; margin-top: 8px; }
+.example-connections select { width: 100%; min-width: 0; min-height: 44px; font: inherit; }
+.example-connections button { min-height: 44px; max-width: 100%; white-space: normal; }
+.example-connections pre { max-height: 180px; overflow: auto; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.study-token { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; padding-block: 8px; border-top: 1px solid var(--border); }
+.study-token code { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+@media (min-width: 901px) {
+  .sidebar { top: calc(var(--studio-header-height, 76px) + var(--workspace-nav-height, 58px) + 8px); max-height: calc(100vh - var(--studio-header-height, 76px) - var(--workspace-nav-height, 58px) - 20px); }
+}
+@media (min-width: 1281px) {
+  .studio-code-dock { top: calc(var(--studio-header-height, 76px) + var(--workspace-nav-height, 58px) + 8px); max-height: calc(100vh - var(--studio-header-height, 76px) - var(--workspace-nav-height, 58px) - 20px); }
+}
+@media (max-width: 580px) {
+  .workspace-navigation { gap: 4px; }
+  .workspace-navigation button { flex: 1; padding-inline: 6px; font-size: 13px; }
+  .workspace-navigation .help:empty { display: none; }
+}

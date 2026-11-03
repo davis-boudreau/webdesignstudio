@@ -23,6 +23,7 @@
       `Basic ${language.toUpperCase()}: ${section() === 'all' ? 'complete file' : 'study excerpt; shared foundations remain in the complete CSS'}. Download saves the complete file. Save index.html beside tokens.css.` : language === 'css' ?
       'Brand → semantic → component rules for light and dark themes. Save tokens.css beside index.html.' :
       `The ${state.theme} home page, also shown in the responsive preview. Save index.html beside tokens.css; images are embedded.`;
+    DSStudio.emit('inspector:change', { language, section: section(), completeCss: language === 'css' && section() === 'all' ? code : null });
     tabs.forEach((id, index) => {
       const selected = language === (index === 0 ? 'css' : 'html');
       $(id).setAttribute('aria-selected', String(selected));
@@ -34,6 +35,24 @@
   renderCode = function() {
     originalRenderCode();
     refreshDock();
+  };
+  DSStudio.inspector = {
+    show({ section: requestedSection = section(), language: requestedLanguage = language, find = '' } = {}) {
+      language = requestedLanguage === 'html' ? 'html' : 'css';
+      const available = [...$('dockSection').options].some(option => option.value === requestedSection);
+      $('dockSection').value = available ? requestedSection : 'all';
+      clearTimeout(copyTimer);
+      refreshDock();
+      const dock = document.querySelector('.studio-code-dock');
+      dock.classList.remove('is-collapsed');
+      $('dockToggle').textContent = 'Collapse code';
+      $('dockToggle').setAttribute('aria-expanded', 'true');
+      const index = find ? live.textContent.indexOf(find) : -1;
+      const line = index < 0 ? 0 : live.textContent.slice(0, index).split('\n').length - 1;
+      live.scrollTop = line * parseFloat(getComputedStyle(live).lineHeight);
+      live.focus({ preventScroll: true });
+      live.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
   };
   $('dockTheme').addEventListener('change', event => {
     state.theme = event.target.value;

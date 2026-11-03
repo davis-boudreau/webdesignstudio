@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261103-sitemap-crud">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
+    <link rel="stylesheet" href="src/css/learning-path.css?v=20261103-learning">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
     <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
   </head>
@@ -44,13 +45,25 @@
       </div>
     </header>
     <div class="shell">
-      <section class="hero">
-        <div class="eyebrow">Plan the experience, then build the design system</div>
-        <h1>Design System Studio · Build &amp; Inspect</h1>
-        <p>
-          Begin with a project brief, content architecture and a prototype on the left, then choose design parameters. Explore the live design-system sections on the right, inspect the generated CSS and sample HTML beside the components, then export your design system starting point.
-        </p>
+      <section class="hero studio-introduction">
+        <h1>Design System Studio &middot; Build &amp; Inspect</h1>
+        <p>Change a design decision, see it on the page, then follow it into HTML and CSS.</p>
+        <div class="beginner-entry"><button id="beginnerStart" type="button">First steps with Basic</button><span class="help">Four short exercises. Your current design settings are kept.</span></div>
+        <details id="beginnerPath" hidden>
+          <summary>Beginner exercises and progress</summary>
+          <p class="help">Choose an exercise, make a change, then compare the example and code. Progress is self-reported for this session.</p>
+          <label for="beginnerTask">Exercise</label><select id="beginnerTask"></select>
+          <p id="beginnerInstruction"></p>
+          <div class="button-row"><button id="beginnerBuild" type="button">Open the control</button><button id="beginnerPreview" type="button">See the example</button><button id="beginnerCode" type="button">Find the CSS</button><button id="beginnerDone" type="button">I tried this &middot; next exercise</button></div>
+          <p id="beginnerProgress" class="help" role="status"></p>
+          <p class="help">Architecture plans navigation; it does not create page sections. The inspector is read-only. Download complete files to edit their content.</p>
+          <div id="beginnerReference"></div>
+        </details>
       </section>
+      <nav id="workspaceNav" class="workspace-navigation" aria-label="Workspace shortcuts">
+        <button type="button" data-workspace="build">Build</button><button type="button" data-workspace="preview">Preview</button><button type="button" data-workspace="code">Code</button><button type="button" data-workspace="learn">Beginner steps</button>
+        <span id="workspaceStatus" class="help" role="status"></span>
+      </nav>
       <div class="layout">
         <aside aria-label="Design system controls" class="sidebar">
           <section aria-labelledby="journeyTitle" class="panel studio-journey">
@@ -2025,9 +2038,16 @@
                     <option value="form">Forms: controls and feedback</option>
                     <option value="footer">Footer: navigation</option>
                   </select>
-                  <small id="dockFocusHelp">Copy uses the visible code. Download always saves the complete file. Section excerpts need the shared rules in tokens.css.</small>
+                  <small id="dockFocusHelp">Copy uses this view. Download saves the complete file.</small>
                 </div>
               </div>
+              <details id="exampleConnections" class="example-connections" hidden>
+                <summary>Example, rule and tokens</summary>
+                <label for="studyExample">Study an example</label><select id="studyExample"></select>
+                <div class="button-row"><button id="studyPick" type="button" aria-pressed="false">Select in preview</button><button id="studyPreview" type="button">Show example</button><button id="studyCode" type="button">Find rule in CSS</button></div>
+                <p id="studyExplanation" class="help"></p><pre id="studyRule" aria-label="Generated CSS rule" tabindex="0"></pre>
+                <div id="studyTokens"></div><p id="studyStatus" class="help" role="status"></p>
+              </details>
               <div class="studio-dock-tabs" role="tablist" aria-label="Inspector code language">
                 <button id="dockTabCss" type="button" role="tab" aria-selected="true" aria-controls="dockCss">CSS</button>
                 <button id="dockTabHtml" type="button" role="tab" aria-selected="false" aria-controls="dockCss" tabindex="-1">HTML</button>
@@ -2082,24 +2102,25 @@
       <script src="src/js/design-process.js?v=20261103-sitemap-crud" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/core-state.js?v=20261021-responsive" defer></script>
-      <script src="src/js/css-dock.js?v=20261103-basic-learning" defer></script>
+      <script src="src/js/css-dock.js?v=20261103-learning" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/journey-library.js?v=20261021-responsive" defer></script>
       <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
       <script src="src/js/sample-system.js?v=20261103-shared-footer" defer></script>
       <script src="src/js/sample-homepage.js?v=20261023-basic-hero" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261103-basic-css-cleanup" defer></script>
-      <script src="src/js/responsive-preview.js?v=20261103-ui-essentials" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261103-learning" defer></script>
+      <script src="src/js/responsive-preview.js?v=20261103-learning" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261021-responsive-review" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261103-learning" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
       <script src="src/js/contrast-audit.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
-      <script src="src/js/section-accordions.js?v=20261020-section-menu" defer></script>
+      <script src="src/js/section-accordions.js?v=20261103-learning" defer></script>
       <script src="src/js/site-builder.js?v=20261103-sitemap-crud" defer></script>
       <script src="src/js/studio-learning.js?v=20261103-preview" defer></script>
+      <script src="src/js/learning-path.js?v=20261103-learning" defer></script>
     </body>
   </html>

@@ -4,7 +4,139 @@ Updated: 3 November 2026 (America/Halifax).
 
 ## Current objective
 
-Add sitemap CRUD/relationships in the wizard and a theme-aware webpage background.
+Analyse the complete studio workflow and actions, and define a consistent process
+across wizard stages, centre lessons, preview and code. Runtime changes are not
+part of this analysis request.
+
+## Design Workflow and button consistency audit (3 November 2026)
+
+- Reviewed all twelve runtime wizard panes, sixteen centre sections, global/local
+  project actions, beginner and inspector controls, colour repair and both sample
+  pages. Read actual handlers and DOM reorganisation, not only static markup.
+- Added `docs/WORKFLOW_REVIEW_2026-11-03.md` with a canonical twelve-stage process,
+  centre mappings, a shared action/feedback contract, section-specific findings
+  and an implementation sequence. Added the grouped runtime inventory in
+  `docs/WORKFLOW_BUTTON_INVENTORY_2026-11-03.csv`: 379 groups / 1,567 button,
+  internal-link and native-disclosure instances. Repeated token, contrast and
+  specimen controls are grouped; conditional behaviour was also read in source.
+- Isolated Chrome checks confirmed all twelve forward routes and their numeric
+  return routes exist. Found naming/numbering ambiguity (Components vs colour
+  roles, Layout vs Components, twelve stages vs sixteen centre numbers) and an
+  Accessibility primary route to States rather than the contrast/review section.
+- Confirmed action defects in the temporary profile: Deliver Show CSS leaves an
+  already selected HTML tab active; restoring Basic's sitemap clears Advanced
+  link mappings too; readiness ticks/status survive Reset. Clamp's copy action
+  silently ignores rejected clipboard access, whereas the central copy action
+  reports a fallback. Header/Deliver JSON exports also use different names and
+  metadata. These findings are recorded, not fixed by this analysis-only task.
+- Recommended one stage registry, twelve matching lesson identities with preview/
+  overview/catalogue utilities outside stage numbering, consistent reveal/focus
+  behaviour, explicit reset/export scopes and common studio action styling.
+  Planning steps should inspect project data or relevant HTML rather than imply
+  every planning field generates page CSS. Basic practice remains a shortcut path.
+- Current checks: targeted runtime audit completed with no JavaScript errors,
+  intercepted downloads and a simulated clipboard failure in isolated temporary
+  Chrome profiles outside the sandbox. `python scripts/check_structure.py`
+  passed (41 assets); `git diff --check` passed. The full browser suite was not
+  rerun for documentation-only work. Earlier 1082/1082 and 38/38 results below
+  remain historical. No user projects/storage were opened.
+- Removed temporary audit helper/JSON; retained the inventory and ignored
+  `.workflow-audit.log`. No runtime assets, existing user edits, sample snapshots,
+  commits or deployments were changed by this review. Manual keyboard-only,
+  screen-reader, cross-browser and learner trials were not performed.
+- Next step: fix confirmed action/scope/progress defects first, then implement the
+  shared stage/action definitions and validate the complete forward/return flow.
+
+## Beginner path and connected workspace (3 November 2026)
+
+- Added an opt-in First steps with Basic entry and four short exercises: action
+  colour, reusable spacing, narrow layout and export/reopen. They select Basic,
+  retain design values and route to existing source controls. Session progress
+  is explicitly self-reported and is excluded from saved project data.
+- Added sticky Build/Preview/Code/Beginner steps shortcuts, compacted the studio
+  introduction, moved the longer three-exercise reference out of the inspector,
+  and shortened repeated dock instructions. Code navigation retains the current
+  language/study section and reveals the code area, including on narrow screens.
+- Added Basic example connections: fixed element/selector/token mappings, actual
+  rule text and theme-scoped declarations from the current CSS export, Configure
+  source controls, and navigation to the matching rule in complete CSS. Section
+  study choices update their related example. Formula tokens retain calc() text.
+- Added optional one-shot preview selection. Primary actions and section/profile/
+  FAQ/Grid/form/footer examples map to their appropriate study entries. Normal
+  actions resume after selection, Escape (including inside the iframe), stopping
+  selection or mode changes. An example selector provides a keyboard alternative.
+- Added DSStudio.inspector.show() and an inspector refresh event rather than a
+  new render wrapper. Reused exported CSS when reading catalogue values, cached
+  unchanged study views and preserved normal copy/full-download paths. Updated
+  affected asset query versions and documented state/API boundaries.
+- Synchronized sticky offsets with measured workspace/header heights and fixed
+  queued preview focus stealing focus after a subsequent Code/control jump.
+  No teaching controls or UI state enter generated website files.
+- Prepared `docs/LEARNER_TRIAL.md`: participant tasks, observation sheet and
+  follow-up decision table. No learner sessions, analytics or messages occurred;
+  actual participant observation remains outstanding.
+- Current checks: `python scripts/check_structure.py` passed (41 assets) and
+  `git diff --check` passed. First expanded `python scripts/browser_review.py`
+  passed 1070/1080, no JavaScript errors: six former header-only offset assertions
+  needed the workspace bar; four new checks required settled colour sampling,
+  calc() expectations, normalized JSON comparison and focus investigation.
+  Second full run passed 1078/1080 with no errors; remaining narrow-offset and
+  queued-focus issues were corrected. Focused new-path harness passed **38/38**.
+  Final full rerun passed **1082/1082**, with no JavaScript errors, in ignored
+  `.learning-path-review.log`. Final FAQ/footer token mapping corrections were
+  then checked by the focused harness: **38/38 passed**, no errors (ignored
+  `.learning-path-focused.log`). All required checks passed.
+- Increased the growing browser harness to a 90-second virtual budget and
+  240-second process timeout, following the prior 120-second timeout during the
+  product review. Assertions were retained/expanded; isolated Chrome profiles
+  outside the sandbox do not use the user's stored projects.
+- Inspected temporary 1440px initial/path/connection screenshots and 320px Code
+  navigation. No page overflow or captured startup errors; compacting the entry
+  restored some initial code visibility, and starting the first exercise showed
+  its control, example and code together. Refreshed controls use studio styling.
+  Removed temporary screenshot/diagnostic helpers and artifacts; no visual
+  baselines were added.
+- Manual keyboard-only, screen-reader, Firefox/Safari and real learner review
+  remain unrun. No root sample snapshots, commits or deployments changed.
+- Next step: run the prepared trial with learners and record anonymised findings
+  before claiming learning effectiveness; complete manual accessibility and
+  cross-browser review.
+
+## Product and system analysis (3 November 2026)
+
+- Reviewed the current implementation at `e9c05eb`, including the UI essentials
+  showcase and newer sitemap/background controls, rather than assuming previous
+  workshop/footer designs were still current. Read README, architecture, scope,
+  historical audits, generator/state/inspector, planning/sitemap, token catalogue,
+  persistence, layout and CI/deployment paths.
+- Added `docs/PRODUCT_REVIEW_2026-11-03.md` with the decision -> preview -> code
+  vision, strengths, concrete usability observations, planning/generation limits,
+  recommendations and a prioritised next phase. Kept earlier reviews historical.
+- Measured and inspected isolated Chrome views at 1440/1280/390 px and a 900 px
+  studio height. Basic's code begins around y=947 at desktop startup; its Fluid
+  preview is about 562 CSS px wide. At 1280 the inspector precedes the preview;
+  at 390 its top is around y=3715 after the wizard. These are navigation/context
+  costs, not assertions that controls are unreachable. Removed temporary visual
+  helper/screenshots after review.
+- Confirmed sitemap edits affect the plan/navigation rather than body sections;
+  wireframe/prototype are bounded teaching artifacts. Noted differing Basic map
+  filters and stale README references to a twelve-entry map/asymmetric checklist.
+- Recommended clarifying the beginner path and scope, improving example-to-rule
+  navigation and narrow-screen access, observing learners, then gating publishing
+  and simplifying the shared update/generator contract. No runtime edits made.
+- Current checks: `python scripts/check_structure.py` passed (39 assets).
+  Standard `python scripts/browser_review.py` exceeded its 120-second process
+  timeout without a final result. Reran the unchanged assertions/virtual-time
+  budget alone with `python .system-analysis-run.py`, a temporary driver allowing
+  240 seconds: **1045/1045 passed**, with no JavaScript errors (ignored output:
+  `.system-analysis-review.log`). Removed the driver afterward. Final
+  `git diff --check` passed. Earlier results below remain historical. Chrome
+  used isolated temporary profiles outside the sandbox.
+- No learner study, manual keyboard-only, screen-reader, Firefox/Safari review,
+  user-storage access, commits or deployments. This is a source/product review
+  with layout observations, not a complete accessibility or security audit.
+- Next step: use the review to choose the next product iteration; learner
+  testing should guide further expansion.
 
 ## Sitemap editor and webpage background (3 November 2026)
 

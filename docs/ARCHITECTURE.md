@@ -2,7 +2,7 @@
 
 ## Wizard configuration and centre lessons
 
-`studio-learning.js` registers last and reorganizes existing control nodes after
+`studio-learning.js` reorganizes existing control nodes after
 the other modules initialize. It preserves their IDs, event handlers and state
 paths while placing font, responsive, layout and accessibility settings inside
 the twelve-step wizard. Hidden compatibility nodes retain legacy module bindings.
@@ -14,6 +14,39 @@ The journey exposes `dssShowWizardStep()` for catalogue/lesson navigation and
 derives its progress from twelve explicit step labels. Navigation alone does not
 mark previous steps complete. Each wizard step links to a related centre lesson;
 startup expands only Responsive page preview.
+
+`learning-path.js` registers after studio learning so it can use the existing
+wizard/token source routes. Its four-exercise path is opt-in: it selects Basic,
+keeps design values and uses the existing source controls. The guide, selected
+example, picking flag and self-reported progress are session UI state, excluded
+from saved projects and generated files. The previous three-exercise reference
+is moved out of the inspector into the beginner panel to reduce dock height.
+
+The workspace shortcut bar navigates/focuses existing areas without hiding panes.
+Its measured height joins the header offset for sticky panes/section navigation.
+`DSStudio.inspector.show()` reveals code while preserving its current language
+and section by default; callers can request complete CSS/HTML and a string to
+scroll to. Existing copy and download generators remain unchanged.
+
+The inspector emits `inspector:change` after refresh. The new module subscribes
+instead of adding another render wrapper. Fixed example metadata maps authored
+element IDs/selectors to tokens; rule text and theme-scoped declaration values
+come from the current export/catalogue. Configure uses `dssConfigureToken()`.
+Study-section changes update the corresponding example. Formula tokens retain
+their exported `calc()` expressions rather than pretending to be resolved pixels.
+
+Preview selection is explicitly enabled, Basic-only and consumed once. The
+preview's existing click handler emits `preview:example` for fixed example IDs
+instead of executing that click's normal action. Escape in the preview emits a
+cancel event; parent Escape, stopping selection and mode changes also cancel it.
+The example selector supplies a keyboard alternative. No teaching controls,
+scripts or selection state are added to exported pages.
+
+`docs/LEARNER_TRIAL.md` contains the unrun participant protocol and observation
+sheet. Automated checks and self-reported exercise progress are not learner-study
+results. The growing browser suite has a 90-second virtual-time budget and a
+240-second process timeout; the prior standard timeout was exhausted during the
+product review even though its unchanged rerun passed.
 
 `token-catalogue.js` reads actual exported declarations through `dssReadTokens()`.
 Its `dssTokenSource(row)` maps each row to a wizard step/control and records

@@ -1331,7 +1331,7 @@ app.onload = async () => {
     section.scrollIntoView({block:'start',behavior:'instant'}); await wait();
     test('Section menu stays visible beneath the sticky header at '+width+'px', () => {
       const nav=d.querySelector('.studio-section-nav'), box=nav.getBoundingClientRect(), header=d.querySelector('.topbar').getBoundingClientRect();
-      return w.getComputedStyle(nav).position==='sticky' && box.top>=header.bottom-1 && box.top<=header.bottom+2 && box.bottom<w.innerHeight && nav.querySelectorAll('a').length===16 && [...nav.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44) && d.documentElement.scrollWidth<=w.innerWidth+1;
+      return w.getComputedStyle(nav).position==='sticky' && box.top>=Math.max(header.bottom,d.getElementById('workspaceNav').getBoundingClientRect().bottom)-1 && box.top<=Math.max(header.bottom,d.getElementById('workspaceNav').getBoundingClientRect().bottom)+6 && box.bottom<w.innerHeight && nav.querySelectorAll('a').length===16 && [...nav.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44) && d.documentElement.scrollWidth<=w.innerWidth+1;
     });
     test('Section navigation keeps headings below the sticky header at '+width+'px', () => {
       const header=d.querySelector('.topbar').getBoundingClientRect();
@@ -2017,6 +2017,76 @@ app.onload = async () => {
   evaluate("state.theme='light';apply()");d.getElementById('page-background-reset').click();await wait();
   test('Page background reset restores the default canvas',()=>evaluate('palette().roles.background')===defaultCanvas);
   reset();await wait();
+  reset(); await wait();
+  input('jProject','My learning project'); input('jBase',18);
+  const beforeLearning=JSON.parse(evaluate('projectJson()'));
+  const settleLearningColours=()=>{const style=previewDoc().createElement('style');style.textContent='.ds-button { transition: none !important; }';previewDoc().head.append(style);};
+  for (const place of ['build','preview','code']) d.querySelector('[data-workspace="'+place+'"]').click();
+  await wait();
+  test('Workspace shortcuts preserve the project while making each area reachable',()=>JSON.stringify(JSON.parse(evaluate('projectJson()')))===JSON.stringify(beforeLearning) && d.activeElement===d.getElementById('dockCss'));
+  d.getElementById('beginnerStart').click(); await wait();
+  const startedLearning=JSON.parse(evaluate('projectJson()'));
+  delete beforeLearning.sampleMode; delete startedLearning.sampleMode;
+  test('Beginner start selects Basic without replacing existing design settings',()=>evaluate('state.sampleMode')==='basic' && Object.keys(beforeLearning).every(key=>JSON.stringify(beforeLearning[key])===JSON.stringify(startedLearning[key])) && d.getElementById('beginnerPath').open && d.activeElement===d.getElementById('bdDefaultBg'));
+  test('Basic exercises and example mappings do not enter exported website files or project state',()=>!evaluate('htmlExport()').includes('beginnerStart') && !evaluate('cssExport()').includes('workspace-navigation') && !evaluate('projectJson()').includes('beginnerTask'));
+  d.getElementById('exampleConnections').open=true;
+  test('Primary action exposes its exact exported rule and live token values',()=>evaluate('cssExport()').includes(d.getElementById('studyRule').textContent) && d.getElementById('studyRule').textContent.startsWith('.ds-button--primary {') && d.getElementById('studyTokens').textContent.includes('--button-primary-bg:'));
+  input('bdDefaultBg','#602d54'); await wait(); settleLearningColours();
+  test('A beginner colour change updates the example, connected token and inspector together',()=>previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(96, 45, 84)' && d.getElementById('studyTokens').textContent.toLowerCase().includes('#602d54') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
+  input('beginnerTask','1','change'); d.getElementById('beginnerBuild').click();
+  test('Spacing exercise opens the existing source control',()=>d.activeElement===d.getElementById('jSpacing') && !d.querySelector('[data-journey-pane="8"]').hidden);
+  const beforeLearningPadding=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('#lists')).paddingTop);
+  input('jSpacing',6); await wait();
+  test('Spacing connection shows derived values from the current generator',()=>d.getElementById('studyTokens').textContent.includes('--space-unit: 6px') && d.getElementById('studyTokens').textContent.includes('--space-8: calc(var(--space-unit) * 8)') && Math.abs(parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('#lists')).paddingTop)-beforeLearningPadding*1.5)<.1 && d.getElementById('studyRule').textContent.includes('var(--space-8)') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
+  for (const theme of ['light','dark']) {
+    input('jTheme',theme); input('studyExample','header','change'); await wait();
+    const primary=w.dssReadTokens().filter(row=>row.name==='--primary').find(row=>theme==='dark'?row.scope==='Dark':row.scope!=='Dark');
+    test(theme+' connected token reads the correct exported theme scope',()=>d.getElementById('studyTokens').textContent.includes('--primary: '+primary.value));
+  }
+  for (const option of [...d.getElementById('studyExample').options]) {
+    input('studyExample',option.value,'change');
+    test('Example '+option.value+' maps to a real generated CSS rule',()=>evaluate('cssExport()').includes(d.getElementById('studyRule').textContent) && !d.getElementById('studyRule').textContent.includes('Inspect its section') && (option.value!=='faq' || d.getElementById('studyTokens').textContent.includes('--heading-weight')) && (option.value!=='footer' || d.getElementById('studyTokens').textContent.includes('--space-8')));
+  }
+  input('studyExample','profile','change'); d.getElementById('studyPreview').click(); await wait();
+  test('Show example focuses its actual preview element',()=>previewDoc().activeElement===previewDoc().getElementById('basic-layout'));
+  const beforePicking=evaluate('projectJson()'), pickingDoc=previewDoc();
+  d.getElementById('studyPick').click();
+  previewDoc().querySelector('#basic-layout a').click(); await wait();
+  test('Opt-in selection connects the clicked example without following its link or changing project data',()=>previewDoc()===pickingDoc && d.getElementById('studyExample').value==='profile' && !w.DSStudio.learning.picking && d.activeElement===d.getElementById('studyExample') && evaluate('projectJson()')===beforePicking);
+  previewDoc().querySelector('#basic-layout a').click(); await wait();
+  test('Normal preview navigation resumes after selecting an example',()=>previewDoc().activeElement===previewDoc().getElementById('list-workflow'));
+  d.getElementById('studyPick').click(); previewDoc().dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  test('Escape inside the preview cancels example selection',()=>!w.DSStudio.learning.picking && d.getElementById('studyPick').getAttribute('aria-pressed')==='false');
+  d.getElementById('studyPick').click(); previewDoc().querySelector('#home h1').click(); await wait();
+  test('Selecting a hero heading connects its layout rather than an unrelated action',()=>d.getElementById('studyExample').value==='hero');
+  d.getElementById('studyPick').click(); previewDoc().querySelector('#home .ds-button--primary').click(); await wait();
+  test('Selecting a primary action connects its component rule',()=>d.getElementById('studyExample').value==='action' && !w.DSStudio.learning.picking);
+  input('dockSection','footer','change');
+  test('Existing study-section selection also updates example connections',()=>d.getElementById('studyExample').value==='footer' && d.getElementById('studyRule').textContent.includes('.website-footer .footer-inner'));
+  d.getElementById('dockTabHtml').click(); d.getElementById('dockToggle').click();
+  d.querySelector('[data-workspace="code"]').click();
+  test('Code shortcut retains the selected language and excerpt and expands the inspector',()=>d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockSection').value==='footer' && !d.querySelector('.studio-code-dock').classList.contains('is-collapsed') && d.activeElement===d.getElementById('dockCss') && d.getElementById('dockCss').textContent===w.DSStudio.samples.basicExcerpt(evaluate('htmlExport()'),'html','footer'));
+  d.getElementById('studyCode').click();
+  test('Find rule selects complete CSS so shared dependencies remain visible',()=>d.getElementById('dockSection').value==='all' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').scrollTop>0 && d.activeElement===d.getElementById('dockCss'));
+  input('beginnerTask','2','change'); const beforeLearningResponsive=evaluate('JSON.stringify(state.responsiveDesign)');
+  d.getElementById('beginnerPreview').click(); await wait();
+  test('Narrow-layout exercise tests 390px without changing saved breakpoints',()=>Math.abs(previewWindow().innerWidth-390)<1 && evaluate('JSON.stringify(state.responsiveDesign)')===beforeLearningResponsive && previewDoc().activeElement===previewDoc().getElementById('home'));
+  d.getElementById('beginnerDone').click();
+  test('Progress is self-reported and moves to export without claiming a test pass',()=>d.getElementById('beginnerTask').value==='3' && d.getElementById('beginnerProgress').textContent.includes('1 of 4 exercises tried') && d.getElementById('beginnerProgress').textContent.includes('not a test result'));
+  const learningFiles=[], beforeLearningDownload=w.download;w.download=(name,content,type)=>learningFiles.push({name,content,type});
+  d.getElementById('beginnerBuild').click();
+  test('Export exercise focuses Deliver without downloading automatically',()=>d.activeElement===d.getElementById('jExportHtml') && learningFiles.length===0);
+  d.getElementById('jExportHtml').click();d.getElementById('jExportCss').click();
+  test('Beginner project exports the complete matching HTML and CSS',()=>learningFiles[0].name==='index.html' && learningFiles[0].content===evaluate('htmlExport()') && learningFiles[1].name==='tokens.css' && learningFiles[1].content===evaluate('cssExport()'));
+  w.download=beforeLearningDownload;
+  const learningExport=evaluate('projectJson()'); reset();evaluate('importConfig('+learningExport+')'); await wait(); settleLearningColours();
+  test('Beginner design survives a project JSON round trip independently of session progress',()=>Object.keys(JSON.parse(learningExport)).every(key=>JSON.stringify(JSON.parse(learningExport)[key])===JSON.stringify(JSON.parse(evaluate('projectJson()'))[key])) && previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(96, 45, 84)');
+  for (const width of [320,390,1280,1440]) {
+    app.style.width=width+'px'; await wait();
+    d.querySelector('[data-workspace="code"]').click();
+    test('Workspace shortcuts and focused code remain usable at '+width+'px',()=>d.documentElement.scrollWidth<=width+1 && [...d.querySelectorAll('[data-workspace]')].every(button=>button.getBoundingClientRect().width>=44 && button.getBoundingClientRect().height>=44) && d.activeElement===d.getElementById('dockCss') && d.getElementById('dockCss').getBoundingClientRect().bottom>0 && d.getElementById('dockCss').getBoundingClientRect().top<app.contentWindow.innerHeight);
+  }
+  app.style.width='1440px';d.querySelector('button[data-width="fluid"]').click();d.getElementById('beginnerPath').open=false;d.getElementById('exampleConnections').open=false;reset();await wait();
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
 };
@@ -2092,9 +2162,9 @@ def main():
         with tempfile.TemporaryDirectory(prefix='studio-review-') as profile:
             run = subprocess.run([browser, '--headless', '--disable-gpu', '--no-first-run',
                                   '--no-default-browser-check', '--disable-background-networking',
-                                  '--user-data-dir=' + profile, '--virtual-time-budget=60000',
+                                  '--user-data-dir=' + profile, '--virtual-time-budget=90000',
                                   '--dump-dom', f'http://127.0.0.1:{server.server_port}/__review__'],
-                                 capture_output=True, encoding='utf-8', errors='replace', timeout=120)
+                                 capture_output=True, encoding='utf-8', errors='replace', timeout=240)
             match = re.search(r'<pre id="results">(.*?)</pre>', run.stdout, re.S)
             if not match or match[1] == 'RUNNING':
                 raise SystemExit('Browser review did not complete.\n' + run.stderr[-2000:])
