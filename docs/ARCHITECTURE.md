@@ -80,6 +80,25 @@ Imports bound text lengths and accept only the two arrangements; missing or inva
 planning objects receive starter data. Empty draft strings remain empty. No plan
 text becomes executable markup, a URL, a CSS declaration or a token.
 
+`site-builder.js` registers after the existing feature modules and before studio
+learning. It provides a two-level CRUD editor in Architecture, backed by the same
+`designProcess.pages` text and bounded parser. `pageLinks.basic/advanced` store
+label-to-fixed-ID mappings (empty string means planned); normalization accepts
+only that sample's inventory IDs and at most 64 bounded labels per mode.
+`showPlanned` is a validated boolean, default false for legacy plans. CRUD saves
+enable planned items in Basic's footer while retaining its Home/Footer exclusion;
+Advanced already displays the complete map. Existing label aliases still work.
+Relationships affect the map/footer, not the authored body-section structure.
+Rename preserves child order and assigned destinations; parent deletion removes
+its children. A one-change in-memory undo is cleared by external edits/imports,
+reset and mode changes. Text edits and complete-inventory restoration remain.
+
+The same module binds Palette's background picker/hex/reset directly to validated
+`semanticOverrides[theme].background`; no second background setting is stored.
+Both generators, preview, contrast review, inspector and project flows use that
+semantic role. Partial invalid hex input does not change state. All controls use
+the shared apply/render/autosave paths and labels render through DOM text APIs.
+
 The twelve wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,
 Typography, Components, Buttons, Layout, Responsive, Accessibility and Deliver. Existing control
 and centre IDs remain stable; numeric wizard indices and token-source routes move
@@ -103,7 +122,38 @@ backend or script requirement. The sandboxed live preview uses its existing
 fragment handler. Planning data describes a project; it does not rewrite the
 field guide's main navigation or generate a finished custom website.
 
+The studio body uses the separate `--studio-background` canvas token:
+`#E8EDF3` in light mode, with dark mode continuing to follow `--background`.
+The generated website palette, previews, semantic overrides and exports keep
+their existing background roles; the studio-only token is not exported.
+
 ## Live CSS/HTML Inspector and sample page
+
+Basic includes a collapsible Start here guide with three exercises: edit an H1
+in downloaded HTML, change live spacing, and compare the preview width presets.
+The inspector remains read-only. The guide explains spacing tokens and introduces
+normal flow, responsive Header navigation, the Flexbox section and Grid/lists.
+The hero also demonstrates a two-column Grid layout.
+Generated Basic HTML is indented and its page CSS uses one declaration per line;
+authored SECTION comments label Page basics, Header, Hero, Skills, Toolkit, Form
+and Footer. Formatting operates on escaped generated strings without execution.
+Preformatted lesson examples and textarea elements are protected while the
+surrounding HTML is indented, preserving their internal whitespace and keeping
+empty textareas empty; examples render as escaped text.
+They preserve all source whitespace and scroll locally on narrow screens,
+keeping identifiers intact without creating horizontal page overflow. A tab
+stop on each code block provides keyboard access to horizontal scrolling.
+
+The Basic-only section selector is transient inspector view state, independent
+of project JSON and preview rendering. `DSStudio.samples.basicExcerpt()` selects
+authored section comments; CSS excerpts also include shared page rules and
+responsive queries, and explicitly require the full foundation/component CSS.
+Page basics also shows the live spacing token definitions for its exercise.
+Copy uses visible code; inspector downloads and Deliver always use complete
+exports. Advanced hides the guide/filter and shows complete files. Returning to
+Basic restores the view selection. Clipboard feedback checks mode, language and
+section after awaiting the clipboard. The guide scrolls separately from its
+selector; stacked docks grow with controls and keep a bounded code viewport.
 
 `brand-palette.js` loads after the registry and before core state. Its defaults
 factory uses the core's example seed when `DEFAULT` is constructed. Each project
@@ -290,23 +340,38 @@ must not shift the saved open state of a FAQ or mobile menu.
 
 ## Architecture-linked sitemap and Basic lists
 
-Basic adds a fourth main section containing titled unordered/ordered/description
-list examples. Its asymmetric toolkit grid uses the saved minimum and gap rules;
-the checklist spans two rows beside the workflow and term panels, becoming one
-column when two minimum-width tracks cannot fit. Both samples
+Basic includes titled unordered/ordered/description list examples. Its equal-width auto-fit card grid uses the saved minimum
+and gap rules, adding columns as space permits without manual row spans. Both samples
 have a footer Sitemap navigation generated by `DSStudio.process.sitemapHtml()`.
-The full map sits in a closed native `details` element so the 38-topic Advanced
-inventory does not dominate the footer. Its summary remains visible and keyboard
-operable without scripts. Identity and a shorter Explore navigation form the top
-row; Basic adds a third suggested-next-step column and a logo beside the project
-name, with its sitemap in a separate bordered disclosure. Copyright and Back to
-top form the bottom row. Shared Grid/Flexbox rules
-stack these rows at the saved narrow breakpoint. Both headers expose `#top`.
+Both samples share one classic footer template and its complete CSS in
+`sample-system.js`. Main navigation sits beside the brand and the sitemap is
+always visible below it. Advanced keeps its full map; Basic shows only Components,
+Layouts and Forms and their known child links. It has no separate Explore
+menu, Home/Footer navigation groups or sitemap disclosure. The helper call uses
+linksOnly plus a fixed parentIds allowlist. Parent groups occupy responsive Grid
+columns, with child links stacked vertically in semantic nested lists.
+The Sitemap heading is left-aligned. The capped-width column grid is centred,
+with each group's heading and vertically stacked sublinks centred in its column.
+In Basic, unlinked entries and children of omitted parents are not promoted. Planning data remains unchanged;
+empty filtered maps explain that no linked sections are available. Copyright and
+Back to top form the bottom row, and both headers expose `#top`.
+The Basic Architecture plan artifact has its own view filter: Forms (including
+legacy Sign up/Signup labels) and Footer parent groups are hidden, while all
+other parents retain their children. The `.process-map--basic` list lays out
+parent groups left to right with children below, wrapping to available width.
+Filtering is render-only: the planning editor, saved JSON, page sections and
+footer links retain their full inventory. Advanced keeps its original tree.
+If filtering removes every group, the artifact explains the empty view.
+
 The shared, fixed inventories in `design-process.js` map all major sections and
 content groups, including each Basic card/list and Advanced lesson/workshop.
 Stable authored IDs identify these destinations; imported labels never become URLs.
-Matching ignores case, spacing and hyphens; Basic also accepts Features and Signup.
-Unknown labels remain escaped text marked Planned page; an empty map is explicit.
+Matching ignores case, spacing and hyphens. Basic accepts its former section
+and lesson labels as aliases for stable IDs. Its inventory names Home, Components, Layouts, Forms and Footer. The exact previous complete Basic plan
+resolves to the new inventory without rewriting stored data; custom plans keep
+their authored labels and legacy destinations.
+In the full map, unknown labels remain escaped text marked Planned page; Basic
+filters them from its footer. Empty maps remain explicit.
 
 `samplePages(mode)` generates the complete two-level plan. `currentPlan()` resolves
 an untouched canonical Basic/Advanced inventory or the exact legacy six-entry
@@ -316,12 +381,38 @@ preview, editor, centre artifacts and HTML exports all use the resolved plan.
 The restore button explicitly replaces custom entries with the selected inventory.
 It reports applied/already-complete status with section/topic counts and expands
 the centre Architecture map without moving keyboard focus. Feedback clears on
-planning edits, sample changes or imports with a different plan. The footer map
-remains a native disclosure; restoring the plan does not generate new pages.
+planning edits, sample changes or imports with a different plan. Restoring the plan does not generate new pages or change either footer
+presentation.
 The parser allows 64 entries, two levels and 64 characters per label; the text
 field/normalizer cap input at 8,400 characters. Footer links use only fixed IDs.
 JSON/local project flows retain custom edits. Main navigation remains a shorter
 selection of destinations rather than duplicating the entire content inventory.
+
+Basic footer sitemap is one block with Components, Layouts
+and Forms and their known children. The helper's parentIds allowlist is
+['features','lists','signup']; Home/Footer and all other parent targets are
+omitted without promoting their children or rewriting planning data.
+The identity row also has a labelled Footer navigation with the same Home,
+Components, Layouts and Forms links as the header. It sits to the right on wide
+screens and beneath the brand at the saved stacking cutoff; links wrap as needed.
+Site identity/copyright/Back to top remain. Advanced uses the same layout with
+Home, About, Resources and Contact navigation and its own tagline/copyright.
+
+The current Basic page is a UI essentials showcase, implementing the agreed
+beginner component scope. Header/main/footer navigation and section labels use
+Home, Components, Layouts and Forms. Components combines real article cards,
+a Flexbox avatar/text row and native FAQ. Layouts includes a card Grid, ul/ol/dl
+examples and a headed section containing a labelled article/aside split. Forms
+adds fieldset/legend radio grouping to labelled inputs, select, textarea and
+checkbox controls, with native validation and live demo feedback. Semantic
+landmarks, one H1, skip link and source reading order remain intact. Layouts
+stack at the saved cutoff; no tab/modal/carousel scripts are added.
+
+The current inventory has sixteen entries, with fourteen links in Basic's
+three-group footer. The previous thirteen-entry mock inventory is recognised
+alongside older complete inventories, and resolves without changing stored
+planning text. Its previous section/topic names remain fixed-ID aliases. Radio
+choices, FAQ state and other form values participate in preview capture/restore.
 
 ## Basic and Advanced sample modes
 
@@ -345,33 +436,39 @@ saved focus width, while buttons retain their component focus settings.
 `basic-homepage.js` registers after the Advanced generator and before the preview.
 It wraps the public HTML/CSS functions to select the current mode; all inspector,
 copy, preview and download paths continue through those functions. Basic renders
-a four-section beginner website workshop: header/logo/wrapping navigation, hero
-with an embedded illustration, three practical Grid skill cards, three semantic
-project-toolkit list cards, a native-validation demo sign-up form and the shared
-footer. Basic uses a framed hero illustration with a caption, an editorial
-5:7 skills layout with three stacked lessons, an asymmetric two-track toolkit
-and a centred sign-up introduction/form limited by `--reading-measure`. Hero
-and skills stack at the saved responsive cutoff. Its footer presents identity,
-vertical navigation and a suggested next step in three columns, with two-column
-shortcuts on narrow screens. Basic footer layout CSS follows the shared footer
-CSS, scoped to `.site-footer`; Advanced retains its two-column footer. Shared
-card styling, typography, button settings, grid gap/alignment, content IDs and
-the Architecture-driven sitemap remain connected to the common generators.
+a four-section component showcase: an illustrated hero, Flexbox content cards
+with a profile row and native FAQ, Grid cards with semantic lists and an
+article/aside supporting layout, and a centred form with grouped choices.
+Copy is concise, with working examples and short component explanations.
+The page keeps semantic landmarks, one H1, labelled sections, articles and aside,
+accessible native navigation and form labels, and static-demo feedback. It shares
+all design-system typography, spacing, colour, component and button settings.
+The framed hero and Flexbox composition stack at the saved narrow cutoff;
+the card Grid uses the saved card minimum and gap, and the article/aside
+split stacks in source order. The form respects --reading-measure.
+Header desktop/mobile/footer links share an authored list. Basic keeps its
+classic identity, grouped sitemap and copyright/Back to top row. Advanced keeps
+its tutorial content and uses the same shared footer layout.
 Every main section has a primary/secondary CTA pair with contextual
-fragment destinations; the form pairs native submit with a toolkit link. Skill
-cards also link directly to the corresponding toolkit cards. All CTA classes
+fragment destinations; the form pairs native submit with a layouts link. Content
+cards also link to related examples. All CTA classes
 come from the shared button helper, including variant, size and mobile width.
 Simple Flexbox action rows wrap with token-based gaps; no new runtime or backend
 is introduced. The two samples use the
 same heading sizes at each hierarchy level and the same saved button size/mobile
 width classes. Advanced interaction simulations remain gallery demonstrations;
 Basic keeps usable native form controls and ordinary page actions.
+Basic's page CSS places shared rules before the individual sections so local
+rules remain easy to follow and mobile navigation overrides retain precedence.
+Identical link targets, flexible-child sizing and form-control rules are grouped;
+obsolete form FAQ styles and repeated declarations are removed. The full export
+still includes shared foundation/component CSS to preserve studio settings.
 Advanced exposes its cached SVG generator as `DSStudio.samples.illustration`;
 Basic reuses it with the active palette roles. The hero uses two equal Grid
 columns, stacking text before the image at the saved responsive stack cutoff.
 Image dimensions reserve its 4:3 ratio; the exported data URL needs no extra file
 or network request.
-Imported project text is escaped. The static form has no sign-up backend; the
+Imported project text is escaped. The static form has no processing backend; the
 preview intercepts its submission and announces that no account was created.
 
 Mode controls are an ARIA tab group with Arrow/Home/End navigation, roving tab

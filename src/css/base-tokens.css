@@ -13,6 +13,8 @@ and use locally available fonts. Arial is the default system font. */
   --space-unit: 4px;
   --radius-base: 12px;
   --shadow-strength: .12;
+  /* Studio canvas is independent of the generated website palette. */
+  --studio-background: #e8edf3;
   /* SEMANTIC: component-independent design roles (edited by JavaScript) */
   --background: #f3f6fa;
   --surface: #ffffff;
@@ -37,6 +39,10 @@ and use locally available fonts. Arial is the default system font. */
   --button-radius: calc(var(--radius-base)*.7)
 }
 
+:root[data-theme="dark"] {
+  --studio-background: var(--background);
+}
+
 * {
   box-sizing: border-box
 }
@@ -52,7 +58,7 @@ body {
   font-size: var(--base-size);
   line-height: var(--body-leading);
   color: var(--text);
-  background: var(--background)
+  background: var(--studio-background)
 }
 
 button,

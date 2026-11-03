@@ -32,7 +32,7 @@
         doc.addEventListener('submit', event => {
           event.preventDefault();
           const note = doc.getElementById('contact-note') || doc.getElementById('basic-signup-note');
-          if (note) note.textContent = state.sampleMode === 'basic' ? 'This is a static sign-up demonstration. No account has been created.' : 'This is a sample form. No enquiry has been sent.';
+          if (note) note.textContent = state.sampleMode === 'basic' ? 'Validation passed. No message has been sent.' : 'This is a sample form. No enquiry has been sent.';
         });
       }
 

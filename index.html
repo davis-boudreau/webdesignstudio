@@ -5,7 +5,7 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Design System Studio V4.1</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261020-minor-third">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261103-studio-background">
     <link rel="stylesheet" href="src/css/layout.css?v=20261020-section-menu">
     <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-wizard-divider">
     <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-state-practices">
@@ -14,9 +14,9 @@
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/design-process.css?v=20261021-brief-alignment">
+    <link rel="stylesheet" href="src/css/design-process.css?v=20261103-sitemap-crud">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
-    <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261021-basic">
+    <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
     <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
   </head>
   <body>
@@ -111,7 +111,10 @@
             <div class="journey-pane" data-journey-pane="1" hidden>
               <h3 class="journey-stage-title">2. Map the information architecture</h3>
               <p class="help">Inventory the content, group it around audience tasks and choose labels people understand. The live sitemap below the centre lesson shows your relationships.</p>
+              <div id="sitemap-editor"></div>
+              <details class="learning-note"><summary>Edit sitemap as text</summary>
               <div class="field process-editor"><label for="plan-pages">Pages and content groups (sitemap)</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">The complete map follows the Basic or Advanced sample selected in the inspector. Edit it to plan your own content; custom edits are kept when switching samples. Use one entry per line, up to 64 entries, with Parent &gt; Child for two levels and labels up to 64 characters. Labels are plain text, not URLs. The centre lesson and footer share this plan; only existing content becomes a link.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample sitemap</button><p class="help" id="plan-sample-status" role="status"></p><a href="#process-ia">Review the sitemap in the centre lesson</a></div>
+              </details>
               <p class="journey-tip"><strong>Before moving on:</strong> Can someone predict where to find the information needed for the main task?</p>
             </div>
             <div class="journey-pane" data-journey-pane="2" hidden>
@@ -130,6 +133,16 @@
             </div>
             <div class="journey-pane" data-journey-pane="4" hidden="">
               <h3 class="journey-stage-title">5. Brand Palette and Main Palette</h3>
+              <section class="page-background-editor" aria-labelledby="page-background-title">
+                <h4 id="page-background-title">Webpage background</h4>
+                <p class="help" id="page-background-help">Set the page canvas for the current theme. Cards and section surfaces keep their own colours. Switch themes to set the other background.</p>
+                <label for="page-background-colour">Choose background colour</label>
+                <input id="page-background-colour" type="color" aria-describedby="page-background-help">
+                <label for="page-background-hex">Background hex colour</label>
+                <input id="page-background-hex" type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" placeholder="#F3F6FA" aria-describedby="page-background-help">
+                <p class="help" id="page-background-theme"></p>
+                <button id="page-background-reset" type="button" class="ghost">Use default background</button>
+              </section>
               <p class="help">Use your brief and prototype findings to assign colours a purpose, then evaluate the combinations people will actually see.</p>
               <details class="learning-note build-guide">
                 <summary>How do I choose and check my palette?</summary>
@@ -1989,6 +2002,32 @@
               </div>
               <div id="dockSamplePanel" role="tabpanel" aria-labelledby="dockModeAdvanced">
               <p id="sampleModeHelp">Advanced: the full field guide, planning workshops and component/state gallery.</p>
+              <div id="dockLearning" hidden>
+                <details class="dock-start">
+                  <summary>Start here: three guided exercises</summary>
+                  <p>The inspector is read-only. Learn in order: semantic HTML, then Flexbox components, responsive Grid layouts and labelled form controls. The live examples keep the page compact; inspect the source to explore each pattern. The footer sitemap is always visible.</p>
+                  <ol>
+                    <li><strong>Change a heading.</strong> Select Hero and HTML to find the <code>h1</code>. Download the complete HTML and CSS into one folder. Edit the heading text in <code>index.html</code>, save, and open or reload that file in your browser. The studio preview keeps its generated text.</li>
+                    <li><strong>Adjust section spacing.</strong> Select Page basics and CSS. In the studio's Spacing controls, change the base unit. Watch the section padding and tokens update together in the preview and code.</li>
+                    <li><strong>Resize the preview.</strong> Open Responsive preview and compare 390 px, 768 px and 1280 px. Select Hero and CSS: find the media query that changes two columns to one. Check that text stays before the image.</li>
+                  </ol>
+                  <p><code>var(--space-4)</code> uses a reusable spacing value: four times the base spacing unit. Changing that unit updates every rule using the token. Shared foundation and component rules remain in the complete CSS.</p>
+                </details>
+                <div class="dock-focus">
+                  <label for="dockSection">Study a section</label>
+                  <select id="dockSection" aria-describedby="dockFocusHelp">
+                    <option value="all">Complete file</option>
+                    <option value="basics">Page basics: normal flow</option>
+                    <option value="header">Header: responsive navigation</option>
+                    <option value="hero">Hero: Grid</option>
+                    <option value="skills">Components: Flexbox</option>
+                    <option value="toolkit">Layouts: Grid</option>
+                    <option value="form">Forms: controls and feedback</option>
+                    <option value="footer">Footer: navigation</option>
+                  </select>
+                  <small id="dockFocusHelp">Copy uses the visible code. Download always saves the complete file. Section excerpts need the shared rules in tokens.css.</small>
+                </div>
+              </div>
               <div class="studio-dock-tabs" role="tablist" aria-label="Inspector code language">
                 <button id="dockTabCss" type="button" role="tab" aria-selected="true" aria-controls="dockCss">CSS</button>
                 <button id="dockTabHtml" type="button" role="tab" aria-selected="false" aria-controls="dockCss" tabindex="-1">HTML</button>
@@ -2040,17 +2079,17 @@
       <script src="src/js/brand-palette.js?v=20261021-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261103-basic-actions" defer></script>
+      <script src="src/js/design-process.js?v=20261103-sitemap-crud" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/core-state.js?v=20261021-responsive" defer></script>
-      <script src="src/js/css-dock.js?v=20261021-basic" defer></script>
+      <script src="src/js/css-dock.js?v=20261103-basic-learning" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/journey-library.js?v=20261021-responsive" defer></script>
       <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/sample-system.js?v=20261103-basic-layouts" defer></script>
+      <script src="src/js/sample-system.js?v=20261103-shared-footer" defer></script>
       <script src="src/js/sample-homepage.js?v=20261023-basic-hero" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261103-basic-layouts" defer></script>
-      <script src="src/js/responsive-preview.js?v=20261021-responsive" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261103-basic-css-cleanup" defer></script>
+      <script src="src/js/responsive-preview.js?v=20261103-ui-essentials" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
       <script src="src/js/token-catalogue.js?v=20261021-responsive-review" defer></script>
@@ -2060,6 +2099,7 @@
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
       <script src="src/js/section-accordions.js?v=20261020-section-menu" defer></script>
+      <script src="src/js/site-builder.js?v=20261103-sitemap-crud" defer></script>
       <script src="src/js/studio-learning.js?v=20261103-preview" defer></script>
     </body>
   </html>

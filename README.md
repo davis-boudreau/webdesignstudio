@@ -18,14 +18,21 @@ the menu horizontally when needed; keyboard focus reveals offscreen links.
 
 The **Live CSS/HTML Inspector** has **Advanced / Basic** sample tabs above its
 independent **CSS / HTML** language tabs. Advanced keeps the full field guide.
-Basic provides a four-section beginner website workshop: logo and wrapping
-navigation, framed illustrated hero, an editorial introduction beside three
-stacked skill lessons, an asymmetric project toolkit with three list types, and
-a centred demo sign-up form. Each section offers primary and secondary actions;
-skill cards link into the toolkit. The Basic footer groups project identity,
-vertical navigation and a suggested next step, with a separate expandable sitemap
-and Back to top row.
-Its shorter, commented CSS teaches Flexbox, Grid, spacing, typography and focus.
+Basic is a compact UI essentials showcase for a first web-development course.
+Home introduces a two-CTA hero and captioned responsive image. Components uses
+Flexbox to demonstrate content cards, an avatar/text profile row and a native
+FAQ. Layouts demonstrates a responsive card Grid, unordered/ordered/description
+lists and a semantic article/aside split. Forms includes labelled fields,
+select/textarea, a fieldset/legend radio group, checkbox, native validation and
+announced demo feedback. Short labels explain each example without long code
+recipes. The inspector provides the full, commented HTML/CSS.
+The footer places horizontal main navigation beside the brand. Its sitemap
+arranges Components, Layouts and Forms in columns with related links stacked
+vertically below each parent; Home/Footer sitemap groups are omitted. Both areas
+reflow on narrow screens. Previous complete Basic inventories resolve to the showcase inventory
+without overwriting saved planning data, and legacy labels remain safe aliases.
+Advanced uses the same classic footer layout with its own main navigation and
+complete sitemap. Both have a left-aligned Sitemap title and centred link groups.
 
 The selected sample drives the live preview, code panels, copy actions and all
 HTML/CSS downloads. Save the matching `index.html` and `tokens.css` together.
@@ -38,16 +45,27 @@ settings. Basic keeps a simpler page layout; planning workshops and state
 demonstrations belong to Advanced. Changing modes starts a fresh preview
 browsing session.
 
-**Architecture is the sitemap plan.** The starter maps all sections and content
+**Architecture is the sitemap plan.** In **Build your design system → Architecture**, select an entry to edit
+its label, parent or existing-section destination. Add/delete entries, move them
+within their level and undo the last change. Planned items can appear in the
+footer without a link; editing does not create new content sections. The text
+editor remains available for bulk edits. The plan updates the responsive preview,
+live HTML inspector, exports and saved projects.
+
+**Palette → Webpage background** sets the canvas colour for the active theme,
+using a picker or hex value. Light and dark backgrounds are saved independently;
+the reset restores the theme default. Cards and section surfaces retain their
+own colours.
+
+The starter maps all sections and content
 groups in the selected Basic or Advanced sample, including cards, lessons and
 workshop topics. Both sample footers use this map, with links to existing content.
-The full map
-is expandable; identity, key links and Back to top stay readily available.
+The footer map is always visible; identity, key links and Back to top stay readily available.
 The original six-entry starter upgrades automatically. Complete sample maps
 follow mode changes; custom edits are preserved. **Use complete Basic/Advanced
 sitemap** restores the selected inventory, confirms section/topic counts and
 opens the centre map for review. Repeated clicks confirm when it is already
-complete. Open **Sitemap** in the preview footer to browse its links. Use `Parent > Child` for two levels,
+complete. Browse **Sitemap** in the preview footer for its links. Use `Parent > Child` for two levels,
 up to 64 entries and 64 characters per label. New, unbuilt entries are marked
 **Planned page**. This is a single-page content map: main navigation can show a
 shorter selection of key destinations. Basic's lists demonstrate `ul`, `ol` and

@@ -7,3 +7,10 @@
 [data-process-artifact] { min-width: 0; }
 [data-process-artifact] > :last-child { margin-bottom: 0; }
 .studio-section .process-screens > li { scroll-margin-top: var(--studio-section-scroll-offset, 125px); }
+.sitemap-editor, #sitemap-form, .page-background-editor { display: grid; gap: .65rem; min-width: 0; margin-block: 1rem; }
+.sitemap-editor select, .sitemap-editor input:not([type="checkbox"]), .page-background-editor input { width: 100%; min-width: 0; }
+.sitemap-editor select[size] { min-height: 12rem; }
+.sitemap-editor .button-row { flex-wrap: wrap; }
+.sitemap-editor button { min-height: 44px; white-space: normal; }
+.sitemap-planned-toggle { display: flex; gap: .5rem; align-items: flex-start; }
+.page-background-editor input[type="color"] { min-height: 44px; }

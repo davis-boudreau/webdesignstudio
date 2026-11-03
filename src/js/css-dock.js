@@ -6,17 +6,21 @@
   const tabs = ['dockTabCss', 'dockTabHtml'];
   let language = 'css', copyTimer;
   const content = () => language === 'css' ? cssExport() : htmlExport();
+  const section = () => state.sampleMode === 'basic' ? $('dockSection').value : 'all';
+  const visibleContent = () => section() === 'all' ? content() : DSStudio.samples.basicExcerpt(content(), language, section());
+  const copyLabel = () => 'Copy ' + language.toUpperCase() + (section() === 'all' ? '' : ' excerpt');
 
   function refreshDock() {
     $('dockTheme').value = state.theme;
-    const code = content();
+    $('dockLearning').hidden = state.sampleMode !== 'basic';
+    const code = visibleContent();
     if (live.textContent !== code) live.textContent = code;
     live.setAttribute('aria-label', `Generated ${language.toUpperCase()} code`);
     live.setAttribute('aria-labelledby', language === 'css' ? tabs[0] : tabs[1]);
     $('dockDownload').textContent = 'Download ' + (language === 'css' ? 'tokens.css' : 'index.html');
-    $('dockCopy').textContent = 'Copy ' + language.toUpperCase();
+    $('dockCopy').textContent = copyLabel();
     $('dockNote').textContent = state.sampleMode === 'basic' ?
-      `Basic ${language.toUpperCase()}: the minimal responsive homepage shown in the preview. Save index.html beside tokens.css.` : language === 'css' ?
+      `Basic ${language.toUpperCase()}: ${section() === 'all' ? 'complete file' : 'study excerpt; shared foundations remain in the complete CSS'}. Download saves the complete file. Save index.html beside tokens.css.` : language === 'css' ?
       'Brand → semantic → component rules for light and dark themes. Save tokens.css beside index.html.' :
       `The ${state.theme} home page, also shown in the responsive preview. Save index.html beside tokens.css; images are embedded.`;
     tabs.forEach((id, index) => {
@@ -34,6 +38,12 @@
   $('dockTheme').addEventListener('change', event => {
     state.theme = event.target.value;
     apply();
+  });
+  $('dockSection').addEventListener('change', () => {
+    clearTimeout(copyTimer);
+    refreshDock();
+    live.scrollTop = 0;
+    live.scrollLeft = 0;
   });
   tabs.forEach((id, index) => {
     $(id).addEventListener('click', () => {
@@ -55,15 +65,16 @@
     });
   });
   $('dockCopy').addEventListener('click', async () => {
-    const selectedLanguage = language, selectedMode = state.sampleMode;
+    const selectedLanguage = language, selectedMode = state.sampleMode, selectedSection = section();
+    const stillSelected = () => language === selectedLanguage && state.sampleMode === selectedMode && section() === selectedSection;
     try {
-      await navigator.clipboard.writeText(content());
-      if (language === selectedLanguage && state.sampleMode === selectedMode) $('dockCopy').textContent = 'Copied!';
+      await navigator.clipboard.writeText(visibleContent());
+      if (stillSelected()) $('dockCopy').textContent = 'Copied!';
     } catch {
-      if (language === selectedLanguage && state.sampleMode === selectedMode) $('dockCopy').textContent = 'Select code to copy';
+      if (stillSelected()) $('dockCopy').textContent = 'Select code to copy';
     }
     clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => $('dockCopy').textContent = 'Copy ' + language.toUpperCase(), 1800);
+    copyTimer = setTimeout(() => $('dockCopy').textContent = copyLabel(), 1800);
   });
   $('dockDownload').addEventListener('click', () => download(
     language === 'css' ? 'tokens.css' : 'index.html', content(),

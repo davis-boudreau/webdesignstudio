@@ -2,3 +2,24 @@
 #dockSamplePanel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 .studio-dock-modes button { min-height: 44px; }
 #sampleModeHelp { padding: 8px 12px; margin: 0; font-size: .76rem; color: var(--text-muted); }
+
+/* Keep the guide available inside a short, independently scrolling dock. */
+#dockLearning { display: flex; flex-direction: column; flex: none; max-height: 38vh; overflow: hidden; border-bottom: 1px solid var(--border); }
+#dockLearning[hidden] { display: none; }
+.dock-start, .dock-focus { padding: 10px 12px; font-size: .8rem; overflow-wrap: anywhere; }
+.dock-start { min-height: 64px; overflow: auto; }
+.dock-start summary { cursor: pointer; min-height: 44px; display: list-item; align-content: center; font-weight: 600; }
+.dock-start p { margin: 8px 0; }
+.dock-start ol { padding-inline-start: 20px; margin-block: 8px; }
+.dock-start li + li { margin-top: 12px; }
+.dock-focus { display: grid; flex: none; gap: 8px; }
+.dock-focus label { font-weight: 600; }
+.dock-focus select { width: 100%; min-width: 0; min-height: 44px; font: inherit; }
+.dock-focus small { color: var(--text-muted); }
+
+/* Added teaching controls must remain reachable in short or stacked docks. */
+#dockSamplePanel { overflow-y: auto; }
+@media (max-width: 1280px) {
+  .studio-code-dock { max-height: none; }
+  #dockCss { flex: none; height: 320px; }
+}

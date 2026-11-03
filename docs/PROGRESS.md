@@ -4,8 +4,548 @@ Updated: 3 November 2026 (America/Halifax).
 
 ## Current objective
 
-Give every Basic section a distinct composition and improve its footer layout,
-retaining shared design-system settings, CTA behaviour, sitemap and exports.
+Add sitemap CRUD/relationships in the wizard and a theme-aware webpage background.
+
+## Sitemap editor and webpage background (3 November 2026)
+
+- Added Architecture controls to create/read/rename entries, choose a parent and
+  existing-section destination, reorder siblings/groups, delete a branch, and
+  undo the last edit. Retained the raw text editor in a disclosure and the full
+  inventory restore action. Selected unmatched entries appear as Planned page
+  in the footer, as explicitly requested; no placeholder body sections are added.
+- Continued using the bounded two-level pages text; added validated per-sample
+  pageLinks and showPlanned fields to planning data. Fixed-ID-only destination
+  validation, escaped rendering, 64-entry limits and stale-undo invalidation
+  cover imported data and editing edge cases. Rename preserves sibling order.
+- Changes feed existing preview, inspector, artifact, project/JSON and export
+  generators. Basic's optional planned view retains Home/Footer exclusions;
+  Advanced's complete map and existing legacy aliases remain supported.
+- Added Palette background picker/hex/reset for the current theme, reusing
+  semanticOverrides rather than introducing another stored colour setting.
+  Both samples and export use it; light/dark values are independent.
+- Added one runtime module, refreshed affected asset versions, updated docs and
+  browser regression checks. User root snapshots/scope file remain untouched.
+- Initial `python scripts/browser_review.py` passed 1039/1039, including CRUD,
+  persistence, preview/inspector, background and unsafe-target coverage. Added
+  sibling-order, entry-limit, stale-undo and narrow-editor checks afterward.
+  Final suite passed 1045/1045 with no interaction JavaScript errors using an
+  isolated temporary Chrome profile outside the sandbox (ignored log:
+  `.site-builder-review.log`). Structure check passed (39 assets), Python
+  compilation and `git diff --check` passed.
+- Visually reviewed light desktop Architecture/Palette and 320px Architecture
+  screenshots; controls fit and wrap. Corrected the screenshot helper for
+  Chrome's minimum window size by explicitly setting the iframe to 320px.
+  Rechecked final Save button styling; removed temporary screenshots/helper. Manual
+  keyboard-only, screen-reader and Firefox/Safari checks remain unrun.
+- Next step: try the editor with a learner and complete manual accessibility
+  and cross-browser review.
+
+## Basic CSS simplification (3 November 2026)
+
+- Consolidated repeated heading, link-target, flexible-child and form-control
+  declarations. Removed obsolete form-section FAQ rules, unused demo-link
+  styling and redundant sizing already supplied by the global box model/cards.
+- Placed the shared page styles before section rules, retaining mobile nav
+  precedence and section-labelled study excerpts. Moved sidebar heading styles
+  beside that layout; refreshed outdated HTML comments and the Basic JS version.
+- Basic's authored page layer fell from 115 to 107 blocks and 286 to 261
+  declarations (counts include media-query blocks, exclude shared foundations
+  and footer). Shared tokens/components remain to support studio controls and
+  matching previews/exports. Advanced and the shared footer are unchanged.
+- `python scripts/check_structure.py` passed (38 assets), `git diff --check`
+  passed. `python scripts/browser_review.py` passed 1021/1021 with no interaction
+  JavaScript errors using isolated Chrome outside the sandbox (ignored log:
+  `.basic-css-cleanup-review.log`). No new tests added for this cleanup.
+- Next step: review the simplified source with a learner. Manual visual, keyboard-only,
+  screen-reader and cross-browser checks have not been rerun for this revision.
+
+## Shared classic footer for Basic and Advanced (3 November 2026)
+
+- Left-aligned the Sitemap title while retaining centred column groups and
+  vertically stacked, centred sublinks. Moved all Basic footer layout rules into
+  the shared CSS generator and consolidated both modes into one HTML template.
+- Advanced now uses the same brand/navigation row, visible sitemap and bottom
+  copyright/Back to top row. Retained its own navigation, tagline, copyright and
+  complete planning map; Basic retains its filtered three-group map. Removed
+  Advanced's Explore heading, redundant Sitemap shortcut and closed disclosure.
+- Updated affected asset versions, README/architecture notes and browser
+  assertions for visible maps, left-aligned titles and centred link groups in
+  both modes across widths/themes and edited design-system settings.
+- `python scripts/check_structure.py` passed (38 assets); `git diff --check`
+  and Python compilation passed. Initial browser run passed 1016/1021: three
+  stale Advanced footer selectors and two colour-dialog focus assertions failed.
+  Corrected selectors; focus assertions passed on rerun without product changes.
+  Final `python scripts/browser_review.py` passed 1021/1021 with no interaction
+  JavaScript errors using isolated Chrome outside the sandbox (ignored log:
+  `.shared-classic-footer-review.log`). One fewer check reflects removing the
+  redundant Advanced Sitemap shortcut navigation test.
+- Next step: review the shared footer; watch for intermittent dialog-focus test
+  failures. Manual visual, keyboard-only, screen-reader
+  and cross-browser reviews have not been rerun for this revision.
+
+## Centred links within Basic sitemap groups (3 November 2026)
+
+- Centred each group heading and its vertically stacked child links within the
+  existing centred sitemap columns. Basic-only styling; refreshed its JS query
+  version and updated architecture notes and existing alignment assertions.
+- `python scripts/check_structure.py` passed (38 assets), Python compilation
+  and `git diff --check` passed. `python scripts/browser_review.py` passed
+  1022/1022 with no interaction JavaScript errors using isolated Chrome outside
+  the sandbox (ignored log: `.basic-footer-links-centred-review.log`).
+- Next step: review the updated footer. Manual visual,
+  accessibility and cross-browser reviews have not been rerun for this revision.
+
+## Centred Basic footer sitemap (3 November 2026)
+
+- Centred the Sitemap heading and constrained its responsive column grid to
+  48rem with automatic inline margins. Groups are centred within their tracks;
+  sublinks retain left alignment and vertical stacking.
+- Scoped changes to Basic, refreshed its JS query version, documented the
+  layout and added geometry/style assertions across existing themes and widths.
+- `python scripts/check_structure.py` passed (38 assets) and `git diff --check`
+  passed. `python scripts/browser_review.py` passed 1022/1022 with no interaction
+  JavaScript errors using isolated Chrome outside the sandbox (ignored log:
+  `.basic-footer-centred-review.log`). Python compilation also passed.
+- Next step: review the centred footer. Manual visual/accessibility and
+  cross-browser checks have not been rerun for this revision.
+
+## Basic footer navigation and sitemap columns (3 November 2026)
+
+- Added labelled main footer navigation beside the project brand/tagline,
+  reusing Home, Components, Layouts and Forms from the header generator.
+  The identity/navigation row stacks at the saved responsive cutoff.
+- Sitemap parent groups use responsive Grid columns; each parent's sublinks
+  stack vertically and align left. Retained the filtered three-group sitemap,
+  stable destinations, copyright and Back to top.
+- Scoped layout changes to Basic, refreshed both affected JS asset versions,
+  and updated README/architecture descriptions. Root snapshots and the user's
+  webd-UI-scope.md remain untouched.
+- Updated browser assertions for navigation destinations/position, horizontal
+  desktop parent columns and vertical sublinks across themes and screen widths.
+  `python scripts/check_structure.py` passed (38 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed 1022/1022 using an isolated
+  temporary Chrome profile outside the sandbox, with no interaction JavaScript
+  errors (ignored log: `.basic-footer-columns-review.log`). Python compilation
+  and final `git diff --check` passed too.
+- Next step: review the revised footer with a learner. Manual visual,
+  keyboard-only, screen-reader and cross-browser checks were not rerun for this
+  revision; automated geometry checks do not establish full accessibility.
+
+## Basic UI essentials showcase (3 November 2026)
+
+- Implemented the agreed scope (also read the user-owned webd-UI-scope.md,
+  left untouched): semantic header/nav/main/section/article/aside/footer,
+  two-CTA hero, captioned image, content card, Grid card collection, Flexbox
+  profile row, article/sidebar layout, ul/ol/dl, form controls and native FAQ.
+  Kept the page compact with component labels and short explanations rather
+  than long code recipes. Advanced's page and user root snapshots are unchanged.
+- Reused four main sections and stable destinations; labels are now Home,
+  Components, Layouts and Forms. Footer remains a single three-group navigation
+  with horizontal/wrapping child links and no Home/Footer groups or duplicate
+  Explore menu. Default inventory has sixteen entries; footer has fourteen.
+- Added a fieldset/legend radio group with two labelled choices and one default,
+  retaining native validation, labelled inputs/select/textarea, required demo
+  checkbox and role=status feedback. FAQ moved into its component article.
+  Existing preview capture/restore preserves radio and FAQ/control state.
+- Added current mock-inventory migration alongside older complete inventories
+  and expanded aliases, preserving stored planning data and old fixed-ID links.
+  Refreshed four affected JS query versions, inspector labels/help and docs.
+- Extended browser regression checks for component content, semantic grouping,
+  radio defaults/state, responsive layouts, footer depth, and mock-plan migration.
+  `python scripts/check_structure.py` passed (38 assets), `git diff --check`
+  passed, `python -m py_compile scripts/browser_review.py` passed.
+- Browser review uses an isolated temporary Chrome profile outside the sandbox;
+  the normal approval path accepted this session's runs. Initial run passed
+  1020/1022 with no JavaScript errors. Corrected old assertions expecting
+  aria-label rather than the existing aria-labelledby footer name, prohibiting
+  the now-valid Form controls link text, and expecting four H2s instead of the
+  hero H1 plus three section H2s. The intermediate rerun passed 1021/1022.
+  Final `python scripts/browser_review.py` passed 1022/1022 with no interaction
+  JavaScript errors (ignored log: `.basic-ui-essentials-review.log`). Structure
+  verification, Python compilation and `git diff --check` also passed again.
+- Visually inspected eight generated-page screenshots: light desktop hero,
+  Components, Layouts, Forms and footer; dark 390px Components/footer; light
+  320px form/footer. No clipping observed; parent/child footer links wrap and
+  controls remain readable. Removed temporary screenshots after review.
+  Manual keyboard-only, screen-reader, zoom and Firefox/Safari checks remain
+  unrun; automated checks do not establish full accessibility.
+- Next step: review with a first-course learner and complete the manual checks above.
+
+## Basic footer navigation limited to three groups (3 November 2026)
+
+- Consolidated Basic's footer into one navigation block: Services (Website design,
+  Content planning, Responsive websites), Resources (Project checklist, How we
+  work, Useful terms) and Contact (Enquiry form, Common questions). Removed
+  duplicate Explore navigation and Home/Footer sitemap groups. Kept identity,
+  copyright, Back to top and horizontal/wrapping parent/child link layout.
+- Added a parentIds rendering allowlist to the shared helper. Basic passes fixed
+  Services/Resources/Contact target IDs; aliases still resolve safely, orphaned
+  children are not promoted, and planning data/Advanced/header navigation remain
+  intact. Refreshed three affected JavaScript query versions and docs.
+- Updated browser expectations for the single navigation block, eleven rendered
+  links, filtered custom/legacy maps and fallback brand navigation for empty maps.
+- Current checks: `python scripts/check_structure.py` passed (38 assets),
+  `git diff --check` passed, `python -m py_compile scripts/browser_review.py`
+  passed. Static source review confirmed exact group/child labels and a single
+  footer nav with no Explore/Home/Footer groups; log is ignored
+  `.basic-footer-groups-static.log`. These checks do not execute browser output.
+- `python scripts/browser_review.py` was attempted, but sandboxed Chrome failed
+  to start (GPU/access denied); no browser assertions ran. Earlier automatic
+  approval-review usage-limit block has not been bypassed. Manual visual,
+  accessibility and cross-browser checks remain unrun for this revision.
+- Next step: inspect Basic footer and rerun the browser suite in working Chrome.
+
+## Horizontal Basic footer navigation (3 November 2026)
+
+- Changed Basic's footer Explore list from Grid to a horizontal, wrapping Flexbox
+  row with shared spacing. Main links stay keyboard accessible and wrap on narrow
+  screens. Refreshed the Basic generator asset query version and extended existing
+  footer checks to assert row direction and wrapping.
+- Inspected the active test.html snapshot and its companion tokens.css: its
+  sample-nav is already horizontal Flexbox, so neither snapshot needed editing.
+- `python scripts/check_structure.py` passed (38 assets), `git diff --check`
+  passed. `python scripts/browser_review.py` was attempted but sandboxed Chrome
+  could not start (GPU process/access denied); no browser assertions ran. The
+  earlier automatic approval-review usage-limit block is documented below and
+  has not been bypassed. No manual visual/accessibility review was run.
+- Next step: review the footer in a working browser and rerun the browser suite.
+
+## Basic mock studio site (3 November 2026)
+
+- Replaced Basic's tutorial/exercise copy and all code blocks with a short mock
+  studio site: Home, Services, Resources and Contact. Retained semantic header,
+  main, headed sections, articles, related aside, native hamburger/FAQ, two-CTA
+  hero, Flexbox services, Grid resources and article/sidebar layout. Source
+  comments and the inspector remain useful for beginners. Removed unused
+  tutorial-specific styling and the example formatter helper.
+- Retained the classic footer with shared main navigation. Expanded its default
+  sitemap to thirteen parent/child links: Services and Resources have three
+  children each, Contact has Enquiry form and Common questions. Home and Footer
+  remain standalone even if a custom plan assigns children. Children remain
+  horizontal/wrapping beneath their parent. Added a standaloneIds render option.
+- Added stable contact-form ID; kept earlier content/control/FAQ IDs. Added
+  current tutorial inventory migration alongside the prior workshop migration,
+  preserving stored planning text and legacy destination aliases. Contact's
+  real copy replaces technical field labels; static-demo notice and safe native
+  validation remain. Preview feedback says no message was sent.
+- Updated browser regression expectations for mock content, lack of on-page
+  recipes, sitemap depth/grouping, legacy inventories, semantic layout and form
+  state. Refreshed affected JS query versions, inspector labels/help and docs.
+- Current checks: `python scripts/check_structure.py` passed (38 assets),
+  `git diff --check` passed; `python -m py_compile scripts/browser_review.py`
+  passed. A read-only `python -` static review passed five checks: balanced mock
+  HTML/semantic landmarks, unique IDs and static label/ARIA/link references,
+  navigation/inventory targets, child counts 0/3/3/2/0, and absence of page
+  tutorial recipes. This inspects templates, not executed browser output; log is
+  ignored `.basic-mock-static-review.log`. `python scripts/browser_review.py` was attempted
+  inside the sandbox but Chrome failed to start (GPU process/access-denied).
+  No browser assertions ran for this revision. The previous turn's final
+  escalated rerun was not executed: automatic approval review hit the account
+  usage limit, not an unsafe-action determination. That check has not been
+  bypassed. Current browser/visual/accessibility/cross-browser checks remain
+  unverified; historical pass counts below do not establish this revision.
+- Previous expanded-sitemap screenshots were inspected in the prior turn before
+  its blocked final rerun, and are now obsolete for this copy change. Temporary
+  screenshots are removed. No commits, deployments or new runtime dependencies.
+- Next step: run `python scripts/browser_review.py` in a working local Chrome
+  environment once approval review is available, and inspect light/dark layouts.
+
+## Expanded sitemap and semantic HTML (3 November 2026)
+
+- Expanded Basic's visible footer sitemap from five top-level links to eleven
+  parent/child links for the default plan. Parent groups and their nested child
+  lists use horizontal wrapping Flexbox rows. The classic Explore navigation,
+  copyright and Back to top remain. The Architecture plan's existing filtering
+  and layout are unchanged.
+- Added a linksOnly sitemap rendering option: includes known children under
+  known parents, omits unlinked planned entries and never promotes orphan
+  children. Original planning data, aliases, custom/empty plans and Advanced's
+  complete map behaviour remain intact. Existing top-level-only option remains.
+- Reviewed and clarified the semantic tutorial: headed section for a topic,
+  article for independent content, aside for related information, and div for
+  layout wrappers. Expanded the existing escaped HTML example to include nav,
+  article and aside; used a labelled article beside the labelled sidebar aside.
+  Kept Flexbox/Grid independent of semantic element choice and all four main
+  sections, stable destinations, native controls and shared design settings.
+- Updated old footer-depth assertions and added both-theme child-row geometry
+  checks at 320/390/768/1440px, semantic structure checks and mixed valid/unknown
+  child filtering coverage. Refreshed three affected runtime query versions and
+  updated README/architecture.
+- `python scripts/check_structure.py` passed (38 assets), `git diff --check`
+  passed. Initial full browser run passed 1019/1020 with no JavaScript errors.
+  Its remaining old assertion expected every article under Grid to be a list
+  card with an h3; scoped that check to the three list cards, leaving the new
+  independent sidebar article correctly headed by h4. Final rerun/visual review
+  pending. Desktop/light and 390px dark expanded-footer screenshots and the
+  semantic lesson screenshot were inspected, but the final escalated rerun was
+  rejected by automatic approval review's account usage limit and did not run.
+  That tutorial revision is superseded by the mock-site changes above.
+- Next step: see the current mock-site objective and its verification gap.
+
+## Classic Basic footer and common UI patterns (3 November 2026)
+
+- Restored a classic footer using Advanced's shared identity/navigation Grid:
+  project identity, an Explore column with Hero/Flexbox/Grid & lists/Forms and
+  Sitemap, then copyright and Back to top. Kept Basic's visible top-level
+  sitemap and its separate Architecture-plan view filtering. Header, mobile
+  menu and footer main links now share one safe authored navigation helper.
+- Added live examples to existing Flexbox lesson cards: content card with a
+  text link, avatar/text media object with a badge, and native FAQ disclosure.
+  Added a main-content/sidebar Grid example below the list cards, stacking in
+  source order at the saved cutoff. Kept the four main sections and plan IDs.
+- Added optional labelled select/textarea controls to the native-validation
+  practice form. New components use semantic roles, spacing and shared control
+  styles. FAQ and optional control state survive live preview edits. Added one
+  CSS recipe (nine examples total) and one practice task (six total).
+- Added regression coverage for matching header/footer links, classic footer
+  geometry, UI/sidebar containment across widths/themes, native FAQ/focus and
+  preservation of FAQ/select/textarea state. Updated previous code/task counts.
+  Refreshed affected runtime query versions, sample help and docs.
+- Final checks: `python scripts/check_structure.py` passed (38 assets),
+  `python scripts/browser_review.py` passed **1010/1010** with no JavaScript
+  errors, and `git diff --check` passed. Chrome used an isolated temporary
+  profile outside the sandbox; ignored log `.basic-classic-components-review.log`.
+  Initial full browser run passed 1008/1009 with no
+  JavaScript errors; every new footer/component check passed. The existing
+  colour-repair focus assertion intermittently fell back to the contrast summary.
+  Review also identified that HTML indentation could insert spaces into an empty
+  textarea. Protected textarea blocks alongside preformatted code and added an
+  empty default-value regression assertion. The final browser rerun passed
+  every check, including the existing focus assertion.
+- Captured and inspected desktop/light footer/profile/FAQ/sidebar and exact-390px
+  dark footer/form plus light sidebar screenshots. Layouts and controls fit;
+  sidebar stacks below content. Manual keyboard-only, screen-reader, zoom and
+  Firefox/Safari review remain unrun; automated checks do not establish full
+  accessibility. Removed the temporary screenshots after inspection; no visual
+  baselines added. No commits, deployments, new dependencies or root snapshots.
+- Next step: try the beginner component examples and complete manual
+  accessibility/cross-browser review.
+
+## Basic sitemap plan groups (3 November 2026)
+
+- Added a render-only filter to the Basic Architecture artifact: hides Forms
+  and Footer parent groups, including case/spacing/hyphen variations and legacy
+  Sign up/Signup aliases. Other groups retain their related second-level items.
+  Child labels are not independently hidden. Empty/fully filtered plans have
+  clear messages. All labels continue to be escaped.
+- Scoped Flexbox styling to process-map--basic: parent groups flow left to right,
+  related children sit below aligned to the same left edge, and groups wrap on
+  narrow screens. Advanced's tree remains unchanged. Full editable/saved plans,
+  generated page sections and Basic footer links are preserved.
+- Updated former full-render count assumptions and added both-theme geometry
+  checks at 320/768/1440px, alias/child/data preservation checks and a fully hidden
+  plan case. Refreshed the affected JavaScript asset query version and architecture.
+- Final checks: `python scripts/check_structure.py` passed (38 assets),
+  `python scripts/browser_review.py` passed **998/998** with no JavaScript
+  errors, and `git diff --check` passed. Chrome used an isolated temporary
+  profile outside the sandbox; log is ignored `.basic-plan-columns-review.log`.
+  First full browser run passed 991/998 with no JavaScript errors:
+  six new assertions incorrectly assumed stored default planning data had already
+  been rewritten to Basic labels (resolution is intentionally pure). Corrected
+  them to check the resolved editor and unchanged stored data. One existing
+  contrast-review focus assertion also failed intermittently; the final run
+  passed that check and all 998 assertions.
+- Inspected desktop/light and exact-390px dark screenshots: three aligned groups
+  on desktop, related items beneath each heading, and wrapping on phones. Manual
+  keyboard-only, screen-reader and Firefox/Safari checks remain unrun. Earlier
+  results below belong to earlier work. Temporary screenshots were removed;
+  no visual baselines were added.
+- Next step: review the Basic plan layout with a real project and complete
+  manual accessibility/cross-browser checks.
+
+## Studio light background shade (3 November 2026)
+
+- Changed the studio body canvas from the shared light background #F3F6FA to
+  a dedicated --studio-background token, #E8EDF3, for stronger separation from
+  white panels. Dark mode continues to follow the existing --background role.
+  Generated website backgrounds, semantic overrides, project data and exports
+  retain their existing behaviour. Refreshed the base CSS asset query version.
+- Final verification: `python scripts/check_structure.py` passed (38 assets),
+  `python scripts/browser_review.py` passed **990/990** with no JavaScript errors,
+  and `git diff --check` passed. A focused isolated Chrome check passed 3/3:
+  exact light canvas, retained dark canvas, and independent custom website
+  backgrounds in preview/export. Logs are ignored `.studio-background-review.log`
+  and `.studio-background-focused.log`. No new permanent tests were added for
+  this small visual change.
+- Manual visual, keyboard, screen-reader and cross-browser review were not run
+  for this change; previous results below are historical.
+- Next step: review the new studio shade visually.
+
+## Basic top-level sitemap links (3 November 2026)
+
+- Added an explicit topLevelLinksOnly rendering option to the shared sitemap
+  helper. Basic uses it to render only known linked parent entries from the
+  current Architecture plan; nested children and unlinked planned entries are
+  omitted, and children are never promoted. Empty and wholly unlinked plans
+  retain clear empty states. Imported labels still resolve only to fixed IDs.
+- Changed Basic's sitemap to a compact wrapping link row and adjusted its tutorial
+  copy. The default sample shows Hero, Flexbox, Grid & lists, Forms and Footer.
+  The complete two-level plan, centre Architecture lesson, local/JSON project
+  data and Advanced's default full sitemap remain intact. Existing aliases work.
+- Updated regression checks for the rendered depth, legacy/custom plans,
+  unknown/malicious labels, restoration, JSON round trips and exports. Added
+  explicit checks that the shared full Basic map retains eleven entries while
+  the footer shows five and that filtering never promotes a known child of an
+  unknown parent. Refreshed three affected runtime query versions and docs.
+- Final checks: `python scripts/check_structure.py` passed (38 assets),
+  `python scripts/browser_review.py` passed **990/990** with no JavaScript
+  errors, and `git diff --check` passed. Chrome used an isolated temporary
+  profile outside the sandbox; output is in ignored
+  `.basic-sitemap-filter-review.log`.
+- Manual visual, keyboard-only, screen-reader and Firefox/Safari checks were not
+  run for this change; earlier screenshots/results below belong to earlier work.
+- Next step: review the simplified footer in Basic and complete manual
+  accessibility/cross-browser checks.
+
+## Basic component tutorial and visible footer sitemap (3 November 2026)
+
+- Replaced workshop/promotional copy with component-specific lessons: Hero and
+  header navigation, semantic HTML, Flexbox rows/columns, native responsive menu,
+  CSS Grid, ul/ol/dl lists, and form labels/validation. Renamed navigation and
+  CTA labels to match the components they reach. Kept the four-section structure,
+  stable IDs, shared settings, native menu, illustration and paired section CTAs.
+- Added eight escaped HTML/CSS code examples plus concrete practice tasks.
+  Protected preformatted examples during HTML indentation, keeping their code
+  whitespace and rendering markup as text. Examples preserve source whitespace and
+  scroll locally with keyboard focus, keeping code identifiers intact.
+  Native form tutorial requests sample data, explains exported GET behaviour and
+  uses a practice acknowledgement rather than marketing consent. Preview success
+  feedback describes validation; no processing backend or script was added.
+- Replaced Basic's three-column promotional footer/Explore menu/dropdown with
+  a compact identity/lesson row, one always-visible grouped sitemap and a utility
+  row (Start again, Sitemap, Back to top). Uses shared safe sitemap generation;
+  Basic-specific markup/style is separate from Advanced's existing presentation.
+- Updated Basic's content inventory to tutorial labels, preserving old section
+  and lesson labels as safe aliases. Exact previous complete Basic inventories
+  resolve to the tutorial inventory without modifying saved planning data;
+  custom and empty plans retain their established behaviour.
+- Added browser regression coverage for tutorial headings/tasks, exact code
+  example text/whitespace, inert escaped markup, visible footer navigation,
+  preformatted-code containment, old complete-plan migration and custom aliases.
+  Updated former Basic disclosure/footer geometry assertions while retaining
+  Advanced native disclosure checks and shared foundation parity checks.
+- Refreshed affected runtime asset query versions, inspector help, README and
+  architecture. Final required checks: `python scripts/check_structure.py`
+  passed (38 assets), `python scripts/browser_review.py` passed **988/988**
+  with no JavaScript errors, and `git diff --check` passed. Chrome used isolated
+  temporary profiles outside the sandbox. Logs are ignored
+  `.basic-tutorial-review.log`, `.basic-tutorial-focus.log` and
+  `.basic-tutorial-scroll.log`. First full browser run passed 985/986, including
+  all tutorial/footer/compatibility checks, with no JavaScript errors. One
+  existing colour-repair focus assertion failed in both full runs. A focused
+  diagnostic rerun passed 143/143 with no JavaScript errors. Updated that test
+  to await the native dialog close event (with a bounded timeout) before checking
+  restored focus and added failure details. The next full run passed 986/986
+  with no JavaScript errors. The first code-scrolling refinement run passed
+  975/988: unwrapped form code exposed an auto-sized centred introduction wider
+  than its narrow Grid track. Constrained the introduction to width:100% within
+  its existing reading measure. A focused isolated Chrome check passed 3/3 at
+  320/390/1440px, confirming no overflowing elements and working focused local
+  code scrolling. Final expanded full run passed all 988 checks.
+- Inspected desktop/light header/hero/Flexbox/Grid/footer and exact 320px light
+  Grid plus 390px dark hero/form/footer screenshots. Visual review found an old
+  decorative caption number wrapping vertically; removed it. Kept practice text
+  left aligned. A final narrow screenshot showed natural hyphen breaks still
+  split code identifiers, so switched code examples to preserved whitespace with
+  keyboard-accessible local horizontal scrolling. Inspected the final 320px
+  code-scrolling screenshot and corrected 390px dark caption/form screenshots.
+  Added focus/scroll assertions in both themes. Also inspected the corrected
+  320px dark form after its width fix. Removed all temporary screenshots after
+  review; no visual baselines were added. Manual keyboard-only, screen-reader,
+  zoom and Firefox/Safari checks
+  remain unrun, so the suite does not establish full accessibility. Earlier results
+  below belong to previous work; no commits/deployments or root snapshots changed.
+- Next step: walk through the beginner exercises with a learner and complete
+  manual accessibility/cross-browser review.
+
+## Basic website structure review (3 November 2026)
+
+- Reviewed the current generated Basic page against the requested structure.
+  The existing illustrated hero already has two shared primary/secondary CTAs,
+  and the footer already links to its expandable Architecture-driven sitemap.
+- Added Basic's native details/summary hamburger with hamburger/close icons,
+  visible Menu label and 48px control. Desktop and mobile links come from one
+  fixed list. The saved stacking cutoff selects desktop/mobile navigation;
+  exported pages need no scripts. The preview preserves menu state on live edits.
+- Converted the whole Skills section to Flexbox, including the 5:7 introduction
+  and vertically stacked lesson cards. Renamed feature-grid to skill-cards so
+  the source reflects the layout being taught. Narrow screens stack both areas.
+- Simplified Toolkit to equal-width auto-fit Grid cards using the saved card
+  minimum and gap, removing the asymmetric first-card span and nested sizing
+  expression. Retained stable IDs, list semantics, all section CTAs, illustration,
+  demo form, shared tokens/components, footer structure and exports.
+- Updated the inspector guide, section labels, sample help, README and architecture
+  to describe Header navigation, Skills Flexbox and Toolkit Grid. Refreshed the
+  affected Basic generator query version. Fixed teaching HTML indentation to
+  recognise self-closing SVG paths introduced by the hamburger icon.
+- Added browser coverage for native menu open/close, visible/hidden navigation,
+  focus outline, target sizes and icon states in both themes at 320/390/768/1440px;
+  preview navigation and retained open state; actual Flexbox-only Skills styles;
+  equal-width Grid cards; standalone footer Sitemap navigation and disclosure.
+  Updated prior Grid-based Skills assumptions and hidden-nav target-size checks.
+- Final checks: `python scripts/check_structure.py` passed (38 assets),
+  `python scripts/browser_review.py` passed **980/980** with no JavaScript errors,
+  and `git diff --check` passed. Chrome used an isolated temporary profile outside
+  the sandbox; output is in ignored `.basic-structure-review.log`. The initial
+  run passed 956/980; corrected obsolete asymmetric Grid/visible-nav test
+  assumptions and restored the palette after the new live-menu test. The next
+  run passed 975/980, including every Basic check, but existing sticky-header
+  assertions measured stale ResizeObserver offsets. A rendering-frame wait
+  stalled under headless virtual time, so replaced it with explicit resize-event
+  delivery after layout before the existing geometry assertions. No studio
+  runtime change was needed. The final rerun passed all 980 checks.
+- Captured and inspected temporary desktop/light header/hero/Skills/Grid toolkit
+  and exact-390px dark open-menu/footer screenshots. Removed temporary screenshots
+  after review; no visual baselines were added. Manual keyboard-only, screen-reader, zoom and
+  Firefox/Safari review have not been run; automated checks do not establish full
+  accessibility. No commits, deployments, new dependencies or user root sample
+  snapshots changed. Earlier results below belong to earlier work.
+- Next step: try the Basic learning exercises and complete manual accessibility
+  and Firefox/Safari review.
+
+## Basic inspector learning guide (3 November 2026)
+
+- Added a Basic-only Start here disclosure with three concrete exercises:
+  edit the downloaded H1, change the live spacing unit, and compare the
+  390/768/1280 px preview presets. Explicitly identifies the inspector as
+  read-only and distinguishes downloaded edits from the generated live preview.
+- Explained spacing custom properties and the progression from normal flow to
+  Header Flexbox and Hero Grid, with Toolkit as an optional Grid challenge.
+- Added authored SECTION comments to Basic HTML/CSS, indented generated HTML
+  (including formerly compact cards, lists, forms and shared footer markup),
+  and expanded page/footer CSS declarations onto separate lines. Shared design
+  system foundations and the existing section compositions are preserved.
+- Added a transient Basic section filter for Page basics, Header, Hero, Skills,
+  Toolkit, Form and Footer. CSS excerpts include shared page/responsive rules
+  and explain their dependency on complete tokens.css. Page basics includes live
+  spacing token definitions so the spacing exercise shows the changed base value.
+  Copy copies the visible excerpt; inspector/Deliver downloads always save the complete selected file.
+  Advanced hides the learning controls and retains complete code. Async copy
+  feedback checks the selected section as well as language/sample mode.
+- Kept the selector visible below the scrolling guide. Stacked docks now grow
+  with controls and use a bounded code viewport, avoiding clipped controls.
+  Refreshed all three affected asset query versions; documented the architecture.
+- Final required checks: `python scripts/check_structure.py` passed (38 assets),
+  `python scripts/browser_review.py` passed **958/958** with no JavaScript
+  errors, and `git diff --check` passed. Output is captured in ignored
+  `.basic-learning-review.log`. First sandboxed Chrome attempt could not start;
+  isolated-profile reruns outside the sandbox worked. The first full run was
+  950/952: corrected a viewport-dependent spacing test assumption and a wrong
+  test-only JSON function name. A subsequent 957/958 run exposed one test
+  expecting a resolved spacing value instead of the exported calc() expression;
+  corrected that assertion. The next 957/958 run passed every new check but
+  intermittently failed the existing contrast-review focus assertion, which
+  passed in earlier runs. The unchanged final rerun passed it and all 958
+  checks; the intermittent focus-check failure remains recorded for follow-up.
+- Captured and inspected temporary desktop/light and exact-390px iframe/dark
+  screenshots with the guide expanded and Hero/HTML selected. Visual review
+  prompted the guide/selector scrolling correction. Removed the temporary
+  screenshots after inspecting the corrected layouts; no screenshot baselines.
+- Manual keyboard-only, screen-reader, zoom and Firefox/Safari review remain
+  unrun; automated checks do not establish full accessibility. No runtime
+  dependencies, commits, deployments or user root sample snapshots changed.
+- Next step: try the exercises with a beginner and complete manual accessibility
+  and cross-browser review; monitor the existing intermittent focus assertion.
 
 ## Basic section and footer layouts (3 November 2026)
 
