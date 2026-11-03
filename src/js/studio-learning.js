@@ -59,7 +59,6 @@ DSStudio.register({
     get('jAccessibilityControls').remove();
 
     const lessons = [
-      ['studio-section-4',0,'See the system working together', 'A page combines foundations, semantic roles and component rules. The same tokens should support narrow and wide layouts.', '--space-unit → --space-4 → page gutters', 'Resize the page, browse its sections, then compare light and dark themes.'],
       ['brandPalette',4,'Brand references and UI decisions', 'Brand swatches record identity colours. Primary, Supporting and Accent assign those colours an interface job; they are independent decisions.', 'Brand reference → Main Palette choice → --primary', 'Compare the current role assignments. Explain why a brand colour may need a different shade for readable UI text.'],
       ['studio-section-1',6,'Ramps become semantic roles', 'A ramp is a family of shades. A semantic token names a purpose, allowing light and dark themes to use different values for that purpose.', '--primary-500 → --primary → action or link', 'Inspect a ramp and the semantic swatches. Compare text, surface and control-border roles in both themes.'],
       ['studio-section-2',5,'Typography creates hierarchy', 'Font family, scale, line-height and tracking work together. Fluid headings interpolate between viewport limits while body text remains readable.', '--font-size-base + --type-ratio → --text-h1 → heading', 'Compare mobile and desktop specimens. Move the calculator viewport slider and explain where the size stops growing.'],

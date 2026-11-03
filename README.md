@@ -18,9 +18,13 @@ the menu horizontally when needed; keyboard focus reveals offscreen links.
 
 The **Live CSS/HTML Inspector** has **Advanced / Basic** sample tabs above its
 independent **CSS / HTML** language tabs. Advanced keeps the full field guide.
-Basic provides a minimal responsive homepage: logo and wrapping navigation, hero,
-three CSS Grid cards, a three-column lists lesson, a labelled static sign-up form
-and a footer with Back to top and an Architecture-driven sitemap.
+Basic provides a four-section beginner website workshop: logo and wrapping
+navigation, framed illustrated hero, an editorial introduction beside three
+stacked skill lessons, an asymmetric project toolkit with three list types, and
+a centred demo sign-up form. Each section offers primary and secondary actions;
+skill cards link into the toolkit. The Basic footer groups project identity,
+vertical navigation and a suggested next step, with a separate expandable sitemap
+and Back to top row.
 Its shorter, commented CSS teaches Flexbox, Grid, spacing, typography and focus.
 
 The selected sample drives the live preview, code panels, copy actions and all
@@ -41,11 +45,15 @@ The full map
 is expandable; identity, key links and Back to top stay readily available.
 The original six-entry starter upgrades automatically. Complete sample maps
 follow mode changes; custom edits are preserved. **Use complete Basic/Advanced
-sitemap** restores the selected inventory. Use `Parent > Child` for two levels,
+sitemap** restores the selected inventory, confirms section/topic counts and
+opens the centre map for review. Repeated clicks confirm when it is already
+complete. Open **Sitemap** in the preview footer to browse its links. Use `Parent > Child` for two levels,
 up to 64 entries and 64 characters per label. New, unbuilt entries are marked
 **Planned page**. This is a single-page content map: main navigation can show a
 shorter selection of key destinations. Basic's lists demonstrate `ul`, `ol` and
-`dl`, with three titled cards side by side when space allows.
+`dl`, with a tall checklist beside workflow/terms panels when space allows.
+Sections stack on smaller screens; shared gap, card minimum, reading width and
+responsive settings continue to drive the exported layouts.
 
 The **Project brief** lesson teaches seven website-specific basics: purpose,
 audience, pages/features, content, design requirements, delivery and success.
@@ -80,15 +88,15 @@ and a practice question form. The interface lab includes button variants,
 feedback and progress controls. The form has no message delivery.
 Project brand colour tokens use the `--brand-*` prefix.
 
-To download the responsive static website, use **Download this responsive website**
-above the preview, or the **Deliver** wizard step:
+To download the responsive static website, use the **Live CSS/HTML Inspector**
+or the **Deliver** wizard step:
 
-1. Select **Download HTML (index.html)**.
-2. Select **Download CSS (tokens.css)**.
+1. In the inspector, select **HTML**, then **Download index.html**.
+2. Select **CSS**, then **Download tokens.css**.
 3. Save both files in one folder and open `index.html` in a browser.
 
-The CSS file includes tokens, components and responsive page rules. **View HTML
-code** and **View CSS code** open the matching live source under Inspect and export.
+The CSS file includes tokens, components and responsive page rules. The inspector
+shows the matching live source for the selected language.
 Downloads use the same generators as the preview and reflect current settings.
 The static menu and FAQ disclosures need no JavaScript. Images are embedded;
 system fonts work offline. Optional Google Fonts still require their CDN. Forms

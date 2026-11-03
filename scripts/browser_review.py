@@ -41,7 +41,7 @@ app.onload = async () => {
   test('Section menu precedes the preview, the only expanded centre section at startup', () => d.querySelector('#main > :first-child').classList.contains('studio-section-nav') && d.querySelector('#main > .studio-section').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(el=>el.open===(el.id==='studio-section-4')));
   test('Only Responsive page preview starts expanded throughout the studio', () => [...d.querySelectorAll('details')].every(el=>el.open===(el.id==='studio-section-4')));
   test('Preview initially fills the centre pane in Fluid mode', () => d.getElementById('previewFrame').dataset.width==='fluid' && d.querySelector('button[data-width="fluid"]').getAttribute('aria-pressed')==='true');
-  test('Twelve wizard steps connect project planning to sixteen centre lessons', () => d.querySelectorAll('[data-journey-step]').length===12 && d.querySelectorAll('[data-journey-pane]').length===12 && d.querySelectorAll('#main > .studio-section > .panel > .studio-lesson').length===16 && d.getElementById('jProgress').textContent.includes('of 12'));
+  test('Twelve wizard steps connect project planning to fifteen centre lessons and the preview', () => d.querySelectorAll('[data-journey-step]').length===12 && d.querySelectorAll('[data-journey-pane]').length===12 && d.querySelectorAll('#main > .studio-section > .panel > .studio-lesson').length===15 && d.getElementById('jProgress').textContent.includes('of 12'));
   test('Every exported token has a configuration source inside the wizard', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
     const source=w.dssTokenSource(row), control=source && d.getElementById(source.control);
     return control && control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step);
@@ -610,6 +610,7 @@ app.onload = async () => {
     d.getElementById(tab).click(); d.getElementById('downloadCode').click();
     test(tab+' downloads exactly the displayed code', () => downloadCalls.at(-1).name===name && downloadCalls.at(-1).content===d.getElementById('codeView').textContent);
   }
+  test('Responsive preview omits the introductory lesson and duplicate export card', () => !d.querySelector('#studio-section-4 .studio-lesson, #studio-section-4 .website-export, #studio-section-4 [data-website-download], #studio-section-4 [data-website-code]') && d.getElementById('previewPage'));
   const beforeWebsiteDownloads=evaluate('projectJson()');
   for (const [index,button] of [...d.querySelectorAll('[data-website-download]')].entries()) {
     button.click();
@@ -618,12 +619,7 @@ app.onload = async () => {
       return file.name===(html?'index.html':'tokens.css') && file.type===(html?'text/html':'text/css') && file.content===evaluate(html?'htmlExport()':'cssExport()');
     });
   }
-  test('Standalone download guidance names the matching files without changing saved settings', () => evaluate('projectJson()')===beforeWebsiteDownloads && d.querySelector('[data-website-status]').textContent.includes('Save index.html and tokens.css in the same folder'));
-  for (const language of ['html','css']) {
-    d.getElementById('studio-section-6').open=false;
-    d.querySelector(`[data-website-code="${language}"]`).click();
-    test('Website '+language+' shortcut opens and focuses its matching live code', () => d.getElementById('studio-section-6').open && d.getElementById(language==='html'?'viewHtml':'viewCss').getAttribute('aria-selected')==='true' && d.getElementById('codeView').textContent===evaluate(language==='html'?'htmlExport()':'cssExport()') && d.activeElement===d.getElementById('codeView'));
-  }
+  test('Deliver downloads preserve saved settings', () => evaluate('projectJson()')===beforeWebsiteDownloads);
   input('tokenSearch','--button-primary-hover'); await wait();
   d.getElementById('tokenDownload').click();
   test('Token search and CSV agree on the filtered tokens', () => [...d.querySelectorAll('#tokenTableBody tr')].every(row=>row.textContent.includes('--button-primary-hover')) && downloadCalls.at(-1).name==='design-system-tokens.csv' && !downloadCalls.at(-1).content.includes('--brand-white'));
@@ -1487,6 +1483,37 @@ app.onload = async () => {
     return image && image.getAttribute('src')===advanced.getAttribute('src') && image.getAttribute('src').startsWith('data:image/svg+xml;') && image.alt.length>0 && image.width===960 && image.height===720 && live.complete && live.naturalWidth===960 && live.getAttribute('src')===image.getAttribute('src') && d.getElementById('dockCss').textContent===evaluate('htmlExport()');
   });
   test('Basic HTML has exactly four main sections, one heading, logo/nav, hero, three cards, signup and footer', () => basicDoc.querySelectorAll('main > section').length===4 && basicDoc.querySelectorAll('h1').length===1 && basicDoc.querySelector('header .logo[aria-hidden="true"]') && basicDoc.querySelector('header nav[aria-label]') && basicDoc.querySelector('#home .button') && basicDoc.querySelectorAll('.feature-grid article').length===3 && basicDoc.querySelector('#signup form') && basicDoc.querySelector('footer nav[aria-label]') && basicDoc.querySelector('footer a[href="#top"]'));
+  test('Basic gives every main section one primary CTA and one secondary route', () => [...basicDoc.querySelectorAll('main > section')].every(section => {
+    const pair=section.querySelector('.section-actions');
+    return pair && pair.children.length===2 && pair.children[0].classList.contains('ds-button--primary') && pair.children[1].classList.contains('ds-button--secondary') && !pair.querySelector('[disabled], [aria-busy], [data-preview-state]');
+  }));
+  test('Basic feature cards offer distinct paths into the practical toolkit', () => [...basicDoc.querySelectorAll('.feature-grid article > a')].map(a=>a.hash).join(',')==='#list-collection,#list-workflow,#list-terms');
+  const basicActionProject=evaluate('projectJson()');
+  for (const link of [...previewDoc().querySelectorAll('.section-actions a, .feature-grid article > a')]) {
+    const page=previewDoc(), target=page.getElementById(link.hash.slice(1));
+    link.click(); await wait();
+    test('Basic action to '+link.getAttribute('href')+' navigates within the preview and focuses its destination', () => previewDoc()===page && page.activeElement===target && evaluate('projectJson()')===basicActionProject);
+  }
+  const basicActionSettings=evaluate('projectJson()');
+  for (const theme of ['light','dark']) {
+    input('jTheme',theme); input('bdVariant','secondary'); input('bdDefaultBg','#602d54'); input('bdText','#ffffff'); input('bdSize','lg');
+    d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true})); await wait();
+    test(theme+' Basic CTAs follow wizard variant colours, size and width settings in the preview and HTML inspector', () => {
+      const page=previewDoc(), links=[...page.querySelectorAll('.section-actions .ds-button--secondary')];
+      return links.length===4 && links.every(a=>previewWindow().getComputedStyle(a).backgroundColor==='rgb(96, 45, 84)' && a.classList.contains('ds-button--lg') && a.classList.contains('ds-button--mobile-full')) && previewWindow().getComputedStyle(page.querySelector('.section-actions .ds-button--primary')).backgroundColor!=='rgb(96, 45, 84)' && d.getElementById('dockCss').textContent===evaluate('htmlExport()');
+    });
+    d.querySelector('button[data-width="mobile"]').click(); await wait();
+    test(theme+' Basic mobile CTAs use the selected full width and retain visible keyboard focus', () => {
+      const page=previewDoc(), pairs=[...page.querySelectorAll('.section-actions')], link=page.querySelector('#features .ds-button--secondary');
+      link.focus();
+      return pairs.every(pair=>[...pair.children].every(a=>Math.abs(a.getBoundingClientRect().width-pair.getBoundingClientRect().width)<2)) && link.matches(':focus-visible') && previewWindow().getComputedStyle(link).outlineStyle==='solid' && page.documentElement.scrollWidth<=390;
+    });
+    d.querySelector('button[data-width="fluid"]').click(); await wait();
+    d.getElementById('dockTabCss').click();
+    test(theme+' Basic CSS inspector and preview share the wizard-generated CTA stylesheet', () => d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('#602d54'));
+    d.getElementById('dockTabHtml').click();
+  }
+  evaluate('importConfig('+basicActionSettings+')'); await wait();
   test('Basic HTML IDs, fragment destinations and form labels resolve without scripts or inline styles', () => {
     const ids=[...basicDoc.querySelectorAll('[id]')].map(el=>el.id);
     return ids.length===new Set(ids).size && !basicDoc.querySelector('script,style') && basicDoc.querySelector('link[href="tokens.css"]') && [...basicDoc.querySelectorAll('a[href^="#"]')].every(link=>basicDoc.getElementById(link.hash.slice(1))) && [...basicDoc.querySelectorAll('label[for]')].every(label=>basicDoc.getElementById(label.htmlFor));
@@ -1519,7 +1546,7 @@ app.onload = async () => {
     const live=previewDoc().querySelector('#home img'), exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#home img');
     return live.complete && live.naturalWidth===960 && live.getAttribute('src')!==initialBasicImage && live.getAttribute('src')===exported.getAttribute('src') && decodeURIComponent(live.getAttribute('src')).includes(evaluate('palette().roles.primary'));
   });
-  test('Basic design settings update its HTML, CSS, preview and source descriptions', () => previewDoc().querySelector('.brand').textContent.includes('Harbour learning club') && previewWindow().getComputedStyle(previewDoc().body).fontSize==='18px' && previewWindow().getComputedStyle(previewDoc().querySelector('.feature-grid')).gap==='32px' && d.getElementById('websiteSampleDescription').textContent.startsWith('Basic') && d.getElementById('dockNote').textContent.startsWith('Basic CSS'));
+  test('Basic design settings update its HTML, CSS, preview and source descriptions', () => previewDoc().querySelector('.brand').textContent.includes('Harbour learning club') && previewWindow().getComputedStyle(previewDoc().body).fontSize==='18px' && previewWindow().getComputedStyle(previewDoc().querySelector('.feature-grid')).gap==='32px' && d.getElementById('dockNote').textContent.startsWith('Basic CSS'));
   const basicForm=previewDoc().querySelector('form');
   test('Basic signup has required name/email/consent and native invalid-input checks', () => !basicForm.checkValidity() && ['signup-name','signup-email'].every(id=>previewDoc().getElementById(id).required) && basicForm.querySelector('input[type="checkbox"]').required);
   previewDoc().getElementById('signup-name').value='Taylor'; previewDoc().getElementById('signup-email').value='taylor@example.com'; basicForm.querySelector('input[type="checkbox"]').checked=true;
@@ -1549,10 +1576,24 @@ app.onload = async () => {
         const layout=pd.querySelector('.hero-layout'), text=layout.firstElementChild.getBoundingClientRect(), image=pd.querySelector('#home img').getBoundingClientRect();
         return pw.getComputedStyle(layout).gridTemplateColumns.split(' ').length===(width<=768?1:2) && image.width>0 && Math.abs(image.width/image.height-4/3)<.01 && image.right<=width+1 && (width<=768 ? image.top>=text.bottom : image.left>=text.right);
       });
+      test(theme+' Basic section actions wrap inside their containers at '+width+'px', () => [...pd.querySelectorAll('.section-actions')].every(pair=>{
+        const bounds=pair.getBoundingClientRect();
+        return parseFloat(pw.getComputedStyle(pair).gap)>0 && [...pair.children].every(action=>{const box=action.getBoundingClientRect();return box.left>=bounds.left-1 && box.right<=bounds.right+1 && box.height>=44;});
+      }));
+      test(theme+' Basic sections have distinct responsive compositions at '+width+'px', () => {
+        const columns=selector=>pw.getComputedStyle(pd.querySelector(selector)).gridTemplateColumns.split(' ').length;
+        const skills=pd.querySelector('.skills-intro').getBoundingClientRect(), lessons=pd.querySelector('.feature-grid').getBoundingClientRect();
+        const form=pd.querySelector('.signup-form').getBoundingClientRect(), area=pd.querySelector('.signup-layout').getBoundingClientRect();
+        return columns('.skills-layout')===(width<=768?1:2) && columns('.feature-grid')===1 && columns('.signup-layout')===1 && (width<=768?lessons.top>=skills.bottom:lessons.left>=skills.right) && Math.abs((form.left+form.right)/2-(area.left+area.right)/2)<2 && pw.getComputedStyle(pd.querySelector('.signup-form')).maxWidth!=='none' && pd.querySelector('.hero-image figcaption');
+      });
+      test(theme+' Basic footer separates identity, navigation and next step at '+width+'px', () => {
+        const footer=pd.querySelector('.site-footer'), layout=footer.querySelector('.footer-inner');
+        return layout.children.length===3 && pw.getComputedStyle(layout).gridTemplateColumns.split(' ').length===(width<=768?1:3) && footer.querySelector('.footer-brand .logo') && footer.querySelector('.footer-next a').hash==='#lists' && footer.querySelectorAll('.footer-links a').length===5 && !footer.querySelector('#sitemap').open;
+      });
       test(theme+' Basic standalone page reflows with its separate stylesheet at '+width+'px', () => {
         const grid=pd.querySelector('.feature-grid'), cards=[...grid.children], first=cards[0].getBoundingClientRect();
         const columns=cards.filter(card=>Math.abs(card.getBoundingClientRect().top-first.top)<1).length;
-        return pd.querySelector('link').sheet && !pd.querySelector('style,script') && pd.documentElement.scrollWidth<=width+1 && columns===(width<476?1:3) && pw.getComputedStyle(grid).display==='grid' && pw.getComputedStyle(pd.querySelector('.signup-layout')).gridTemplateColumns.split(' ').length===(width<=768?1:2) && [...pd.querySelectorAll('header nav a, footer nav[aria-label="Footer navigation"] a, .button')].every(el=>el.getBoundingClientRect().height>=44);
+        return pd.querySelector('link').sheet && !pd.querySelector('style,script') && pd.documentElement.scrollWidth<=width+1 && columns===1 && pw.getComputedStyle(grid).display==='grid' && pw.getComputedStyle(pd.querySelector('.signup-layout')).gridTemplateColumns.split(' ').length===1 && [...pd.querySelectorAll('header nav a, footer nav[aria-label="Footer navigation"] a, .button')].every(el=>el.getBoundingClientRect().height>=44);
       });
     }
     pd.querySelector('.skip-link').focus();
@@ -1638,7 +1679,7 @@ app.onload = async () => {
         responsivePage.style.width=width+'px'; await wait();
         test(mode+' '+theme+' obeys configured cutoffs and gutters at '+width+'px', () => {
           const container=pw.getComputedStyle(pd.querySelector('.container'));
-          const composition=pw.getComputedStyle(pd.querySelector(mode==='basic'?'.signup-layout':'.sample-hero'));
+          const composition=pw.getComputedStyle(pd.querySelector(mode==='basic'?'.skills-layout':'.sample-hero'));
           const columns=composition.gridTemplateColumns.split(' ').length;
           return pd.documentElement.scrollWidth<=width+1 && container.maxWidth==='1280px' && container.paddingLeft===(width>=1152?'40px':'20px') && columns===(width<=640?1:mode==='basic'?2:12);
         });
@@ -1681,6 +1722,22 @@ app.onload = async () => {
   test('Empty Architecture has an honest empty sitemap and keeps real footer navigation', () => previewDoc().querySelector('#sitemap').textContent.includes('Add page labels') && previewDoc().querySelector('footer [aria-label="Footer navigation"] a[href="#lists"]'));
   d.getElementById('plan-use-sample').click(); await wait();
   test('Use complete sitemap restores every Basic content group after a custom or empty plan', () => d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===11);
+  for (const mode of ['advanced','basic']) {
+    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click(); await wait();
+    input('plan-pages','Home\nCustom > Future page'); await wait();
+    d.getElementById('process-ia').open=false;
+    d.getElementById('plan-use-sample').click(); await wait();
+    test(mode+' sitemap button restores stored/editor/centre/preview/inspector content and gives visible feedback', () => {
+      const expected=w.DSStudio.process.samplePages(mode), parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+      return evaluate('state.designProcess.pages')===expected && d.getElementById('plan-pages').value===expected && d.getElementById('process-ia').open && !d.querySelector('#process-ia .process-map').textContent.includes('Future page') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap').innerHTML===parsed.querySelector('#sitemap').innerHTML && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()') && d.getElementById('plan-sample-status').textContent.includes('sitemap applied:');
+    });
+    const restored=evaluate('projectJson()');
+    d.getElementById('plan-use-sample').click(); await wait();
+    test(mode+' repeated sitemap clicks confirm an already complete map without changing data', () => evaluate('projectJson()')===restored && d.getElementById('plan-sample-status').textContent.includes('already complete'));
+    input('plan-pages','Home\nMy next page'); await wait();
+    test(mode+' editing a restored sitemap clears outdated confirmation', () => d.getElementById('plan-sample-status').textContent==='');
+    d.getElementById('plan-use-sample').click(); await wait();
+  }
   const listsPage=d.createElement('iframe'); listsPage.style.cssText='width:1440px;height:1000px;border:0';
   listsPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
   await new Promise(resolve=>{listsPage.onload=resolve;d.body.append(listsPage);});
@@ -1688,7 +1745,7 @@ app.onload = async () => {
     listsPage.style.width=width+'px'; await wait();
     test('Basic list cards and sitemap fit at '+width+'px', () => {
       const pd=listsPage.contentDocument, cards=[...pd.querySelectorAll('#lists article')], boxes=cards.map(card=>card.getBoundingClientRect());
-      return pd.documentElement.scrollWidth<=width+1 && boxes.every(box=>box.left>=0 && box.right<=width+1) && (width===1440?boxes.every(box=>Math.abs(box.top-boxes[0].top)<1):boxes[1].top>boxes[0].bottom);
+      return pd.documentElement.scrollWidth<=width+1 && boxes.every(box=>box.left>=0 && box.right<=width+1) && (width===1440?(Math.abs(boxes[1].top-boxes[0].top)<1 && boxes[1].left>=boxes[0].right && boxes[2].top>=boxes[1].bottom):(boxes[1].top>=boxes[0].bottom && boxes[2].top>=boxes[1].bottom));
     });
   }
   listsPage.remove();
@@ -1716,6 +1773,7 @@ app.onload = async () => {
         const signature={body:style('body').font,h1:style('h1').font,h2:style('main h2').font,h3:style('main h3').font,padding:style('.card').padding,border:style('.card').border,shadow:style('.card').boxShadow,opacity:style('.card').opacity,measure:style('.card p:last-of-type').maxWidth,input:style('.input').minHeight,inputPadding:style('.input').padding,button:style('#home .ds-button').padding,buttonHeight:style('#home .ds-button').minHeight,buttonRadius:style('#home .ds-button').borderRadius,buttonWeight:style('#home .ds-button').fontWeight,buttonBackground:style('#home .ds-button').backgroundColor,buttonText:style('#home .ds-button').color,align:style(mode==='basic'?'.feature-grid':'.card-grid').alignItems,footerPadding:style('.footer-inner').padding,footerLinkWeight:style('.footer-links a').fontWeight,navFont:style('header nav a').font,navDecoration:style('header nav a').textDecorationLine,background:style('body').backgroundColor};
         signatures.push(signature);
         test(mode+' '+theme+' '+(edited?'edited/imported':'default')+' follows system dimensions in standalone CSS',()=> css.startsWith(w.DSStudio.samples.foundationCss()) && signature.padding===(edited?'36px':'24px') && signature.input===(edited?'56px':'48px') && signature.opacity===(edited?'0.72':'1') && signature.align===(edited?'center':'stretch') && Math.abs(parseFloat(style('h1').fontSize)-evaluate('fluidTypePx(5,1440)'))<.2 && (!edited || (Math.abs(parseFloat(signature.button)-17.08)<.02 && signature.buttonRadius==='18px' && signature.buttonBackground==='rgb(96, 45, 84)' && signature.buttonText==='rgb(255, 255, 255)' && signature.shadow!=='none')));
+        if (mode==='basic') test(theme+' Basic sign-up width follows the '+(edited?'edited/imported':'default')+' reading measure',()=>style('.signup-form').maxWidth!=='none' && style('.signup-form').maxWidth===signature.measure);
         const previewStyle=previewWindow().getComputedStyle(previewDoc().querySelector('.card'));
         test(mode+' preview and inspector use the same edited system as downloads',()=>previewStyle.padding===signature.padding && previewStyle.opacity===signature.opacity && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()'));
         const map=pd.getElementById('sitemap');

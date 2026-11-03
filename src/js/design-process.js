@@ -150,18 +150,29 @@
       const controls = [...document.querySelectorAll('[data-process-field]')];
       const rendered = new Map();
       document.getElementById('plan-use-sample').addEventListener('click', () => {
-        state.designProcess = normalize({ ...state.designProcess, pages: samplePages() });
+        const pages = samplePages(state.sampleMode);
+        const alreadyApplied = currentPlan().pages === pages;
+        state.designProcess = normalize({ ...state.designProcess, pages });
         apply();
+        feedbackPages = pages;
+        const groups = hierarchy(pages);
+        const topics = groups.reduce((total, [, children]) => total + children.length, 0);
+        document.getElementById('plan-sample-status').textContent = `${state.sampleMode === 'basic' ? 'Basic' : 'Advanced'} sitemap ${alreadyApplied ? 'already complete' : 'applied'}: ${groups.length} sections and ${topics} content groups. Review the centre map or open Sitemap in the preview footer. This updates the plan; it does not create new pages.`;
+        window.dssRevealSection('process-ia', false);
       });
       for (const control of controls) control.addEventListener('input', () => {
         state.designProcess = normalize({ ...state.designProcess, [control.dataset.processField]: control.value });
+        document.getElementById('plan-sample-status').textContent = '';
         apply();
       });
+      let feedbackMode = state.sampleMode, feedbackPages = null;
       const previousRender = renderCode;
       renderCode = function() {
         const css = processCss();
         if (style.textContent !== css) style.textContent = css;
         const plan = currentPlan();
+        if (feedbackMode !== state.sampleMode || plan.pages !== feedbackPages) document.getElementById('plan-sample-status').textContent = '';
+        feedbackMode = state.sampleMode;
         document.getElementById('plan-use-sample').textContent = `Use complete ${state.sampleMode === 'basic' ? 'Basic' : 'Advanced'} sitemap`;
         for (const control of controls) if (control.value !== plan[control.dataset.processField]) control.value = plan[control.dataset.processField];
         for (const target of document.querySelectorAll('[data-process-artifact]')) {

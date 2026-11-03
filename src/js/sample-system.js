@@ -16,12 +16,13 @@
   }
   function footerHtml(mode) {
     const basic = mode === 'basic', project = escapeHtml(state.project);
-    const links = basic ? [['Home','home'],['What you can learn','features'],['Lists','lists'],['Sign up','signup']] : [['Home','home'],['About','about'],['Resources','resources'],['Contact','contact']];
+    const links = basic ? [['Home','home'],['What you can learn','features'],['Project toolkit','lists'],['Sign up','signup']] : [['Home','home'],['About','about'],['Resources','resources'],['Contact','contact']];
     return `<footer class="website-footer ${basic ? 'site-footer' : 'sample-footer'}" id="footer">
     <div class="container">
       <div class="footer-inner sample-footer-inner">
-        <div class="footer-identity"><a class="footer-brand" href="#home">${project}</a><p>A place to learn, practise and build something useful.</p></div>
+        <div class="footer-identity"><a class="footer-brand" href="#home">${basic ? `<span class="logo" aria-hidden="true">Logo</span><span>${project}</span>` : project}</a><p>A place to learn, practise and build something useful.</p>${basic ? '<p>Start with a small idea. Leave with a clearer next step.</p>' : ''}</div>
         <nav aria-label="Footer navigation"><h2 class="footer-heading">Explore</h2><ul class="footer-links ${basic ? 'nav-list' : 'sample-nav'}">${links.map(([label,id])=>`<li><a href="#${id}">${label}</a></li>`).join('')}<li><a href="#sitemap">Sitemap</a></li></ul></nav>
+        ${basic ? '<aside class="footer-next" aria-labelledby="footer-next-title"><h2 class="footer-heading" id="footer-next-title">Make a little progress</h2><p>One page is enough to begin. Keep the checklist close as you build.</p><a href="#lists">Open your toolkit &rarr;</a></aside>' : ''}
       </div>
       <details class="sitemap" id="sitemap">
         <summary id="sitemap-title"><span>Sitemap</span><span class="footer-sitemap-hint">All sections and topics</span></summary>

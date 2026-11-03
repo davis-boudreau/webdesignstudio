@@ -1,13 +1,115 @@
 # Project progress
 
-Updated: 23 October 2026 (America/Halifax).
+Updated: 3 November 2026 (America/Halifax).
 
 ## Current objective
 
-Add an offline hero illustration to the Basic sample, matching Advanced's
-palette-aware image in live previews and generated website files.
-The initial audit began at commit
-`6163ada` (`improved UX/UI`) with a clean working tree; its changes are still local.
+Give every Basic section a distinct composition and improve its footer layout,
+retaining shared design-system settings, CTA behaviour, sitemap and exports.
+
+## Basic section and footer layouts (3 November 2026)
+
+- Replaced repetitive section grids with a framed/captioned two-column hero,
+  a 5:7 editorial skills layout beside three stacked lessons, an asymmetric
+  toolkit with a two-row checklist beside workflow/terms panels, and a centred
+  sign-up introduction/form limited by the saved reading measure.
+- Layouts use the existing semantic roles, spacing, card appearance, grid gap,
+  card alignment and responsive cutoff. The toolkit also respects the saved
+  minimum card width. Retained all four main sections, stable content IDs,
+  primary/secondary CTAs, native validation and the offline illustration.
+- Redesigned only Basic's footer presentation: logo/project identity, vertical
+  shortcuts and a suggested next-step column; a separate bordered expandable
+  sitemap; copyright and Back to top below. Mobile stacks the areas and uses
+  two-column shortcuts. Shared footer generation/sitemap validation remain;
+  Advanced keeps its existing two-column presentation.
+- Updated sample help, README, architecture and affected asset query versions.
+  Updated former three-column assumptions in browser checks, added section/footer
+  geometry coverage in both themes at 320/390/768/1440 px, and assertions that
+  form width follows default and edited/imported reading measure. Existing tests
+  continue to cover wizard/preview/inspector/export parity and sitemap behaviour.
+- Current checks: `python scripts/check_structure.py` passed (38 assets),
+  `git diff --check` passed. Initial expanded `python scripts/browser_review.py`
+  passed **915/915**, with no JavaScript errors. Visual review then exposed an
+  undefined form-width token; corrected it to `--reading-measure`, added explicit
+  form-width checks. The next run passed 915/919 with no JavaScript errors; the
+  four new assertions accidentally compared the form to small eyebrow text, so
+  their `ch` values used different font metrics. A focused isolated Chrome check
+  confirmed the correct form token/width. Corrected the selector to compare body
+  text. Final full rerun passed **919/919**, with no JavaScript errors, captured
+  in ignored `.basic-layout-review.log`. All three required checks passed. Chrome
+  used an isolated temporary profile outside the sandbox, with no access to the
+  user's saved projects.
+- Captured and inspected temporary light desktop hero/skills/toolkit/footer and
+  exact-390px dark sign-up/footer screenshots, including refreshed screenshots
+  after the form-width correction. Removed temporary screenshot/diagnostic helpers
+  and artifacts; no visual baselines were added.
+- Manual keyboard-only, screen-reader, zoom and Firefox/Safari review were not
+  run; automated tests do not establish full accessibility. No commits,
+  deployments, runtime dependencies or user root sample snapshots changed.
+- Next step: try the revised layouts with a real project and complete manual
+  accessibility/cross-browser review.
+
+## Basic page engagement and sitemap feedback (3 November 2026)
+
+- Reworked the existing four sections around a beginner website workshop:
+  an outcome-led hero, three practical skill cards, a project toolkit and a
+  clearly labelled demo sign-up. Retained existing IDs, inventories, native form
+  validation, offline illustration and the shared foundation/component generator.
+- Added primary/secondary CTA pairs to all four sections, contextual fragment
+  destinations and direct links from skill cards to toolkit cards. Shared button
+  classes retain wizard variant colours, size, dimensions and mobile width.
+  Action rows wrap with the defined spacing tokens; the form status is announced.
+- Investigated the reported sitemap button: the existing handler restored custom
+  and empty plans in the prior browser suite, but had no visible feedback when
+  the map already matched and the footer remained collapsed. Added applied versus
+  already-complete confirmation, section/topic counts, expansion of the centre
+  map and a review link. Feedback clears after plan/sample changes. The action
+  changes the plan, while existing content destinations remain fixed and safe.
+- Added browser coverage for every CTA destination, primary/secondary settings
+  in both themes, mobile full-width/focus, row spacing/containment, and sitemap
+  restoration/repeated clicks/feedback in both modes. Existing tests cover live
+  typography, grid, shared foundations, copy/downloads, forms, storage and exports.
+- Current checks: `python scripts/check_structure.py` passed (38 assets) and
+  `git diff --check` passed. The first `python scripts/browser_review.py` run
+  encountered Windows console encoding while printing a CTA arrow in a test
+  name. Changed test names to use ASCII destination IDs. Final expanded suite
+  passed **899/899**, with no captured JavaScript errors, outside the sandbox
+  using an isolated temporary Chrome profile. Output is captured in ignored
+  `.basic-engagement-review.log`. All three required checks passed.
+- Captured and inspected temporary desktop/light and exact-390px mobile/light
+  hero screenshots plus dark mobile toolkit/sign-up screenshots. Visual review
+  caught an undefined action-gap token; corrected it and added a computed-gap
+  assertion. Removed the temporary screenshot helper and artifacts afterward;
+  no visual baselines were added.
+- Manual keyboard-only, screen-reader, zoom and Firefox/Safari checks were not
+  run; automated tests do not establish full accessibility. No commits,
+  deployments, runtime dependencies or root sample snapshots changed.
+- Next step: try the revised Basic journey with a real project and complete
+  manual accessibility/cross-browser checks.
+
+## Responsive preview cleanup (3 November 2026)
+
+- Removed `See the system working together` from the preview's generated lesson
+  list and `Download this responsive website` from the preview markup. The live
+  viewport now follows the theme/width controls. Other centre lessons remain.
+- Removed the card's unused stylesheet, code-shortcut handlers, status-node update
+  and sample-description update. Inspector/Deliver downloads still use the same
+  generators; generated sample pages and saved project data are unchanged.
+- Refreshed affected JavaScript query versions, updated README/architecture notes
+  and adjusted browser coverage for fifteen lessons plus the preview, absence of
+  the removed sections and retained download behaviour.
+- Current checks: `python scripts/check_structure.py` passed (38 assets);
+  `git diff --check` passed. The first `python scripts/browser_review.py` attempt
+  failed because the sandbox blocked access to Chrome's temporary profile.
+  The first full run outside the sandbox passed 866/867 with no JavaScript
+  errors; its remaining assertion referenced the removed sample-description node.
+  Updated that obsolete assertion; final full rerun passed **867/867**, with no
+  JavaScript errors, using the isolated-profile harness. Output is captured in
+  ignored `.preview-cleanup-review.log`. All three required checks passed.
+- Manual visual, keyboard, screen-reader and cross-browser checks were not run;
+  automated checks do not establish full accessibility. Earlier results below
+  belong to prior sessions. No commits, deployments or root snapshots changed.
+- Next step: review the simplified preview in the UI and complete manual checks.
 
 ## Completed in this session
 

@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261021-brief-alignment">
-    <link rel="stylesheet" href="src/css/website-export.css?v=20261021-downloads">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261021-basic">
     <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
@@ -112,7 +111,7 @@
             <div class="journey-pane" data-journey-pane="1" hidden>
               <h3 class="journey-stage-title">2. Map the information architecture</h3>
               <p class="help">Inventory the content, group it around audience tasks and choose labels people understand. The live sitemap below the centre lesson shows your relationships.</p>
-              <div class="field process-editor"><label for="plan-pages">Pages and content groups (sitemap)</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">The complete map follows the Basic or Advanced sample selected in the inspector. Edit it to plan your own content; custom edits are kept when switching samples. Use one entry per line, up to 64 entries, with Parent &gt; Child for two levels and labels up to 64 characters. Labels are plain text, not URLs. The centre lesson and footer share this plan; only existing content becomes a link.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample sitemap</button></div>
+              <div class="field process-editor"><label for="plan-pages">Pages and content groups (sitemap)</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">The complete map follows the Basic or Advanced sample selected in the inspector. Edit it to plan your own content; custom edits are kept when switching samples. Use one entry per line, up to 64 entries, with Parent &gt; Child for two levels and labels up to 64 characters. Labels are plain text, not URLs. The centre lesson and footer share this plan; only existing content becomes a link.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample sitemap</button><p class="help" id="plan-sample-status" role="status"></p><a href="#process-ia">Review the sitemap in the centre lesson</a></div>
               <p class="journey-tip"><strong>Before moving on:</strong> Can someone predict where to find the information needed for the main task?</p>
             </div>
             <div class="journey-pane" data-journey-pane="2" hidden>
@@ -1120,20 +1119,6 @@
                     </div>
                   </div>
                 </div>
-                <section class="website-export" aria-labelledby="websiteExportTitle">
-                  <h3 id="websiteExportTitle">Download this responsive website</h3>
-                  <p class="help" id="websiteSampleDescription">Advanced static homepage: header and mobile menu, hero, images, cards, Grid/Flexbox layouts, forms, table, FAQs, component states and footer.</p>
-                  <div class="button-row">
-                    <button type="button" class="ghost" data-website-download="html">Download HTML (index.html)</button>
-                    <button type="button" class="ghost" data-website-download="css">Download CSS (tokens.css)</button>
-                  </div>
-                  <div class="button-row">
-                    <button type="button" class="ghost" data-website-code="html">View HTML code</button>
-                    <button type="button" class="ghost" data-website-code="css">View CSS code</button>
-                  </div>
-                  <p class="help">Save both files in the same folder, then open <code>index.html</code>. Images are embedded. System fonts work offline; selected Google Fonts use their CDN. The form is a static demonstration and sends no messages.</p>
-                  <p class="help" data-website-status role="status"></p>
-                </section>
                 <div class="preview-shell" id="previewShell" role="region" aria-label="Responsive page viewport" tabindex="0">
                   <div class="preview-frame" data-width="fluid" id="previewFrame">
                     <iframe id="previewPage" title="Live generated home page" sandbox="allow-same-origin allow-forms" srcdoc="<!doctype html><html lang='en'><head><meta charset='utf-8'></head><body></body></html>"></iframe>
@@ -2055,18 +2040,18 @@
       <script src="src/js/brand-palette.js?v=20261021-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261021-brief-alignment" defer></script>
+      <script src="src/js/design-process.js?v=20261103-basic-actions" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/core-state.js?v=20261021-responsive" defer></script>
       <script src="src/js/css-dock.js?v=20261021-basic" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/journey-library.js?v=20261021-responsive" defer></script>
       <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/sample-system.js?v=20261021-navigation" defer></script>
+      <script src="src/js/sample-system.js?v=20261103-basic-layouts" defer></script>
       <script src="src/js/sample-homepage.js?v=20261023-basic-hero" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261023-basic-hero" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261103-basic-layouts" defer></script>
       <script src="src/js/responsive-preview.js?v=20261021-responsive" defer></script>
-      <script src="src/js/website-export.js?v=20261021-downloads" defer></script>
+      <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
       <script src="src/js/token-catalogue.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
@@ -2075,6 +2060,6 @@
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
       <script src="src/js/section-accordions.js?v=20261020-section-menu" defer></script>
-      <script src="src/js/studio-learning.js?v=20261021-responsive" defer></script>
+      <script src="src/js/studio-learning.js?v=20261103-preview" defer></script>
     </body>
   </html>
