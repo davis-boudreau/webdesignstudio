@@ -96,7 +96,9 @@ reset and mode changes. Text edits and complete-inventory restoration remain.
 The same module binds Palette's background picker/hex/reset directly to validated
 `semanticOverrides[theme].background`; no second background setting is stored.
 Both generators, preview, contrast review, inspector and project flows use that
-semantic role. Partial invalid hex input does not change state. All controls use
+semantic role. Basic main sections are transparent so the selected canvas remains
+visible throughout the page; cards, controls, header and footer retain surface roles.
+Partial invalid hex input does not change state. All controls use
 the shared apply/render/autosave paths and labels render through DOM text APIs.
 
 The twelve wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,

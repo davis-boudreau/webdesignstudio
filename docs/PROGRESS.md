@@ -1,10 +1,33 @@
 # Project progress
 
-Updated: 3 November 2026 (America/Halifax).
+Updated: 4 November 2026 (America/Halifax).
 
 ## Current objective
 
 Add sitemap CRUD/relationships in the wizard and a theme-aware webpage background.
+
+## Basic webpage background visibility (4 November 2026)
+
+- Confirmed Basic Hero, Layouts and Forms painted full-width surface colours
+  over the chosen webpage background, leaving only Components visibly affected.
+  Removed these three section backgrounds so all four main sections expose the
+  selected canvas. Cards, controls, header/footer surfaces remain independent.
+- Refreshed the Basic generator asset version and clarified README/architecture
+  behaviour. Added light/dark preview and standalone-export regressions checking
+  the body colour and all four section backgrounds.
+- Current checks: `python scripts/check_structure.py` passed (39 assets),
+  `python -m py_compile scripts/browser_review.py` and `git diff --check` passed.
+  Sandboxed Chrome could not start (GPU/access denied). Initial approved isolated
+  Chrome attempts ended without a completed report. Increased the suite virtual
+  time allowance from 60 to 120 seconds and process timeout from 120 to 180
+  seconds; the completed run passed 1048/1049 with no captured JavaScript errors.
+  All four new background checks passed; the existing contrast-review focus/
+  disclosure assertion failed. Final rerun passed 1049/1049 with no captured
+  JavaScript errors; no focus-related product changes were made. Temporary
+  diagnostics removed.
+- Manual visual, keyboard, screen-reader and cross-browser checks remain unrun.
+- Next step: review the selected background across Basic's sections in the UI
+  and complete the manual accessibility/cross-browser checks.
 
 ## Sitemap editor and webpage background (3 November 2026)
 

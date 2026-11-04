@@ -54,8 +54,8 @@ live HTML inspector, exports and saved projects.
 
 **Palette → Webpage background** sets the canvas colour for the active theme,
 using a picker or hex value. Light and dark backgrounds are saved independently;
-the reset restores the theme default. Cards and section surfaces retain their
-own colours.
+the reset restores the theme default. Basic's main sections show this canvas colour;
+cards, controls, header and footer retain their own surface colours.
 
 The starter maps all sections and content
 groups in the selected Basic or Advanced sample, including cards, lessons and

@@ -2003,6 +2003,17 @@ app.onload = async () => {
   const defaultCanvas=evaluate('palette().roles.background');
   input('page-background-hex','#E1E9F0');await wait();
   test('Page background control updates tokens, inspector and Basic preview',()=>evaluate('palette().roles.background')==='#E1E9F0' && previewWindow().getComputedStyle(previewDoc().body).backgroundColor==='rgb(225, 233, 240)' && evaluate('cssExport()').includes('--background: #E1E9F0') && d.getElementById('page-background-colour').value==='#e1e9f0');
+  for (const [theme,colour,rgb] of [['light','#E1E9F0','rgb(225, 233, 240)'],['dark','#172635','rgb(23, 38, 53)']]) {
+    evaluate(`state.theme='${theme}';apply()`);input('page-background-hex',colour);await wait();
+    const checkCanvas=(pd,pw)=>pw.getComputedStyle(pd.body).backgroundColor===rgb && [...pd.querySelectorAll('main > section')].length===4 && [...pd.querySelectorAll('main > section')].every(section=>pw.getComputedStyle(section).backgroundColor==='rgba(0, 0, 0, 0)');
+    test(theme+' Basic selected background is visible behind every main section',()=>checkCanvas(previewDoc(),previewWindow()));
+    const canvasPage=d.createElement('iframe');
+    canvasPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
+    d.body.append(canvasPage);await wait();
+    test(theme+' Basic exported background is visible behind every main section',()=>checkCanvas(canvasPage.contentDocument,canvasPage.contentWindow));
+    canvasPage.remove();
+  }
+  evaluate("state.theme='light';apply()");await wait();
   input('page-background-hex','bad');await wait();
   test('Page background rejects invalid input without changing state',()=>evaluate('palette().roles.background')==='#E1E9F0');
   const backgroundProject=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(backgroundProject)+')');await wait();
@@ -2092,9 +2103,9 @@ def main():
         with tempfile.TemporaryDirectory(prefix='studio-review-') as profile:
             run = subprocess.run([browser, '--headless', '--disable-gpu', '--no-first-run',
                                   '--no-default-browser-check', '--disable-background-networking',
-                                  '--user-data-dir=' + profile, '--virtual-time-budget=60000',
+                                  '--user-data-dir=' + profile, '--virtual-time-budget=120000',
                                   '--dump-dom', f'http://127.0.0.1:{server.server_port}/__review__'],
-                                 capture_output=True, encoding='utf-8', errors='replace', timeout=120)
+                                 capture_output=True, encoding='utf-8', errors='replace', timeout=180)
             match = re.search(r'<pre id="results">(.*?)</pre>', run.stdout, re.S)
             if not match or match[1] == 'RUNNING':
                 raise SystemExit('Browser review did not complete.\n' + run.stderr[-2000:])

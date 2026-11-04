@@ -203,7 +203,7 @@ nav { min-width: 0; max-width: 100%; }
 .mobile-navigation a:hover { background: var(--surface-muted); }
 
 /* SECTION: hero */
-.hero { padding-block: var(--space-12); background: var(--surface-muted); }
+.hero { padding-block: var(--space-12); }
 .hero-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--grid-gap); align-items: center; }
 .hero-image { margin: 0; padding: var(--space-4); background: var(--surface); border: var(--border-width) solid var(--border); border-radius: var(--radius-base); }
 .hero-image figcaption { padding: var(--space-4) var(--space-2) 0; font-size: var(--text-small); color: var(--text-muted); }
@@ -229,7 +229,7 @@ nav { min-width: 0; max-width: 100%; }
 .faq-demo p { margin: var(--space-2) 0 0; }
 /* SECTION: toolkit */
 /* GRID SECTION: auto-fit adds equal-width columns when the saved minimum fits. */
-.toolkit { background: var(--surface-muted); border-block: var(--border-width) solid var(--border); }
+.toolkit { border-block: var(--border-width) solid var(--border); }
 .toolkit-heading { max-width: var(--reading-measure); }
 .list-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); gap: var(--grid-gap); align-items: var(--grid-align); margin-top: var(--space-8); }
 .list-grid ul, .list-grid ol { margin: 0; padding-inline-start: var(--space-6); }
@@ -243,7 +243,6 @@ nav { min-width: 0; max-width: 100%; }
 .content-sidebar h4 { margin: 0 0 var(--space-2); font-family: var(--font-heading); font-size: var(--text-body); font-weight: var(--heading-weight); line-height: var(--heading-leading); }
 .content-sidebar ul { margin: 0; padding-inline-start: var(--space-4); }
 /* SECTION: form */
-.signup { background: var(--surface); }
 .signup-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--grid-gap); justify-items: center; }
 .signup-intro, .signup-form { width: 100%; max-width: var(--reading-measure); }
 .signup-intro { text-align: center; }
