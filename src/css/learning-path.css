@@ -1,0 +1,90 @@
+/* Guided workspace chrome is separate from generated website CSS. */
+.layout { --studio-space-small: 8px; --studio-space: 16px; --studio-section-space: 24px; --studio-panel-padding: clamp(16px, 2vw, 24px); gap: var(--studio-space); }
+#journeyTitle { font-size: 1.5rem; margin: 0 0 12px; }
+.journey-purpose { font-size: 1rem; font-weight: 500; color: var(--text); line-height: 1.5; margin: 0 0 var(--studio-section-space); }
+.studio-right { grid-template-columns: minmax(0, 1fr); gap: var(--studio-space); }
+.studio-right > .studio-code-dock { display: block; position: static; max-height: none; grid-column: 1; grid-row: 2; padding: 0; margin: 0; }
+.is-inspector-collapsed .studio-right { grid-template-columns: minmax(0, 1fr); }
+.studio-code-dock > summary { display: list-item; min-height: 44px; box-sizing: border-box; cursor: pointer; }
+.studio-code-dock > summary, .studio-right .studio-section > summary { padding: var(--studio-space) var(--studio-panel-padding); }
+.studio-code-dock > summary h2 { display: inline; margin: 0; font-size: 1.15rem; }
+.studio-code-dock[open] > summary { border-bottom: 1px solid var(--border); }
+.studio-right > .studio-code-dock:not([open]) { grid-column: 1 / -1; grid-row: 1; position: static; }
+.studio-right #main { display: flex; flex-direction: column; gap: var(--studio-space); grid-column: 1; grid-row: 1; }
+.is-inspector-collapsed .studio-right #main { grid-row: 2; }
+.studio-right #main > .studio-section { margin: 0; }
+.studio-right #main > #studio-section-4 { order: -1; }
+.studio-right #main > .studio-references { order: 2; }
+.studio-right #main > .footer { order: 4; }
+.studio-right #main > [hidden], [hidden] { display: none !important; }
+.studio-section, .studio-section > summary, .studio-section > summary h2, .studio-code-dock, .journey-stage-title { scroll-margin-top: var(--studio-section-scroll-offset, 84px); }
+.journey-phase { flex-basis: 100%; font-size: .78rem; font-weight: 600; color: var(--text-muted); padding-top: 6px; }
+.journey-steps button { min-height: 44px; }
+.journey-step-list > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 600; }
+.journey-step-list .journey-steps { margin-top: 4px; }
+.step-task { border-left: 3px solid var(--primary); padding-left: 12px; }
+.step-more { margin-top: 12px; }
+.step-more > summary, .studio-references > summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+.studio-references { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.studio-reference-links { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.studio-reference-links a { min-height: 44px; align-content: center; }
+.step-output button, .example-connections button { font: inherit; padding: 8px 12px; min-height: 44px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); cursor: pointer; }
+.step-output { flex-wrap: wrap; }
+.studio-code-dock #dockCss { min-height: 240px; max-height: 420px; flex: auto; }
+.studio-code-dock .studio-dock-theme { display: none; }
+.example-connections { margin: 8px 12px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+.example-connections > summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+.example-connections label { display: block; margin-top: 8px; }
+.example-connections select { width: 100%; min-width: 0; min-height: 44px; font: inherit; }
+.example-connections button { max-width: 100%; white-space: normal; }
+.example-connections pre { max-height: 180px; overflow: auto; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.study-token { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; padding-block: 8px; border-top: 1px solid var(--border); }
+.study-token code { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+/* One app spacing rhythm for control panes and lesson/inspector surfaces. */
+.studio-journey, .studio-right .studio-section > .panel { padding: var(--studio-panel-padding); }
+.studio-journey > .journey-pane { margin-top: calc(var(--studio-space) * 2); padding-top: var(--studio-section-space); border-top: 1px solid var(--border); }
+.journey-pane { gap: var(--studio-space); }
+.journey-pane .field { gap: var(--studio-space-small); margin: 0; }
+.journey-pane > p, .journey-pane .field > .help { margin: 0; }
+.journey-pane .grid2, .journey-pane .clamp-grid { gap: var(--studio-space); }
+.journey-pane #plan-brief-fields { gap: var(--studio-section-space); }
+.journey-pane .sitemap-editor, .journey-pane #sitemap-form, .journey-pane .page-background-editor { gap: var(--studio-space); margin-block: 0; }
+.journey-status { margin: var(--studio-section-space) 0 var(--studio-space-small); }
+.journey-step-list { padding: 0; margin: 0; }
+.journey-step-list > summary, .step-more > summary { padding: var(--studio-space-small) var(--studio-space); }
+.journey-step-list .journey-steps { margin: 0; padding: 0 var(--studio-space) var(--studio-space); gap: var(--studio-space-small); border-bottom: 0; }
+.journey-actions { gap: var(--studio-space-small); margin-top: var(--studio-section-space); }
+.local-projects { margin-top: var(--studio-section-space); padding-top: var(--studio-section-space); border-top: 1px solid var(--border); }
+.local-projects > hr { display: none; }
+.local-projects > h3 { margin-bottom: var(--studio-space-small); }
+.local-projects .field { margin-block: var(--studio-space); gap: var(--studio-space-small); }
+.local-actions, .step-output { gap: var(--studio-space-small); }
+.studio-lesson { padding: var(--studio-space); margin-bottom: var(--studio-section-space); }
+.studio-lesson > :last-child { margin-bottom: 0; }
+.step-more { padding: 0; margin-top: var(--studio-section-space); }
+.step-more > :not(summary) { margin-inline: var(--studio-space); }
+.studio-references { padding: var(--studio-space-small) var(--studio-panel-padding); }
+.preview-controls { gap: var(--studio-space); }
+#studio-section-4 .studio-dock-modes { padding: var(--studio-space) 0 0; gap: var(--studio-space-small); }
+.studio-code-dock .studio-dock-header, .studio-code-dock .studio-dock-actions { padding: var(--studio-space) var(--studio-panel-padding); gap: var(--studio-space-small); }
+.studio-code-dock .studio-dock-header p { margin: 0; }
+.studio-code-dock .studio-dock-tabs { padding: var(--studio-space) var(--studio-panel-padding) 0; gap: var(--studio-space-small); }
+.studio-code-dock .studio-dock-header button, .studio-code-dock .studio-dock-tabs button, .studio-code-dock .studio-dock-actions button { min-height: 44px; padding: var(--studio-space-small) 12px; }
+.studio-code-dock #dockCss, .studio-code-dock .studio-dock-note { padding: var(--studio-space) var(--studio-panel-padding); }
+.studio-code-dock .studio-dock-note { margin: 0; }
+.example-connections { margin: var(--studio-space) var(--studio-panel-padding); padding: var(--studio-space); }
+@media (max-width: 900px) {
+  .journey-pane .clamp-grid, .journey-pane .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .journey-pane details, .journey-pane .field, .journey-pane select { min-width: 0; }
+  .journey-pane input[type=range] { margin-inline: 0; max-width: 100%; }
+  .journey-pane { margin-bottom: 16px; }
+  .journey-pane .journey-stage-title { display: none; }
+}
+@media (min-width: 901px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); }
+  .sidebar { top: calc(var(--studio-header-height, 76px) + 8px); max-height: calc(100vh - var(--studio-header-height, 76px) - 20px); }
+}
+@media (min-width: 1281px) {
+  .studio-right { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .studio-right > .studio-code-dock[open] { grid-column: 2; grid-row: 1; position: sticky; top: calc(var(--studio-header-height, 76px) + 8px); }
+}

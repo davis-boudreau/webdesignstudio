@@ -31,9 +31,9 @@ Browser storage may be unavailable in private or restricted contexts. */
     el('jSaveStatus').textContent = message;
   }
 
-  function showStep(n) {
-    const labels = ['Brief', 'Architecture', 'Wireframe', 'Prototype', 'Palette', 'Typography', 'Components', 'Buttons', 'Layout', 'Responsive', 'Accessibility', 'Deliver'];
-    step = Math.max(0, Math.min(labels.length - 1, n));
+  function showStep(n, focus = true) {
+    const labels = DSStudio.stages.map(stage => stage.label);
+    step = Math.max(0, Math.min(labels.length - 1, Number.isFinite(n) ? Math.trunc(n) : 0));
     document.querySelectorAll('[data-journey-pane]').forEach(p => p.hidden = Number(p.dataset.journeyPane) !== step);
     document.querySelectorAll('[data-journey-step]').forEach(b => {
       const i = Number(b.dataset.journeyStep);
@@ -43,16 +43,31 @@ Browser storage may be unavailable in private or restricted contexts. */
     el('jBack').disabled = step === 0;
     el('jNext').hidden = step === labels.length - 1;
     el('jProgress').textContent = `Step ${step+1} of ${labels.length} · ${labels[step]}`;
+    el('jBack').textContent = 'Previous step';
+    el('jNext').textContent = `Next: ${labels[step + 1] || 'Deliver'}`;
+    DSStudio.activeStage = step;
+    DSStudio.emit('stage:change', { stage: DSStudio.stages[step], focus });
   }
   window.dssShowWizardStep = showStep;
 
   function syncJourney() {
+    clearStaleReadiness();
     for (const [id, key] of Object.entries(bindings)) {
       const e = el(id);
       e.value = state[key];
       if (e.type === 'color') el(id + 'Out').textContent = String(state[key]).toUpperCase();
       if (['jBase', 'jRatio', 'jLeading', 'jSpacing', 'jRadius'].includes(id)) el(id + 'Out').textContent = state[key] + (['jBase', 'jSpacing', 'jRadius'].includes(id) ? 'px' : '');
       if (['jHeadingTracking', 'jBodyTracking'].includes(id)) el(id + 'Out').textContent = round(state[key], 3) + 'em';
+    }
+  }
+
+  let reviewedProject = '';
+  function clearStaleReadiness(force = false) {
+    const current = projectJson();
+    if (force || reviewedProject !== current) {
+      document.querySelectorAll('.readiness-item').forEach(box => { box.checked = false; });
+      el('readinessStatus').textContent = 'Review this project before delivery. Checks are self-reported and clear when the design changes.';
+      reviewedProject = current;
     }
   }
 
@@ -75,6 +90,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   /* FIX: one autosave routine, also used by the theme toggle and the Button wizard (exposed below),
   so every kind of change is written to the active local project. */
   function autosave() {
+    clearStaleReadiness();
     if (!autosaveSuspended && activeId && projects[activeId]) {
       projects[activeId].data = serialize();
       projects[activeId].updated = new Date().toISOString();
@@ -148,6 +164,7 @@ Browser storage may be unavailable in private or restricted contexts. */
     if (!p) return notify('Choose a saved project first.');
     try {
       importConfig(p.data);
+      clearStaleReadiness(true);
       activeId = id;
       el('jPreset').value = 'custom';
       syncJourney();
@@ -200,9 +217,9 @@ Browser storage may be unavailable in private or restricted contexts. */
   el('jBack').addEventListener('click', () => showStep(step - 1));
   el('jNext').addEventListener('click', () => showStep(step + 1));
   document.querySelectorAll('[data-journey-step]').forEach(b => b.addEventListener('click', () => showStep(Number(b.dataset.journeyStep))));
-  el('jExportJson').addEventListener('click', () => download('design-system-project.json', JSON.stringify(serialize(), null, 2), 'application/json'));
+  el('jExportJson').addEventListener('click', () => download('design-system-studio.json', projectJson(), 'application/json'));
   el('jViewCss').addEventListener('click', () => {
-    window.dssRevealSection('studio-section-6');
+    DSStudio.inspector.show({ language: 'css', section: 'all' });
   });
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || '{}');
@@ -220,16 +237,18 @@ Browser storage may be unavailable in private or restricted contexts. */
   // Foundation changes save after apply(); advanced and button editors save after updating their state.
   /* FIX: only react to resets that actually happened (the old listener ran even when Reset was cancelled). */
   document.addEventListener('dss:reset', () => {
+    clearStaleReadiness(true);
     activeId = null;
     el('jPreset').value = 'example';
   });
   /* FIX: replaces the old setTimeout(150) guess; fired after a JSON file has finished loading. */
   document.addEventListener('dss:imported', () => {
+    clearStaleReadiness(true);
     activeId = null;
     el('jPreset').value = 'custom';
     syncJourney();
   });
   refreshList();
   syncJourney();
-  showStep(0);
+  showStep(0, false);
 })();

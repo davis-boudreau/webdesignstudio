@@ -387,7 +387,7 @@ function cssExport() {
   // The default 4px unit provides an 8px rhythm and 4px fine adjustments.
   const spacing = SPACING_STEPS
     .map(n => `  --space-${n}: calc(var(--space-unit) * ${n});`).join("\n");
-  return `/* Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(state.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
+  return `/* Web Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(state.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
@@ -597,6 +597,7 @@ function syncResponsivePreview() {
   status.textContent = width === 'fluid' ? 'Fluid preview: fills the available preview area.' :
     `${({mobile:390,tablet:768,desktop:1280})[width]} px viewport` + (overflows ? ' — scroll horizontally to inspect the full-width page.' : ' — fully visible.');
   syncFluidTypography();
+  DSStudio.emit('preview:change', { width: $('previewPage').contentWindow?.innerWidth || 0 });
 }
 
 function updateResponsivePreview(width) {

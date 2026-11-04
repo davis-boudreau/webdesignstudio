@@ -35,10 +35,12 @@
           <ul class="footer-links">${navigation}</ul>
         </nav>
       </div>
-      <nav class="sitemap" id="sitemap" aria-labelledby="sitemap-title" tabindex="-1">
-        <h2 id="sitemap-title">Sitemap</h2>
-        ${sitemap}
-      </nav>
+      <details class="footer-sitemap" id="footer-sitemap">
+        <summary id="sitemap-toggle"><h2 id="sitemap-title">Sitemap</h2></summary>
+        <nav class="sitemap" id="sitemap" aria-labelledby="sitemap-title" tabindex="-1">
+          ${sitemap}
+        </nav>
+      </details>
       <div class="footer-bottom">
         <small>&copy; ${project}. ${basic ? 'HTML &amp; CSS essentials.' : 'A website practice space.'}</small>
         <a class="back-to-top" href="#top">Back to top <span aria-hidden="true">&uarr;</span></a>
@@ -47,7 +49,7 @@
   </footer>`;
   }
   function footerCss() {
-    return `/* Shared classic footer: main navigation, visible sitemap and return link. */
+    return `/* Shared classic footer: main navigation, native sitemap disclosure and return link. */
 .website-footer { border-top: var(--border-width) solid var(--border); background: var(--surface); }
 .website-footer .footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: var(--space-8); padding-block: var(--space-8); }
 .website-footer .footer-inner > * { min-width: 0; }
@@ -59,7 +61,11 @@
 .website-footer a { overflow-wrap: anywhere; text-underline-offset: .2em; }
 .website-footer a:hover { text-decoration: underline; }
 .website-footer .footer-links a, .website-footer .back-to-top { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; }
-.website-footer .sitemap { border-top: var(--border-width) solid var(--border); padding-block: var(--space-6); }
+.website-footer .footer-sitemap { margin: 0; padding: 0; border: 0; border-top: var(--border-width) solid var(--border); border-radius: 0; }
+.website-footer .footer-sitemap > summary { display: list-item; min-height: 44px; padding-block: var(--space-6) var(--space-4); box-sizing: border-box; color: var(--text); text-align: left; cursor: pointer; }
+.website-footer .footer-sitemap > summary:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }
+.website-footer .sitemap { padding-block: 0 var(--space-6); }
+.website-footer .footer-sitemap:not([open]) > .sitemap { display: none; }
 .website-footer .sitemap-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--space-6); list-style: none; padding: 0; max-width: 48rem; margin: 0 auto; justify-items: center; }
 .website-footer .sitemap-list > li { min-width: 0; max-width: 100%; margin: 0; overflow-wrap: anywhere; text-align: center; }
 .website-footer .sitemap-list > li > a, .website-footer .sitemap-list > li > span { font-weight: var(--heading-weight); }
@@ -74,7 +80,7 @@
   .website-footer .footer-inner { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
 }
 .website-footer .footer-inner > nav { justify-self: end; }
-.website-footer #sitemap-title { font: inherit; font-weight: var(--heading-weight); margin: 0 0 var(--space-4); text-align: left; }
+.website-footer #sitemap-title { display: inline; font: inherit; font-weight: var(--heading-weight); margin: 0; text-align: left; }
 @media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
   .website-footer .footer-inner > nav { justify-self: start; }
   .website-footer .footer-bottom { flex-direction: column; align-items: flex-start; }

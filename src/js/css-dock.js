@@ -3,28 +3,48 @@
 (() => {
   const $ = id => document.getElementById(id);
   const live = $('dockCss');
-  const tabs = ['dockTabCss', 'dockTabHtml'];
+  const tabs = ['dockTabCss', 'dockTabHtml', 'dockTabJson'];
+  const languages = ['css', 'html', 'json'];
   let language = 'css', copyTimer;
-  const content = () => language === 'css' ? cssExport() : htmlExport();
-  const section = () => state.sampleMode === 'basic' ? $('dockSection').value : 'all';
+  const dock = document.querySelector('.studio-code-dock');
+  const layout = document.querySelector('.layout');
+  function setCollapsed(collapsed) {
+    const restoreFocus = collapsed && dock.contains(document.activeElement);
+    layout.classList.toggle('is-inspector-collapsed', collapsed);
+    dock.classList.toggle('is-collapsed', collapsed);
+    dock.open = !collapsed;
+    $('dockToggle').textContent = collapsed ? 'Expand code' : 'Collapse code';
+    $('dockToggle').setAttribute('aria-expanded', String(!collapsed));
+    if (restoreFocus) {
+      const opener = $('inspectorToggle');
+      opener.focus({ preventScroll: true });
+      const bounds = opener.getBoundingClientRect();
+      if (bounds.top < document.querySelector('.topbar').getBoundingClientRect().bottom || bounds.bottom > innerHeight)
+        dock.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+    syncResponsivePreview();
+  }
+  const content = () => language === 'css' ? cssExport() : language === 'json' ? projectJson() : htmlExport();
+  const section = () => language !== 'json' && state.sampleMode === 'basic' ? $('dockSection').value : 'all';
   const visibleContent = () => section() === 'all' ? content() : DSStudio.samples.basicExcerpt(content(), language, section());
   const copyLabel = () => 'Copy ' + language.toUpperCase() + (section() === 'all' ? '' : ' excerpt');
 
   function refreshDock() {
     $('dockTheme').value = state.theme;
-    $('dockLearning').hidden = state.sampleMode !== 'basic';
+    $('dockLearning').hidden = state.sampleMode !== 'basic' || language === 'json';
     const code = visibleContent();
     if (live.textContent !== code) live.textContent = code;
     live.setAttribute('aria-label', `Generated ${language.toUpperCase()} code`);
-    live.setAttribute('aria-labelledby', language === 'css' ? tabs[0] : tabs[1]);
-    $('dockDownload').textContent = 'Download ' + (language === 'css' ? 'tokens.css' : 'index.html');
+    live.setAttribute('aria-labelledby', tabs[languages.indexOf(language)]);
+    $('dockDownload').textContent = 'Download ' + (language === 'css' ? 'tokens.css' : language === 'json' ? 'design-system-studio.json' : 'index.html');
     $('dockCopy').textContent = copyLabel();
-    $('dockNote').textContent = state.sampleMode === 'basic' ?
+    $('dockNote').textContent = language === 'json' ? 'Project JSON preserves editable settings and planning data. Load it into the studio to resume your work.' : state.sampleMode === 'basic' ?
       `Basic ${language.toUpperCase()}: ${section() === 'all' ? 'complete file' : 'study excerpt; shared foundations remain in the complete CSS'}. Download saves the complete file. Save index.html beside tokens.css.` : language === 'css' ?
       'Brand → semantic → component rules for light and dark themes. Save tokens.css beside index.html.' :
       `The ${state.theme} home page, also shown in the responsive preview. Save index.html beside tokens.css; images are embedded.`;
+    DSStudio.emit('inspector:change', { language, section: section(), completeCss: language === 'css' && section() === 'all' ? code : null });
     tabs.forEach((id, index) => {
-      const selected = language === (index === 0 ? 'css' : 'html');
+      const selected = language === languages[index];
       $(id).setAttribute('aria-selected', String(selected));
       $(id).tabIndex = selected ? 0 : -1;
     });
@@ -34,6 +54,21 @@
   renderCode = function() {
     originalRenderCode();
     refreshDock();
+  };
+  DSStudio.inspector = {
+    show({ section: requestedSection = section(), language: requestedLanguage = language, find = '' } = {}) {
+      language = languages.includes(requestedLanguage) ? requestedLanguage : 'css';
+      const available = [...$('dockSection').options].some(option => option.value === requestedSection);
+      $('dockSection').value = available ? requestedSection : 'all';
+      clearTimeout(copyTimer);
+      refreshDock();
+      setCollapsed(false);
+      const index = find ? live.textContent.indexOf(find) : -1;
+      const line = index < 0 ? 0 : live.textContent.slice(0, index).split('\n').length - 1;
+      live.scrollTop = line * parseFloat(getComputedStyle(live).lineHeight);
+      live.focus({ preventScroll: true });
+      live.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
   };
   $('dockTheme').addEventListener('change', event => {
     state.theme = event.target.value;
@@ -47,7 +82,7 @@
   });
   tabs.forEach((id, index) => {
     $(id).addEventListener('click', () => {
-      language = index === 0 ? 'css' : 'html';
+      language = languages[index];
       clearTimeout(copyTimer);
       refreshDock();
       live.scrollTop = 0;
@@ -55,7 +90,8 @@
     });
     $(id).addEventListener('keydown', event => {
       let next;
-      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') next = (index + 1) % tabs.length;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
       else if (event.key === 'Home') next = 0;
       else if (event.key === 'End') next = tabs.length - 1;
       else return;
@@ -77,13 +113,13 @@
     copyTimer = setTimeout(() => $('dockCopy').textContent = copyLabel(), 1800);
   });
   $('dockDownload').addEventListener('click', () => download(
-    language === 'css' ? 'tokens.css' : 'index.html', content(),
-    language === 'css' ? 'text/css' : 'text/html'));
+    language === 'css' ? 'tokens.css' : language === 'json' ? 'design-system-studio.json' : 'index.html', content(),
+    language === 'css' ? 'text/css' : language === 'json' ? 'application/json' : 'text/html'));
   /* FIX: $() is getElementById, so $('.studio-code-dock') returned null and the Collapse button crashed. */
   $('dockToggle').addEventListener('click', () => {
-    const collapsed = document.querySelector('.studio-code-dock').classList.toggle('is-collapsed');
-    $('dockToggle').textContent = collapsed ? 'Expand code' : 'Collapse code';
-    $('dockToggle').setAttribute('aria-expanded', String(!collapsed));
+    setCollapsed(dock.open);
   });
+  dock.addEventListener('toggle', () => setCollapsed(!dock.open));
+  setCollapsed(dock.classList.contains('is-collapsed'));
   refreshDock();
 })();

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
-    <title>Design System Studio V4.1</title>
+    <title>Web Design System Studio V4.1</title>
     <link rel="stylesheet" href="src/css/base-tokens.css?v=20261103-studio-background">
     <link rel="stylesheet" href="src/css/layout.css?v=20261020-section-menu">
     <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-wizard-divider">
@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261103-sitemap-crud">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
+    <link rel="stylesheet" href="src/css/learning-path.css?v=20261103-inspector-cap">
+    <link rel="stylesheet" href="src/css/spacing-lesson.css?v=20261103-spacing-lesson">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
     <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
   </head>
@@ -23,10 +25,10 @@
     <a class="skip-link" href="#main">Skip to studio previews</a>
     <header class="topbar">
       <div class="shell top-inner">
-        <a class="brand" href="./" aria-label="Design System Studio home">
+        <a class="brand" href="./" aria-label="Web Design System Studio home">
           <span class="brandmark">DS</span>
           <span>
-            Design System Studio
+            Web Design System Studio
             <small class="pill">V4.1</small>
           </span>
         </a>
@@ -44,20 +46,13 @@
       </div>
     </header>
     <div class="shell">
-      <section class="hero">
-        <div class="eyebrow">Plan the experience, then build the design system</div>
-        <h1>Design System Studio · Build &amp; Inspect</h1>
-        <p>
-          Begin with a project brief, content architecture and a prototype on the left, then choose design parameters. Explore the live design-system sections on the right, inspect the generated CSS and sample HTML beside the components, then export your design system starting point.
-        </p>
-      </section>
-      <div class="layout">
+      <div class="layout is-inspector-collapsed">
         <aside aria-label="Design system controls" class="sidebar">
           <section aria-labelledby="journeyTitle" class="panel studio-journey">
-            <div class="journey-kicker">Start here · Minimum viable design system</div>
-            <h2 id="journeyTitle">Build your design system</h2>
-            <p class="help">
-              Plan your project and configure its design system through twelve steps in this wizard. Use the centre lessons to learn, compare examples and explain your decisions; inspect the generated HTML and CSS on the right. Derived ramps, scales and aliases follow their foundation settings.
+            <div class="journey-kicker">Guided design decisions</div>
+            <h1 id="journeyTitle">Build your design system</h1>
+            <p class="journey-purpose">
+              Plan and design your website. Define its colours, typography and layout. See your design decisions on the page, then follow them into HTML and CSS.
             </p>
             <div aria-label="Builder steps" class="journey-steps" role="group">
               <button data-journey-step="0" type="button">1 &middot; Brief</button>
@@ -66,10 +61,10 @@
               <button data-journey-step="3" type="button">4 &middot; Prototype</button>
               <button data-journey-step="4" type="button">5 &middot; Palette</button>
               <button data-journey-step="5" type="button">6 &middot; Typography</button>
-              <button data-journey-step="6" type="button">7 &middot; Components</button>
+              <button data-journey-step="6" type="button">7 &middot; Semantic colours</button>
               <button data-journey-step="7" type="button">8 &middot; Buttons</button>
-              <button data-journey-step="8" type="button">9 &middot; Layout</button>
-              <button data-journey-step="9" type="button">10 &middot; Responsive</button>
+              <button data-journey-step="8" type="button">9 &middot; Spacing and surfaces</button>
+              <button data-journey-step="9" type="button">10 &middot; Responsive layout</button>
               <button data-journey-step="10" type="button">11 &middot; Accessibility</button>
               <button data-journey-step="11" type="button">12 &middot; Deliver</button>
             </div>
@@ -396,10 +391,6 @@
                 </div>
               </details>
 
-              <strong>Button Design Wizard</strong>
-              <p class="help">
-                Define the default appearance, then inspect every relevant state. Settings apply across the state matrix, both themes and exported CSS.
-              </p>
               <details id="bdReview" class="bd-review">
                 <summary>Review all variants and states</summary>
                 <p class="help">Expand a variant and choose a state to inspect its contrast in both themes. Review means a required text or indicator pair is below target.</p>
@@ -720,20 +711,11 @@
                   0 of 8 checks completed. These are self-reported, not automated accessibility tests.
                 </p>
               </div>
-              <div class="journey-mini">
-                <span>Brief</span><span>Architecture</span><span>Wireframe</span><span>Prototype</span><span>Responsive</span>
-                <span>✓ Colour</span>
-                <span>✓ Typography</span>
-                <span>✓ Spacing</span>
-                <span>✓ Radius</span>
-                <span>✓ Themes</span>
-                <span>✓ Button states</span>
-              </div>
               <div class="local-actions">
                 <button id="jExportHtml" class="ghost" type="button" data-website-download="html">Download HTML (index.html)</button>
                 <button id="jExportCss" class="ghost" type="button" data-website-download="css">Download CSS (tokens.css)</button>
                 <button id="jExportJson" type="button">Download JSON</button>
-                <button id="jViewCss" type="button">Show CSS</button>
+                <button id="jViewCss" type="button">Inspect CSS</button>
               </div>
               <p class="journey-tip">
                 Apply the CSS to semantic HTML, test at narrow and wide widths, and keep CSS plus JSON with your project files. Browser-local saves are not permanent backups.
@@ -1088,30 +1070,59 @@
           </details>
         </aside>
         <div class="studio-right">
+            <details id="studioInspector" aria-label="Live generated CSS, HTML and project JSON" class="studio-code-dock is-collapsed">
+              <summary id="inspectorToggle"><h2>Live CSS/HTML Inspector</h2></summary>
+              <div class="studio-dock-header">
+                <div>
+                  <p>Updates as you change the parameters</p>
+                </div>
+                <button id="dockCopy" type="button">Copy CSS</button>
+              </div>
+              <div id="dockCodePanel">
+              <div id="dockLearning" hidden>
+                <div class="dock-focus">
+                  <label for="dockSection">Study a section</label>
+                  <select id="dockSection" aria-describedby="dockFocusHelp">
+                    <option value="all">Complete file</option>
+                    <option value="basics">Page basics: normal flow</option>
+                    <option value="header">Header: responsive navigation</option>
+                    <option value="hero">Hero: Grid</option>
+                    <option value="skills">Components: Flexbox</option>
+                    <option value="toolkit">Layouts: Grid</option>
+                    <option value="form">Forms: controls and feedback</option>
+                    <option value="footer">Footer: navigation</option>
+                  </select>
+                  <small id="dockFocusHelp">Copy uses this view. Download saves the complete file.</small>
+                </div>
+              </div>
+              <details id="exampleConnections" class="example-connections" hidden>
+                <summary>Example, rule and tokens</summary>
+                <label for="studyExample">Study an example</label><select id="studyExample"></select>
+                <div class="button-row"><button id="studyPick" type="button" aria-pressed="false">Select in preview</button><button id="studyPreview" type="button">Show example</button><button id="studyCode" type="button">Find rule in CSS</button></div>
+                <p id="studyExplanation" class="help"></p><pre id="studyRule" aria-label="Generated CSS rule" tabindex="0"></pre>
+                <div id="studyTokens"></div><p id="studyStatus" class="help" role="status"></p>
+              </details>
+              <div class="studio-dock-tabs" role="tablist" aria-label="Inspector code language">
+                <button id="dockTabCss" type="button" role="tab" aria-selected="true" aria-controls="dockCss">CSS</button>
+                <button id="dockTabHtml" type="button" role="tab" aria-selected="false" aria-controls="dockCss" tabindex="-1">HTML</button>
+                <button id="dockTabJson" type="button" role="tab" aria-selected="false" aria-controls="dockCss" tabindex="-1">Project JSON</button>
+              </div>
+              <div class="studio-dock-theme">
+                <label for="dockTheme">Page theme</label>
+                <select id="dockTheme" aria-describedby="dockThemeHelp"><option value="light">Light</option><option value="dark">Dark</option></select>
+                <small id="dockThemeHelp">Shared with the preview. CSS includes both themes.</small>
+              </div>
+              <div class="studio-dock-actions">
+                <button id="dockDownload" type="button">Download tokens.css</button>
+                <button aria-expanded="false" id="dockToggle" type="button" aria-controls="studioInspector">Expand code</button>
+              </div>
+              <pre aria-label="Generated CSS code" aria-labelledby="dockTabCss" aria-describedby="dockNote" role="tabpanel" id="dockCss" tabindex="0"></pre>
+              <p class="studio-dock-note" id="dockNote">
+                Brand → semantic → component rules. Save tokens.css beside the sample index.html.
+              </p>
+              </div>
+            </details>
           <main id="main">
-            <nav aria-label="Design system sections" class="studio-section-nav">
-              <a href="#studio-section-4">01 &middot; Responsive</a>
-              <a href="#process-brief">02 &middot; Brief</a>
-              <a href="#process-ia">03 &middot; Architecture</a>
-              <a href="#process-wireframe">04 &middot; Wireframe</a>
-              <a href="#process-prototype">05 &middot; Prototype</a>
-              <a href="#brandPalette">06 &middot; Palette</a>
-              <a href="#studio-section-1">07 &middot; Colour</a>
-              <a href="#studio-section-2">08 &middot; Typography</a>
-              <a href="#buttonDesignLab">09 &middot; Buttons</a>
-              <a href="#studio-section-3">10 &middot; Components</a>
-              <a href="#responsiveDesign">11 &middot; Responsive</a>
-              <a href="#stateExplorer">12 &middot; States</a>
-              <a href="#studio-section-5">13 &middot; Accessibility</a>
-              <a href="#studio-section-6">14 &middot; Inspect &amp; export</a>
-              <a href="#studio-section-7">15 &middot; Workflow</a>
-              <a href="#studio-section-8">16 &middot; Token catalogue</a>
-            </nav>
-            <div class="section-actions" role="group" aria-label="Section visibility">
-              <button type="button" id="expandSections" class="ghost">Expand all sections</button>
-              <button type="button" id="collapseSections" class="ghost">Collapse all sections</button>
-              <p class="help">Select a section heading to expand or collapse it. Navigation links open the section you choose.</p>
-            </div>
               <details class="studio-section" id="studio-section-4" open>
               <summary><h2>1. Responsive page preview</h2></summary>
               <section class="panel">
@@ -1132,11 +1143,18 @@
                     </div>
                   </div>
                 </div>
+              <div class="studio-dock-tabs studio-dock-modes" role="tablist" aria-label="Website sample complexity">
+                <button id="dockModeAdvanced" type="button" role="tab" aria-selected="true" aria-controls="dockSamplePanel">Advanced</button>
+                <button id="dockModeBasic" type="button" role="tab" aria-selected="false" aria-controls="dockSamplePanel" tabindex="-1">Basic</button>
+              </div>
+              <div id="dockSamplePanel" role="tabpanel" aria-labelledby="dockModeAdvanced">
+                <p id="sampleModeHelp" class="help">Advanced: the full field guide, planning workshops and component/state gallery.</p>
                 <div class="preview-shell" id="previewShell" role="region" aria-label="Responsive page viewport" tabindex="0">
                   <div class="preview-frame" data-width="fluid" id="previewFrame">
                     <iframe id="previewPage" title="Live generated home page" sandbox="allow-same-origin allow-forms" srcdoc="<!doctype html><html lang='en'><head><meta charset='utf-8'></head><body></body></html>"></iframe>
                   </div>
                 </div>
+              </div>
                 <p class="help">
                   Use the page navigation or scroll inside the preview to browse. Fixed presets keep their selected width; scroll horizontally when the viewport is wider than this pane. Fluid fills the available space.
                 </p>
@@ -1146,6 +1164,24 @@
                    role="status"
                    aria-live="polite"></p>
 
+              <details class="learning-note" id="html-css-foundations">
+                <summary>How HTML, the DOM and CSS work together</summary>
+                <div class="learning-content">
+                  <p><strong>HTML (HyperText Markup Language)</strong> describes elements, their meaning and their nesting. The browser parses this markup to create the <strong>DOM (Document Object Model)</strong>: a tree of node objects, including elements and text.</p>
+                  <pre tabindex="0" aria-label="HTML showing a section with two children"><code>&lt;section class="card"&gt;
+  &lt;h2&gt;A reusable card&lt;/h2&gt;
+  &lt;p&gt;The card content.&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+                  <p>The section is the parent of the heading and paragraph; those two children are siblings. Their nesting expresses document relationships. Classes label elements so CSS selectors can match them.</p>
+                  <pre tabindex="0" aria-label="CSS styling paragraph children of a card"><code>.card &gt; p {
+  color: var(--text);
+}</code></pre>
+                  <p><strong>CSS (Cascading Style Sheets)</strong> supplies rules that assign property values to matching elements. Here, <code>color</code> is a property and <code>var(--text)</code> supplies its value. The cascade resolves competing declarations; some properties inherit from parents. CSS controls presentation and layout while HTML retains its structure and meaning.</p>
+                  <p>Thinking of elements as objects is useful: the browser creates those DOM objects from HTML. CSS properties describe their presentation; DOM objects also have their own properties and methods.</p>
+                  <p><strong>Try it:</strong> inspect HTML to follow the element relationships, then inspect CSS to follow a class selector to its properties and design tokens.</p>
+                  <p class="learning-reference">Read more: <a href="https://html.spec.whatwg.org/multipage/introduction.html#a-quick-introduction-to-html">HTML and the DOM</a> and <a href="https://www.w3.org/TR/selectors/#data-model">CSS selectors and element trees</a>.</p>
+                </div>
+              </details>
               <details class="learning-note">
                 <summary>Why test between device sizes?</summary>
                 <div class="learning-content">
@@ -1857,6 +1893,7 @@
                 <p class="help">
                   The output includes foundation tokens, semantic roles, responsive type and commented component examples. Export a JSON configuration to continue your work later.
                 </p>
+<div hidden>
                 <div aria-label="Code views" class="tabs" role="tablist">
                   <button aria-selected="true"
                           class="tab"
@@ -1882,6 +1919,7 @@
                   <button class="ghost" id="downloadCode" type="button">Download visible code</button>
                 </div>
                 <pre class="code" id="codeView" role="tabpanel" aria-labelledby="viewCss" tabindex="0"></pre>
+</div>
                 <h3>Token dependency inspector</h3>
                 <div class="token-list" id="tokenInspector"></div>
 
@@ -1986,67 +2024,16 @@
               </details>
               </section>
             </details>
-              <div class="footer">Design System Studio V4.1 · standalone design toolkit · no external dependencies</div>
+            <details class="studio-references">
+              <summary>Reference tools</summary>
+              <nav aria-label="Reference tools" class="studio-reference-links">
+                <a href="#studio-section-7">Workflow overview</a>
+                <a href="#studio-section-8">Token catalogue</a>
+                <a href="#stateExplorer">Component states</a>
+              </nav>
+            </details>
+              <div class="footer">Web Design System Studio V4.1 · standalone design toolkit · no external dependencies</div>
             </main>
-            <aside aria-label="Live generated CSS and HTML" class="studio-code-dock">
-              <div class="studio-dock-header">
-                <div>
-                  <strong>Live CSS/HTML Inspector</strong>
-                  <p>Updates as you change the parameters</p>
-                </div>
-                <button id="dockCopy" type="button">Copy CSS</button>
-              </div>
-              <div class="studio-dock-tabs studio-dock-modes" role="tablist" aria-label="Website sample complexity">
-                <button id="dockModeAdvanced" type="button" role="tab" aria-selected="true" aria-controls="dockSamplePanel">Advanced</button>
-                <button id="dockModeBasic" type="button" role="tab" aria-selected="false" aria-controls="dockSamplePanel" tabindex="-1">Basic</button>
-              </div>
-              <div id="dockSamplePanel" role="tabpanel" aria-labelledby="dockModeAdvanced">
-              <p id="sampleModeHelp">Advanced: the full field guide, planning workshops and component/state gallery.</p>
-              <div id="dockLearning" hidden>
-                <details class="dock-start">
-                  <summary>Start here: three guided exercises</summary>
-                  <p>The inspector is read-only. Learn in order: semantic HTML, then Flexbox components, responsive Grid layouts and labelled form controls. The live examples keep the page compact; inspect the source to explore each pattern. The footer sitemap is always visible.</p>
-                  <ol>
-                    <li><strong>Change a heading.</strong> Select Hero and HTML to find the <code>h1</code>. Download the complete HTML and CSS into one folder. Edit the heading text in <code>index.html</code>, save, and open or reload that file in your browser. The studio preview keeps its generated text.</li>
-                    <li><strong>Adjust section spacing.</strong> Select Page basics and CSS. In the studio's Spacing controls, change the base unit. Watch the section padding and tokens update together in the preview and code.</li>
-                    <li><strong>Resize the preview.</strong> Open Responsive preview and compare 390 px, 768 px and 1280 px. Select Hero and CSS: find the media query that changes two columns to one. Check that text stays before the image.</li>
-                  </ol>
-                  <p><code>var(--space-4)</code> uses a reusable spacing value: four times the base spacing unit. Changing that unit updates every rule using the token. Shared foundation and component rules remain in the complete CSS.</p>
-                </details>
-                <div class="dock-focus">
-                  <label for="dockSection">Study a section</label>
-                  <select id="dockSection" aria-describedby="dockFocusHelp">
-                    <option value="all">Complete file</option>
-                    <option value="basics">Page basics: normal flow</option>
-                    <option value="header">Header: responsive navigation</option>
-                    <option value="hero">Hero: Grid</option>
-                    <option value="skills">Components: Flexbox</option>
-                    <option value="toolkit">Layouts: Grid</option>
-                    <option value="form">Forms: controls and feedback</option>
-                    <option value="footer">Footer: navigation</option>
-                  </select>
-                  <small id="dockFocusHelp">Copy uses the visible code. Download always saves the complete file. Section excerpts need the shared rules in tokens.css.</small>
-                </div>
-              </div>
-              <div class="studio-dock-tabs" role="tablist" aria-label="Inspector code language">
-                <button id="dockTabCss" type="button" role="tab" aria-selected="true" aria-controls="dockCss">CSS</button>
-                <button id="dockTabHtml" type="button" role="tab" aria-selected="false" aria-controls="dockCss" tabindex="-1">HTML</button>
-              </div>
-              <div class="studio-dock-theme">
-                <label for="dockTheme">Page theme</label>
-                <select id="dockTheme" aria-describedby="dockThemeHelp"><option value="light">Light</option><option value="dark">Dark</option></select>
-                <small id="dockThemeHelp">Shared with the preview. CSS includes both themes.</small>
-              </div>
-              <div class="studio-dock-actions">
-                <button id="dockDownload" type="button">Download tokens.css</button>
-                <button aria-expanded="true" id="dockToggle" type="button">Collapse code</button>
-              </div>
-              <pre aria-label="Generated CSS code" aria-labelledby="dockTabCss" aria-describedby="dockNote" role="tabpanel" id="dockCss" tabindex="0"></pre>
-              <p class="studio-dock-note" id="dockNote">
-                Brand → semantic → component rules. Save tokens.css beside the sample index.html.
-              </p>
-              </div>
-            </aside>
           </div>
         </div>
       </div>
@@ -2075,31 +2062,33 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261019-typography" defer></script>
+      <script src="src/js/studio-registry.js?v=20261103-spacing-lesson" defer></script>
       <script src="src/js/brand-palette.js?v=20261021-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261103-sitemap-crud" defer></script>
+      <script src="src/js/design-process.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
-      <script src="src/js/core-state.js?v=20261021-responsive" defer></script>
-      <script src="src/js/css-dock.js?v=20261103-basic-learning" defer></script>
+      <script src="src/js/core-state.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/css-dock.js?v=20261103-spacing-lesson" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
-      <script src="src/js/journey-library.js?v=20261021-responsive" defer></script>
-      <script src="src/js/button-design.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/sample-system.js?v=20261103-shared-footer" defer></script>
+      <script src="src/js/journey-library.js?v=20261103-single-wizard" defer></script>
+      <script src="src/js/button-design.js?v=20261103-web-studio" defer></script>
+      <script src="src/js/sample-system.js?v=20261103-sitemap-accordion" defer></script>
       <script src="src/js/sample-homepage.js?v=20261023-basic-hero" defer></script>
       <script src="src/js/basic-homepage.js?v=20261104-page-background" defer></script>
       <script src="src/js/responsive-preview.js?v=20261103-ui-essentials" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261021-responsive-review" defer></script>
-      <script src="src/js/clamp-explorer.js?v=20261019-typography" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261103-learning" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/contrast-audit.js?v=20261019-brand-palette" defer></script>
       <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
-      <script src="src/js/section-accordions.js?v=20261020-section-menu" defer></script>
+      <script src="src/js/section-accordions.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/site-builder.js?v=20261103-sitemap-crud" defer></script>
-      <script src="src/js/studio-learning.js?v=20261103-preview" defer></script>
+      <script src="src/js/studio-learning.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
+      <script src="src/js/spacing-lesson.js?v=20261103-spacing-lesson" defer></script>
     </body>
   </html>

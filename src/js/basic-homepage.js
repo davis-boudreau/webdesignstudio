@@ -321,7 +321,7 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
           tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
         });
         document.getElementById('dockSamplePanel').setAttribute('aria-labelledby', tabs[basic ? 1 : 0]);
-        document.getElementById('sampleModeHelp').textContent = basic ? 'Basic: essential UI components in a compact page. Responsive header/hero, cards, profile row, FAQ, Grid/lists, article/aside, native form controls and grouped footer navigation. Uses your shared typography, spacing, colours, components, buttons and responsive settings.' : 'Advanced: the full field guide, planning workshops and component/state gallery.';
+        document.getElementById('sampleModeHelp').textContent = basic ? 'Basic: HTML/CSS essentials. Study examples with your shared design settings.' : 'Advanced: the full field guide, planning workshops and component/state gallery.';
       }
       tabs.forEach((id, index) => {
         const tab = document.getElementById(id);

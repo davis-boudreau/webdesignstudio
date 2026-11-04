@@ -1,0 +1,380 @@
+area,element,identifier,label,instances,hiddenAncestor,disclosure,disabled,type,className
+Global,a,#main | Skip to studio previews,Skip to studio previews,1,False,False,False,,skip-link
+Global,button,themeToggle,Switch to dark,1,False,False,False,button,
+Global,button,resetBtn,Reset,1,False,False,False,button,
+Global,button,saveBtn,Save JSON,1,False,False,False,button,
+Global,button,loadBtn,Load JSON,1,False,False,False,button,
+Global,button,cssBtn,Export CSS,1,False,False,False,button,
+Global,button,beginnerStart,First steps with Basic,1,False,False,False,button,
+beginnerPath,summary,Beginner exercises and progress,Beginner exercises and progress,1,True,True,False,,
+beginnerPath,button,beginnerBuild,Open the control,1,True,True,False,button,
+beginnerPath,button,beginnerPreview,See the example,1,True,True,False,button,
+beginnerPath,button,beginnerCode,Find the CSS,1,True,True,False,button,
+beginnerPath,button,beginnerDone,I tried this - next exercise,1,True,True,False,button,
+beginnerPath,summary,Start here: three guided exercises,Start here: three guided exercises,1,True,True,False,,
+workspaceNav,button,Build,Build,1,False,False,False,button,
+workspaceNav,button,Preview,Preview,1,False,False,False,button,
+workspaceNav,button,Code,Code,1,False,False,False,button,
+workspaceNav,button,Beginner steps,Beginner steps,1,False,False,False,button,
+Wizard navigation,button,1 · Brief,1 · Brief,1,False,False,False,button,
+Wizard navigation,button,2 · Architecture,2 · Architecture,1,False,False,False,button,
+Wizard navigation,button,3 · Wireframe,3 · Wireframe,1,False,False,False,button,
+Wizard navigation,button,4 · Prototype,4 · Prototype,1,False,False,False,button,
+Wizard navigation,button,5 · Palette,5 · Palette,1,False,False,False,button,
+Wizard navigation,button,6 · Typography,6 · Typography,1,False,False,False,button,
+Wizard navigation,button,7 · Components,7 · Components,1,False,False,False,button,
+Wizard navigation,button,8 · Buttons,8 · Buttons,1,False,False,False,button,
+Wizard navigation,button,9 · Layout,9 · Layout,1,False,False,False,button,
+Wizard navigation,button,10 · Responsive,10 · Responsive,1,False,False,False,button,
+Wizard navigation,button,11 · Accessibility,11 · Accessibility,1,False,False,False,button,
+Wizard navigation,button,12 · Deliver,12 · Deliver,1,False,False,False,button,
+Wizard 1,summary,What should I decide before changing styles?,What should I decide before changing styles?,1,False,True,False,,
+Wizard 1,a,#studio-section-7 | Design workflow,Design workflow,1,False,True,False,,
+Wizard 1,button,Explore the centre lesson,Explore the centre lesson,1,False,False,False,button,ghost
+Wizard 2,button,sitemap-new,New entry,1,True,False,False,button,ghost
+Wizard 2,button,sitemap-up,Move up,1,True,False,True,button,ghost
+Wizard 2,button,sitemap-down,Move down,1,True,False,False,button,ghost
+Wizard 2,button,Save entry,Save entry,1,True,False,False,submit,ghost
+Wizard 2,button,sitemap-delete,Delete entry,1,True,False,False,button,ghost
+Wizard 2,button,sitemap-undo,Undo last sitemap change,1,True,False,True,button,ghost
+Wizard 2,summary,Edit sitemap as text,Edit sitemap as text,1,True,True,False,,
+Wizard 2,button,plan-use-sample,Use complete Advanced sitemap,1,True,True,False,button,ghost
+Wizard 2,a,#process-ia | Review the sitemap in the centre lesson,Review the sitemap in the centre lesson,1,True,True,False,,
+Wizard 2,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 3,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 4,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 5,button,page-background-reset,Use default background,1,True,False,True,button,ghost
+Wizard 5,summary,How do I choose and check my palette?,How do I choose and check my palette?,1,True,True,False,,
+Wizard 5,a,#studio-section-1 | Colour systems,Colour systems,1,True,True,False,,
+Wizard 5,a,#studio-section-5 | Accessibility quick checks,Accessibility quick checks,1,True,True,False,,
+Wizard 5,summary,Edit Brand Palette,Edit Brand Palette,1,True,True,False,,
+Wizard 5,button,[data-remove-brand],Remove colour,11,True,True,False,button,ghost
+Wizard 5,button,jBrandAdd,Add brand colour,1,True,True,False,button,ghost
+Wizard 5,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 6,summary,What do the typography controls change?,What do the typography controls change?,1,True,True,False,,
+Wizard 6,a,#studio-section-2 | Typography studio and clamp calculator,Typography studio and clamp calculator,1,True,True,False,,
+Wizard 6,a,#fontControls | Explore font-loading and fallback examples in the centre lesson.,Explore font-loading and fallback examples in the centre lesson.,1,True,False,False,,
+Wizard 6,summary,Heading and body font sources,Heading and body font sources,1,True,True,False,,
+Wizard 6,summary,Responsive typography limits,Responsive typography limits,1,True,True,False,,
+Wizard 6,button,clampReset,Reset responsive limits,1,True,True,False,button,ghost
+Wizard 6,summary,Fine typography adjustments,Fine typography adjustments,1,True,True,False,,
+Wizard 6,summary,Typography and readability,Typography and readability,1,True,True,False,,
+Wizard 6,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 7,summary,"How do spacing, radius and themes work together?","How do spacing, radius and themes work together?",1,True,True,False,,
+Wizard 7,a,"#studio-section-3 | Spacing, surfaces and component states","Spacing, surfaces and component states",1,True,True,False,,
+Wizard 7,a,#stateExplorer | Component State Explorer,Component State Explorer,1,True,True,False,,
+Wizard 7,button,jSemanticEdit,Preview / edit role colour,1,True,False,False,button,ghost
+Wizard 7,button,jSemanticReset,Use generated colour,1,True,False,True,button,ghost
+Wizard 7,summary,Semantic colours and feedback,Semantic colours and feedback,1,True,True,False,,
+Wizard 7,summary,"Edit theme colours: text, surfaces, borders and semantic roles","Edit theme colours: text, surfaces, borders and semantic roles",1,True,True,False,,
+Wizard 7,button,semanticEdit,Preview / edit selected colour,1,True,True,False,button,ghost
+Wizard 7,button,semanticReset,Use generated colour,1,True,True,True,button,ghost
+Wizard 7,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 8,summary,Default state best practices: colour plus visible cues,Default state best practices: colour plus visible cues,1,True,True,False,,
+Wizard 8,summary,"Which button settings are shared, and what should I test?","Which button settings are shared, and what should I test?",1,True,True,False,,
+Wizard 8,a,#buttonDesignLab | Button Design Laboratory,Button Design Laboratory,1,True,True,False,,
+Wizard 8,summary,Review all variants and states,Review all variants and states,1,True,True,False,,
+Wizard 8,summary,Primary Targets met,Primary Targets met,1,True,True,False,,
+Wizard 8,button,Default,Default,5,True,True,False,button,
+Wizard 8,button,Hover,Hover,5,True,True,False,button,
+Wizard 8,button,Focus-visible,Focus-visible,5,True,True,False,button,
+Wizard 8,button,Active / pressed,Active / pressed,5,True,True,False,button,
+Wizard 8,button,Selected toggle,Selected toggle,5,True,True,False,button,
+Wizard 8,button,Disabled,Disabled,5,True,True,False,button,
+Wizard 8,button,Loading,Loading,5,True,True,False,button,
+Wizard 8,summary,Secondary Targets met,Secondary Targets met,1,True,True,False,,
+Wizard 8,summary,Accent Targets met,Accent Targets met,1,True,True,False,,
+Wizard 8,summary,Outline Targets met,Outline Targets met,1,True,True,False,,
+Wizard 8,summary,Text Targets met,Text Targets met,1,True,True,False,,
+Wizard 8,button,Edit text / background,Edit text / background,2,True,False,False,button,ghost
+Wizard 8,button,Edit colours,Edit colours,6,True,False,False,button,ghost
+Wizard 8,button,Edit boundary colours,Edit boundary colours,2,True,False,False,button,ghost
+Wizard 8,summary,Advanced state colours and behaviour,Advanced state colours and behaviour,1,True,True,False,,
+Wizard 8,button,bdJump,View button laboratory →,1,True,False,False,button,ghost
+Wizard 8,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 9,summary,"Surfaces, borders and elevation","Surfaces, borders and elevation",1,True,True,False,,
+Wizard 9,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 10,summary,Responsive and layout,Responsive and layout,1,True,True,False,,
+Wizard 10,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 11,summary,Interaction states,Interaction states,1,True,True,False,,
+Wizard 11,summary,Accessibility and motion,Accessibility and motion,1,True,True,False,,
+Wizard 11,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard 12,summary,What should a complete handoff include?,What should a complete handoff include?,1,True,True,False,,
+Wizard 12,a,#studio-section-6 | Inspect and export,Inspect and export,1,True,True,False,,
+Wizard 12,a,#studio-section-8 | Token catalogue,Token catalogue,1,True,True,False,,
+Wizard 12,button,jExportHtml,Download HTML (index.html),1,True,False,False,button,ghost
+Wizard 12,button,jExportCss,Download CSS (tokens.css),1,True,False,False,button,ghost
+Wizard 12,button,jExportJson,Download JSON,1,True,False,False,button,
+Wizard 12,button,jViewCss,Show CSS,1,True,False,False,button,
+Wizard 12,button,Explore the centre lesson,Explore the centre lesson,1,True,False,False,button,ghost
+Wizard navigation,button,jBack,← Back,1,False,False,True,button,
+Wizard navigation,button,jNext,Next →,1,False,False,False,button,
+Local projects,button,jSaveLocal,Save project,1,False,False,False,button,
+Local projects,button,jNewLocal,New project,1,False,False,False,button,
+Local projects,button,jLoadLocal,Load,1,False,False,False,button,
+Local projects,button,jDeleteLocal,Delete,1,False,False,False,button,
+Local projects,summary,Why keep a JSON backup?,Why keep a JSON backup?,1,False,True,False,,
+Hidden legacy controls,summary,All parameters · Advanced editing,All parameters · Advanced editing,1,True,True,False,,
+Hidden legacy controls,button,resetAdvanced,Reset,1,True,True,False,button,ghost
+Global,a,#studio-section-4 | 01 · Responsive,01 · Responsive,1,False,False,False,,
+Global,a,#process-brief | 02 · Brief,02 · Brief,1,False,False,False,,
+Global,a,#process-ia | 03 · Architecture,03 · Architecture,1,False,False,False,,
+Global,a,#process-wireframe | 04 · Wireframe,04 · Wireframe,1,False,False,False,,
+Global,a,#process-prototype | 05 · Prototype,05 · Prototype,1,False,False,False,,
+Global,a,#brandPalette | 06 · Palette,06 · Palette,1,False,False,False,,
+Global,a,#studio-section-1 | 07 · Colour,07 · Colour,1,False,False,False,,
+Global,a,#studio-section-2 | 08 · Typography,08 · Typography,1,False,False,False,,
+Global,a,#buttonDesignLab | 09 · Buttons,09 · Buttons,1,False,False,False,,
+Global,a,#studio-section-3 | 10 · Components,10 · Components,1,False,False,False,,
+Global,a,#responsiveDesign | 11 · Responsive,11 · Responsive,1,False,False,False,,
+Global,a,#stateExplorer | 12 · States,12 · States,1,False,False,False,,
+Global,a,#studio-section-5 | 13 · Accessibility,13 · Accessibility,1,False,False,False,,
+Global,a,#studio-section-6 | 14 · Inspect & export,14 · Inspect & export,1,False,False,False,,
+Global,a,#studio-section-7 | 15 · Workflow,15 · Workflow,1,False,False,False,,
+Global,a,#studio-section-8 | 16 · Token catalogue,16 · Token catalogue,1,False,False,False,,
+Global,button,expandSections,Expand all sections,1,False,False,False,button,ghost
+Global,button,collapseSections,Collapse all sections,1,False,False,False,button,ghost
+studio-section-4,summary,1. Responsive page preview,1. Responsive page preview,1,False,True,False,,
+studio-section-4,button,390 px,390 px,1,False,True,False,button,tab
+studio-section-4,button,768 px,768 px,1,False,True,False,button,tab
+studio-section-4,button,1280 px,1280 px,1,False,True,False,button,tab
+studio-section-4,button,Fluid,Fluid,1,False,True,False,button,tab
+studio-section-4,summary,Why test between device sizes?,Why test between device sizes?,1,False,True,False,,
+process-brief,summary,2. Project brief,2. Project brief,1,False,True,False,,
+process-brief,button,"[data-configure-step=""0""]",Configure in wizard · step 1,1,False,True,False,button,ghost
+process-ia,summary,3. Information architecture,3. Information architecture,1,False,True,False,,
+process-ia,button,"[data-configure-step=""1""]",Configure in wizard · step 2,1,False,True,False,button,ghost
+process-wireframe,summary,4. Wireframing,4. Wireframing,1,False,True,False,,
+process-wireframe,button,"[data-configure-step=""2""]",Configure in wizard · step 3,1,False,True,False,button,ghost
+process-prototype,summary,5. Prototyping,5. Prototyping,1,False,True,False,,
+process-prototype,button,"[data-configure-step=""3""]",Configure in wizard · step 4,1,False,True,False,button,ghost
+process-prototype,a,#studio-plan-choose | Browse the lesson choices →,Browse the lesson choices →,1,False,True,False,,
+process-prototype,a,#studio-plan-review | Choose a lesson and review →,Choose a lesson and review →,1,False,True,False,,
+process-prototype,a,#studio-plan-discover | ← Back to discover,← Back to discover,1,False,True,False,,
+process-prototype,a,#studio-plan-discover | Restart the task,Restart the task,1,False,True,False,,
+brandPalette,summary,6. Brand Colour Palette,6. Brand Colour Palette,1,False,True,False,,
+brandPalette,button,"[data-configure-step=""4""]",Configure in wizard · step 5,1,False,True,False,button,ghost
+brandPalette,button,brandEditPalette,Edit Brand Palette,1,False,True,False,button,ghost
+brandPalette,button,[data-brand-hex],White#FFFFFFSet as Primary UI colourNot assigned to the Main Palette,11,False,True,False,button,brand-swatch-apply
+brandPalette,summary,Why separate palette swatches from colour roles?,Why separate palette swatches from colour roles?,1,False,True,False,,
+studio-section-1,summary,7. Colour systems,7. Colour systems,1,False,True,False,,
+studio-section-1,button,"[data-configure-step=""6""]",Configure in wizard · step 7,1,False,True,False,button,ghost
+studio-section-1,button,oklchApply,Apply to selected role,1,False,True,False,button,ghost
+studio-section-1,button,oklchReset,Load current role colour,1,False,True,False,button,ghost
+studio-section-1,button,oklchDefault,Reset selected role to default,1,False,True,False,button,ghost
+studio-section-1,summary,"How does OKLCH work, and how should I explore the wheel?","How does OKLCH work, and how should I explore the wheel?",1,False,True,False,,
+studio-section-1,a,#studio-section-5 | Accessibility quick checks,Accessibility quick checks,1,False,True,False,,
+studio-section-1,summary,How does the ramp generator work?,How does the ramp generator work?,1,False,True,False,,
+studio-section-1,summary,Why use ramps and semantic colours?,Why use ramps and semantic colours?,1,False,True,False,,
+studio-section-2,summary,8. Typography studio,8. Typography studio,1,False,True,False,,
+studio-section-2,button,"[data-configure-step=""5""]",Configure in wizard · step 6,1,False,True,False,button,ghost
+studio-section-2,button,fontRetry,Retry font loading,1,True,True,False,button,ghost
+studio-section-2,summary,How do CDN fonts work?,How do CDN fonts work?,1,False,True,False,,
+studio-section-2,button,clampCopy,Copy CSS,1,False,True,False,button,ghost
+studio-section-2,summary,Named scale or mobile percentage: what is the difference?,Named scale or mobile percentage: what is the difference?,1,False,True,False,,
+studio-section-2,summary,Why use REM for sizes and em for letter spacing?,Why use REM for sizes and em for letter spacing?,1,False,True,False,,
+studio-section-2,summary,Practice: document your type scale,Practice: document your type scale,1,False,True,False,,
+studio-section-2,summary,Why use a type scale and fluid sizes?,Why use a type scale and fluid sizes?,1,False,True,False,,
+buttonDesignLab,summary,9. Button design laboratory,9. Button design laboratory,1,False,True,False,,
+buttonDesignLab,button,"[data-configure-step=""7""]",Configure in wizard · step 8,1,False,True,False,button,ghost
+buttonDesignLab,button,.bd-button (state specimens),Primary action,38,False,True,False,button,bd-button
+buttonDesignLab,button,bdCopy,Copy button CSS,1,False,True,False,button,ghost
+buttonDesignLab,button,bdExport,Download button CSS,1,False,True,False,button,ghost
+buttonDesignLab,summary,Why separate button appearance from behaviour?,Why separate button appearance from behaviour?,1,False,True,False,,
+studio-section-3,summary,"10. Spacing, surfaces and component states","10. Spacing, surfaces and component states",1,False,True,False,,
+studio-section-3,button,"[data-configure-step=""8""]",Configure in wizard · step 9,1,False,True,False,button,ghost
+studio-section-3,button,Primary,Primary,1,False,True,False,button,demo-btn
+studio-section-3,button,Secondary,Secondary,1,False,True,False,button,demo-btn secondary
+studio-section-3,button,Accent,Accent,1,False,True,False,button,demo-btn accent
+studio-section-3,button,Outline,Outline,1,False,True,False,button,demo-btn outline
+studio-section-3,button,Disabled,Disabled,1,False,True,True,button,demo-btn
+studio-section-3,summary,"Why standardize spacing, surfaces and feedback?","Why standardize spacing, surfaces and feedback?",1,False,True,False,,
+responsiveDesign,summary,11. Responsive design,11. Responsive design,1,False,True,False,,
+responsiveDesign,button,"[data-configure-step=""9""]",Configure in wizard · step 10,1,False,True,False,button,ghost
+stateExplorer,summary,12. Component state explorer,12. Component state explorer,1,False,True,False,,
+stateExplorer,button,"[data-configure-step=""10""]",Configure in wizard · step 11,1,False,True,False,button,ghost
+stateExplorer,button,advDemoButton,Register for an event,1,False,True,False,button,demo-btn
+stateExplorer,summary,Why simulate states?,Why simulate states?,1,False,True,False,,
+studio-section-5,summary,13. Accessibility quick checks,13. Accessibility quick checks,1,False,True,False,,
+studio-section-5,button,"[data-configure-step=""10""]",Configure in wizard · step 11,1,False,True,False,button,ghost
+studio-section-5,summary,"Which contrasts need testing, and what is covered here?","Which contrasts need testing, and what is covered here?",1,False,True,False,,
+studio-section-5,button,contrastDownload,Download filtered contrast CSV,1,False,True,False,button,ghost
+studio-section-5,summary,Boundaries and indicators 30 pairs,Boundaries and indicators 30 pairs,1,False,True,False,,
+studio-section-5,button,[data-edit-contrast],Edit this colour,859,False,True,False,button,contrast-edit
+studio-section-5,summary,Button Laboratory: indicators 273 pairs,Button Laboratory: indicators 273 pairs,1,False,True,False,,
+studio-section-5,summary,Button Laboratory: text 280 pairs,Button Laboratory: text 280 pairs,1,False,True,False,,
+studio-section-5,summary,General components and form states 72 pairs · 8 to review,General components and form states 72 pairs · 8 to review,1,False,True,False,,
+studio-section-5,summary,Surfaces and opacity 8 pairs,Surfaces and opacity 8 pairs,1,False,True,False,,
+studio-section-5,summary,Swatch candidates: reference and ramps 176 pairs,Swatch candidates: reference and ramps 176 pairs,1,False,True,False,,
+studio-section-5,summary,Text and semantic roles 42 pairs,Text and semantic roles 42 pairs,1,False,True,False,,
+studio-section-5,summary,What does a contrast pass tell you?,What does a contrast pass tell you?,1,False,True,False,,
+studio-section-5,summary,What should I check beyond colour?,What should I check beyond colour?,1,False,True,False,,
+studio-section-6,summary,14. Inspect and export,14. Inspect and export,1,False,True,False,,
+studio-section-6,button,"[data-configure-step=""11""]",Configure in wizard · step 12,1,False,True,False,button,ghost
+studio-section-6,button,viewCss,Commented CSS,1,False,True,False,button,tab
+studio-section-6,button,viewJson,Project JSON,1,False,True,False,button,tab
+studio-section-6,button,viewHtml,HTML example,1,False,True,False,button,tab
+studio-section-6,button,copyCode,Copy visible code,1,False,True,False,button,demo-btn
+studio-section-6,button,downloadCode,Download visible code,1,False,True,False,button,ghost
+studio-section-6,summary,"Which export do I need, and how do I use it?","Which export do I need, and how do I use it?",1,False,True,False,,
+studio-section-6,summary,Why inspect the CSS while designing?,Why inspect the CSS while designing?,1,False,True,False,,
+studio-section-7,summary,15. Design workflow,15. Design workflow,1,False,True,False,,
+studio-section-7,button,"[data-configure-step=""0""]",Configure in wizard · step 1,1,False,True,False,button,ghost
+studio-section-7,summary,Why document decisions as well as values?,Why document decisions as well as values?,1,False,True,False,,
+studio-section-8,summary,16. Design token catalogue,16. Design token catalogue,1,False,True,False,,
+studio-section-8,button,"[data-configure-step=""11""]",Configure in wizard · step 12,1,False,True,False,button,ghost
+studio-section-8,button,tokenDownload,Export token CSV,1,False,True,False,button,ghost
+studio-section-8,button,[data-token-name],Configure source,218,False,True,False,button,ghost
+studio-section-8,summary,Why name tokens by purpose?,Why name tokens by purpose?,1,False,True,False,,
+Inspector,button,dockCopy,Copy CSS,1,False,False,False,button,
+Inspector,button,dockModeAdvanced,Advanced,1,False,False,False,button,
+Inspector,button,dockModeBasic,Basic,1,False,False,False,button,
+Inspector,summary,"Example, rule and tokens","Example, rule and tokens",1,True,True,False,,
+Inspector,button,studyPick,Select in preview,1,True,True,False,button,
+Inspector,button,studyPreview,Show example,1,True,True,False,button,
+Inspector,button,studyCode,Find rule in CSS,1,True,True,False,button,
+Inspector,button,dockTabCss,CSS,1,False,False,False,button,
+Inspector,button,dockTabHtml,HTML,1,False,False,False,button,
+Inspector,button,dockDownload,Download tokens.css,1,False,False,False,button,
+Inspector,button,dockToggle,Collapse code,1,False,False,False,button,
+colourRepair,button,repairApply,Apply previewed colour,1,False,False,False,button,ghost
+colourRepair,button,repairCancel,Cancel,1,False,False,False,button,ghost
+Colour repair suggestions,button,[data-suggest-colour],Preview #0B1B30 0 required problems resolved; 0 introduced,3,False,False,False,button,repair-suggestion
+advanced sample / document,a,#main-content | Skip to main content,Skip to main content,1,False,False,False,,sample-skip
+advanced sample / header,a,#home | Logo My Project,Logo My Project,1,False,False,False,,sample-brand
+advanced sample / header,a,#home | Home,Home,2,False,False,False,,
+advanced sample / header,a,#about | About,About,2,False,False,False,,
+advanced sample / header,a,#design-process | Process,Process,2,False,False,False,,
+advanced sample / header,a,#services | Lessons,Lessons,2,False,False,False,,
+advanced sample / header,a,#resources | Resources,Resources,2,False,False,False,,
+advanced sample / header,a,#contact | Contact,Contact,2,False,False,False,,
+advanced sample / header,summary,Menu,Menu,1,False,True,False,,
+advanced sample / home,a,#services | Find your first lesson,Find your first lesson,1,False,False,False,,ds-button ds-button--primary
+advanced sample / home,a,#grid-lab | Explore the live grid ↘,Explore the live grid ↘,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / about,a,#services | Browse the lessons,Browse the lessons,1,False,False,False,,ds-button ds-button--primary
+advanced sample / about,a,#design-process | Plan before the palette,Plan before the palette,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / design-process,a,#sample-plan-choose | Browse the lesson choices →,Browse the lesson choices →,1,False,False,False,,
+advanced sample / design-process,a,#sample-plan-review | Choose a lesson and review →,Choose a lesson and review →,1,False,False,False,,
+advanced sample / design-process,a,#sample-plan-discover | ← Back to discover,← Back to discover,1,False,False,False,,
+advanced sample / design-process,a,#sample-plan-discover | Restart the task,Restart the task,1,False,False,False,,
+advanced sample / design-process,a,#colour-lab | Give colours a purpose,Give colours a purpose,1,False,False,False,,ds-button ds-button--primary
+advanced sample / design-process,a,#services | Choose your next lesson,Choose your next lesson,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / services,a,#brief-lab | Write a project brief →,Write a project brief →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#ia-lab | Read the content map →,Read the content map →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#wireframe-lab | Explore the wireframe →,Explore the wireframe →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#prototype-lab | Try the prototype →,Try the prototype →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#colour-lab | Read the palette →,Read the palette →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#type-lab | Practise typography →,Practise typography →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#about | Start with structure →,Start with structure →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#grid-lab | Explore Grid and Flexbox →,Explore Grid and Flexbox →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#components | Explore the interface lab →,Explore the interface lab →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#resources | Review the field notes →,Review the field notes →,1,False,False,False,,ds-button ds-button--text
+advanced sample / services,a,#grid-lab | Start the layout exercise,Start the layout exercise,1,False,False,False,,ds-button ds-button--primary
+advanced sample / services,a,#resources | Browse the field notes,Browse the field notes,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / grid-lab,summary,See the grid recipe,See the grid recipe,1,False,True,False,,
+advanced sample / grid-lab,summary,See the Flexbox recipes,See the Flexbox recipes,1,False,True,False,,
+advanced sample / grid-lab,a,#type-lab | Explore type and colour,Explore type and colour,1,False,False,False,,ds-button ds-button--primary
+advanced sample / grid-lab,a,#resources | Check your layout,Check your layout,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / type-lab,a,#components | Explore component states,Explore component states,1,False,False,False,,ds-button ds-button--primary
+advanced sample / type-lab,a,#contact | Ask a design question,Ask a design question,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / resources,a,#getting-started | Read the guide,Read the guide,1,False,False,False,,
+advanced sample / resources,a,#working-together | See the checklist,See the checklist,1,False,False,False,,
+advanced sample / resources,a,#contact | Ask a question,Ask a question,1,False,False,False,,
+advanced sample / resources,summary,How do I use this field guide?,How do I use this field guide?,1,False,True,False,,
+advanced sample / resources,summary,What belongs in my review checklist?,What belongs in my review checklist?,1,False,True,False,,
+advanced sample / resources,summary,Can I learn from the exported page?,Can I learn from the exported page?,1,False,True,False,,
+advanced sample / resources,a,#contact | Bring a design question,Bring a design question,1,False,False,False,,ds-button ds-button--primary
+advanced sample / resources,a,#components | Explore the interface lab,Explore the interface lab,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / contact,button,Preview my question,Preview my question,1,False,False,False,submit,ds-button ds-button--primary
+advanced sample / contact,a,#services | Revisit the lessons,Revisit the lessons,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / components,button,Primary action,Primary action,1,False,False,False,button,ds-button ds-button--primary
+advanced sample / components,button,Secondary action,Secondary action,1,False,False,False,button,ds-button ds-button--secondary
+advanced sample / components,button,Accent action,Accent action,1,False,False,False,button,ds-button ds-button--accent
+advanced sample / components,button,Outline action,Outline action,1,False,False,False,button,ds-button ds-button--outline
+advanced sample / components,button,Text action,Text action,1,False,False,False,button,ds-button ds-button--text
+advanced sample / components,button,Continue,Continue,1,False,False,False,button,ds-button ds-button--primary sample-selected-action
+advanced sample / components,a,#contact | Ask a design question,Ask a design question,1,False,False,False,,ds-button ds-button--primary
+advanced sample / components,a,#grid-lab | Return to the grid,Return to the grid,1,False,False,False,,ds-button ds-button--secondary
+advanced sample / footer,a,#home | My Project,My Project,1,False,False,False,,footer-brand
+advanced sample / footer,a,#home | Home,Home,2,False,False,False,,
+advanced sample / footer,a,#about | About,About,2,False,False,False,,
+advanced sample / footer,a,#resources | Resources,Resources,2,False,False,False,,
+advanced sample / footer,a,#contact | Contact,Contact,2,False,False,False,,
+advanced sample / footer,a,#design-process | Design process,Design process,1,False,False,False,,
+advanced sample / footer,a,#brief-lab | Project brief,Project brief,1,False,False,False,,
+advanced sample / footer,a,#ia-lab | Information architecture,Information architecture,1,False,False,False,,
+advanced sample / footer,a,#wireframe-lab | Wireframing,Wireframing,1,False,False,False,,
+advanced sample / footer,a,#prototype-lab | Prototyping,Prototyping,1,False,False,False,,
+advanced sample / footer,a,#services | Lessons,Lessons,1,False,False,False,,
+advanced sample / footer,a,#lesson-brief | Brief lesson,Brief lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-architecture | Architecture lesson,Architecture lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-wireframe | Wireframe lesson,Wireframe lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-prototype | Prototype lesson,Prototype lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-colour | Colour lesson,Colour lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-typography | Typography lesson,Typography lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-structure | Structure lesson,Structure lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-layout | Layout lesson,Layout lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-components | Components lesson,Components lesson,1,False,False,False,,
+advanced sample / footer,a,#lesson-review | Review lesson,Review lesson,1,False,False,False,,
+advanced sample / footer,a,#grid-lab | Layout workshop,Layout workshop,1,False,False,False,,
+advanced sample / footer,a,#grid-example | CSS Grid,CSS Grid,1,False,False,False,,
+advanced sample / footer,a,#flex-lab | Flexbox,Flexbox,1,False,False,False,,
+advanced sample / footer,a,#layout-choice-title | Choosing a layout system,Choosing a layout system,1,False,False,False,,
+advanced sample / footer,a,#layout-comparison | Layout comparison,Layout comparison,1,False,False,False,,
+advanced sample / footer,a,#type-lab | Visual language,Visual language,1,False,False,False,,
+advanced sample / footer,a,#type-specimen | Typography,Typography,1,False,False,False,,
+advanced sample / footer,a,#colour-lab | Colour,Colour,1,False,False,False,,
+advanced sample / footer,a,#resource-library | Resource library,Resource library,1,False,False,False,,
+advanced sample / footer,a,#getting-started | Getting started,Getting started,1,False,False,False,,
+advanced sample / footer,a,#working-together | Review checklist,Review checklist,1,False,False,False,,
+advanced sample / footer,a,#learning-from-exports | Learning from exports,Learning from exports,1,False,False,False,,
+advanced sample / footer,a,#practice-tip | Practice tip,Practice tip,1,False,False,False,,
+advanced sample / footer,a,#components | Components,Components,1,False,False,False,,
+advanced sample / footer,a,#component-actions | Actions,Actions,1,False,False,False,,
+advanced sample / footer,a,#component-feedback | Feedback,Feedback,1,False,False,False,,
+advanced sample / footer,a,#component-progress | Progress and controls,Progress and controls,1,False,False,False,,
+advanced sample / footer,a,#footer | Footer,Footer,1,False,False,False,,
+advanced sample / footer,a,#top | Back to top ↑,Back to top ↑,1,False,False,False,,back-to-top
+basic sample / document,a,#main-content | Skip to main content,Skip to main content,1,False,False,False,,skip-link
+basic sample / header,a,#top | Logo My Project,Logo My Project,1,False,False,False,,brand
+basic sample / header,a,#home | Home,Home,2,False,False,False,,
+basic sample / header,a,#features | Components,Components,2,False,False,False,,
+basic sample / header,a,#lists | Layouts,Layouts,2,False,False,False,,
+basic sample / header,a,#signup | Forms,Forms,2,False,False,False,,
+basic sample / header,summary,Menu,Menu,1,False,True,False,,
+basic sample / home,a,#features | Explore components,Explore components,1,False,False,False,,button ds-button ds-button--primary
+basic sample / home,a,#lists | Compare layouts,Compare layouts,1,False,False,False,,button ds-button ds-button--secondary
+basic sample / features,a,#lists | Explore Grid layouts,Explore Grid layouts,1,False,False,False,,button ds-button ds-button--primary
+basic sample / features,a,#signup | Try the form controls,Try the form controls,1,False,False,False,,button ds-button ds-button--secondary
+basic sample / features,a,#list-collection | Explore the list cards →,Explore the list cards →,1,False,False,False,,
+basic sample / features,a,#list-workflow | See an ordered sequence →,See an ordered sequence →,1,False,False,False,,
+basic sample / features,summary,Does this disclosure need JavaScript?,Does this disclosure need JavaScript?,1,False,True,False,,
+basic sample / features,a,#list-terms | Review useful layout terms →,Review useful layout terms →,1,False,False,False,,
+basic sample / lists,a,#basic-layout | Profile row,Profile row,1,False,False,False,,
+basic sample / lists,a,#contact-form | Form controls,Form controls,1,False,False,False,,
+basic sample / lists,a,#signup | Try the form,Try the form,1,False,False,False,,button ds-button ds-button--primary
+basic sample / lists,a,#features | Revisit components,Revisit components,1,False,False,False,,button ds-button ds-button--secondary
+basic sample / signup,button,Submit demo form,Submit demo form,1,False,False,False,submit,button ds-button ds-button--primary
+basic sample / signup,a,#lists | Back to layouts,Back to layouts,1,False,False,False,,button ds-button ds-button--secondary
+basic sample / footer,a,#home | My Project,My Project,1,False,False,False,,footer-brand
+basic sample / footer,a,#home | Home,Home,1,False,False,False,,
+basic sample / footer,a,#features | Components,Components,2,False,False,False,,
+basic sample / footer,a,#lists | Layouts,Layouts,2,False,False,False,,
+basic sample / footer,a,#signup | Forms,Forms,2,False,False,False,,
+basic sample / footer,a,#basic-structure | Content card,Content card,1,False,False,False,,
+basic sample / footer,a,#basic-layout | Profile row,Profile row,1,False,False,False,,
+basic sample / footer,a,#basic-usability | FAQ disclosure,FAQ disclosure,1,False,False,False,,
+basic sample / footer,a,#cards-grid | Card grid,Card grid,1,False,False,False,,
+basic sample / footer,a,#list-collection | Unordered list,Unordered list,1,False,False,False,,
+basic sample / footer,a,#list-workflow | Ordered list,Ordered list,1,False,False,False,,
+basic sample / footer,a,#list-terms | Description list,Description list,1,False,False,False,,
+basic sample / footer,a,#sidebar-example-title | Content and sidebar,Content and sidebar,1,False,False,False,,
+basic sample / footer,a,#contact-form | Form controls,Form controls,1,False,False,False,,
+basic sample / footer,a,#form-options | Grouped choices,Grouped choices,1,False,False,False,,
+basic sample / footer,a,#basic-signup-note | Form feedback,Form feedback,1,False,False,False,,
+basic sample / footer,a,#top | Back to top ↑,Back to top ↑,1,False,False,False,,back-to-top
+Inspector: Basic connections,summary,"Example, rule and tokens","Example, rule and tokens",1,False,True,False,,
+Inspector: Basic connections,button,studyPick,Select in preview,1,False,True,False,button,
+Inspector: Basic connections,button,studyPreview,Show example,1,False,True,False,button,
+Inspector: Basic connections,button,studyCode,Find rule in CSS,1,False,True,False,button,
+Inspector: Basic connections,button,Configure,Configure,3,False,True,False,button,

@@ -76,8 +76,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
     return SEMANTIC_COLOUR_KEYS.includes(name.slice(2)) ? 'Semantic colours' : 'Interaction';
   };
 
-  const readTokens = () => {
-    const css = cssExport();
+  const readTokens = (css = cssExport()) => {
     const tokens = [];
     let scope = 'Light / base';
     for (const line of css.split('\n')) {

@@ -181,7 +181,7 @@
       document.getElementById('plan-use-sample').addEventListener('click', () => {
         const pages = samplePages(state.sampleMode);
         const alreadyApplied = currentPlan().pages === pages;
-        state.designProcess = normalize({ ...state.designProcess, pages, pageLinks: { basic: {}, advanced: {} }, showPlanned: false });
+        state.designProcess = normalize({ ...state.designProcess, pages, pageLinks: { ...currentPlan().pageLinks, [state.sampleMode]: {} }, showPlanned: false });
         apply();
         feedbackPages = pages;
         const groups = hierarchy(pages);

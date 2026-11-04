@@ -1,19 +1,136 @@
 # Architecture
 
+## Project identity and teaching model
+
+The public name is Web Design System Studio. The header, page title,
+footer, README and generated CSS attribution use it. Existing `DSStudio` APIs,
+DOM IDs, local-storage keys, JSON format and download filenames remain compatible.
+Historical audits and user-authored root sample snapshots retain their names.
+The workspace starts directly below the app header, without a separate branded
+hero/title or tagline. Build your design system is its primary heading, followed
+by the existing step/lesson/inspection guidance in normal foreground text.
+
+The preview includes a closed, static HTML/DOM/CSS introduction: HTML is parsed
+into node objects; valid nesting establishes tree relationships; CSS selectors
+match elements and declarations assign presentation/layout property values.
+It distinguishes CSS properties from DOM object properties and methods, with
+escaped HTML and a token-based CSS example. No imported content is executed.
+The explanation follows the WHATWG HTML/DOM and W3C Selectors/Cascade standards.
+
 ## Wizard configuration and centre lessons
 
-`studio-learning.js` registers last and reorganizes existing control nodes after
+`spacing-lesson.js` registers after studio learning/example connections, with
+`spacing-lesson.css` scoped to its single lesson. It replaces the short Spacing
+lesson with authored Understand/Try/Observe/Inspect/Reflect content populated from
+the current exports. It reads base token declarations via `dssReadTokens`, resolves
+only pixel values or the generator's fixed spacing multiplication syntax, and
+shows literal formulas rather than evaluating CSS or executing project data.
+All dynamic output enters through textContent; fixed section IDs select the
+actual opening HTML tag and CSS rules in Basic/Advanced. Basic's padding overrides
+are collected from the exported responsive section and matched with native
+matchMedia. The explanation also reports measured preview padding. This is a
+bounded reader for the authored samples, not a general CSS cascade interpreter.
+
+Its before/now comparison starts on lesson entry, can be rebased explicitly, and
+remains private session UI state with optional reflection text. Replacing the
+core state object on import/local load/reset invalidates both; explicit reset/
+import events also cover identical values. Updates coalesce through two microtasks
+so legacy import wrappers and the queued preview renderer settle before reading
+new values. Unchanged text nodes stay intact, preserving selection and focus.
+
+`syncResponsivePreview()` emits `preview:change` after measurement/readout updates;
+inspector layout changes call that same measurement function. The lesson listens
+to this and `inspector:change`, stage/disclosure entry and iframe load. It needs
+no extra render wrapper or independent resize observer. Preset, window and
+inspector width changes update the applicable padding rule without changing the
+comparison. Inspect actions keep complete-file generation and explicit language.
+Queued example selection is invalidated by subsequent navigation/code focus.
+
+An optional fixed `[data-stage-controls]` anchor in an authored lesson tells
+studio learning where its real control pane belongs on narrow screens. The
+`lesson:content` event refreshes placement after content initializes. For Spacing,
+the controls join Try; desktop restores the original sidebar placeholder. Control
+IDs, source routes and listeners are preserved, with no duplicate editors.
+
+App spacing is scoped to `.layout` in `learning-path.css`: 8px for small gaps,
+16px for normal gaps, 24px between groups and responsive 16–24px panel insets.
+Desktop wizard panes have a 32px gap, divider and 24px inset before each step,
+separating the builder introduction/navigation from editing. Fields, planning
+editors, summaries, lesson cards and inspector controls reuse that rhythm.
+These app-only values do not enter generated website CSS or saved design data.
+
+`studio-learning.js` reorganizes existing control nodes after
 the other modules initialize. It preserves their IDs, event handlers and state
 paths while placing font, responsive, layout and accessibility settings inside
 the twelve-step wizard. Hidden compatibility nodes retain legacy module bindings.
-The main pane adds fifteen lessons with token relationships, exercises and
-configuration shortcuts alongside the responsive preview. Interactive comparison
-and experiment controls remain.
+The centre presents the current short lesson, its task and contextual output
+actions; deeper material lives in More about disclosures. Workflow, catalogue
+and states remain secondary references rather than a second numbered curriculum.
 
-The journey exposes `dssShowWizardStep()` for catalogue/lesson navigation and
-derives its progress from twelve explicit step labels. Navigation alone does not
-mark previous steps complete. Each wizard step links to a related centre lesson;
-startup expands only Responsive page preview.
+`DSStudio.stages` in `studio-registry.js` defines the twelve stable stage IDs,
+labels, phases, lesson IDs, tasks and CSS declaration targets. The existing
+`dssShowWizardStep(n, focus)` updates controls, location and `DSStudio.activeStage`,
+then emits `stage:change`. `studio-learning.js` selects the matching lesson and
+focuses its heading on deliberate navigation. Startup expands only the preview;
+navigation never marks completion. The step list is a collapsed Choose a step
+disclosure. Numeric indices and existing control/lesson IDs remain compatible.
+
+At 900px and below, existing control panes move directly after their lesson.
+Comment placeholders restore them to the sidebar at wider widths; IDs, bindings
+and values are unchanged. Previous/Next moves after the output on narrow screens.
+The preview iframe never moves: it remains first in the centre above the lessons,
+preserving its browsing context. Other sections remain visible as collapsed
+disclosures. `DSStudio.activateLesson` lets existing fragment and laboratory
+routes select a collapsed lesson before revealing the target.
+Ordinary edits preserve control focus and do not invoke stage navigation.
+
+`learning-path.js` now supplies contextual example connections only. Its former
+beginner task selector, progress, entry button and workspace bar are removed.
+The four useful tasks are in Buttons, Spacing, Responsive and Deliver. Basic and
+Advanced remain sample choices beside the page; navigation does not switch them.
+The selected example and picking flag are session UI state, excluded from project
+JSON and generated files. A step change selects its example and frames a matching
+page target where available without moving keyboard focus.
+
+`DSStudio.inspector.show()` selects output in the inspector to the right of the centre,
+preserving language/section by default. Explicit callers select complete CSS,
+HTML or project JSON and an optional search string. JSON always uses the complete
+project generator. Legacy centre code controls remain hidden to preserve existing
+core bindings; the visible centre output actions all use the shared inspector.
+The inspector is one native `details` element with a `summary` heading, matching
+the preview's disclosure arrow in open and closed states. It starts collapsed
+above the preview, with its code body hidden by the browser and its column
+released. `setCollapsed` synchronizes the native open property, dock/workspace
+classes and the optional internal Collapse code control. Native toggle events
+update the same path; contextual Inspect actions open it through the existing
+API. Collapsing with focus inside returns focus to its summary and brings it into view.
+Visibility stays transient and is excluded from project JSON. Sample
+tabs label the preview panel, separately
+from the inspector's three language tabs. Sticky offsets now use the header alone.
+
+Readiness acknowledgements clear after project changes, reset, imports or local
+project loads, including loading identical data. Practice progress was removed.
+Header and Deliver project JSON downloads share filename and payload policy.
+
+The inspector emits `inspector:change` after refresh. The new module subscribes
+instead of adding another render wrapper. Fixed example metadata maps authored
+element IDs/selectors to tokens; rule text and theme-scoped declaration values
+come from the current export/catalogue. Configure uses `dssConfigureToken()`.
+Study-section changes update the corresponding example. Formula tokens retain
+their exported `calc()` expressions rather than pretending to be resolved pixels.
+
+Preview selection is explicitly enabled, Basic-only and consumed once. The
+preview's existing click handler emits `preview:example` for fixed example IDs
+instead of executing that click's normal action. Escape in the preview emits a
+cancel event; parent Escape, stopping selection and mode changes also cancel it.
+The example selector supplies a keyboard alternative. No teaching controls,
+scripts or selection state are added to exported pages.
+
+`docs/LEARNER_TRIAL.md` contains the unrun participant protocol and observation
+sheet. Automated checks are not learner-study results. The growing browser suite
+has a 90-second virtual-time budget and a
+240-second process timeout; the prior standard timeout was exhausted during the
+product review even though its unchanged rerun passed.
 
 `token-catalogue.js` reads actual exported declarations through `dssReadTokens()`.
 Its `dssTokenSource(row)` maps each row to a wizard step/control and records
@@ -102,11 +219,10 @@ Partial invalid hex input does not change state. All controls use
 the shared apply/render/autosave paths and labels render through DOM text APIs.
 
 The twelve wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,
-Typography, Components, Buttons, Layout, Responsive, Accessibility and Deliver. Existing control
-and centre IDs remain stable; numeric wizard indices and token-source routes move
-by three after the old first stage. Four new native centre disclosures follow the
-preview hub, bringing the centre navigation to sixteen sections. Startup still
-expands only the responsive preview; navigation does not imply task completion.
+Typography, Semantic colours, Buttons, Spacing and surfaces, Responsive layout,
+Accessibility and Deliver. Existing control and centre IDs remain stable; the
+shared stage registry keeps their routes aligned. Planning artifacts appear in
+the selected lesson; other stage sections are hidden until selected.
 
 The module's initializer binds planning inputs through the existing `apply()` /
 `renderCode()` / autosave paths. It wraps the CSS generator for shared artifact
@@ -131,11 +247,9 @@ their existing background roles; the studio-only token is not exported.
 
 ## Live CSS/HTML Inspector and sample page
 
-Basic includes a collapsible Start here guide with three exercises: edit an H1
-in downloaded HTML, change live spacing, and compare the preview width presets.
-The inspector remains read-only. The guide explains spacing tokens and introduces
-normal flow, responsive Header navigation, the Flexbox section and Grid/lists.
-The hero also demonstrates a two-column Grid layout.
+Basic teaching tasks are integrated into the wizard. The inspector remains
+read-only; download complete files to edit their content. The hero demonstrates
+a two-column Grid layout, with Flexbox, Grid and form examples further down.
 Generated Basic HTML is indented and its page CSS uses one declaration per line;
 authored SECTION comments label Page basics, Header, Hero, Skills, Toolkit, Form
 and Footer. Formatting operates on escaped generated strings without execution.
@@ -152,10 +266,9 @@ authored section comments; CSS excerpts also include shared page rules and
 responsive queries, and explicitly require the full foundation/component CSS.
 Page basics also shows the live spacing token definitions for its exercise.
 Copy uses visible code; inspector downloads and Deliver always use complete
-exports. Advanced hides the guide/filter and shows complete files. Returning to
+exports. Advanced hides the section filter and shows complete files. Returning to
 Basic restores the view selection. Clipboard feedback checks mode, language and
-section after awaiting the clipboard. The guide scrolls separately from its
-selector; stacked docks grow with controls and keep a bounded code viewport.
+section after awaiting the clipboard. The inspector keeps a bounded code viewport.
 
 `brand-palette.js` loads after the registry and before core state. Its defaults
 factory uses the core's example seed when `DEFAULT` is constructed. Each project
@@ -184,15 +297,27 @@ keyboard focus. It runs on every project refresh, including manual role edits,
 import and reset. Its Edit shortcut opens/focuses the guided editor instead of
 resetting project data. Core `renderBrand()` delegates to this module's renderer.
 
-The studio chrome uses the full window width. `layout.css` sets fixed desktop
-tracks through `--studio-controls-width` (310px) and `--studio-inspector-width`
-(380px), with the centre consuming the remaining space via `minmax(0, 1fr)`.
-Shell gutters also align the top bar with the workspace. At 1280px and below,
-the inspector stacks above the centre; at 900px and below, the left pane stacks
-as well. Existing sticky behaviour remains on desktop. These layout rules apply
-to the studio and do not change the generated sample site's container width.
+The studio chrome uses the full window width. `learning-path.css` overrides the
+older fixed-track rules with a desktop three-column layout above 1280px. The
+builder takes 25% of available width in either inspector state. Centre and
+inspector split the remainder 2:1 after their gap, capping the inspector at 25%
+of the desktop workspace and giving the centre approximately 50%. The inspector
+precedes `main` in DOM order; explicit grid placement
+puts it above the preview when closed and to the right when open, with sticky
+positioning on desktop. Its native disclosure heading stays available.
+The outer layout stays a 1:3 grid above 900px whether code is open or closed.
+With code collapsed, `is-inspector-collapsed` switches `studio-right` to a single
+track. The closed inspector body takes
+no space and supplies no keyboard targets; its visible compact bar spans the
+remaining workspace above the preview. The iframe is not moved or replaced;
+its existing resize observer updates Fluid width while retaining browsing state.
+At <=1280px the inspector stacks below the centre. At <=900px the entire layout
+stacks and controls join their lesson. The preview remains first and expanded
+on startup, with other centre sections collapsed; stage activation opens its
+matching lesson without moving nodes. Shell gutters align the top bar with the
+workspace. These rules do not affect generated website container widths.
 
-`css-dock.js` selects `cssExport()` or `htmlExport()` for its shared code panel,
+`css-dock.js` selects `cssExport()`, `htmlExport()` or `projectJson()` for its code panel,
 copy action and download. Its language tabs use arrow/Home/End keys, managed tab
 stops and panel labelling; selection is independent of the centre export tabs.
 Settings changes refresh the active language through the existing `renderCode` hook.
@@ -354,6 +479,17 @@ linksOnly plus a fixed parentIds allowlist. Parent groups occupy responsive Grid
 columns, with child links stacked vertically in semantic nested lists.
 The Sitemap heading is left-aligned. The capped-width column grid is centred,
 with each group's heading and vertically stacked sublinks centred in its column.
+The map is wrapped in native `details#footer-sitemap`, initially closed, with
+`summary#sitemap-toggle` containing the existing `#sitemap-title` heading. The
+inner `nav#sitemap` and its aria-labelledby relationship/destinations are retained.
+The expanded list markup, grid and child alignment are unchanged. The closed
+state explicitly hides only the inner navigation, avoiding residual map geometry;
+the main footer navigation and bottom row stay visible. Summary size/focus reuse
+the shared spacing, heading weight and button focus tokens. Native fragments to
+the inner map reveal the ancestor in standalone exports; preview fragment
+handling already opens ancestor disclosures. Existing keyed preview capture
+preserves open/closed state and summary focus during palette/theme updates,
+without storing the disclosure in project JSON or adding exported scripts.
 In Basic, unlinked entries and children of omitted parents are not promoted. Planning data remains unchanged;
 empty filtered maps explain that no linked sections are available. Copyright and
 Back to top form the bottom row, and both headers expose `#top`.

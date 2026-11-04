@@ -13,8 +13,20 @@
       function wire(doc) {
         if (wired.has(doc)) return;
         wired.add(doc);
+        doc.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && DSStudio.learning?.picking) DSStudio.emit('preview:cancel');
+        });
         // Fragment URLs in srcdoc otherwise resolve against the studio's URL.
         doc.addEventListener('click', event => {
+          if (state.sampleMode === 'basic' && DSStudio.learning?.picking) {
+            const action = event.target.closest('.ds-button--primary');
+            const example = action || event.target.closest('#basic-layout, #basic-usability, #cards-grid, #contact-form, #home, #features, #lists, #signup, #top, #footer');
+            if (example) {
+              event.preventDefault();
+              DSStudio.emit('preview:example', { id: example.id, example: action ? 'action' : null });
+              return;
+            }
+          }
           const anchor = event.target.closest('a[href]');
           const href = anchor?.getAttribute('href');
           if (!href?.startsWith('#')) return;
