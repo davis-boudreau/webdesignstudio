@@ -76,18 +76,136 @@ DSStudio.register({
       lesson.innerHTML = `<h3>${title}</h3><p>${explanation}</p><p><code>${chain}</code></p><p><strong>Practice:</strong> ${exercise}</p><button type="button" class="ghost" data-configure-step="${step}">Configure in wizard · step ${step + 1}</button>`;
       get(id).querySelector(':scope > .panel').prepend(lesson);
     }
-    const topics = ['process-brief','process-ia','process-wireframe','process-prototype','brandPalette','studio-section-2','studio-section-1','buttonDesignLab','studio-section-3','responsiveDesign','stateExplorer','studio-section-6'];
-    topics.forEach((id, step) => {
-      const button = document.createElement('button');
-      button.type = 'button'; button.className = 'ghost';
-      button.textContent = 'Explore the centre lesson';
-      button.addEventListener('click', () => window.dssRevealSection(id));
-      pane(step).append(button);
+    const main = get('main'), preview = get('studio-section-4');
+    const sections = [...main.querySelectorAll(':scope > .studio-section')];
+    const focusHeading = heading => {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+      heading.closest('.studio-section').scrollIntoView({ block: 'start', behavior: 'instant' });
+    };
+    // Short lesson first; detailed laboratories stay available in-place.
+    for (const stage of DSStudio.stages) {
+      const section = get(stage.lesson), panel = section.querySelector(':scope > .panel');
+      const lesson = panel.querySelector(':scope > .studio-lesson');
+      section.dataset.stage = String(stage.index);
+      const heading = section.querySelector(':scope > summary h2');
+      heading.textContent = `Step ${stage.index + 1} of ${DSStudio.stages.length}: ${stage.label}`;
+      pane(stage.index).querySelector('.journey-stage-title').textContent = stage.label;
+      document.querySelector(`[data-journey-step="${stage.index}"]`).textContent = `${stage.index + 1} · ${stage.label}`;
+      const task = document.createElement('p'); task.className = 'step-task';
+      task.textContent = stage.task;
+      lesson.replaceChildren(lesson.querySelector('h3'), lesson.querySelector('p'), task);
+      const actions = document.createElement('div'); actions.className = 'button-row step-output';
+      const inspect = (label, language, find = '') => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'ghost'; button.textContent = label;
+        button.dataset.inspect = language;
+        button.addEventListener('click', () => DSStudio.inspector.show({ language, section: 'all', find }));
+        actions.append(button);
+      };
+      if (stage.index < 4) inspect('Inspect project data', 'json');
+      if (stage.index === 1) inspect('Inspect footer HTML', 'html', 'website-footer');
+      if (stage.index >= 4) {
+        inspect('Inspect CSS', 'css', stage.find);
+        inspect('Inspect HTML', 'html', stage.index === 7 ? 'ds-button--primary' : '<main');
+      }
+      lesson.append(actions);
+      if (stage.index >= 4) {
+        const more = document.createElement('details'); more.className = 'step-more';
+        const summary = document.createElement('summary'); summary.textContent = `More about ${stage.label.toLowerCase()}`;
+        more.append(summary);
+        for (const child of [...panel.children]) if (child !== lesson) more.append(child);
+        panel.append(more);
+      }
+    }
+    // Group headings describe the one step list; they are not another menu.
+    let previousPhase = '';
+    for (const stage of DSStudio.stages) {
+      if (stage.phase !== previousPhase) {
+        const title = document.createElement('span'); title.className = 'journey-phase'; title.textContent = stage.phase;
+        document.querySelector(`[data-journey-step="${stage.index}"]`).before(title);
+        previousPhase = stage.phase;
+      }
+    }
+    for (const section of sections) {
+      if (!section.dataset.stage) {
+        const heading = section.querySelector(':scope > summary h2');
+        if (heading) heading.textContent = heading.textContent.replace(/^\d+\.\s*/, '');
+      }
+    }
+    // Narrow layouts put the real controls immediately after the short lesson,
+    // preserving nodes/listeners rather than creating a second set of editors.
+    const narrow = matchMedia('(max-width: 900px)');
+    const stepList = document.createElement('details'); stepList.className = 'journey-step-list';
+    const stepSummary = document.createElement('summary'); stepSummary.textContent = 'Choose a step';
+    const stepButtons = document.querySelector('.journey-steps');
+    stepButtons.before(stepList); stepList.append(stepSummary, stepButtons);
+    stepList.before(get('jProgress'));
+    const navigation = document.querySelector('.journey-actions');
+    const navigationHome = document.createComment('wizard navigation'); navigation.before(navigationHome);
+    const controlHomes = DSStudio.stages.map(stage => {
+      const controls = pane(stage.index), home = document.createComment(`controls: ${stage.id}`);
+      controls.before(home);
+      return home;
     });
+    const placeControls = () => {
+      for (const stage of DSStudio.stages) {
+        const controls = pane(stage.index);
+        const destination = narrow.matches ? get(stage.lesson).querySelector('[data-stage-controls]') || get(stage.lesson).querySelector('.studio-lesson') : controlHomes[stage.index];
+        // Avoid reinserting correctly placed nodes: even a no-op DOM move can
+        // discard focus during a delayed resize notification.
+        if (destination.nextSibling !== controls) destination.after(controls);
+      }
+      if (narrow.matches) {
+        const right = document.querySelector('.studio-right');
+        if (navigation.parentElement !== right) right.append(navigation);
+      } else if (navigationHome.nextSibling !== navigation) navigationHome.after(navigation);
+    };
+    placeControls();
+    narrow.addEventListener('change', placeControls);
+    DSStudio.on('lesson:content', placeControls);
+    const activate = ({ stage, focus, initial = false }) => {
+      // A step can be selected before a queued media-query change is delivered.
+      // Place the existing controls using the current viewport on every route.
+      placeControls();
+      stepList.open = false;
+      for (const section of sections) {
+        const active = !initial && section.id === stage.lesson;
+        section.hidden = false;
+        if (section !== preview) section.open = active;
+      }
+      const section = get(stage.lesson);
+      if (focus) focusHeading(section.querySelector(':scope > summary h2'));
+    };
+    DSStudio.on('stage:change', activate);
+    DSStudio.activateLesson = (id, focus = false) => {
+      const target = get(id), section = target?.closest('.studio-section');
+      if (!section || section === preview) return;
+      const stage = DSStudio.stages.find(item => item.lesson === section.id);
+      if (stage && DSStudio.activeStage !== stage.index) window.dssShowWizardStep(stage.index, focus);
+      section.hidden = false;
+    };
+    // The lesson and controls are already connected; remove reciprocal navigation.
+    document.querySelectorAll('[data-configure-step]').forEach(button => button.remove());
+    for (const stage of DSStudio.stages) {
+      const controls = pane(stage.index), section = get(stage.lesson);
+      const more = section.querySelector('.step-more');
+      if (more) controls.querySelectorAll(':scope > .build-guide, :scope > .journey-tip').forEach(note => more.append(note));
+      else controls.querySelectorAll(':scope > .build-guide').forEach(note => note.remove());
+      if (stage.index >= 4) controls.querySelector(':scope > p.help')?.remove();
+    }
+    // Secondary references are deliberate destinations and have a clear return.
+    for (const section of sections.filter(item => !item.dataset.stage && item !== preview)) {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'ghost';
+      button.textContent = 'Return to current step';
+      button.addEventListener('click', () => window.dssShowWizardStep(DSStudio.activeStage));
+      section.querySelector('.panel').prepend(button);
+    }
+    activate({ stage: DSStudio.stages[DSStudio.activeStage || 0], focus: false, initial: true });
     window.dssConfigureToken = row => {
       const source = window.dssTokenSource(row);
       if (!source) return;
-      window.dssShowWizardStep(source.step);
+      window.dssShowWizardStep(source.step, false);
       if (source.semantic || source.variant) {
         state.theme = row.scope === 'Dark' ? 'dark' : 'light';
         if (source.semantic) get('jSemanticRole').value = source.semantic;
@@ -104,14 +222,6 @@ DSStudio.register({
       control.focus();
       announce(`${row.name}: ${source.mode}. Configure its source in wizard step ${source.step + 1}.`);
     };
-    document.addEventListener('click', event => {
-      const button = event.target.closest('[data-configure-step]');
-      if (!button) return;
-      window.dssShowWizardStep(Number(button.dataset.configureStep));
-      const title = pane(button.dataset.configureStep).querySelector('h3');
-      title.tabIndex = -1; title.focus();
-      title.scrollIntoView({ block: 'center', behavior: 'instant' });
-    });
     window.dssUpdateTokenCatalogue();
   }
 });

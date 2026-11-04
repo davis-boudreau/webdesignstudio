@@ -81,16 +81,16 @@
     apply();
     update();
   });
-  el('clampCopy').addEventListener('click', () => {
+  const copyStatus = document.createElement('p');
+  copyStatus.className = 'help'; copyStatus.id = 'clampCopyStatus'; copyStatus.setAttribute('role', 'status');
+  el('clampCopy').after(copyStatus);
+  el('clampCopy').addEventListener('click', async () => {
     const value = el('clampCss').textContent;
-    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(value).catch(() => {});
-    else {
-      const ta = document.createElement('textarea');
-      ta.value = value;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
+    try {
+      await navigator.clipboard.writeText(value);
+      copyStatus.textContent = 'CSS copied.';
+    } catch {
+      copyStatus.textContent = 'Clipboard unavailable. Select the CSS above and copy it manually.';
     }
   });
   const original = renderType;

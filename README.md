@@ -1,4 +1,4 @@
-# Design System Studio
+# Web Design System Studio
 
 A dependency-free, browser-based studio for building accessible design systems: brand palettes, OKLCH colour exploration, fluid typography (`clamp()`) calculator, button component designer, state explorer, and exportable CSS / tokens / HTML.
 
@@ -6,36 +6,74 @@ No build step or framework. System fonts work offline by default. Optional Googl
 Fonts mode loads stylesheets and fonts from Google's CDN; project files and
 browser-saved projects stay local.
 
-Start with **First steps with Basic** for four short exercises: change an action
-colour, adjust reusable spacing, test a narrow layout, and export/reopen the page.
-This selects Basic and opens existing controls without resetting your design.
-Exercise progress is self-reported for the current session, independently of
-saved project data. The full twelve-stage project journey remains available.
+**Change a design decision, see it on the page, then follow it into HTML and CSS.**
 
-The sticky **Build / Preview / Code / Beginner steps** shortcuts keep each part
-of the workspace reachable on smaller screens. Code retains the selected language
-and study section. In Basic, **Example, rule and tokens** connects an example to
-its exact generated CSS rule, live token declarations and Configure actions.
-**Find rule in CSS** opens the complete stylesheet so shared rules are available.
-You can select an example from a list or turn on **Select in preview**; its next
-example click is inspected instead of performing the normal action. Selection
-ends after that click, on Escape, or when switching to Advanced.
+An open-source workshop for understanding how semantic HTML, design decisions
+and CSS work together. The browser parses HTML into a DOM tree of node objects;
+element nesting establishes parent, child and sibling relationships. CSS
+selectors match elements and rules assign property values that control their
+presentation and layout. The cascade and inheritance determine the resulting
+styles. Design tokens give reusable names to values used by those rules.
 
-The learner trial is prepared in [LEARNER_TRIAL.md](docs/LEARNER_TRIAL.md), with
-tasks and an observation sheet. No participant trial has been run yet.
+For example, a section can contain a heading and a paragraph. Those two children
+are siblings; `.card > p` selects paragraph children of an element labelled
+`class="card"`. In `color: var(--text)`, `color` is the property and the token
+supplies its value. The preview's **How HTML, the DOM and CSS work together**
+note explains this relationship alongside the live inspector.
 
-The studio fills the window. On desktop, the controls stay 310 px wide and the
-inspector stays 380 px wide while the centre pane takes the remaining space.
-The inspector stacks at 1280 px and below; all panes stack at 900 px and below.
-On a normal load, only **1. Responsive page preview** is expanded in the centre
-pane, in Fluid mode. All other centre sections start collapsed. The preview stays
-synchronized with wizard edits even when you collapse it.
-The **1–16 section menu** sits above the responsive preview and stays pinned below
-the app header while you browse the centre lessons, including on phones. Scroll
-the menu horizontally when needed; keyboard focus reveals offscreen links.
+Start in **Build your design system**. One twelve-step wizard selects both the
+controls and their matching centre lesson. Each step explains a decision, offers
+one task and connects its result to actual output. Use **Previous step** and the
+named **Next** action, or open **Choose a step** to jump directly. Planning,
+foundations, application and review are phases of this same journey.
+The app opens directly into the workspace; its introduction lives beneath
+Build your design system, with the project name retained in the app header.
 
-The **Live CSS/HTML Inspector** has **Advanced / Basic** sample tabs above its
-independent **CSS / HTML** language tabs. Advanced keeps the full field guide.
+The page preview stays visible while you work. **Basic / Advanced** chooses the
+sample beside it. **Inspect CSS**, **Inspect HTML** and planning's **Inspect
+project data** open the live inspector and select the relevant output. It starts
+collapsed to a visible **Live CSS/HTML Inspector** heading above the preview.
+Click its disclosure arrow or heading to expand/collapse, just like Responsive
+page preview. The expanded right-hand inspector uses at most 25% of the desktop workspace; collapsing
+releases its column.
+reopening preserves the language and section. Both code files and project JSON
+remain complete downloads. Deeper theory and labs
+are under **More about…**, with the workflow, catalogue and states available in
+**Reference tools**. Navigation records your place, not completion.
+
+Above 900 px, the builder uses 25% of available workspace in both inspector
+states. With code collapsed, the preview/lessons use the rest. Opening code above
+1280 px restores three columns: approximately 25% builder, 50% centre and 25%
+inspector after accounting for gutters.
+The centre starts with
+**Responsive page preview** expanded at the top and all other sections collapsed.
+Choosing a wizard step opens its lesson below the preview. At 1280 px and below,
+the inspector stacks after the centre. At 900 px and below, the actual controls
+join the selected lesson beneath its explanation. Previous/Next follows the output. The
+preview iframe is retained across stage changes, preserving its document and
+browsing state. Ordinary edits update results without moving keyboard focus.
+
+In Basic, **Example, rule and tokens** connects examples to exported rules and
+live token declarations. Configure selects the token's source step and control.
+**Find rule in CSS** opens the complete stylesheet including shared rules. The
+optional **Select in preview** mode inspects one example click, then restores
+normal actions; Escape and switching samples also cancel selection.
+
+**Step 9: Spacing and surfaces** includes the first tutorial driven by your own
+design: Understand, Try, Observe, Inspect and Reflect. It compares a session
+starting point with current exported spacing values, shows the actual sample
+section and links to complete HTML/CSS. Basic's responsive overrides are included:
+its section padding can use eight, twelve or sixteen units depending on preview
+width. Grid gap is explained as a separate setting. On narrow screens, the real
+spacing controls appear within Try. Comparison history and optional reflection
+notes stay in this tab; resetting or loading a project clears them, and they do
+not enter saved project JSON or website exports. No completion score is inferred.
+
+The learner trial is prepared in [LEARNER_TRIAL.md](docs/LEARNER_TRIAL.md).
+No participant trial has been run yet.
+
+The inspector offers independent **CSS / HTML / Project JSON** language tabs.
+Advanced keeps the full field guide.
 Basic is a compact UI essentials showcase for a first web-development course.
 Home introduces a two-CTA hero and captioned responsive image. Components uses
 Flexbox to demonstrate content cards, an avatar/text profile row and a native
@@ -51,6 +89,9 @@ reflow on narrow screens. Previous complete Basic inventories resolve to the sho
 without overwriting saved planning data, and legacy labels remain safe aliases.
 Advanced uses the same classic footer layout with its own main navigation and
 complete sitemap. Both have a left-aligned Sitemap title and centred link groups.
+The Sitemap heading is a native accordion, initially collapsed. Select its arrow
+or heading to reveal the same column layout; footer navigation and Back to top
+remain visible. The disclosure also works in downloaded pages without JavaScript.
 
 The selected sample drives the live preview, code panels, copy actions and all
 HTML/CSS downloads. Save the matching `index.html` and `tokens.css` together.
@@ -139,17 +180,17 @@ system fonts work offline. Optional Google Fonts still require their CDN. Forms
 are demonstrations with no message delivery.
 
 
-The **left pane configures** the system through twelve wizard steps: Project Brief,
-Information Architecture, Wireframing, Prototyping, Palette, Typography, Components,
-Buttons, Layout, Responsive, Accessibility and Deliver.
+The wizard configures the system through twelve steps: Brief, Architecture,
+Wireframe, Prototype, Palette, Typography, Semantic colours, Buttons,
+Spacing and surfaces, Responsive layout, Accessibility and Deliver.
 Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
-component examples, token relationships and practice exercises; each section
-links to its wizard settings, and each step links back to a centre lesson.
+component examples, token relationships and practice tasks. Selecting a step
+opens its matching lesson automatically, with contextual inspection actions.
 Interactive labs remain available for experiments and contrast review.
 
 The four planning lessons come before palette design. Record audience, main task,
-scope, success signal and constraints. Write a content map with up to twelve
+scope, success signal and constraints. Write a content map with up to 64
 entries (`Lessons > Layout` creates a child), compare split/stacked wireframes,
 and follow a linked Discover, Choose and Review prototype. Save observations and
 revise before styling. The prototype is a low-detail navigation exercise with no

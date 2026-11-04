@@ -1,0 +1,17 @@
+/* Tutorial UI only; generated website files keep their own spacing tokens. */
+.spacing-lesson { display: grid; gap: var(--studio-section-space); }
+.spacing-lesson > h3, .spacing-lesson h4, .spacing-lesson p { margin: 0; }
+.spacing-lesson > section { display: grid; gap: var(--studio-space-small); min-width: 0; }
+.spacing-lesson .button-row { display: flex; flex-wrap: wrap; gap: var(--studio-space-small); }
+.spacing-lesson button { font: inherit; min-height: 44px; max-width: 100%; padding: 8px 12px; white-space: normal; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--surface); cursor: pointer; }
+.spacing-lesson .step-task { margin: 0; }
+.spacing-lesson .spacing-table-scroll { overflow-x: auto; max-width: 100%; }
+.spacing-lesson table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.spacing-lesson caption { text-align: left; font-weight: 600; padding-bottom: var(--studio-space-small); }
+.spacing-lesson th, .spacing-lesson td { padding: var(--studio-space-small); border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.spacing-lesson th:first-child { overflow-wrap: anywhere; }
+.spacing-lesson pre { min-width: 0; max-width: 100%; max-height: 240px; margin: 0; padding: var(--studio-space); overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: .8rem; }
+.spacing-lesson details { margin: 0; padding: var(--studio-space-small) var(--studio-space); }
+.spacing-lesson summary { min-height: 44px; align-content: center; }
+.spacing-lesson textarea { resize: vertical; }
+.spacing-lesson [data-journey-pane] { margin-block: var(--studio-space); }

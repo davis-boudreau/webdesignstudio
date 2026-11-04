@@ -5,9 +5,9 @@ Status: ready to run. No participants have been observed yet.
 ## Purpose
 
 Find out whether a beginner can connect a control, a visible example and its
-generated rule, then export and reopen a small website. The product's four
-exercises support the trial; clicking "I tried this" is self-report, not proof
-that a task was understood or completed.
+generated rule, then export and reopen a small website. The integrated wizard
+tasks support the trial; navigation and readiness
+acknowledgements are not proof that a task was understood or completed.
 
 ## Session setup
 
@@ -25,8 +25,8 @@ that a task was understood or completed.
 
 | Task to give the learner | What to observe | Completion evidence |
 | --- | --- | --- |
-| Open First steps with Basic and change the primary action colour. | Can they identify the actual action control and compare it with the preview? Do they review text contrast? | The primary action changes; they find its component colour token and can explain its purpose. |
-| Make the page spacing more generous. Explain why several gaps change. | Do they find Layout, use the spacing unit and connect it to derived values? | The preview and rule agree; the learner distinguishes the base unit from a multiple. |
+| Select the Basic sample and change the primary action colour. | Can they identify the actual action control and compare it with the preview? Do they review text contrast? | The primary action changes; they find its component colour token and can explain its purpose. |
+| Make the page spacing more generous. Explain why several gaps change. | Do they use the live Spacing lesson's prediction, before/now comparison, page observation and code connections? Can they distinguish the independent grid gap and Basic's responsive padding multiples? | The preview and active rule agree; the learner explains the foundation/multiple relationship and why viewport width can change the applied multiple. |
 | Check the hero at a phone width. Explain what changes the column layout. | Can they reach the preview and code without losing context? Do they confuse presets with saved breakpoints? | They compare 390 px/Fluid and locate the hero rule and responsive override. |
 | Study a component of your choice and find its rule and controlling tokens. | Do the example selector, optional preview selection and Configure actions make sense? | They connect a real element to an exact rule, token value and source control. |
 | Rename a sitemap entry and explain the result. | Do they expect a new page or a renamed body heading? Can they locate its footer link or planned status? | They correctly explain that Architecture changes the plan/navigation and does not generate a body section. |

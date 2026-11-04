@@ -4,9 +4,532 @@ Updated: 3 November 2026 (America/Halifax).
 
 ## Current objective
 
-Analyse the complete studio workflow and actions, and define a consistent process
-across wizard stages, centre lessons, preview and code. Runtime changes are not
-part of this analysis request.
+Simplify Build your design system into one wizard with integrated centre lessons,
+guided by: Change a design decision, see it on the page, then follow it into HTML
+and CSS. The inspector uses the same native disclosure arrow as the preview,
+keeping the builder at 25% in either inspector state; expanded code
+returns on the right capped at 25% of desktop workspace width.
+The first tutorial now uses the learner's spacing settings and actual output.
+Next: observe learners using it before extending the pattern to other stages;
+complete manual accessibility/cross-browser checks.
+
+## Footer Sitemap accordion (3 November 2026)
+
+- Wrapped the shared Basic/Advanced Sitemap in native details/summary, initially
+  collapsed, with a visible arrow and heading. Preserved the existing centred
+  responsive columns, stacked child links, filtering/planned entries, navigation
+  destinations, footer identity/main navigation and copyright/Back to top row.
+- Retained nav#sitemap and its aria-labelledby heading; added stable disclosure/
+  summary IDs. Native summary supplies expansion semantics and uses shared
+  heading/spacing/focus tokens. Closing explicitly hides the map only. The
+  generated exports work without JavaScript; no new runtime library or state.
+- Existing preview disclosure capture retains open/closed state and summary
+  focus during live updates. Native standalone fragments and existing preview
+  fragment handling reveal a collapsed map target. Updated the generator asset
+  query version, README and architecture.
+- Adapted existing footer layout/target-size checks to expand the map before
+  measuring it, retaining complete column/link coverage. Added default-closed,
+  native-summary, focus/close/reopen, palette/theme state retention and live/
+  script-free standalone fragment-navigation regressions for both samples.
+- `python scripts/check_structure.py` passed (43 assets); `git diff --check`
+  passed. Initial sandbox Chrome launch could not access its temporary profile;
+  subsequent runs used isolated profiles outside the sandbox, without user
+  projects/storage. First full run passed 1213/1228: the old Basic disclosure
+  count needed updating, and closed-map geometry assertions exposed residual
+  hidden navigation boxes. Added an explicit closed-nav display rule while
+  preserving the open map layout. Final `python scripts/browser_review.py`
+  passed **1242/1242**, no captured JavaScript errors
+  (`.sitemap-accordion-review.log`).
+- Temporary `python .sitemap-accordion-focused.py` passed **15/15**, no errors,
+  for both samples' live/standalone disclosure and fragment behavior
+  (`.sitemap-accordion-focused.log`). `python scripts/button_states_review.py`
+  passed **5/5 reduced-motion**, **7/7 forced-colour**
+  (`.sitemap-accordion-states.log`). Earlier counts below remain historical.
+- Temporary `python .sitemap-accordion-visual.py` verified script-free exported
+  footer states: Advanced light expanded at 1440px, Basic dark expanded at 390px,
+  Basic light collapsed at 1440px. Confirmed no page overflow/errors, correct
+  disclosure markers, >=44px summary and zero closed map height. Inspected all
+  three screenshots. Removed temporary edit/test/visual helpers and screenshots;
+  no visual baselines added. Logs are ignored.
+- Manual keyboard-only, screen-reader and Firefox/Safari review remain unrun.
+  No saved project schema/storage, root sample snapshots, dependencies, commits,
+  pushes or deployments changed.
+
+## Live Spacing tutorial prototype (3 November 2026)
+
+- Added `src/js/spacing-lesson.js` and scoped CSS after existing lesson/example
+  modules, preserving deferred load order and local dependency-free runtime.
+  Step 9 now follows Understand -> Try -> Observe -> Inspect -> Reflect, with
+  one spacing experiment driven by the current unit and real control limits.
+- Reads current exported declarations/formulas, computes bounded known spacing
+  multiples without eval, and keeps a session before/now comparison. Shows exact
+  sample section markup/rules, theme and preview width, computed padding and
+  explicit complete-file token/CSS/HTML inspection routes. Example navigation
+  focuses the real Basic/Advanced section without invoking business actions.
+- Initial focused review exposed Basic's larger responsive padding multiples;
+  the lesson now reads its actual exported media rules and follows native media
+  matching plus measured preview padding. It teaches base --space-8 and the
+  --space-12/--space-16 overrides rather than claiming one fixed padding value.
+  Explains that grid gap has its own decision/control.
+- Added `preview:change` to shared preview measurement and invoke it after
+  inspector layout changes. The lesson subscribes instead of adding a renderer
+  wrapper or another resize observer. Coalesced reads let legacy imports and
+  queued preview output settle before a fresh comparison captures values.
+- Comparison rebasing changes only tutorial UI. Imports, local project loads
+  (including identical values) and resets clear comparison/reflection; theme,
+  sample and ordinary design edits retain it. Optional notes remain in the tab,
+  never in project JSON or website files. No exercise score or learning success
+  claim. Text-only updates retain nodes/focus; stale queued example focus is
+  cancelled when code or navigation is selected afterward.
+- Added a narrow-screen control anchor so the existing Spacing pane joins Try,
+  rather than appearing after the entire tutorial. `lesson:content` refreshes
+  placement after initialization. Desktop restores existing sidebar controls;
+  IDs, bindings and token source routes stay intact, with no duplicate editors.
+- Updated canonical spacing task wording, changed asset query versions, README,
+  architecture and the prepared learner protocol. Added regressions for both
+  samples/themes, prediction/comparison, actual padding/rules, viewport presets,
+  Fluid/inspector resizing, input focus, source/code/example routes, import/reset/
+  local-load lifecycle, escaping, session-only exports and 320/901/1440px layouts.
+- Early browser attempt did not finish because a new hostile-text fixture
+  contained a literal closing script delimiter in the HTML harness; corrected
+  the fixture. An earlier full model passed 1197/1197, but focused review caught
+  a wide-Basic assumption (70/71) and intermittent resize observation gaps.
+  Corrected responsive content and moved updates onto shared preview events.
+  Final focused `python .spacing-lesson-focused.py`: **76/76 passed**, no errors.
+- Final `python scripts/browser_review.py`: **1202/1202 passed**, no captured
+  JavaScript errors (`.spacing-lesson-review.log`), including the final narrow
+  Try control placement. `python scripts/check_structure.py`: **43 assets**;
+  `git diff --check`: passed. The initial sandbox launch could not access its
+  temporary Chrome profile; subsequent runs used isolated profiles outside the
+  sandbox, without user storage/projects. Earlier counts below remain historical.
+- `python scripts/button_states_review.py`: **5/5 reduced-motion**, **7/7
+  forced-colour** passed (`.spacing-lesson-states.log`). Temporary
+  `python .spacing-lesson-visual.py` verified live 4->6 comparisons, both authored
+  samples, actual 72px responsive Basic / 48px Advanced padding, five lesson parts,
+  no overflow/errors and inline Try controls at 320px. Inspected 1440px Basic light,
+  1440px Advanced dark with code open, and 320px Basic screenshots. Removed
+  temporary helpers/screenshots; logs are ignored and no baselines were added.
+- No learner trials, manual keyboard-only/screen-reader or Firefox/Safari checks
+  performed. Automated results do not establish learning effectiveness. No
+  saved project schema/storage, generated sample behavior, root snapshots,
+  dependencies, commits, pushes or deployments changed.
+
+## Cap the right inspector at 25% (3 November 2026)
+
+- Changed the expanded desktop centre/inspector split from 1:1 to 2:1. With the
+  left builder retained at 25%, this gives approximately 50% to the centre and
+  caps the right inspector at 25% of workspace width after gutter accounting.
+  Native disclosure, collapsed preview expansion and <=1280px stacking remain.
+- Refreshed the affected CSS query version and updated README/architecture.
+  Adapted the existing desktop geometry assertion to verify the cap, 2:1 split,
+  25% left pane and no overflow across 1281–3440px. No new tests for this
+  reversible width-only adjustment.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. First full browser run passed 1126/1127 with no JavaScript errors;
+  the 1280px collapse-focus visibility assertion failed while every width/cap
+  assertion passed. Added failure diagnostics and replayed the focused collapse
+  subset using temporary `python .inspector-cap-focused.py`: **14/14 passed**,
+  including a second replay with the longer sitemap lesson open. No inspector
+  behavior changes were made for this unreproduced failure. Final
+  `python scripts/browser_review.py` rerun passed **1127/1127**, with no captured
+  JavaScript errors (`.inspector-cap-review.log`). Removed the temporary focused
+  helper; logs are ignored. The focused output is `.inspector-cap-focused.log`.
+  Initial browser launch hit the Chrome
+  temporary-profile sandbox restriction; reran outside the sandbox with an
+  isolated profile without saved user projects/storage.
+- No button-state rules, inspector actions, generated sample CSS/HTML, project
+  data/schema, root snapshots, dependencies, commits or deployments changed.
+  Manual visual, keyboard-only, screen-reader, Firefox/Safari and learner checks
+  were not rerun for this width-only change; prior screenshots/mode results are
+  historical. This cap supersedes the earlier wider-than-25% requirement below.
+
+## Consistent app spacing and step separation (3 November 2026)
+
+- Added a 32px gap, divider and 24px top inset before each desktop wizard step,
+  clearly separating Build your design system/introduction/navigation from the
+  active step. Applied the same treatment throughout the builder, not only Brief.
+- Defined app-scoped 8/16/24px spacing values and responsive 16–24px panel insets.
+  Aligned outer/centre grid gaps to 16px; standardized builder/lesson panel
+  padding, preview/inspector disclosure headings, field label/help gaps, planning
+  editors, action rows, local-project separators, lesson cards and inspector
+  body/code/control padding. Removed the inspector's inherited extra details
+  padding so its title/panel align with the preview.
+- Kept the 25% builder width, inspector behavior, responsive control placement
+  and generated website spacing unchanged. App spacing uses separate variables
+  and does not enter state, project JSON or exported CSS. Refreshed the affected
+  CSS version and documented the spacing contract in architecture.
+- Updated the existing geometry assertion for the consistent 16px centre/code
+  gutter. No new permanent tests for reversible presentation styling.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed **1127/1127**, no captured
+  JavaScript errors (`.app-spacing-review.log`). Initial sandbox browser launch
+  could not access its temporary profile; reran with an isolated Chrome profile
+  outside the sandbox, without opening user storage/projects.
+- `python scripts/button_states_review.py` passed **5/5 reduced-motion** and
+  **7/7 forced-colour** checks (`.app-spacing-states.log`). Temporary
+  `python .app-spacing-visual.py` checked every step with expanded control groups
+  in both themes at 1440/901/320px: no pane/page overflow or captured errors.
+  Confirmed 32px step margin and 24px inset on desktop, and panel padding of
+  24px at 1440, 18.02px at 901 and 16px at 320. Inspected light Brief, dark Buttons
+  with expanded inspector and narrow Brief screenshots; 901px Typography was
+  measured by the helper.
+- Removed temporary visual helper/screenshots; logs are ignored and no visual
+  baselines added. Manual keyboard-only, screen-reader, Firefox/Safari and learner
+  reviews remain unrun. No generated sample files, root snapshots, saved projects,
+  dependencies, commits or deployments changed.
+
+## Clearer builder introduction (3 November 2026)
+
+- Follow-up wording: the opening now reads Plan and design your website.
+- Replaced the abstract Choose a step / lesson-controls-result paragraph with:
+  Plan your website. Define its colours, typography and layout. See your design
+  decisions on the page, then follow them into HTML and CSS.
+- Copy-only edit to `index.html`; no behavior, assets, exports or data changed.
+  `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. No new tests or browser/manual checks for this wording change;
+  the preceding 1127/1127 result remains historical.
+
+## Builder stays at 25% (3 November 2026)
+
+- Set the builder to 25% of available workspace above 900px in both inspector
+  states. Expanding code no longer widens the left pane to one third. Preview
+  and inspector share the remaining space when open; the preview receives it
+  when collapsed. Single-column layouts remain at <=900px.
+- Refreshed the affected CSS query version, adjusted existing geometry checks
+  for 25% with code open, and updated README/architecture. Below the three-column
+  breakpoint, inspector expansion stacks vertically without changing pane widths.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed **1127/1127**, with no captured
+  JavaScript errors (`.quarter-builder-review.log`). The initial sandbox Chrome launch
+  could not access its temporary profile; reran outside the sandbox using an
+  isolated profile without saved user projects/storage.
+- No new tests for this reversible layout adjustment; adapted existing responsive
+  assertions. No button-state rules, project data/schema, sample generators, root
+  snapshots, dependencies, commits or deployments changed. Manual visual,
+  keyboard-only, screen-reader, cross-browser and learner review remain unrun
+  for this width-only change. Earlier screenshot/mode results remain historical.
+
+## Native inspector disclosure and expanded width (3 November 2026)
+
+- Replaced the separate compact bar and Expand button with one native
+  details/summary inspector, using the same right/down disclosure arrow as
+  Responsive page preview. Clicking the heading toggles the same pane in both
+  states; contextual Inspect actions and the internal Collapse code action also
+  remain available. Native toggle events synchronize layout state.
+- Closed inspector sits above the preview with only its summary visible; code
+  is hidden by native disclosure behavior rather than hiding the whole pane.
+  Closing releases its column and retains the 25% desktop builder. Open desktop
+  inspector sits on the right and exceeds 25% of screen width. The iframe and
+  code DOM remain in place, preserving project values, browsing state and the
+  chosen code view. Focus recovery now targets the native summary.
+- Updated grid placement, removed the obsolete compact-bar styles/markup,
+  refreshed changed CSS/JS asset versions and updated README/architecture.
+  Adapted visibility/focus regressions to native open state; covered a native
+  summary with marker/tab stop and an expanded width greater than 25%.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed **1127/1127**, no captured
+  JavaScript errors (`.native-inspector-review.log`). Initial sandbox launch
+  could not access Chrome's temporary profile; reran with an isolated profile
+  outside the sandbox without user projects/storage.
+- `python scripts/button_states_review.py` passed **5/5 reduced-motion** and
+  **7/7 forced-colour** checks (`.native-inspector-states.log`). Temporary
+  `python .native-inspector-visual.py` confirmed native disclosure-closed and
+  disclosure-open markers, no page overflow/errors, and 444px expanded inspector
+  width at 1440px (about 31% of screen width). Checked exact 320px too, and
+  inspected desktop collapsed/expanded and narrow screenshots. Removed temporary
+  edit/visual helpers and screenshots; no visual baselines added.
+- Manual keyboard-only, screen-reader, Firefox/Safari and learner checks remain
+  unrun. No saved project schema/storage, sample generators, root snapshots,
+  dependencies, commits or deployments changed. Earlier separate-bar notes below
+  are historical and superseded by this native disclosure implementation.
+
+## Visible collapsed inspector bar (3 November 2026)
+
+- Replaced the header Show code / Hide code action with a visible compact
+  Live CSS/HTML Inspector bar above the preview. Its Expand button opens the
+  existing right-hand pane; Collapse code returns to the bar. The compact bar
+  disappears while the full pane is open, avoiding duplicate visible titles.
+- Kept the previous column-release behavior: collapsed code reserves no grid
+  column, the desktop builder uses 25%, and preview/lessons use the remainder.
+  Expanded desktop code restores the three-column arrangement. Language, excerpt,
+  theme, project values and iframe document remain intact across toggles.
+- Shared collapse state synchronizes both controls, aria-expanded/controls,
+  compact-bar visibility and the full pane. Closing focused code returns focus
+  to Expand. A narrow-screen visual check found the bar could be offscreen;
+  added conditional reveal so the focused opener is visible below the header.
+- Refreshed CSS/dock query versions and updated README/architecture. Extended
+  startup and collapse regression assertions to require the named visible bar,
+  available Expand control and visible restored focus at all tested widths.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. Initial browser launch hit the Chrome temporary-profile sandbox
+  restriction; reran in an isolated profile outside the sandbox. First full
+  `python scripts/browser_review.py` passed **1127/1127**, no JavaScript errors.
+  Final rerun including the focus-reveal adjustment/assertion also passed
+  **1127/1127**, no captured errors (`.inspector-bar-review.log`).
+- `python scripts/button_states_review.py` passed **5/5 reduced-motion** and
+  **7/7 forced-colour** checks (`.inspector-bar-states.log`). Temporary
+  `python .inspector-bar-visual.py` confirmed the compact bar/expanded pane at
+  1440px and compact bar at exact 320px, with no overflow or captured errors.
+  Final focused checks confirmed Expand regains visible focus at both sizes.
+  Preview remains 927.75px collapsed vs 357px expanded at 1440px. Inspected
+  desktop collapsed/expanded and 320px screenshots.
+- Removed temporary visual helper and screenshots after verification; logs are
+  ignored and no visual baselines were added.
+- Manual keyboard-only, screen-reader, cross-browser and learner trials remain
+  unrun. No project storage/schema, generated samples, dependencies, root
+  snapshots, commits or deployments changed. Older header-only toggle notes
+  below are historical and superseded by this update.
+
+## Hide inspector to expand the preview (3 November 2026)
+
+- Inspector starts fully hidden, releasing its entire grid column. Above 900px,
+  the hidden state gives the builder 25% of available width and preview/lessons
+  the remainder. Opening code restores the prior one-third builder and (above
+  1280px) centre/right-inspector columns. Narrow screens retain single-column
+  controls/lessons and stacked inspection when requested.
+- Added header Show code / Hide code with synchronized aria-expanded and
+  aria-controls. Both toggles and contextual Inspect actions use a common dock
+  visibility path. Hiding focused code returns focus to the header opener;
+  reopening preserves language/section and still supports explicit CSS/HTML/JSON
+  inspection. Hidden code has no keyboard targets or reserved layout track.
+- Kept the iframe/document, project settings, generators, exports and UI-state
+  persistence boundary intact. Fluid preview resizes through its existing
+  observer. Refreshed CSS/dock asset versions; updated README and architecture.
+- Added functional regression checks for initial 25% width, complete column
+  release, increased Fluid preview width, focus recovery, language/excerpt and
+  document preservation, header/inside/contextual toggles and excluded JSON UI
+  state at 320/901/1280/1440/2560px.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed **1126/1126**, no captured
+  JavaScript errors (`.preview-space-review.log`). Initial sandbox launch could
+  not access its temporary Chrome profile; reran outside the sandbox using an
+  isolated profile without user projects/storage.
+- `python scripts/button_states_review.py` passed **5/5 reduced-motion** and
+  **7/7 forced-colour** checks (`.preview-space-states.log`).
+- Temporary `python .preview-space-visual.py` checked every wizard stage in both
+  themes at 1440/901/320px: no page overflow or runtime errors. At 1440px, builder
+  measured 338.25px (25% after the gap); Fluid preview grew from 357px with code
+  open to 927.75px hidden. At 901px it grew from 476.95px to 546.45px. Inspected
+  desktop/320px screenshots after settling scroll; removed helper/screenshots.
+  No visual baselines added. Logs are ignored.
+- Manual keyboard-only, screen-reader, Firefox/Safari and learner review remain
+  unrun. No root snapshots, schema/storage keys, runtime dependencies, commits,
+  pushes or deployments changed. Earlier expanded-inspector defaults below are
+  historical and superseded by this update.
+
+## App workspace introduction cleanup (3 November 2026)
+
+- Removed the standalone Web Design System Studio heading and tagline above the
+  workspace. Kept the app name in the header/browser title and other identity
+  locations. The workspace now begins directly below the app header.
+- Preserved the existing statement beneath Build your design system, increased
+  it to normal-sized foreground text, and promoted the builder title to the
+  page's single primary heading. Removed obsolete studio-introduction CSS and
+  refreshed the affected CSS query version. README and architecture reflect this
+  app-focused presentation; earlier branding/intro notes below are historical.
+- `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed **1112/1112**, with no captured
+  JavaScript errors (`.app-workspace-review.log`). Its initial sandbox launch
+  could not access Chrome's temporary profile; reran with an isolated profile
+  outside the sandbox, without opening user projects/storage.
+- Temporary `python .app-workspace-visual.py` confirmed the removed banner,
+  retained builder guidance, one primary heading and no page overflow or captured
+  JavaScript errors at 1440px light and exact 320px dark. Inspected both screenshots.
+- Removed the temporary visual helper and screenshots; no visual baselines added.
+- No new permanent tests for this reversible presentation change. No generated
+  website styles/content, project schema/storage, root snapshots, button-state
+  rules, commits or deployments changed. Manual keyboard-only, screen-reader,
+  cross-browser and learner checks remain unrun.
+
+## Web Design System Studio identity and HTML/DOM/CSS model (3 November 2026)
+
+- Adopted Web Design System Studio in the browser title, accessible header name,
+  wordmark, introduction, footer, README and generated complete/button CSS
+  attribution. Kept the existing decision -> page -> HTML/CSS tagline.
+- Added a closed explanatory note beside the preview with escaped nested HTML
+  and a token-based child-selector example. Explains that HTML means HyperText
+  Markup Language; the browser parses it into DOM node objects, nesting describes
+  parent/child/sibling relationships, and CSS selectors/rules assign presentation
+  and layout property values. Distinguishes CSS properties from DOM object
+  properties/methods; introduces cascade and inheritance without treating classes
+  as object constructors. Updated README and architecture with this model.
+- Checked the explanation against WHATWG HTML introduction/DOM trees and W3C
+  Selectors/CSS Cascade standards. Source links are in the teaching note; no
+  network requests or libraries were added to the runtime.
+- Preserved project data/schema, DSStudio API, browser storage keys, download
+  filenames, the existing DS mark and user-authored root snapshots. Historical
+  audits retain their original project name. No repository/hosting renames,
+  commits, pushes or deployments were performed.
+- Refreshed changed JavaScript asset query versions. Current
+  `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. `python scripts/browser_review.py` passed **1112/1112**, with no captured
+  JavaScript errors (`.web-studio-review.log`). The initial
+  browser launch was blocked by sandbox access to its temporary profile; reran
+  using an isolated Chrome profile outside the sandbox.
+- Temporary `python .web-studio-visual.py` confirmed the new browser title and
+  generated CSS attribution, two literal/escaped teaching examples with no
+  injected section nodes, closed initial note and no page overflow with the note
+  open or closed at 1440px light and exact 320px dark. Inspected screenshots of
+  both sizes/themes; the longer name fits. No captured JavaScript errors.
+- Removed temporary rename/visual helpers and screenshots after verification;
+  no visual baselines added. The browser log is ignored.
+- Manual keyboard-only, screen-reader, cross-browser and learner review remain
+  unrun. No button-state rules changed; earlier mode checks remain historical.
+
+## Three columns and preview-first startup (3 November 2026)
+
+- Restored three columns above 1280px: the builder retains one third of available
+  width on the left; centre preview/lessons and the live inspector equally share
+  the remaining width. The inspector is sticky on the right and starts expanded.
+  At <=1280px it stacks after the centre; <=900px keeps the single-column layout
+  and actual controls within their lesson.
+- Put Responsive page preview first in both DOM and visual order. It is the only
+  centre section expanded at startup. All other centre sections remain visible
+  as collapsed disclosures; selecting a wizard step opens its matching lesson
+  and closes the other lesson sections. The preview iframe stays stationary.
+- Removed active-lesson DOM reordering and kept the shared routing, focus,
+  generators, project data and preview preservation. Refreshed CSS/JS asset
+  versions, updated geometry/startup/navigation assertions and current docs.
+- Temporary `python .three-column-visual.py` confirmed preview-first startup,
+  only the preview section expanded, and an expanded right-hand inspector at
+  1440px in light and dark themes. Also checked 1280px and exact 320px stacking;
+  no page overflow or captured runtime errors. Inspected desktop/both-theme and
+  320px screenshots. Narrow Fluid preview remains bounded by the available pane;
+  fixed device presets are available for inspecting wider page viewports.
+- Initial browser launch was blocked by sandbox access to Chrome's temporary
+  profile; reran with an isolated profile outside the sandbox. First full run
+  passed 1111/1112 with no JavaScript errors. One desktop-resize assertion found
+  delayed control placement after returning from narrow widths; stage activation
+  now synchronizes control placement immediately using the current media query.
+- The second full run also passed 1111/1112, with the resize assertion passing
+  and one brand-row focus assertion failing. Made responsive placement
+  idempotent: correctly positioned panes/navigation are no longer reinserted
+  during stage activation or delayed media-query callbacks, preserving focus.
+- Final `python scripts/browser_review.py` passed **1112/1112**, with no captured
+  JavaScript errors (`.three-column-review.log`). Current
+  `python scripts/check_structure.py` passed (41 assets); `git diff --check`
+  passed. Removed temporary edit/visual helpers and screenshots; no visual
+  baselines added. The earlier layout/test counts below remain historical.
+- Manual keyboard-only, screen-reader, Firefox/Safari and learner trials remain
+  unrun. Button specimen rules were unchanged; earlier reduced-motion and
+  forced-colour checks remain historical. No user storage, generated website
+  dimensions, root snapshots, commits or deployments were changed.
+
+## Wider builder and inspector above lessons (3 November 2026)
+
+- Changed the desktop workspace to responsive 1:2 columns: Build your design
+  system receives one third of available width instead of the former fixed
+  310px. The existing single-column layout and inline lesson controls remain
+  at <=900px. Generated website dimensions are unaffected.
+- Moved the existing Live CSS/HTML Inspector before the centre lesson in static
+  markup, aligning visual and keyboard order. It retains its Expand/Collapse
+  control, initially collapsed state and contextual Inspect actions. No preview
+  iframe reparenting or generator/state changes were needed.
+- Refreshed the affected CSS asset version, updated desktop/inspector geometry
+  assertions, README and architecture. Earlier layout notes below are historical.
+- Current `python scripts/check_structure.py` passed (41 assets) and
+  `git diff --check` passed. `python scripts/browser_review.py` passed
+  **1112/1112**, with no captured JavaScript errors (`.wide-builder-review.log`).
+  Initial sandbox launch could not access Chrome's temporary profile; reran
+  outside the sandbox using an isolated profile without user storage.
+- Temporary `python .wide-builder-visual.py` checked all twelve steps in both
+  themes at 1440px, the 901px two-column boundary and 320px: no page overflow or
+  runtime errors; inspector precedes lessons. At 1440px the measured builder
+  was 451px, exactly one third of the 1353px available after the column gap.
+  Inspected desktop/320px expanded-inspector screenshots. Removed the helper,
+  edit script and screenshots afterward; no visual baselines added.
+- No manual keyboard-only, screen-reader, Firefox/Safari or learner trials were
+  run. Button specimen styles did not change; previous reduced-motion and
+  forced-colour results belong to the preceding implementation. No commits,
+  deployments, saved user projects or root snapshots changed.
+- Next step: review the wider controls and top inspector in everyday use, then
+  complete the outstanding manual accessibility and learner reviews.
+
+## Integrated wizard implementation (3 November 2026)
+
+- Added shared `DSStudio.stages` metadata and stage activation events. Previous,
+  named Next, direct selection and token-source routes now synchronize the
+  controls, matching centre lesson and focused heading. Accessibility opens its
+  main review. Step position is navigation, not completion evidence.
+- Removed Build/Preview/Code/Beginner steps, First steps with Basic, the separate
+  exercise selector/progress and sixteen-entry numbered centre menu. The step
+  list is a compact Choose a step disclosure with four phase headings. Renamed
+  Components to Semantic colours and Layout to Spacing and surfaces.
+- Each active lesson provides a short explanation, one task and relevant output
+  actions. Integrated colour, spacing, responsive and export practice into their
+  stages. Deeper lab/theory/control guidance lives in More about disclosures;
+  workflow, catalogue and states remain secondary Reference tools with a return.
+- Preserved real control nodes, handlers and project fields. At <=900px, move
+  the actual controls beneath their lesson and Previous/Next after output;
+  comment placeholders restore the desktop sidebar. No duplicate editors or new
+  saved UI state. Source routes still reveal/focus the precise control.
+- Kept the preview iframe stationary using CSS ordering after discovering that
+  moving it reloaded its document. Stage entry frames an available example;
+  ordinary edits keep focus and preview scroll. Retained Basic's rule/token
+  connections and optional one-shot preview selection without the beginner shell.
+- Moved sample selection beside the preview. One visible, initially collapsed
+  inspector below the page handles CSS, HTML and full project JSON. Explicit
+  Inspect actions select the promised language; copy/download retain complete
+  generators and excerpt distinctions. Legacy centre code bindings remain hidden.
+- Corrected confirmed audit defects: sitemap restore clears only the selected
+  sample's link mappings; readiness clears after edits/reset/import/local load;
+  clamp clipboard rejection gives a manual fallback; header/Deliver JSON exports
+  use identical filenames and payloads. Removed static delivery checkmark cues.
+- Refreshed affected runtime asset versions and updated README, architecture and
+  learner-trial directions. Historical analysis/proposal documents remain dated
+  records rather than claims that the old navigation is still current.
+- Verification: `python scripts/check_structure.py` passed (41 assets), and
+  `git diff --check` passed. Chrome's first sandbox launch could not access its
+  temporary profile; subsequent checks used isolated profiles outside the sandbox.
+  An early browser run had no final report; the instrumented rerun stopped at
+  685/703 because retired guide tests accessed removed markup. Updated retired
+  navigation/layout assertions while retaining generator/state/export coverage.
+  Next full run passed 1109/1111 with no JavaScript errors; corrected the remaining
+  expanded-control overflow at 320px. Final `python scripts/browser_review.py`
+  passed **1111/1111**, no captured JavaScript errors (`.single-wizard-review.log`).
+- Added regression assertions for all stage routes, focus, narrow control
+  placement, contextual inspection, references and confirmed action defects. Then
+  added explicit preview-document preservation coverage; ran the final focused
+  subset through temporary `python .wizard-visual.py --focused`: **42/42 passed**,
+  no errors (`.single-wizard-focused.log`). This subset includes the extra
+  assertion added after the 1111-check full run.
+- `python scripts/button_states_review.py` passed **5/5 reduced-motion** and
+  **7/7 forced-colour** checks (`.single-wizard-states.log`). Temporary
+  `python .wizard-visual.py` verified desktop/320px geometry and preview-document
+  preservation; expanded typography/responsive controls fit in both themes.
+  Inspected temporary 1440px and exact-320px Buttons screenshots and corrected
+  header focus visibility/step-list height. Removed temporary helpers, CSS copy
+  and screenshots; logs are ignored. No visual baselines were added.
+- Manual keyboard-only, screen-reader, Firefox/Safari and real learner trials
+  remain unrun; passing automation does not establish full accessibility or
+  learning effectiveness. No user project storage, root snapshots, runtime
+  dependencies, commits, pushes or deployments changed.
+- Next step: try one complete decision -> page -> code cycle with a learner,
+  including narrow-screen navigation, before further changes to stage count.
+
+## Single-wizard simplification proposal (3 November 2026)
+
+- Reviewed the current wizard activation, injected lesson routes, beginner path,
+  inspector and section disclosure/offset code against the user's concern that
+  Build/Preview/Code/Beginner steps and First steps with Basic add complexity.
+- Added `docs/STUDIO_SIMPLIFICATION_2026-11-03.md`. Proposes one active step shared
+  by controls and centre lesson, persistent page results, contextual HTML/CSS
+  inspection and one Previous/Next sequence. Remove duplicate navigation and
+  exercise progress; integrate useful beginner tasks into their relevant stages.
+- Supersedes the earlier recommendation to retain a separate Basic shortcut path.
+  Retain twelve stages initially, grouped under four phase headings, and align
+  ambiguous names. Planning stages show actual artifacts/data rather than imply
+  every decision changes page CSS. No new runtime dependencies or schema needed.
+- Recorded navigation/focus/update rules, a Buttons walkthrough, implementation
+  boundaries and acceptance criteria. Existing example mappings remain useful;
+  removing the learning-path module wholesale would lose those connections.
+- No runtime assets, project storage, exports, commits or deployments changed.
+  No new browser/visual/manual or learner checks were run for this analysis;
+  prior browser counts remain historical. Current `python
+  scripts/check_structure.py` passed (41 assets); `git diff --check` passed.
+- Next step: implement the shared stage activation and integrated lesson view,
+  remove competing navigation, preserve contextual example/code connections,
+  then validate all routes and the previously confirmed action defects.
 
 ## Design Workflow and button consistency audit (3 November 2026)
 

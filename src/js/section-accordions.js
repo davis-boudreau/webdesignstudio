@@ -3,25 +3,19 @@
 (() => {
   const sections = [...document.querySelectorAll('#main > .studio-section')];
   const header = document.querySelector('.topbar');
-  const navigation = document.querySelector('.studio-section-nav');
-  const workspace = document.getElementById('workspaceNav');
   function syncScrollOffset() {
     const headerHeight = Math.ceil(header.getBoundingClientRect().height);
     document.documentElement.style.setProperty('--studio-header-height', `${headerHeight}px`);
-    if (workspace) document.documentElement.style.setProperty('--workspace-nav-height', `${Math.ceil(workspace.getBoundingClientRect().height)}px`);
-    const style = getComputedStyle(navigation);
-    const navigationBottom = style.position === 'sticky' ? (parseFloat(style.top) || 0) + navigation.getBoundingClientRect().height : 0;
-    document.documentElement.style.setProperty('--studio-section-scroll-offset', `${Math.ceil(Math.max(headerHeight, navigationBottom)) + 8}px`);
+    document.documentElement.style.setProperty('--studio-section-scroll-offset', `${headerHeight + 8}px`);
   }
   const offsetObserver = new ResizeObserver(syncScrollOffset);
   offsetObserver.observe(header);
-  offsetObserver.observe(navigation);
-  if (workspace) offsetObserver.observe(workspace);
   window.addEventListener('resize', syncScrollOffset);
   syncScrollOffset();
   function reveal(id, scroll = true) {
     const target = document.getElementById(id);
     if (!target) return;
+    DSStudio.activateLesson?.(id);
     for (let parent = target; parent; parent = parent.parentElement)
       if (parent.tagName === 'DETAILS') parent.open = true;
     if (scroll) target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
@@ -30,8 +24,6 @@
   for (const section of sections) section.addEventListener('toggle', () => {
     if (section.open && section.id === 'studio-section-4') updateResponsivePreview(document.getElementById('previewFrame').dataset.width);
   });
-  document.getElementById('expandSections').addEventListener('click', () => sections.forEach(section => section.open = true));
-  document.getElementById('collapseSections').addEventListener('click', () => sections.forEach(section => section.open = false));
   document.addEventListener('click', event => {
     const anchor = event.target.closest('a[href]');
     if (!anchor || !anchor.hash || anchor.origin !== location.origin || anchor.pathname !== location.pathname) return;

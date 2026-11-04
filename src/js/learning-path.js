@@ -2,7 +2,7 @@
 /* Session-only learning/navigation state. Project values remain in the shared
    system; study rules and token values are read from the current CSS export. */
 DSStudio.register({
-  id: 'learning-path', title: 'Beginner path and example connections',
+  id: 'learning-path', title: 'Contextual example connections',
   init() {
     const get = id => document.getElementById(id);
     const examples = {
@@ -17,14 +17,7 @@ DSStudio.register({
       form: { label: 'Form controls', id: 'contact-form', section: 'form', selector: '.signup-form', tokens: ['--reading-measure', '--space-4', '--control-height'], explanation: 'Grid spaces the form fields; the reading measure limits its width. Labels and native validation remain in HTML.' },
       footer: { label: 'Footer navigation', id: 'footer', section: 'footer', selector: '.website-footer .footer-inner', tokens: ['--space-8', '--border-width'], explanation: 'The footer combines identity and navigation. Its sitemap follows Architecture; planned entries do not create body sections.' }
     };
-    const tasks = [
-      { label: '1. Change an action colour', example: 'action', token: '--button-primary-bg', instruction: 'Change the primary button background in Buttons. See the action update in Basic, find --button-primary-bg in CSS, and review the text contrast before keeping the colour.' },
-      { label: '2. Change reusable spacing', example: 'spacing', token: '--space-unit', instruction: 'Change the base spacing unit in Layout. Compare section padding before and after, then follow --space-unit into --space-8. Explain why several spaces change together.' },
-      { label: '3. Test a narrow layout', example: 'hero', step: 9, control: 'responsive-stack', instruction: 'Compare the 390 px and Fluid preview widths. Find the rule that stacks the hero, then compare the saved narrow cutoff with the preview width. Presets test widths; they do not change your breakpoints.' },
-      { label: '4. Export and reopen', example: 'hero', step: 11, control: 'jExportHtml', instruction: 'In Deliver, download index.html and tokens.css into the same folder. Open index.html in a browser. Export project JSON too, then explain the difference between editable website files and your restorable studio project.' }
-    ];
-    let selected = 'action', taskIndex = 0, picking = false, previousMode = state.sampleMode;
-    const tried = new Set();
+    let selected = 'action', picking = false, previousMode = state.sampleMode;
     let studySignature = '', focusVersion = 0;
     const focus = element => {
       if (!element) return;
@@ -32,9 +25,6 @@ DSStudio.register({
       element.scrollIntoView({ block: 'center', behavior: 'instant' });
       element.focus({ preventScroll: true });
     };
-    function basic() {
-      if (state.sampleMode !== 'basic') get('dockModeBasic').click();
-    }
     function tokenRow(name) {
       const rows = window.dssReadTokens().filter(row => row.name === name);
       return (state.theme === 'dark' ? rows.find(row => row.scope === 'Dark') : null) || rows.find(row => row.scope !== 'Dark');
@@ -110,49 +100,7 @@ DSStudio.register({
       DSStudio.inspector.show({ section: 'all', language: 'css', find: examples[selected].selector + ' {' });
       get('studyStatus').textContent = `Complete CSS: ${examples[selected].selector}. Shared rules and responsive overrides also apply.`;
     }
-    function setTask(index) {
-      taskIndex = Math.max(0, Math.min(tasks.length - 1, index));
-      const task = tasks[taskIndex];
-      get('beginnerTask').value = String(taskIndex);
-      get('beginnerInstruction').textContent = task.instruction;
-      get('beginnerProgress').textContent = `${tried.size} of ${tasks.length} exercises tried. This is your own progress, not a test result.`;
-      get('beginnerDone').textContent = taskIndex === tasks.length - 1 ? 'I tried this exercise' : 'I tried this - next exercise';
-      select(task.example);
-    }
-    function openControl() {
-      focusVersion++;
-      basic();
-      const task = tasks[taskIndex];
-      if (task.token) configure(task.token);
-      else { window.dssShowWizardStep(task.step); focus(get(task.control)); }
-    }
-    function navigate(place) {
-      focusVersion++;
-      if (place === 'build') focus(document.querySelector('[data-journey-pane]:not([hidden]) .journey-stage-title'));
-      if (place === 'preview') showPreview();
-      if (place === 'code') DSStudio.inspector.show();
-      if (place === 'learn') { get('beginnerPath').hidden = false; get('beginnerPath').open = true; focus(get('beginnerTask')); }
-      get('workspaceStatus').textContent = { build: 'Build: current wizard step', preview: 'Preview: generated website', code: 'Code: current inspector view', learn: 'Beginner exercises' }[place];
-    }
     get('studyExample').replaceChildren(...Object.entries(examples).map(([key, example]) => new Option(example.label, key)));
-    get('beginnerTask').replaceChildren(...tasks.map((task, index) => new Option(task.label, String(index))));
-    get('beginnerReference').append(document.querySelector('.dock-start'));
-    get('beginnerStart').addEventListener('click', () => {
-      basic(); get('beginnerPath').hidden = false; get('beginnerPath').open = true; setTask(0); DSStudio.inspector.show({ section: 'all', language: 'css' }); openControl();
-    });
-    get('beginnerTask').addEventListener('change', event => { basic(); setTask(Number(event.target.value)); });
-    get('beginnerBuild').addEventListener('click', openControl);
-    get('beginnerPreview').addEventListener('click', () => {
-      basic(); select(tasks[taskIndex].example);
-      if (taskIndex === 2) document.querySelector('button[data-width="mobile"]').click();
-      showPreview();
-    });
-    get('beginnerCode').addEventListener('click', () => {
-      focusVersion++;
-      basic(); select(tasks[taskIndex].example);
-      if (taskIndex === 3) DSStudio.inspector.show({ section: 'all', language: 'html' }); else showCode();
-    });
-    get('beginnerDone').addEventListener('click', () => { tried.add(taskIndex); setTask(Math.min(taskIndex + 1, tasks.length - 1)); });
     get('studyExample').addEventListener('change', event => select(event.target.value));
     get('studyPreview').addEventListener('click', showPreview);
     get('studyCode').addEventListener('click', showCode);
@@ -176,16 +124,20 @@ DSStudio.register({
       if (bySection[section] && examples[selected].section !== section) selected = bySection[section];
       sync(completeCss);
     });
-    for (const button of document.querySelectorAll('[data-workspace]')) button.addEventListener('click', () => navigate(button.dataset.workspace));
-    const nav = get('workspaceNav');
-    new ResizeObserver(() => {
-      const root = document.documentElement, height = `${Math.ceil(nav.getBoundingClientRect().height)}px`;
-      if (root.style.getPropertyValue('--workspace-nav-height') !== height) {
-        root.style.setProperty('--workspace-nav-height', height);
-        window.dispatchEvent(new Event('resize'));
+    DSStudio.on('stage:change', ({ stage }) => {
+      focusVersion++;
+      picking = false;
+      const key = { architecture: 'footer', palette: 'header', typography: 'hero', semantic: 'header', buttons: 'action', spacing: 'spacing', responsive: 'hero', accessibility: 'form', deliver: 'hero' }[stage.id];
+      if (key) select(key); else sync();
+      // Entering a step frames its representative result without taking focus.
+      // Ordinary design edits do not run this path or disturb preview scrolling.
+      if (key && stage.index < 11) {
+        const doc = get('previewPage').contentDocument;
+        const target = stage.id === 'buttons' ? doc?.querySelector('#home .ds-button--primary') : doc?.getElementById(examples[key].id);
+        if (target) doc.defaultView.scrollTo({ top: doc.defaultView.scrollY + target.getBoundingClientRect().top - 24, behavior: 'instant' });
       }
-    }).observe(nav);
+    });
     DSStudio.learning = { get picking() { return picking; } };
-    setTask(0);
+    sync();
   }
 });
