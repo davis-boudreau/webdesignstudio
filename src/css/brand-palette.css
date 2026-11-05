@@ -49,3 +49,17 @@
 .brand-swatch-apply > .brand-swatch-usage { display: block; margin: 0; padding: 8px 16px 16px; font-size: .8rem; overflow-wrap: anywhere; }
 .brand-swatch[data-current="true"] { border-color: var(--text); }
 .brand-swatch[data-current="true"] .brand-swatch-usage { font-weight: 700; }
+.palette-token-lesson { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); min-width: 0; }
+.palette-process-steps { padding-left: 1.25rem; }
+.palette-process-steps li { margin-block: 12px; }
+.palette-brand-token-list { max-height: 16rem; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-base); padding: 12px; }
+.palette-brand-token-list p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.palette-ramp { min-width: 0; margin-block: 16px; }
+.palette-ramp h5 { font-size: 1rem; }
+.palette-ramp > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 700; }
+.palette-step-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 8px; }
+.palette-step-list li { display: flex; gap: 8px; align-items: center; min-width: 0; padding: 8px; border: 1px solid var(--border); border-radius: 4px; }
+.palette-step-list code, .palette-token-chain { overflow-wrap: anywhere; }
+.palette-step-list li[data-anchor="true"] { border-width: 2px; font-weight: 700; }
+.interaction-palette-field { min-width: 0; }
+.interaction-palette-field select { min-height: 44px; font: inherit; }

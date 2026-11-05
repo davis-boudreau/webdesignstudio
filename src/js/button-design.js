@@ -387,14 +387,24 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     window.dssAutosave?.();
   };
   window.dssSetButtonContrastColour = (variant, property, value) => {
-    if (!validColor(value) || !Object.prototype.hasOwnProperty.call(names, variant)) return;
-    if (property === 'focus') b.focus = value;
+    if ((value !== null && !validColor(value)) || !Object.prototype.hasOwnProperty.call(names, variant)) return;
+    if (property === 'focus') b.focus = value === null ? defaults.focus : value;
     else if (['text', 'bg', 'hover', 'active', 'hoverText', 'activeText', 'border'].includes(property)) {
-      b.overrides[variant] = { ...b.overrides[variant], [property]: value };
+      b.overrides[variant] = { ...b.overrides[variant] };
+      if (value === null) delete b.overrides[variant][property];
+      else b.overrides[variant][property] = value;
     } else return;
     controls();
     render();
     window.dssAutosave?.();
+  };
+  window.dssGetButtonDefaultContrastColour = (variant, property, theme = state.theme) => {
+    if (!Object.prototype.hasOwnProperty.call(names, variant)) return null;
+    if (property === 'focus') return defaults.focus;
+    if (!['text', 'bg', 'hover', 'active'].includes(property)) return null;
+    const settings = JSON.parse(JSON.stringify(b));
+    if (settings.overrides[variant]) delete settings.overrides[variant][property];
+    return colors(variant, theme, settings)[property === 'text' ? 'fg' : property];
   };
   controls();
   render();

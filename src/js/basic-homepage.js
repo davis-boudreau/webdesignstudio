@@ -183,7 +183,7 @@ section, #top, #main-content { scroll-margin-top: var(--space-4); }
 
 /* SECTION: header */
 /* Flexbox aligns the brand and desktop navigation. Native details controls the mobile menu. */
-.site-header { border-bottom: var(--border-width) solid var(--border); background: var(--surface); }
+.site-header { border-bottom: var(--border-width) solid var(--border); background: var(--header-background-paint); }
 .header-inner { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-4); }
 .brand { display: flex; align-items: center; gap: var(--space-2); min-width: 0; max-width: 100%; font-weight: var(--heading-weight); text-decoration: none; }
 .brand > span:last-child { min-width: 0; }
@@ -313,19 +313,19 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
       const advancedHtml = htmlExport, advancedCss = cssExport;
       htmlExport = () => state.sampleMode === 'basic' ? basicHtml() : advancedHtml();
       cssExport = () => state.sampleMode === 'basic' ? basicCss() : advancedCss();
-      const tabs = ['dockModeAdvanced', 'dockModeBasic'];
+      const tabs = ['dockModeBasic', 'dockModeAdvanced'];
       function sync() {
         const basic = state.sampleMode === 'basic';
         tabs.forEach((id, index) => {
-          const selected = basic === (index === 1), tab = document.getElementById(id);
+          const selected = basic === (index === 0), tab = document.getElementById(id);
           tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
         });
-        document.getElementById('dockSamplePanel').setAttribute('aria-labelledby', tabs[basic ? 1 : 0]);
+        document.getElementById('dockSamplePanel').setAttribute('aria-labelledby', tabs[basic ? 0 : 1]);
         document.getElementById('sampleModeHelp').textContent = basic ? 'Basic: HTML/CSS essentials. Study examples with your shared design settings.' : 'Advanced: the full field guide, planning workshops and component/state gallery.';
       }
       tabs.forEach((id, index) => {
         const tab = document.getElementById(id);
-        tab.addEventListener('click', () => { state.sampleMode = index === 1 ? 'basic' : 'advanced'; apply(); });
+        tab.addEventListener('click', () => { state.sampleMode = index === 0 ? 'basic' : 'advanced'; apply(); });
         tab.addEventListener('keydown', event => {
           let next;
           if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') next = 1 - index;

@@ -350,6 +350,7 @@ ${sectionActions(['#contact', 'Ask a design question'], ['#grid-lab', 'Return to
 .sample-home figcaption { margin-top: var(--space-2); color: var(--text-muted); font-size: var(--text-small); }
 .sample-home section[id] { scroll-margin-top: var(--space-8); }
 .sample-header, .sample-footer { background: var(--surface); border-block: var(--border-width) solid var(--border); }
+.sample-header { background: var(--header-background-paint); }
 .sample-header-inner, .sample-footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); padding-block: var(--space-4); }
 .sample-header-inner { position: relative; }
 .sample-home .sample-brand { display: inline-flex; gap: var(--space-2); align-items: center; color: var(--text); font-weight: var(--heading-weight); text-decoration: none; max-width: 100%; }
@@ -373,7 +374,7 @@ ${sectionActions(['#contact', 'Ask a design question'], ['#grid-lab', 'Return to
 .sample-mobile-navigation a:hover { background: var(--surface-muted); }
 .sample-skip { position: absolute; left: var(--space-4); top: -10rem; padding: var(--space-4); z-index: 1; background: var(--surface); }
 .sample-skip:focus { top: var(--space-4); }
-.sample-home main.container { container: sample-content / inline-size; }
+.sample-home main.container { container: sample-content / inline-size; padding-left: calc(var(--page-gutter) + var(--main-padding-left)); padding-right: calc(var(--page-gutter) + var(--main-padding-right)); }
 .sample-home .sample-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--grid-gap); }
 .sample-grid > * { grid-column: span 6; min-width: 0; }
 .sample-home .card-grid > .card { grid-column: span 4; }
@@ -475,6 +476,7 @@ ${flexRecipe}
 }
 @media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
   .sample-home .container { padding-inline: var(--page-gutter-wide); }
+  .sample-home main.container { padding-left: calc(var(--page-gutter-wide) + var(--main-padding-left)); padding-right: calc(var(--page-gutter-wide) + var(--main-padding-right)); }
   .sample-logo { width: var(--space-16); }
   .sample-hero { padding-block: var(--space-20); }
   .sample-section { padding-block: var(--space-16); }

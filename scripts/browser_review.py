@@ -36,12 +36,17 @@ app.onload = async () => {
     el.dispatchEvent(new w.Event(type,{bubbles:true}));
   };
   const revealAll = () => d.querySelectorAll('#main > .studio-section, .step-more').forEach(section => {section.hidden=false;section.open=true;});
-  const reset = () => evaluate('resetStudio()');
+  // Most historical feature fixtures exercise the complete Advanced sample.
+  // Default/reset behavior is checked separately through resetStudio directly.
+  const reset = () => {evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const previewDoc = () => d.getElementById('previewPage').contentDocument;
   const previewWindow = () => d.getElementById('previewPage').contentWindow;
   const saved = () => Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects')))[0].data;
   const wait = (ms=100) => new Promise(resolve => setTimeout(resolve,ms));
   test('No startup JavaScript errors', () => !w.__reviewErrors.length);
+  test('Startup defaults to OKLCH across state, both method controls and lesson output',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && d.getElementById('method').value==='oklch' && d.getElementById('rampMethodLabel').textContent==='OKLCH' && d.getElementById('palette-method-status').textContent.includes('OKLCH'));
+  test('New projects start with Basic on the left and Advanced on the right',()=>evaluate('state.sampleMode')==='basic' && [...d.querySelectorAll('[aria-label="Website sample complexity"] [role="tab"]')].map(el=>el.id).join(',')==='dockModeBasic,dockModeAdvanced' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockModeBasic').tabIndex===0 && d.getElementById('dockModeAdvanced').tabIndex===-1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic');
+  d.getElementById('dockModeAdvanced').click();await wait();
   test('Startup selects Minor Third 1.2 throughout the typography controls and export', () => evaluate('state.ratio===1.2 && cssExport().includes("--type-ratio: 1.2;")') && ['jScalePreset','clampScalePreset'].every(id=>d.getElementById(id).value==='minor-third') && ['ratio','jRatio','clampRatio'].every(id=>d.getElementById(id).value==='1.2'));
   test('Startup gives the expanded preview its space with lessons collapsed and inspector hidden', () => d.querySelector('#main > :first-child').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(section=>!section.hidden && section.open===(section.id==='studio-section-4')) && !d.querySelector('.studio-code-dock').open && !d.getElementById('studioInspector').open);
   test('Hidden inspector leaves one quarter for the desktop builder and the rest for the preview', () => Math.abs(d.querySelector('.sidebar').getBoundingClientRect().width-(d.querySelector('.layout').clientWidth-16)/4)<1 && d.getElementById('dockCss').getBoundingClientRect().height===0);
@@ -232,7 +237,7 @@ app.onload = async () => {
   });
   test('Reference swatches and every generated ramp step have candidate checks', () => {
     const rows=report().filter(row=>row.scope==='candidate');
-    return rows.length===(11+33)*2*2 && rows.every(row=>row.status==='candidate');
+    return rows.length===(11+44)*2*2 && rows.every(row=>row.status==='candidate');
   });
   test('Disabled controls are exempt and read-only text is tested', () => report().filter(row=>row.state==='disabled').every(row=>row.status==='exempt') &&
     report().some(row=>row.name==='State Explorer input text' && row.state==='readonly' && row.threshold===4.5));
@@ -1229,7 +1234,7 @@ app.onload = async () => {
   test('Reset restores starter Brand Palette and Main Palette choices', () => evaluate('state.brandPalette.length===11') && brandSelect('primary').value==='#004780' && brandSelect('secondary').value==='#495965' && brandSelect('accent').value==='#CBDB2A');
   d.getElementById('brandPalette').open=true;
   const swatch=id=>d.querySelector(`[data-brand-swatch="${id}"]`);
-  test('Brand Colour Palette names its purpose and replaces the whole-project reset with editing', () => d.querySelector('#brandPalette > summary h2').textContent==='Step 5 of 12: Palette' && !d.getElementById('restoreDefaults') && d.getElementById('brandEditPalette').textContent==='Edit Brand Palette');
+  test('Brand Colour Palette names its purpose and replaces the whole-project reset with editing', () => d.querySelector('#brandPalette > summary h2').textContent==='Step 4 of 12: Palette' && !d.getElementById('restoreDefaults') && d.getElementById('brandEditPalette').textContent==='Edit Brand Palette');
   test('Every brand swatch has one complete clickable card with an explicit role action', () => d.querySelectorAll('#brandSwatches .brand-swatch').length===11 && [...d.querySelectorAll('#brandSwatches .brand-swatch')].every(card=>card.querySelectorAll('button').length===1 && !!card.querySelector('button .brand-swatch-color') && card.querySelector('button').getAttribute('aria-label').startsWith('Set Primary UI colour to') && d.getElementById(card.querySelector('button').getAttribute('aria-describedby'))===card.querySelector('[data-brand-usage]')));
   const beforeRoleChoice=evaluate('projectJson()'); input('brandApplyRole','secondary','change'); await wait();
   test('Choosing a target role prepares every card without changing project colours', () => evaluate('projectJson()')===beforeRoleChoice && [...d.querySelectorAll('#brandSwatches button')].every(button=>button.dataset.brandRole==='secondary' && button.textContent.includes('Set as Supporting colour')));
@@ -1265,9 +1270,348 @@ app.onload = async () => {
   }
   reset(); app.style.width='1440px'; await wait();
   test('Reset restores the swatch target and current-role feedback', () => d.getElementById('brandApplyRole').value==='primary' && d.getElementById('brandCurrentPrimary').textContent.includes('#004780') && swatch('blue').dataset.current==='true');
+  // Inline state colours edit/reset existing sources, with mirrored defaults.
+  reset();app.style.width='1440px';w.dssShowWizardStep(4);await wait();
+  const stateColour=(view,key)=>d.querySelector('#interaction-palette-'+view+' [data-state-colour="'+key+'"]');
+  input('interaction-palette-controls-component','general','change');
+  d.getElementById('jSaveLocal').click();const inlineSavedId=d.getElementById('jProjects').value;
+  const hoverColour=stateColour('lesson','hover'),hoverCard=hoverColour.closest('details');hoverCard.open=true;hoverColour.focus();
+  const originalDarkHover=evaluate('palette("dark").roles["primary-hover"]');
+  hoverColour.value='#00BADC';hoverColour.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  test('Inline semantic state colour keeps focus/disclosure, mirrors controls, autosaves and edits only its theme',()=>d.activeElement===hoverColour && hoverCard.open && stateColour('controls','hover').value==='#00BADC' && evaluate('state.semanticOverrides.light["primary-hover"]')==='#00BADC' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[inlineSavedId].data.semanticOverrides.light['primary-hover']==='#00BADC' && evaluate('palette("dark").roles["primary-hover"]')===originalDarkHover && d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] [data-shade="500"]').textContent.includes('#00BADC'));
+  input(hoverColour.id,'default','change');await wait();
+  test('Inline Default removes a semantic override and restores its generated source colour',()=>!evaluate('state.semanticOverrides.light["primary-hover"]') && stateColour('lesson','hover').value==='default' && stateColour('lesson','hover').options[0].textContent.includes(evaluate('palette().roles["primary-hover"]').toUpperCase()));
+  input(stateColour('lesson','invalid').id,'#00BADC','change');input(stateColour('controls','readonly').id,'#CBDB2A','change');await wait();
+  test('Invalid and read-only dropdowns update their actual feedback/surface sources',()=>evaluate('state.semanticOverrides.light.danger')==='#00BADC' && evaluate('state.semanticOverrides.light["surface-muted"]')==='#CBDB2A' && d.querySelector('#status-palette-ramp-lessons [data-palette-role="danger"] [data-shade="500"]').textContent.includes('#00BADC'));
+  const inlineProject=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(inlineProject)+')');await wait();
+  test('Inline state colour choices survive JSON round-trip using existing saved fields',()=>stateColour('lesson','invalid').value==='#00BADC' && stateColour('controls','readonly').value==='#CBDB2A' && !Object.keys(JSON.parse(evaluate('projectJson()'))).some(key=>/statePalette/i.test(key)));
+  input('interaction-palette-controls-component','primary','change');
+  input(stateColour('lesson','hover').id,'#00BADC','change');input(stateColour('controls','active').id,'#CBDB2A','change');await wait();
+  test('Button hover and pressed dropdowns update separate real component properties in both themes',()=>['light','dark'].every(theme=>{const data=w.dssGetButtonContrastData().themes[theme].primary;return data.hover==='#00BADC' && data.active==='#CBDB2A';}) && stateColour('controls','hover').value==='#00BADC' && stateColour('lesson','active').value==='#CBDB2A');
+  input(stateColour('lesson','hover').id,'default','change');await wait();
+  test('Default removes only the selected button property override',()=>!evaluate('state.buttonDesign.overrides.primary.hover') && evaluate('state.buttonDesign.overrides.primary.active')==='#CBDB2A' && stateColour('controls','hover').value==='default');
+  input(stateColour('lesson','default').id,'#00BADC','change');await wait();
+  test('Shared button base dropdowns synchronize default, disabled and loading and explain the scope',()=>['default','disabled','loading'].every(key=>stateColour('lesson',key).value==='#00BADC') && d.getElementById(stateColour('lesson','default').getAttribute('aria-describedby')).textContent.includes('Disabled, Loading'));
+  input(stateColour('controls','focus').id,'#00BADC','change');await wait();
+  test('Focus dropdown updates the shared focus/selected source across variants',()=>w.DSStudio.statePalettes.variants.every(variant=>w.DSStudio.statePalettes.entries('light',variant).filter(entry=>['focus','selected'].includes(entry.key)).every(entry=>entry.anchor==='#00BADC')) && stateColour('lesson','selected').value==='#00BADC');
+  input(stateColour('lesson','selected').id,'default','change');await wait();
+  test('Focus Default restores the button default without changing other properties',()=>evaluate('state.buttonDesign.focus')==='#B86C20' && evaluate('state.buttonDesign.overrides.primary.active')==='#CBDB2A' && stateColour('controls','focus').value==='default');
+  input('interaction-palette-lesson-component','outline','change');input(stateColour('lesson','default').id,'#00BADC','change');await wait();
+  test('Transparent state dropdown edits its foreground while retaining a transparent background',()=>w.dssGetButtonContrastData().themes.light.outline.bg==='transparent' && w.dssGetButtonContrastData().themes.light.outline.fg==='#00BADC' && stateColour('controls','disabled').value==='#00BADC');
+  input(stateColour('controls','default').id,'default','change');await wait();
+  test('Transparent state Default removes the foreground override',()=>!evaluate('state.buttonDesign.overrides.outline.text') && stateColour('lesson','default').value==='default');
+  const beforeInvalidStateChoice=evaluate('projectJson()');input(stateColour('lesson','hover').id,'not-a-colour','change');await wait();
+  test('Inline state dropdown rejects unsupported values without changing project data',()=>evaluate('projectJson()')===beforeInvalidStateChoice);
+  // Every general/button interaction state exposes shades from its resolved source.
+  reset();w.dssShowWizardStep(4);await wait();
+  const interactionGroups=['general','primary','secondary','accent','outline','text'];
+  const interactionStates=['default','hover','focus','active','selected','disabled','loading','invalid','success','readonly'];
+  for(const method of ['mix','oklch']) for(const theme of ['light','dark']) {
+    input('jRamp',method);input('jTheme',theme);await wait();
+    const allStateTokens=w.dssReadTokens();
+    for(const group of interactionGroups) {
+      const beforeStatePaletteView=evaluate('projectJson()');
+      input('interaction-palette-controls-component',group,'change');await wait();
+      const entries=w.DSStudio.statePalettes.entries(theme,group);
+      test(method+' '+theme+' '+group+' has every state, eleven exported shades and a configuration source',()=>entries.length===(group==='general'?10:7) && entries.every(entry=>{
+        const expected=evaluate('makeRamp('+JSON.stringify(entry.anchor)+',state.method)');
+        return Array.from({length:11},(_,i)=>[50,100,200,300,400,500,600,700,800,900,950][i]).every(step=>{
+          const token=allStateTokens.find(token=>token.name===entry.prefix+'-'+step && (token.scope==='Dark')===(theme==='dark'));
+          return token && token.value===expected[step] && w.dssTokenSource(token)?.control===entry.control;
+        });
+      }));
+      test(method+' '+theme+' '+group+' mirrored state lessons show actual CSS and preserve project data',()=>['interaction-palette-controls','interaction-palette-lesson'].every(id=>d.getElementById(id+'-component').value===group && [...d.querySelectorAll('#'+id+' [data-interaction-state]')].length===entries.length && entries.every(entry=>{
+        const card=d.querySelector('#'+id+' [data-interaction-state="'+entry.key+'"]');
+        return card.querySelectorAll('[data-shade]').length===11 && card.querySelector('[data-shade="500"]').textContent.includes(entry.prefix+'-500: '+entry.anchor+';');
+      })) && evaluate('projectJson()')===beforeStatePaletteView);
+      test(method+' '+theme+' '+group+' gives every state a labelled Default and brand colour dropdown',()=>['controls','lesson'].every(view=>entries.every(entry=>{const select=stateColour(view,entry.key);return select && d.querySelector('label[for="'+select.id+'"]') && d.getElementById(select.getAttribute('aria-describedby')) && select.options[0].value==='default' && [...select.options].some(option=>option.value==='#00BADC');})));
+    }
+  }
+  input('interaction-palette-controls-component','outline','change');await wait();
+  test('Transparent variant state ramps explicitly use the foreground source',()=>['default','disabled','loading'].every(key=>{
+    const entry=w.DSStudio.statePalettes.entries('dark','outline').find(entry=>entry.key===key);
+    return entry.source==='--button-outline-text' && entry.control==='bdText' && entry.cue.includes('transparent') && d.querySelector('#interaction-palette-lesson [data-interaction-state="'+key+'"]').textContent.includes('transparent');
+  }));
+  evaluate('dssSetButtonContrastColour("outline","bg","#3a5b7c")');await wait();
+  test('Button overrides regenerate state ramps and update transparent-source routing without stale views',()=>{
+    const entry=w.DSStudio.statePalettes.entries('dark','outline').find(entry=>entry.key==='default');
+    return entry.anchor==='#3A5B7C' && entry.source==='--button-outline-bg' && entry.control==='bdDefaultBg' && d.querySelector('#interaction-palette-lesson [data-interaction-state="default"] [data-shade="500"]').textContent.includes('#3A5B7C') && w.dssTokenSource({name:entry.prefix+'-500',scope:'Dark'}).control==='bdDefaultBg';
+  });
+  d.querySelector('#interaction-palette-lesson [data-interaction-state="default"] button').click();await wait();
+  test('Interaction shade inspector contains the complete current stylesheet and preview uses it',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
+  d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] button:last-child').click();await wait();
+  test('Button state shade configure reaches the correct variant and property',()=>w.DSStudio.activeStage===7 && d.getElementById('bdVariant').value==='outline' && d.activeElement===d.getElementById('bdHover'));
+  w.dssShowWizardStep(4);input('interaction-palette-controls-component','general','change');await wait();
+  const generalDisclosure=d.querySelector('#interaction-palette-controls [data-interaction-state="readonly"]');generalDisclosure.open=true;
+  input('jTheme','light');await wait();
+  test('General state theme changes preserve disclosure nodes and include all State Explorer states',()=>generalDisclosure===d.querySelector('#interaction-palette-controls [data-interaction-state="readonly"]') && generalDisclosure.open && [...d.getElementById('advState').options].every(option=>interactionStates.includes(option.value)));
+  d.querySelector('#interaction-palette-lesson [data-interaction-state="invalid"] button:last-child').click();await wait();
+  test('Invalid state shade configure reaches the current theme Danger semantic colour',()=>w.DSStudio.activeStage===6 && d.getElementById('jSemanticRole').value==='danger' && evaluate('state.theme')==='light');
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
+    d.querySelectorAll('#interaction-palette-controls details, #interaction-palette-lesson details').forEach(el=>el.open=true);
+    test('All expanded interaction state ramps fit '+width+'px with usable component and colour selectors',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['interaction-palette-controls','interaction-palette-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1 && d.getElementById(id+'-component').getBoundingClientRect().height>=44 && [...el.querySelectorAll('[data-state-colour]')].every(select=>select.getBoundingClientRect().height>=44);}));
+  }
+  const stableCatalogueRow=d.querySelector('#tokenTableBody tr');w.dssUpdateTokenCatalogue();
+  test('Unchanged state exports retain catalogue rows instead of rebuilding the large table',()=>d.querySelector('#tokenTableBody tr')===stableCatalogueRow);
+  input('tokenSearch','');const stableBrandCatalogueRow=d.querySelector('#tokenTableBody tr');input('jBase',19);await wait();
+  test('Editing one foundation token refreshes its catalogue value while reusing unaffected rows',()=>d.querySelector('#tokenTableBody tr')===stableBrandCatalogueRow && d.querySelector('[data-token-name="--font-size-base"]').closest('tr').textContent.includes('19px'));
+  // Status ramps reuse resolved theme colours and the exported shade generator.
+  reset();w.dssShowWizardStep(4);await wait();
+  for(const method of ['mix','oklch']) for(const theme of ['light','dark']) {
+    input('jRamp',method);input('jTheme',theme);await wait();
+    test(method+' '+theme+' status ramps preserve semantic anchors and match preview/export',()=>evaluate(`
+      STATUS_PALETTE_ROLES.every(role=>{
+        const anchor=palette('${theme}').roles[role],ramp=makeRamp(anchor,state.method);
+        return steps.every(step=>cssExport().includes('--'+role+'-'+step+': '+ramp[step]+';')) && ramp[500]===anchor;
+      })`) && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
+    test(method+' '+theme+' status teaching reads all eleven theme-specific exported steps',()=>['status-palette-steps','status-palette-ramp-lessons'].every(id=>['success','warning','danger'].every(role=>{
+      const rows=[...d.querySelectorAll('#'+id+' [data-palette-role="'+role+'"] [data-shade]')];
+      const tokens=w.dssReadTokens().filter(row=>(row.scope==='Dark')===(theme==='dark'));
+      return rows.length===11 && rows.every(row=>row.textContent.includes('--'+role+'-'+row.dataset.shade+': '+tokens.find(token=>token.name==='--'+role+'-'+row.dataset.shade).value+';'));
+    })) && d.getElementById('status-palette-theme').textContent.includes(theme==='dark'?'Dark':'Light'));
+  }
+  evaluate('state.semanticOverrides={light:{success:"#246840",warning:"#784500",danger:"#903344"},dark:{success:"#88DDAA",warning:"#EECC77",danger:"#EE8899"}};apply();renderCode()');await wait();
+  test('Status overrides regenerate each theme independently and catalogue routes to the semantic source',()=>['light','dark'].every(theme=>['success','warning','danger'].every(role=>{
+    const token=w.dssReadTokens().find(row=>row.name==='--'+role+'-500' && (row.scope==='Dark')===(theme==='dark'));
+    const source=w.dssTokenSource(token);
+    return token.value===evaluate('state.semanticOverrides.'+theme+'.'+role) && token.type==='Colour ramp' && source.step===6 && source.semantic===role && source.control==='jSemanticRole';
+  })));
+  d.querySelector('#status-palette-steps [data-palette-role="danger"] button').click();await wait();
+  test('Status shade inspection opens complete synchronized CSS',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true');
+  const statusBeforeConfigure=evaluate('projectJson()');
+  d.querySelector('#status-palette-steps [data-palette-role="warning"] .button-row button:last-child').click();await wait();
+  test('Status configuration reaches the correct theme role without changing project data',()=>w.DSStudio.activeStage===6 && d.getElementById('jSemanticRole').value==='warning' && evaluate('state.theme')==='dark' && evaluate('projectJson()')===statusBeforeConfigure);
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
+    d.querySelectorAll('#status-palette-steps details, #status-palette-ramp-lessons details').forEach(el=>el.open=true);
+    test('Expanded status steps fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['status-palette-steps-controls','status-palette-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
+  }
+  // Palette process: explicit token names, exported ramps and final Prototype.
+  reset();app.style.width='1440px';w.dssShowWizardStep(4);await wait();
+  d.getElementById('jBrandEditor').closest('details').open=true;
+  const tokenField=()=>d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');
+  const beforeTokenRoles=evaluate('JSON.stringify([state.primary,state.secondary,state.accent])');
+  const displayName=d.querySelector('[data-brand-id="blue"] [data-brand-field="name"]');
+  displayName.value='Ocean blue';displayName.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  test('Colour display names remain independent of brand token names',()=>tokenField().value==='blue' && evaluate('cssExport()').includes('--brand-blue: #004780'));
+  const stableTokenInput=tokenField();stableTokenInput.focus();stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  test('Token rename updates exports, teaching surfaces and catalogue while retaining focus and copied roles',()=>d.activeElement===stableTokenInput && d.querySelector('[data-brand-id="ocean-blue"] [data-brand-field="id"]')===stableTokenInput && evaluate('cssExport()').includes('--brand-ocean-blue: #004780') && !evaluate('cssExport()').includes('--brand-blue:') && d.getElementById('palette-brand-token-list').textContent.includes('--brand-ocean-blue: #004780;') && w.dssReadTokens().some(row=>row.name==='--brand-ocean-blue') && evaluate('JSON.stringify([state.primary,state.secondary,state.accent])')===beforeTokenRoles);
+  for(const invalid of ['white','Bad name','x;--evil','']) {
+    stableTokenInput.value=invalid;stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+    test('Token suffix rejects '+JSON.stringify(invalid)+' without changing saved data',()=>!stableTokenInput.validity.valid && evaluate('state.brandPalette.some(item=>item.id==="ocean-blue")') && evaluate('cssExport()').includes('--brand-ocean-blue: #004780'));
+  }
+  stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));
+  d.getElementById('jSaveLocal').click();const tokenProject=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(tokenProject)+')');await wait();
+  test('Token suffix survives project JSON import and local storage',()=>d.querySelector('[data-brand-id="ocean-blue"] [data-brand-field="id"]').value==='ocean-blue' && Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>project.data.brandPalette.some(item=>item.id==='ocean-blue')));
+  test('Palette sequence puts Main Palette generation before backgrounds, then interaction state steps in both panes',()=>{
+    const pairs=[[d.getElementById('jRamp'),d.getElementById('palette-steps-controls')],[d.getElementById('palette-steps-controls'),d.querySelector('.page-background-editor')],[d.getElementById('palette-token-lesson'),d.getElementById('webpage-background-lesson')],[d.querySelector('.page-background-editor'),d.getElementById('interaction-palette-controls')],[d.getElementById('webpage-background-lesson'),d.getElementById('interaction-palette-lesson')]];
+    return pairs.every(([before,after])=>Boolean(before.compareDocumentPosition(after)&w.Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  for(const method of ['mix','oklch']) for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) {
+    for(const [role,hex] of (method==='mix'?[['primary','#004780'],['secondary','#495965'],['accent','#CBDB2A']]:[['primary','#00BADC'],['secondary','#F37327'],['accent','#EF426F']])) input('j'+role[0].toUpperCase()+role.slice(1)+'Brand',hex,'change');
+    input('jRamp',method);d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);await wait();
+    test(method+' '+mode+' '+theme+' all Main Palette shade steps match exported tokens',()=>evaluate('state.method')===method && ['primary','secondary','accent'].every(role=>{
+      const rows=[...d.querySelectorAll('#palette-ramp-lessons [data-palette-role="'+role+'"] [data-shade]')];
+      const tokens=w.dssReadTokens();return rows.length===11 && rows.every(row=>row.textContent.includes('--'+role+'-'+row.dataset.shade+': '+tokens.find(token=>token.name==='--'+role+'-'+row.dataset.shade).value+';')) && rows.find(row=>row.dataset.shade==='500').textContent.includes(evaluate('state.'+role).toUpperCase()) && rows.find(row=>row.dataset.shade==='500').dataset.anchor==='true';
+    }));
+    test(method+' '+mode+' '+theme+' semantic explanation follows both exported themes',()=>['primary','secondary','accent'].every(role=>{
+      const text=d.querySelector('#palette-ramp-lessons [data-palette-role="'+role+'"] .palette-token-chain').textContent;
+      const tokens=w.dssReadTokens().filter(token=>token.name==='--'+role);return tokens.every(token=>text.includes('--'+role+': '+token.value+';')) && text.includes('generated from --'+role+'-'+(role==='secondary'?700:500)) && text.includes('generated from --'+role+'-300');
+    }));
+  }
+  input('jPrimaryBrand','#004780','change');evaluate('state.semanticOverrides={light:{primary:"#123456"},dark:{}};apply()');await wait();
+  test('Palette lesson distinguishes semantic overrides from generated shade values',()=>d.querySelector('#palette-ramp-lessons [data-palette-role="primary"] .palette-token-chain').textContent.includes('--primary: #123456; (custom semantic override)') && d.querySelector('#palette-ramp-lessons [data-palette-role="primary"] [data-shade="500"]').textContent.includes('#004780'));
+  d.querySelector('#palette-ramp-lessons [data-palette-role="primary"] button').click();await wait();
+  test('Palette shade inspection shows complete current CSS',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true');
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();d.getElementById('jBrandEditor').closest('details').open=true;d.querySelectorAll('#main-palette-steps details').forEach(el=>el.open=true);
+    test('Palette token teaching and expanded ramps fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['palette-steps-controls','palette-token-lesson','jBrandEditor'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
+  }
+  app.style.width='1440px';reset();w.dssShowWizardStep(4);await wait();
+  const resetTokenInput=d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');resetTokenInput.focus();resetTokenInput.value='white';resetTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));reset();await wait();
+  test('Reset restores token suffix values and clears stale validation while retaining editor focus',()=>resetTokenInput.value==='blue' && resetTokenInput.validity.valid && d.activeElement===resetTokenInput);
+  w.dssShowWizardStep(0,false);await wait();
+  const beforeOrderedWalk=evaluate('projectJson()');
+  test('Centre lessons follow wizard order immediately after the unchanged preview',()=>[...d.querySelectorAll('#main > .studio-section')].slice(1,13).every((section,position)=>section.id===w.DSStudio.orderedStages[position].lesson));
+  for(const [position,index] of w.DSStudio.stageOrder.entries()) {
+    if(position)d.getElementById('jNext').click();await wait();
+    test('Next follows stage '+(position+1)+' '+w.DSStudio.stages[index].label,()=>w.DSStudio.activeStage===index && d.getElementById('jProgress').textContent.startsWith('Step '+(position+1)+' of 12') && d.querySelector('[data-journey-step="'+index+'"]').getAttribute('aria-current')==='step' && evaluate('projectJson()')===beforeOrderedWalk);
+  }
+  const finalPrototypeDocument=previewDoc();d.getElementById('reviewFinalPrototype').click();await wait();
+  test('Final Prototype reviews the existing live page with native preview focus',()=>d.getElementById('studio-section-4').open && d.activeElement===d.querySelector('#studio-section-4 > summary') && previewDoc()===finalPrototypeDocument && d.getElementById('jNext').hidden);
+  d.getElementById('reviewPrototypeExport').click();await wait();
+  test('Prototype export route opens existing Deliver without replacing project or preview',()=>w.DSStudio.activeStage===11 && !d.querySelector('[data-journey-pane="11"]').hidden && previewDoc()===finalPrototypeDocument && evaluate('projectJson()')===beforeOrderedWalk);
+  // End palette process checks.
+  // Neutral palette follows Primary UI without a second editable anchor.
+  reset();w.dssShowWizardStep(4);await wait();
+  const neutralRows=()=>w.dssReadTokens().filter(row=>/^--neutral-\d+$/.test(row.name));
+  for(const method of ['mix','oklch']) for(const primary of ['#004780','#F37327','#008050','#000000','#FFFFFF','#808080']) {
+    input('jRamp',method);input('jPrimary',primary);await wait();
+    const colours=neutralRows().map(row=>row.value);
+    test(method+' '+primary+' produces eleven valid neutral steps ordered light to dark',()=>colours.length===11 && new Set(colours).size===11 && colours.every((hex,i)=>/^#[0-9A-F]{6}$/.test(hex) && (i===0 || evaluate('lum('+JSON.stringify(colours[i-1])+')')>evaluate('lum('+JSON.stringify(hex)+')'))));
+    test(method+' '+primary+' neutral midpoint retains hue at low chroma or remains grey',()=>{
+      const source=evaluate('rgbToOklch(state.primary)'),mid=evaluate('rgbToOklch(palette().n[500])');
+      const delta=Math.abs(Math.atan2(Math.sin(source[2]-mid[2]),Math.cos(source[2]-mid[2])));
+      const rgb=evaluate('hexRgb(palette().n[500])');
+      return mid[1]<=Math.min(source[1]*.12,.025)+.003 && (source[1]<.005?Math.max(...rgb)-Math.min(...rgb)<=1:delta<.2) && Math.abs(mid[0]-.6)<.005;
+    });
+    test(method+' '+primary+' neutral lesson reads real tokens and distinguishes its midpoint',()=>['main-palette-steps','palette-ramp-lessons'].every(id=>{
+      const rows=[...d.querySelectorAll('#'+id+' [data-palette-role="neutral"] [data-shade]')];
+      return rows.length===11 && rows.every(row=>row.textContent.includes('--neutral-'+row.dataset.shade+': '+neutralRows().find(token=>token.name==='--neutral-'+row.dataset.shade).value+';')) && rows.find(row=>row.dataset.shade==='500').textContent.includes('derived midpoint');
+    }));
+  }
+  input('jPrimary','#004780');await wait();const blueNeutrals=JSON.stringify(neutralRows());
+  input('jSecondary','#F37327');input('jAccent','#EF426F');await wait();
+  test('Supporting and Accent changes do not alter Neutral',()=>JSON.stringify(neutralRows())===blueNeutrals);
+  input('jPrimary','#F37327');await wait();
+  test('Changing Primary UI hue updates Neutral and all background option groups',()=>JSON.stringify(neutralRows())!==blueNeutrals && ['page','header','main','footer'].every(region=>{
+    const options=[...d.getElementById(region+'-background-brand').querySelectorAll('optgroup option')];return options.length===11 && options.every((option,i)=>option.value===neutralRows()[i].value && option.textContent.includes(neutralRows()[i].name));
+  }));
+  const selectedNeutral=neutralRows().find(row=>row.name==='--neutral-100').value;
+  for(const region of ['page','header','main','footer']) input(region+'-background-brand',selectedNeutral,'change');
+  await wait();
+  for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) {
+    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
+    for(const region of ['page','header','main','footer'])input(region+'-background-brand',selectedNeutral,'change');await wait();
+    const checkNeutral=(pd,pw)=>['body','header','main','footer'].every(region=>pw.getComputedStyle(pd.querySelector(region==='body'?'body':'body > '+region)).backgroundColor==='rgb('+evaluate('hexRgb('+JSON.stringify(selectedNeutral)+')').join(', ')+')');
+    test(mode+' '+theme+' applies a neutral step in all four live backgrounds',()=>checkNeutral(previewDoc(),previewWindow()) && neutralRows().length===11);
+    const page=d.createElement('iframe');page.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(page);await wait();
+    test(mode+' '+theme+' standalone export includes and applies Neutral',()=>checkNeutral(page.contentDocument,page.contentWindow) && page.contentDocument.querySelector('style').textContent.includes('--neutral-100: '+selectedNeutral));page.remove();
+  }
+  const assignedNeutrals=evaluate('JSON.stringify(state.semanticOverrides)');input('jPrimary','#008050');await wait();
+  test('New neutral generation preserves previously copied background choices',()=>evaluate('JSON.stringify(state.semanticOverrides)')===assignedNeutrals && evaluate('palette().roles.background')===selectedNeutral);
+  const neutralProject=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();reset();evaluate('importConfig('+JSON.stringify(neutralProject)+')');await wait();
+  test('Neutral regenerates from saved Primary and method without storing another anchor',()=>evaluate('state.primary')==='#008050' && neutralRows().length===11 && !Object.hasOwn(JSON.parse(evaluate('projectJson()')),'neutral') && evaluate('JSON.stringify(state.semanticOverrides)')===assignedNeutrals);
+  test('Neutral catalogue tokens are classified and configured from Primary UI',()=>neutralRows().every(row=>row.type==='Colour ramp' && w.dssTokenSource(row).control==='jPrimary' && w.dssTokenSource(row).step===4));
+  w.dssConfigureToken(neutralRows()[0]);await wait();
+  test('Configure Neutral focuses Primary rather than creating an independent colour',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('jPrimary'));
+  const neutralCandidates=w.dssGetContrastChecks().filter(row=>/^neutral-\d+ /.test(row.name));
+  test('Every neutral step has contrast candidates with valid Primary source targets',()=>neutralCandidates.length===44 && neutralCandidates.every(row=>row.scope==='candidate' && row.targets.some(target=>target.type==='anchor' && target.key==='primary')));
+  d.querySelector('#palette-ramp-lessons [data-palette-role="neutral"] button').click();await wait();
+  test('Neutral Inspect CSS uses the current complete stylesheet',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--neutral-500:'));
+  const neutralBackgroundInspect=d.querySelectorAll('#palette-ramp-lessons [data-palette-role="neutral"] button')[1];neutralBackgroundInspect.click();await wait();
+  test('Neutral background inspection targets an existing semantic declaration',()=>neutralBackgroundInspect.textContent==='Inspect background CSS' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--background:') && d.getElementById('dockCss').scrollTop>0);
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);d.querySelector('#main-palette-steps [data-palette-role="neutral"]').open=true;await wait();
+    test('Neutral palette fits '+width+'px with expanded steps',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['main-palette-steps','palette-ramp-lessons'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
+  }
+  app.style.width='1440px';reset();await wait();
+  test('Reset restores the Primary-derived neutral default',()=>JSON.stringify(evaluate('palette().n'))===JSON.stringify(evaluate('makeNeutralRamp(DEFAULT.primary,DEFAULT.method)')));
+  input('jRamp','mix');evaluate('resetStudio()');await wait();
+  test('Reset restores OKLCH and its neutral output after RGB mix',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && JSON.stringify(evaluate('palette().n'))===JSON.stringify(evaluate('makeNeutralRamp(state.primary,"oklch")')));
+  input('jRamp','mix');d.getElementById('jNewLocal').click();await wait();
+  test('New projects restore OKLCH after choosing RGB mix',()=>evaluate('state.method')==='oklch' && d.getElementById('method').value==='oklch');
+  for(const method of ['mix','oklch']) {
+    evaluate('importConfig({method:'+JSON.stringify(method)+'})');await wait();
+    test('Import preserves explicit '+method+' ramp choice',()=>evaluate('state.method')===method && d.getElementById('jRamp').value===method && d.getElementById('method').value===method);
+  }
+  evaluate('importConfig({method:"invalid"})');await wait();
+  test('Invalid imported methods fall back to OKLCH',()=>evaluate('state.method')==='oklch');
+  evaluate('importConfig({})');await wait();
+  test('Projects without a method inherit OKLCH',()=>evaluate('state.method')==='oklch');
+  // End neutral palette checks.
+  // Background transparency paints alpha without fading region contents.
+  reset();w.dssShowWizardStep(4);await wait();
+  const opacityRegions=['body','header','main','footer'];
+  const opacityId=region=>(region==='body'?'page':region)+'-background';
+  test('Background opacity defaults to fully opaque for existing projects',()=>opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1 && d.getElementById(opacityId(region)+'-opacity').value==='100'));
+  const opacityColours={body:'#004780',header:'#F37327',main:'#5FC5BF',footer:'#EF426F'};
+  for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) for(const percent of [0,35,100]) {
+    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
+    for(const region of opacityRegions){input(opacityId(region)+'-hex',opacityColours[region]);input(opacityId(region)+'-opacity',percent);}
+    await wait();
+    const checkOpacity=(pd,pw)=>opacityRegions.every(region=>{
+      const el=pd.querySelector(region==='body'?'body':'body > '+region),style=pw.getComputedStyle(el),rgb=evaluate('hexRgb('+JSON.stringify(opacityColours[region])+')');
+      return style.opacity==='1' && style.backgroundColor===(percent===100?'rgb('+rgb.join(', ')+')':'rgba('+rgb.join(', ')+', '+percent/100+')');
+    });
+    test(mode+' '+theme+' '+percent+'% background paint preserves full content opacity',()=>checkOpacity(previewDoc(),previewWindow()) && previewWindow().getComputedStyle(previewDoc().querySelector('header a')).opacity==='1' && opacityRegions.every(region=>d.getElementById(opacityId(region)+'-opacity-value').textContent===percent+'%' && d.getElementById(region+'-background-opacity-code').textContent==='--'+region+'-background-opacity: '+percent/100+';'));
+    const standalone=d.createElement('iframe');standalone.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(standalone);await wait();
+    test(mode+' '+theme+' '+percent+'% standalone transparency matches live output',()=>checkOpacity(standalone.contentDocument,standalone.contentWindow) && standalone.contentWindow.getComputedStyle(standalone.contentDocument.documentElement).backgroundColor===evaluate("'rgb('+hexRgb(palette().roles.surface).join(', ')+')'"));standalone.remove();
+  }
+  input('jTheme','light');input('jSemanticRole','surface','change');evaluate('state.semanticOverrides.light.surface="#FFFFFF";state.semanticOverrides.light.text="#000000";apply()');
+  input('page-background-opacity',50);input('header-background-opacity',50);await wait();
+  test('Translucent Header contrast uses the actual Body-over-canvas blend',()=>{
+    const row=w.dssGetContrastChecks().find(row=>row.theme==='light'&&row.group==='Text and semantic roles'&&row.name==='--text'&&row.location==='--header-background');
+    return row.bg==='#B98B73' && d.getElementById('header-background-composite').textContent.includes('#B98B73') && d.getElementById('body-background-composite').textContent.includes('#80A3C0');
+  });
+  const savedOpacity=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();await wait();
+  test('Opacity values autosave with the existing project state',()=>Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>project.data.backgroundOpacity?.light?.header===50));
+  reset();evaluate('importConfig('+JSON.stringify(savedOpacity)+')');await wait();
+  test('JSON round trip restores both themes and all opacity sliders',()=>evaluate('state.backgroundOpacity.light.header')===50 && evaluate('state.backgroundOpacity.dark.header')===100 && d.getElementById('header-background-opacity').value==='50');
+  const previousOpacity=evaluate('state.backgroundOpacity.light.header');input('header-background-brand',evaluate('palette().n[100]'),'change');await wait();
+  test('Brand or Neutral background selection preserves its opacity choice',()=>evaluate('state.backgroundOpacity.light.header')===previousOpacity);
+  input('jTheme','dark');input('header-background-opacity',25);input('main-background-opacity',35);d.getElementById('header-background-reset').click();await wait();
+  test('Background reset clears current-region colour and alpha only',()=>!evaluate('state.backgroundOpacity.dark.header') && !evaluate('state.semanticOverrides.dark["header-background"]') && evaluate('backgroundOpacity("header")')===1 && evaluate('state.backgroundOpacity.dark.main')===35 && evaluate('state.backgroundOpacity.light.header')===50);
+  const alphaToken=w.dssReadTokens().find(row=>row.name==='--header-background-opacity'&&row.scope==='Light / base');w.dssConfigureToken(alphaToken);await wait();
+  test('Opacity catalogue source selects its theme and focuses its range',()=>evaluate('state.theme')==='light' && w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('header-background-opacity'));
+  d.getElementById('header-background-opacity').focus();input('header-background-opacity',64);await wait();
+  test('Opacity edits preserve focus and update complete inspector CSS',()=>d.activeElement===d.getElementById('header-background-opacity') && (w.DSStudio.inspector.show({language:'css',section:'all',find:'--header-background-opacity:'}),d.getElementById('dockCss').textContent===evaluate('cssExport()')) && d.getElementById('dockCss').textContent.includes('--header-background-opacity: 0.64;'));
+  evaluate('importConfig({backgroundOpacity:{light:{body:-20,header:240,main:33.6,footer:"20",unknown:0},dark:{body:null,header:{bad:1},main:50,footer:0}}})');await wait();
+  test('Opacity imports clamp finite numbers, round percentages and reject non-numeric data',()=>evaluate('state.backgroundOpacity.light.body===0 && state.backgroundOpacity.light.header===100 && state.backgroundOpacity.light.main===34 && !("footer" in state.backgroundOpacity.light) && !("unknown" in state.backgroundOpacity.light) && !("body" in state.backgroundOpacity.dark) && !("header" in state.backgroundOpacity.dark) && state.backgroundOpacity.dark.main===50 && state.backgroundOpacity.dark.footer===0'));
+  evaluate('importConfig({backgroundOpacity:{light:{body:NaN,header:Infinity,main:-Infinity}}})');await wait();
+  test('Non-finite opacity imports remain fully opaque',()=>opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1));
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
+    test('Opacity controls and centre model fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && opacityRegions.every(region=>{const el=d.getElementById(opacityId(region)+'-opacity');return el.getBoundingClientRect().height>=44 && el.getBoundingClientRect().width>0 && el.getAttribute('aria-describedby')==='background-opacity-help';}) && d.getElementById('webpage-background-lesson').scrollWidth<=d.getElementById('webpage-background-lesson').clientWidth+1);
+  }
+  app.style.width='1440px';input('page-background-opacity',0);evaluate('resetStudio()');await wait();
+  test('Reset removes custom opacity data and restores opaque defaults',()=>!evaluate('state.backgroundOpacity') && opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1 && d.getElementById(opacityId(region)+'-opacity').value==='100'));
+  // End background transparency checks.
+  // Region padding extends the existing layout without replacing content gutters.
+  reset();w.dssShowWizardStep(4);await wait();
+  const paddingRegions=['header','main','footer'],paddingSides=['top','right','bottom','left'];
+  const paddingValues=()=>Object.fromEntries(paddingRegions.map(region=>[region,paddingSides.map(side=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')'))]));
+  test('Region padding starts at zero and is available only for Header, Main and Footer',()=>paddingRegions.every(region=>d.getElementById(region+'-padding-controls') && paddingValues()[region].every(value=>value===0)) && !d.getElementById('body-padding-controls'));
+  for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) for(const width of [320,1440]) for(const value of [0,64]) {
+    app.style.width=width+'px';d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);w.dssShowWizardStep(4);
+    for(const region of paddingRegions)for(const side of paddingSides)input(region+'-padding-'+side,value);await wait();
+    const checkPadding=(pd,pw)=>paddingRegions.every(region=>{
+      const style=pw.getComputedStyle(pd.querySelector('body > '+region));
+      const gutter=mode==='advanced'&&region==='main'?parseFloat(pw.getComputedStyle(pd.querySelector('header > .container')).paddingLeft):0;
+      return paddingSides.every(side=>Math.abs(parseFloat(style.getPropertyValue('padding-'+side))-value-(['left','right'].includes(side)?gutter:0))<.1);
+    });
+    test(mode+' '+theme+' '+width+'px region padding '+value+'px matches live output',()=>checkPadding(previewDoc(),previewWindow()) && paddingRegions.every(region=>d.getElementById(region+'-padding-code').textContent.includes('--'+region+'-padding-left: '+value+'px;')));
+    const page=d.createElement('iframe');page.style.cssText='width:'+width+'px;height:800px;border:0';page.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(page);await wait();
+    test(mode+' '+theme+' '+width+'px region padding '+value+'px exports without overflow',()=>checkPadding(page.contentDocument,page.contentWindow) && page.contentDocument.documentElement.scrollWidth<=width+1);page.remove();
+  }
+  app.style.width='1440px';w.dssShowWizardStep(4);await wait();
+  for(const [index,region] of paddingRegions.entries())for(const [sideIndex,side] of paddingSides.entries())input(region+'-padding-'+side,8+index*16+sideIndex*4);await wait();
+  test('All four padding sides are independently saved and shown in the centre',()=>paddingRegions.every((region,index)=>paddingSides.every((side,sideIndex)=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')')===8+index*16+sideIndex*4 && d.getElementById(region+'-padding-'+side+'-value').textContent===(8+index*16+sideIndex*4)+' px')));
+  const sharedPadding=evaluate('JSON.stringify(state.regionPadding)');input('jTheme','light');await wait();
+  test('Region padding is shared across themes',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding && d.getElementById('header-padding-left').value==='20');
+  input('header-background-hex','#123456');input('header-background-opacity',40);d.getElementById('header-background-reset').click();await wait();
+  test('Resetting a background preserves its separate padding',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding);
+  const paddingProject=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();await wait();
+  test('Region padding autosaves in existing local projects',()=>Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>JSON.stringify(project.data.regionPadding)===sharedPadding));
+  reset();evaluate('importConfig('+JSON.stringify(paddingProject)+')');await wait();
+  test('Region padding round trips through project JSON',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding && d.getElementById('footer-padding-left').value==='52');
+  const nonHeaderPadding=evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])');d.getElementById('header-padding-reset').click();await wait();
+  test('Padding reset restores one region without changing colours, alpha or other regions',()=>paddingValues().header.every(value=>value===0) && evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])')===nonHeaderPadding);
+  const paddingToken=w.dssReadTokens().find(row=>row.name==='--main-padding-left');w.dssConfigureToken(paddingToken);await wait();
+  test('Padding catalogue source reveals and focuses the actual slider',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('main-padding-left') && d.getElementById('main-padding-controls').open);
+  input('main-padding-left',17);await wait();
+  test('Padding edits preserve focus and update the centre inset',()=>d.activeElement===d.getElementById('main-padding-left') && d.getElementById('main-padding-demo').style.paddingLeft==='17px');
+  d.querySelector('#main-padding-demo').parentElement.querySelector('button').click();await wait();
+  test('Inspect padding opens complete live CSS at the real padding tokens',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--main-padding-left: 17px;') && d.getElementById('dockCss').scrollTop>0);
+  evaluate('importConfig({regionPadding:{header:{top:-10,right:500,bottom:13.6,left:"20",unknown:10},main:{top:NaN,right:Infinity,bottom:null,left:32},footer:"bad",body:{top:20}}})');await wait();
+  test('Padding imports accept only bounded finite numbers and known regions/sides',()=>evaluate('state.regionPadding.header.top===0 && state.regionPadding.header.right===64 && state.regionPadding.header.bottom===14 && !("left" in state.regionPadding.header) && !("unknown" in state.regionPadding.header) && state.regionPadding.main.left===32 && !("top" in state.regionPadding.main) && !("right" in state.regionPadding.main) && !("bottom" in state.regionPadding.main) && !("body" in state.regionPadding) && !("footer" in state.regionPadding)'));
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
+    paddingRegions.forEach(region=>d.getElementById(region+'-padding-controls').open=true);await wait();
+    test('Expanded padding controls and demos fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && paddingRegions.every(region=>{
+      const details=d.getElementById(region+'-padding-controls'),demo=d.getElementById(region+'-padding-demo');
+      return details.scrollWidth<=details.clientWidth+1 && demo.scrollWidth<=demo.clientWidth+1 && paddingSides.every(side=>d.getElementById(region+'-padding-'+side).getBoundingClientRect().height>=44);
+    }));
+  }
+  app.style.width='1440px';evaluate('resetStudio()');await wait();
+  test('Reset clears custom region padding and restores existing spacing defaults',()=>!evaluate('state.regionPadding') && paddingRegions.every(region=>paddingValues()[region].every(value=>value===0) && d.getElementById(region+'-padding-reset').disabled));
+  // End region padding checks.
   reset(); await wait(); input('tokenSearch','');
-  d.querySelector('[data-journey-step="11"]').click();
-  test('Wizard reaches its twelfth step and returns without implying completed checks', () => !d.querySelector('[data-journey-pane="11"]').hidden && d.getElementById('jNext').hidden && d.getElementById('jProgress').textContent.includes('Step 12 of 12') && !d.querySelector('.journey-steps .is-complete'));
+  d.querySelector('[data-journey-step="3"]').click();
+  test('Wizard ends at Prototype without implying completed checks', () => !d.querySelector('[data-journey-pane="3"]').hidden && d.getElementById('jNext').hidden && d.getElementById('jProgress').textContent.includes('Step 12 of 12') && !d.querySelector('.journey-steps .is-complete'));
+  d.getElementById('jBack').click();
+  test('Back from Prototype reaches Deliver',()=>!d.querySelector('[data-journey-pane="11"]').hidden && !d.getElementById('jNext').hidden);
   d.getElementById('jBack').click();
   test('Back navigation reaches accessibility and restores Next', () => !d.querySelector('[data-journey-pane="10"]').hidden && !d.getElementById('jNext').hidden);
   for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',6],['--button-secondary-hover-text','Dark','bdHoverText',7],['--brand-blue','Light / base',null,4]]) {
@@ -1351,11 +1695,12 @@ app.onload = async () => {
     const passes=boxes.length===8 && boxes[0].parentElement.textContent.includes('brief') && boxes[1].parentElement.textContent.includes('prototype') && d.getElementById('readinessStatus').textContent.startsWith('1 of 8');
     boxes[0].checked=false; boxes[0].dispatchEvent(new w.Event('change')); return passes;
   });
-  test('Planning stages precede palette in both wizard and centre navigation', () => {
-    const labels=[...d.querySelectorAll('[data-journey-step]')].slice(0,5).map(button=>button.textContent);
-    const destinations=w.DSStudio.stages.slice(0,5).map(stage=>'#'+stage.lesson);
-    return ['Brief','Architecture','Wireframe','Prototype','Palette'].every((label,index)=>labels[index].includes(label))
-      && JSON.stringify(destinations)===JSON.stringify(['#process-brief','#process-ia','#process-wireframe','#process-prototype','#brandPalette']);
+  test('Plan leads into Palette and Prototype is the final stage', () => {
+    const labels=[...d.querySelectorAll('[data-journey-step]')].map(button=>button.textContent);
+    const destinations=w.DSStudio.orderedStages.slice(0,4).map(stage=>'#'+stage.lesson);
+    return ['Brief','Architecture','Wireframe','Palette'].every((label,index)=>labels[index].includes(label))
+      && labels.at(-1)==='12 · Prototype' && w.DSStudio.orderedStages.filter(stage=>stage.phase==='Plan').length===3
+      && JSON.stringify(destinations)===JSON.stringify(['#process-brief','#process-ia','#process-wireframe','#brandPalette']);
   });
   for (const [index,id] of ['brief','ia','wireframe','prototype'].entries()) {
     d.querySelector(`[data-journey-step="${index}"]`).click();
@@ -1365,6 +1710,8 @@ app.onload = async () => {
     d.querySelector(`[data-journey-step="${index}"]`).click();
     test(id+' lesson returns to the correct wizard stage and focuses its heading', () => !d.querySelector(`[data-journey-pane="${index}"]`).hidden && d.activeElement===d.querySelector(`#process-${id} > summary h2`));
   }
+  // Planning workshops are part of the Advanced sample; New now starts Basic.
+  d.getElementById('dockModeAdvanced').click();await wait();
   input('jProject','Community learning hub'); d.getElementById('jSaveLocal').click();
   const planProjectId=d.getElementById('jProjects').value;
   for (const [key,value] of Object.entries({audience:'New community members',goal:'Find a workshop and prepare a question.',scope:'Workshop listings and resources',content:'Organiser supplies workshop copy and photographs.',delivery:'Release in two weeks; organiser approves and maintains content.',success:'Find the right workshop without help.',constraints:'Keyboard and phone access',pages:'Home\nWorkshops > Layout\nWorkshops > Colour\nResources\nContact',layout:'stack',wireframeNotes:'Put workshop choices before supporting resources.',prototypeTask:'Find the layout workshop.',prototypeNotes:'The participant hesitated at the first label.'})) input('plan-'+key,value);
@@ -1405,6 +1752,7 @@ app.onload = async () => {
   reset(); await wait();
   test('Editing planning never mutates the starter defaults; reset restores every field', () => evaluate('JSON.stringify(state.designProcess)===JSON.stringify(DSStudio.process.defaults()) && JSON.stringify(DEFAULT.designProcess)===JSON.stringify(DSStudio.process.defaults())'));
   d.getElementById('process-prototype').open=true;
+  d.querySelector('#process-prototype .step-more').open=true;
   w.dssRevealSection('process-prototype',false);
   const prototypeNode=d.getElementById('studio-plan-choose'); prototypeNode.querySelector('a').focus();
   input('jAccent','#00badc'); await wait();
@@ -1472,7 +1820,8 @@ app.onload = async () => {
   }
   standalone.remove(); reset(); await wait();
   const advancedHtml=evaluate('htmlExport()'), advancedCss=evaluate('cssExport()');
-  test('Sample mode defaults to Advanced with a labelled independent tab group', () => evaluate('state.sampleMode')==='advanced' && d.getElementById('dockModeAdvanced').getAttribute('aria-selected')==='true' && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeAdvanced' && d.querySelector('[aria-label="Website sample complexity"]'));
+  evaluate('resetStudio()');await wait();
+  test('Sample mode resets to Basic with a labelled independent tab group', () => evaluate('state.sampleMode')==='basic' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic' && d.querySelector('[aria-label="Website sample complexity"]'));
   d.getElementById('dockTabHtml').click(); d.getElementById('dockModeBasic').click(); await wait();
   test('Basic selection synchronizes inspector, preview and central exports while retaining the language tab', () => evaluate('state.sampleMode')==='basic' && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('codeView').textContent===evaluate('codeContent()') && previewDoc().querySelector('.skill-cards') && !previewDoc().querySelector('#design-process'));
   test('Basic exports shared system foundations without the Advanced gallery styles', () => evaluate('cssExport()').length<advancedCss.length && evaluate('cssExport()').includes('--space-unit:') && evaluate('cssExport()').includes('--button-pad-x:') && evaluate('cssExport()').includes('repeat(auto-fit, minmax(') && !evaluate('cssExport()').includes('.sample-grid-demo'));
@@ -1533,11 +1882,12 @@ app.onload = async () => {
     const ids=[...basicDoc.querySelectorAll('[id]')].map(el=>el.id);
     return ids.length===new Set(ids).size && !basicDoc.querySelector('script,style') && basicDoc.querySelector('link[href="tokens.css"]') && [...basicDoc.querySelectorAll('a[href^="#"]')].every(link=>basicDoc.getElementById(link.hash.slice(1))) && [...basicDoc.querySelectorAll('label[for]')].every(label=>basicDoc.getElementById(label.htmlFor));
   });
-  for (const [key,id] of [['End','dockModeBasic'],['Home','dockModeAdvanced'],['ArrowRight','dockModeBasic'],['ArrowLeft','dockModeAdvanced']]) {
+  for (const [key,id] of [['End','dockModeAdvanced'],['Home','dockModeBasic'],['ArrowRight','dockModeAdvanced'],['ArrowLeft','dockModeBasic']]) {
     const selected=d.querySelector('.studio-dock-modes [aria-selected="true"]');
     selected.dispatchEvent(new w.KeyboardEvent('keydown',{key,bubbles:true})); await wait();
     test('Mode tabs support '+key+' navigation and one tab stop', () => d.activeElement===d.getElementById(id) && d.getElementById(id).getAttribute('aria-selected')==='true' && [...d.querySelectorAll('.studio-dock-modes button')].filter(button=>button.tabIndex===0).length===1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')===id);
   }
+  d.getElementById('dockModeAdvanced').click();await wait();
   test('Returning to Advanced preserves its exact generated page and CSS', () => evaluate('htmlExport()')===advancedHtml && evaluate('cssExport()')===advancedCss);
   d.getElementById('dockModeBasic').click(); await wait(); d.getElementById('jSaveLocal').click();
   const basicProjectId=d.getElementById('jProjects').value, basicProject=evaluate('projectJson()');
@@ -1704,7 +2054,7 @@ app.onload = async () => {
   }
   basicPage.remove();
   evaluate('importConfig({sampleMode:"<script>",project:"<img src=x onerror=alert(1)>"})');
-  test('Invalid sample mode falls back to Advanced', () => evaluate('state.sampleMode')==='advanced');
+  test('Invalid sample mode falls back to Basic', () => evaluate('state.sampleMode')==='basic');
   evaluate('importConfig({sampleMode:"basic",project:"<img src=x onerror=alert(1)>"})');
   test('Basic escapes imported project text in its title and brand', () => {
     const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
@@ -1712,8 +2062,9 @@ app.onload = async () => {
   });
   evaluate('importConfig({})'); await wait();
   test('Legacy projects without a sample mode retain Advanced', () => evaluate('state.sampleMode')==='advanced' && d.getElementById('dockModeAdvanced').getAttribute('aria-selected')==='true');
-  d.getElementById('dockModeBasic').click(); reset(); await wait();
-  test('Reset restores Advanced mode and its complete sample', () => evaluate('state.sampleMode')==='advanced' && previewDoc().querySelector('#design-process') && d.getElementById('sampleModeHelp').textContent.startsWith('Advanced'));
+  d.getElementById('dockModeAdvanced').click(); evaluate('resetStudio()'); await wait();
+  test('Reset restores Basic mode and its matching preview and exports', () => evaluate('state.sampleMode')==='basic' && previewDoc().querySelector('.skill-cards') && !previewDoc().querySelector('#design-process') && evaluate('htmlExport()').includes('skill-cards') && d.getElementById('sampleModeHelp').textContent.startsWith('Basic'));
+  d.getElementById('dockModeAdvanced').click();await wait();
   test('Brief lesson teaches seven website-project prompts instead of displaying a prefilled project', () => d.querySelectorAll('#process-brief .process-brief-guide > li').length===7 && d.querySelector('#process-brief .process-brief-template').textContent.includes('[audience]') && !d.querySelector('#process-brief .process-brief-draft') && ['goal','audience','scope','content','constraints','delivery','success'].every(key=>d.getElementById('plan-'+key).value===''));
   test('Website brief covers scope, content ownership, requirements, delivery and a concrete example', () => {
     const lesson=d.querySelector('#process-brief'), guide=lesson.querySelector('.process-brief-guide').textContent;
@@ -1961,6 +2312,45 @@ app.onload = async () => {
     d.getElementById('sitemap-target').value=target;
     d.getElementById('sitemap-form').requestSubmit(); await wait();
   };
+  // Ordinary edits must retain visibility in project data, UI and generated output.
+  for (const mode of ['basic','advanced']) for (const visible of [false,true]) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
+    const destination=w.DSStudio.process.inventory(mode).find(([,id])=>!['home','footer','top'].includes(id))[1];
+    evaluate('state.designProcess=DSStudio.process.normalize('+JSON.stringify({
+      pages:'Overview\nOverview > Linked entry\nOverview > Second entry\nFuture page',
+      pageLinks:{[mode]:{'Overview':destination,'Linked entry':destination,'Second entry':destination,'Future page':''}},
+      showPlanned:visible
+    })+');apply()');await wait();
+    w.dssShowWizardStep(1);
+    const initial=evaluate('JSON.stringify(state.designProcess)');
+    const visibilityMatches=()=>evaluate('state.designProcess.showPlanned')===visible &&
+      d.getElementById('sitemap-planned').checked===visible &&
+      JSON.parse(evaluate('projectJson()')).designProcess.showPlanned===visible &&
+      Boolean(previewDoc().querySelector('#sitemap .sitemap-planned'))===(mode==='advanced'||visible) &&
+      Boolean(new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap .sitemap-planned'))===(mode==='advanced'||visible);
+    const undoSitemap=async action=>{
+      d.getElementById('sitemap-undo').click();await wait();
+      test(mode+' '+visible+' Undo restores '+action+' and visibility',()=>evaluate('JSON.stringify(state.designProcess)')===initial && visibilityMatches() && d.getElementById('sitemap-undo').disabled);
+    };
+    input('sitemap-items','0:0','change');
+    d.getElementById('sitemap-label').value='Renamed entry';d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' '+visible+' rename preserves visibility and destination',()=>visibilityMatches() && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Renamed entry' && a.hash==='#'+destination));
+    await undoSitemap('rename');
+    await saveSitemap('New planned page');
+    test(mode+' '+visible+' creation preserves visibility',()=>visibilityMatches() && evaluate('state.designProcess.pages').includes('New planned page') && previewDoc().querySelector('#sitemap').textContent.includes('New planned page')===(mode==='advanced'||visible));
+    await undoSitemap('creation');
+    input('sitemap-items','0:0','change');d.getElementById('sitemap-delete').click();await wait();
+    test(mode+' '+visible+' deletion preserves visibility',()=>visibilityMatches() && !evaluate('state.designProcess.pages').includes('Linked entry') && !previewDoc().querySelector('#sitemap').textContent.includes('Linked entry'));
+    await undoSitemap('deletion');
+    input('sitemap-items','0:0','change');d.getElementById('sitemap-down').click();await wait();
+    test(mode+' '+visible+' reorder preserves visibility and changes order',()=>visibilityMatches() && w.DSStudio.process.hierarchy(evaluate('state.designProcess.pages'))[0][1][1]==='Linked entry');
+    await undoSitemap('reorder');
+    d.getElementById('sitemap-planned').click();await wait();
+    test(mode+' '+visible+' checkbox explicitly changes visibility',()=>evaluate('state.designProcess.showPlanned')===!visible && d.getElementById('sitemap-planned').checked===!visible);
+    await undoSitemap('visibility toggle');
+  }
+  reset();d.getElementById('dockModeBasic').click();await wait();w.dssShowWizardStep(1);
+  d.getElementById('sitemap-planned').click();await wait();
   await saveSitemap('Our team');
   test('Sitemap CRUD creates a planned group visible in Basic preview and export',()=>previewDoc().querySelector('#sitemap').textContent.includes('Our team') && previewDoc().querySelector('#sitemap .sitemap-planned') && evaluate('htmlExport()').includes('Our team') && d.querySelector('#process-ia').textContent.includes('Our team'));
   const teamIndex=w.DSStudio.process.hierarchy(evaluate('DSStudio.process.currentPlan().pages')).findIndex(([name])=>name==='Our team');
@@ -1996,6 +2386,7 @@ app.onload = async () => {
   await saveSitemap('Too many');await saveSitemap('Still too many');
   test('Sitemap CRUD enforces entry limits and remains usable after repeated rejections',()=>w.DSStudio.process.hierarchy(evaluate('state.designProcess.pages')).length===64 && d.getElementById('sitemap-status').textContent.includes('64 entries'));
   d.getElementById('plan-use-sample').click();await wait();
+  d.getElementById('sitemap-planned').click();await wait();
   await saveSitemap('Research <notes');
   test('Sitemap labels render as escaped text without creating page sections',()=>previewDoc().querySelector('#sitemap').textContent.includes('Research <notes') && !previewDoc().querySelector('#sitemap notes') && previewDoc().querySelectorAll('main > section').length===4);
   for (const width of [320,1440]) {
@@ -2032,6 +2423,74 @@ app.onload = async () => {
   evaluate("state.theme='light';apply()");d.getElementById('page-background-reset').click();await wait();
   test('Page background reset restores the default canvas',()=>evaluate('palette().roles.background')===defaultCanvas);
   reset();await wait();
+  w.dssShowWizardStep(4);
+  const regions=['header','main','footer'];
+  test('Background controls follow Brand and Main Palettes, in page order',()=>{
+    const pane=d.querySelector('[data-journey-pane="4"]'),editor=d.querySelector('.page-background-editor');
+    return Boolean(d.getElementById('jRamp').compareDocumentPosition(editor)&w.Node.DOCUMENT_POSITION_FOLLOWING) &&
+      [...editor.querySelectorAll('legend')].map(el=>el.textContent).join('|')==='Body background|Header background|Main background|Footer background' &&
+      pane.contains(editor) && d.querySelector('#brandPalette .studio-lesson #webpage-background-lesson');
+  });
+  test('Body is a visible first-class control and contains the centre page regions',()=>!d.getElementById('body-background-controls').closest('details') && d.getElementById('page-background-colour').getBoundingClientRect().height>=44 && ['header','main','footer'].every(region=>d.getElementById('body-background-value').closest('section').querySelector('.background-contained-regions').contains(d.getElementById(region+'-background-value'))));
+  test('Every background selector offers the complete Brand Palette in its saved order',()=>regions.concat('page').every(region=>{
+    const values=[...d.getElementById(region+'-background-brand').children].filter(el=>el.tagName==='OPTION').slice(1);
+    return values.length===evaluate('state.brandPalette.length') && values.every((option,i)=>option.value===evaluate('state.brandPalette')[i].hex && option.textContent.includes(evaluate('state.brandPalette')[i].name));
+  }));
+  const regionColours={light:['#004780','#5FC5BF','#F37327'],dark:['#EF426F','#495965','#57B7E7']};
+  const bodyColours={light:'#00BADC',dark:'#2B71B9'};
+  for (const theme of ['light','dark']) {
+    input('jTheme',theme);await wait();
+    input('page-background-brand',bodyColours[theme],'change');await wait();
+    test(theme+' Body brand choice updates the existing background role and centre model',()=>evaluate('palette().roles.background')===bodyColours[theme] && d.getElementById('body-background-value').textContent==='--background: '+bodyColours[theme]+';' && d.getElementById('body-background-contrast').textContent.includes('Text '));
+    for (const [index,region] of regions.entries()) {
+      input(region+'-background-brand',regionColours[theme][index],'change');await wait();
+      test(theme+' '+region+' background selects a brand value independently',()=>evaluate('palette().roles')[region+'-background']===regionColours[theme][index] && d.getElementById(region+'-background-hex').value===regionColours[theme][index] && d.getElementById(region+'-background-value').textContent.includes(regionColours[theme][index]));
+    }
+    for (const mode of ['basic','advanced']) {
+      d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
+      const checkRegions=(pd,pw)=>pw.getComputedStyle(pd.body).backgroundColor==='rgb('+evaluate('hexRgb('+JSON.stringify(bodyColours[theme])+')').join(', ')+')' && regions.every((region,i)=>{
+        const rgb=evaluate('hexRgb('+JSON.stringify(regionColours[theme][i])+')');
+        return pw.getComputedStyle(pd.querySelector('body > '+region)).backgroundColor==='rgb('+rgb.join(', ')+')';
+      });
+      test(theme+' '+mode+' preview paints Body and all three regions and preserves card surfaces',()=>checkRegions(previewDoc(),previewWindow()) && previewWindow().getComputedStyle(previewDoc().querySelector('.card')).backgroundColor!==previewWindow().getComputedStyle(previewDoc().querySelector('main')).backgroundColor);
+      const exportPage=d.createElement('iframe');exportPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(exportPage);await wait();
+      test(theme+' '+mode+' standalone HTML and CSS paint the same backgrounds',()=>checkRegions(exportPage.contentDocument,exportPage.contentWindow));exportPage.remove();
+      for (const region of ['body',...regions]) for (const language of ['css','html']) {
+        const row=d.getElementById(region+'-background-value').closest('section');row.querySelector('[data-background-inspect="'+language+'"]').click();await wait();
+        test(theme+' '+mode+' '+region+' Inspect '+language+' shows the complete current output',()=>d.getElementById('studioInspector').open && d.getElementById('dockCss').textContent===evaluate(language==='css'?'cssExport()':'htmlExport()') && d.getElementById(language==='css'?'dockTabCss':'dockTabHtml').getAttribute('aria-selected')==='true');
+      }
+    }
+  }
+  const regionProject=JSON.parse(evaluate('projectJson()'));input('jProject','Region background test');d.getElementById('jSaveLocal').click();await wait();
+  input('header-background-colour','#123456');await wait();
+  test('A custom region picker updates the current inspector output',()=>evaluate("palette().roles['header-background']")==='#123456' && d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
+  d.getElementById('jLoadLocal').click();await wait();
+  test('Saved projects restore autosaved per-theme region and Body backgrounds',()=>evaluate('state.semanticOverrides.dark["header-background"]')==='#123456' && evaluate('state.semanticOverrides.light["header-background"]')===regionColours.light[0] && evaluate('state.semanticOverrides.dark.background')===bodyColours.dark && evaluate('state.semanticOverrides.light.background')===bodyColours.light);
+  reset();evaluate('importConfig('+JSON.stringify(regionProject)+')');await wait();
+  test('Region and Body backgrounds survive project JSON round trip',()=>regions.every((region,i)=>evaluate('state.semanticOverrides.dark')[region+'-background']===regionColours.dark[i] && evaluate('state.semanticOverrides.light')[region+'-background']===regionColours.light[i]) && evaluate('state.semanticOverrides.dark.background')===bodyColours.dark && evaluate('state.semanticOverrides.light.background')===bodyColours.light);
+  w.dssConfigureToken({name:'--background',scope:'Light'});await wait();
+  test('Body token source routes to the correct theme and visible Body control',()=>evaluate('state.theme')==='light' && w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('page-background-colour'));
+  input('jTheme','dark');await wait();
+  input('main-background-hex','#123ABC');await wait();
+  input('main-background-hex','red;/*');await wait();
+  test('Invalid region hex cannot change state or generated output',()=>evaluate('state.semanticOverrides.dark["main-background"]')==='#123ABC' && !evaluate('cssExport()').includes('red;/*') && d.getElementById('main-background-hex').getAttribute('aria-invalid')==='true');
+  for (const region of regions) {d.getElementById(region+'-background-reset').click();await wait();}
+  test('Region reset restores current-theme defaults and retains other-theme choices',()=>regions.every((region,i)=>!evaluate('state.semanticOverrides.dark')[region+'-background'] && evaluate('state.semanticOverrides.light')[region+'-background']===regionColours.light[i]) && evaluate("palette().roles['main-background']===palette().roles.background && palette().roles['header-background']===palette().roles.surface && palette().roles['footer-background']===palette().roles.surface"));
+  input('page-background-hex','#234567');await wait();
+  test('Default Main background follows subsequent canvas changes',()=>evaluate("palette().roles['main-background']==='#234567'"));
+  d.getElementById('page-background-reset').click();await wait();
+  test('Body reset restores only its theme and updates default Main',()=>!evaluate('state.semanticOverrides.dark.background') && evaluate('state.semanticOverrides.light.background')===bodyColours.light && evaluate('palette().roles.background===palette().roles["main-background"]'));
+  input('header-background-brand','#FFFFFF','change');await wait();
+  evaluate("state.brandPalette=state.brandPalette.map(item=>item.hex==='#FFFFFF'?{...item,name:'<img onerror=alert(1)>',hex:'#EEEEEE'}:item);apply()");await wait();
+  test('Brand edits refresh all choices safely while existing assignments retain copied hex',()=>evaluate("palette().roles['header-background']")==='#FFFFFF' && regions.every(region=>[...d.getElementById(region+'-background-brand').options].some(option=>option.value==='#EEEEEE'&&option.textContent.includes('<img onerror=alert(1)>'))) && !d.querySelector('#webpage-region-controls img'));
+  evaluate('importConfig({semanticOverrides:{light:{"header-background":"url(javascript:alert(1))","main-background":{},"footer-background":"#abc"},dark:{"header-background":"#abcdef"}}})');await wait();
+  test('Imported region overrides validate hex types and lengths',()=>evaluate("!state.semanticOverrides.light['header-background'] && !state.semanticOverrides.light['main-background'] && !state.semanticOverrides.light['footer-background'] && state.semanticOverrides.dark['header-background']==='#ABCDEF'"));
+  for (const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
+    test('Background controls and centre lesson fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['body-background-controls','webpage-region-controls','webpage-background-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}) && ['page',...regions].every(region=>['brand','colour','hex'].every(kind=>{const el=d.getElementById(region+'-background-'+kind);el.focus();return d.activeElement===el && el.getBoundingClientRect().height>=44;})));
+  }
+  app.style.width='1440px';reset();await wait();
+  test('Reset clears all region overrides and restores selectors',()=>!evaluate('state.semanticOverrides') && regions.every(region=>d.getElementById(region+'-background-reset').disabled));
   reset(); await wait();
   input('jProject','My learning project'); input('jBase',18);
   const beforeLearning=JSON.parse(evaluate('projectJson()'));
@@ -2282,6 +2741,44 @@ app.onload = async () => {
   d.querySelector('[data-journey-step="7"]').click();d.querySelector('#buttonDesignLab [data-inspect="css"]').click();
   test('Contextual Inspect CSS reopens the hidden column and selects its promised output',()=>d.getElementById('studioInspector').open && !d.querySelector('.layout').classList.contains('is-inspector-collapsed') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc()===collapseDocument);
   test('Inspector visibility is absent from project JSON',()=>!Object.keys(JSON.parse(evaluate('projectJson()'))).some(key=>/inspector|collapsed/i.test(key)));
+  // Studio section returns never navigate or regenerate the sample website.
+  reset();app.style.width='1440px';await wait();
+  test('Every studio panel, wizard pane and inspector ends with one native return link',()=>[...d.querySelectorAll('.studio-section > .panel, [data-journey-pane], #studioInspector')].every(container=>{
+    const rows=container.querySelectorAll(':scope > .studio-home-return'),link=rows[0]?.querySelector('a');
+    return rows.length===1 && container.lastElementChild===rows[0] && link?.getAttribute('href')==='#studio-home' && link.tabIndex===0 && link.textContent.startsWith('Back to top') && link.querySelector('span').getAttribute('aria-hidden')==='true';
+  }));
+  for(const theme of ['light','dark']) for(const width of [320,901,1440]) {
+    input('jTheme',theme);app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
+    const controls=d.querySelector('[data-journey-pane="4"]'),panel=d.querySelector('#brandPalette > .panel');
+    test(theme+' section return links align right and fit '+width+'px',()=>[controls,panel].every(container=>{
+      const row=container.querySelector(':scope > .studio-home-return'),link=row.querySelector('a'),box=link.getBoundingClientRect(),rowBox=row.getBoundingClientRect();
+      return box.width>=44 && box.height>=44 && box.width<=container.clientWidth+1 && Math.abs(box.right-(rowBox.right-parseFloat(w.getComputedStyle(row).paddingRight)))<1;
+    }) && d.documentElement.scrollWidth<=w.innerWidth+1);
+    const beforeHome=evaluate('projectJson()'),beforeStage=w.DSStudio.activeStage,beforeDocument=previewDoc(),beforeLibrary=w.localStorage.getItem('dss-v27-projects');
+    const openState=[...d.querySelectorAll('#main > .studio-section')].map(el=>el.open).join(',');
+    const link=panel.querySelector(':scope > .studio-home-return a');link.scrollIntoView({block:'center',behavior:'instant'});link.focus();link.click();await wait();
+    test(theme+' return reaches the studio top with visible focus at '+width+'px',()=>w.scrollY<=1 && d.activeElement===d.getElementById('studio-home') && w.getComputedStyle(d.getElementById('studio-home')).outlineStyle==='solid' && d.getElementById('studio-home').getBoundingClientRect().top>=-1);
+    test(theme+' return preserves the current stage, project, library and preview at '+width+'px',()=>evaluate('projectJson()')===beforeHome && w.DSStudio.activeStage===beforeStage && previewDoc()===beforeDocument && w.localStorage.getItem('dss-v27-projects')===beforeLibrary && [...d.querySelectorAll('#main > .studio-section')].map(el=>el.open).join(',')===openState);
+  }
+  app.style.width='1440px';w.dssShowWizardStep(8);await wait();
+  const nativeReturn=d.querySelector('#studio-section-3 > .panel > .studio-home-return a');
+  nativeReturn.scrollIntoView({block:'center',behavior:'instant'});nativeReturn.focus();d.documentElement.style.scrollBehavior='smooth';
+  nativeReturn.dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true,button:0,detail:0}));await wait();
+  test('Keyboard-style link activation returns immediately despite smooth page scrolling',()=>w.scrollY<=1 && d.activeElement===d.getElementById('studio-home'));
+  d.documentElement.style.removeProperty('scroll-behavior');
+  for(const stage of w.DSStudio.orderedStages) {
+    w.dssShowWizardStep(stage.index,false);await wait();
+    test(stage.label+' retains one return link after stage routing',()=>d.querySelectorAll('#'+stage.lesson+' > .panel > .studio-home-return').length===1 && d.querySelectorAll('[data-journey-pane="'+stage.index+'"] > .studio-home-return').length===1);
+  }
+  w.DSStudio.inspector.show({language:'css',section:'all'});await wait();
+  const homeCode=d.getElementById('dockCss').textContent,homeMode=evaluate('state.sampleMode');
+  d.querySelector('#studioInspector > .studio-home-return a').click();await wait();
+  test('Inspector return retains its visibility, selected language and exact output',()=>d.getElementById('studioInspector').open && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===homeCode && evaluate('state.sampleMode')===homeMode && d.activeElement===d.getElementById('studio-home'));
+  for(const mode of ['basic','advanced']) {
+    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
+    test(mode+' preview and exported files contain no studio return controls',()=>!previewDoc().querySelector('.studio-home-return,.studio-home-link,#studio-home') && !evaluate('htmlExport()').includes('studio-home') && !evaluate('cssExport()').includes('studio-home'));
+  }
+  // End studio section return checks.
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
 };
@@ -2359,7 +2856,8 @@ def main():
                                   '--no-default-browser-check', '--disable-background-networking',
                                   '--user-data-dir=' + profile, '--virtual-time-budget=120000',
                                   '--dump-dom', f'http://127.0.0.1:{server.server_port}/__review__'],
-                                 capture_output=True, encoding='utf-8', errors='replace', timeout=180)
+                                 # The full state/colour matrix can exceed three minutes on Windows.
+                                 capture_output=True, encoding='utf-8', errors='replace', timeout=300)
             match = re.search(r'<pre id="results">(.*?)</pre>', run.stdout, re.S)
             if not match or match[1] == 'RUNNING':
                 raise SystemExit('Browser review did not complete.\n' + run.stderr[-2000:])

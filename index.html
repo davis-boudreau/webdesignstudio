@@ -14,16 +14,16 @@
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/design-process.css?v=20261103-sitemap-crud">
+    <link rel="stylesheet" href="src/css/design-process.css?v=20261104-region-padding">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
-    <link rel="stylesheet" href="src/css/learning-path.css?v=20261103-inspector-cap">
+    <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
     <link rel="stylesheet" href="src/css/spacing-lesson.css?v=20261103-spacing-lesson">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
-    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261019-swatch-actions">
+    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261104-all-state-palettes">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
-    <header class="topbar">
+    <header class="topbar" id="studio-home" tabindex="-1">
       <div class="shell top-inner">
         <a class="brand" href="./" aria-label="Web Design System Studio home">
           <span class="brandmark">DS</span>
@@ -58,15 +58,15 @@
               <button data-journey-step="0" type="button">1 &middot; Brief</button>
               <button data-journey-step="1" type="button">2 &middot; Architecture</button>
               <button data-journey-step="2" type="button">3 &middot; Wireframe</button>
-              <button data-journey-step="3" type="button">4 &middot; Prototype</button>
-              <button data-journey-step="4" type="button">5 &middot; Palette</button>
-              <button data-journey-step="5" type="button">6 &middot; Typography</button>
-              <button data-journey-step="6" type="button">7 &middot; Semantic colours</button>
-              <button data-journey-step="7" type="button">8 &middot; Buttons</button>
-              <button data-journey-step="8" type="button">9 &middot; Spacing and surfaces</button>
-              <button data-journey-step="9" type="button">10 &middot; Responsive layout</button>
-              <button data-journey-step="10" type="button">11 &middot; Accessibility</button>
-              <button data-journey-step="11" type="button">12 &middot; Deliver</button>
+              <button data-journey-step="4" type="button">4 &middot; Palette</button>
+              <button data-journey-step="5" type="button">5 &middot; Typography</button>
+              <button data-journey-step="6" type="button">6 &middot; Semantic colours</button>
+              <button data-journey-step="7" type="button">7 &middot; Buttons</button>
+              <button data-journey-step="8" type="button">8 &middot; Spacing and surfaces</button>
+              <button data-journey-step="9" type="button">9 &middot; Responsive layout</button>
+              <button data-journey-step="10" type="button">10 &middot; Accessibility</button>
+              <button data-journey-step="11" type="button">11 &middot; Deliver</button>
+              <button data-journey-step="3" type="button">12 &middot; Prototype</button>
             </div>
             <div class="journey-pane" data-journey-pane="0">
               <h3 class="journey-stage-title">1. Write the project brief</h3>
@@ -105,7 +105,7 @@
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden>
               <h3 class="journey-stage-title">2. Map the information architecture</h3>
-              <p class="help">Inventory the content, group it around audience tasks and choose labels people understand. The live sitemap below the centre lesson shows your relationships.</p>
+              <p class="help">Use the brief to identify essential pages, content and user tasks. Group them into a clear sitemap and check the labels with your audience. The centre lesson guides this planning step.</p>
               <div id="sitemap-editor"></div>
               <details class="learning-note"><summary>Edit sitemap as text</summary>
               <div class="field process-editor"><label for="plan-pages">Pages and content groups (sitemap)</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">The complete map follows the Basic or Advanced sample selected in the inspector. Edit it to plan your own content; custom edits are kept when switching samples. Use one entry per line, up to 64 entries, with Parent &gt; Child for two levels and labels up to 64 characters. Labels are plain text, not URLs. The centre lesson and footer share this plan; only existing content becomes a link.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample sitemap</button><p class="help" id="plan-sample-status" role="status"></p><a href="#process-ia">Review the sitemap in the centre lesson</a></div>
@@ -120,25 +120,15 @@
               <p class="journey-tip"><strong>Before moving on:</strong> Compare the narrow and wide wireframe. Does the reading order support the main task?</p>
             </div>
             <div class="journey-pane" data-journey-pane="3" hidden>
-              <h3 class="journey-stage-title">4. Rehearse a prototype task</h3>
-              <p class="help">Follow the centre lesson's linked Discover, Choose and Review screens. This low-detail prototype tests one navigation path; it has no data submission or application backend.</p>
+              <h3 class="journey-stage-title">12. Review the finished prototype</h3>
+              <p class="help">Use the live page and exported HTML/CSS as your finished prototype. Test the task below with real content, themes, keyboard use and narrow layouts. The earlier linked task rehearsal remains available in the centre.</p>
               <div class="field process-editor"><label for="plan-prototypeTask">Task to test</label><textarea id="plan-prototypeTask" data-process-field="prototypeTask" maxlength="600" rows="5"></textarea></div>
               <div class="field process-editor"><label for="plan-prototypeNotes">Observations and next revision</label><textarea id="plan-prototypeNotes" data-process-field="prototypeNotes" maxlength="1600" rows="5"></textarea></div>
-              <p class="journey-tip"><strong>Before palette:</strong> Ask someone to try the task without coaching. Record hesitation and revise the brief, labels or hierarchy as needed.</p>
+              <p class="journey-tip"><strong>Review the prototype:</strong> Ask someone to try the live page without coaching. Record hesitation and revise the design before handover.</p>
             </div>
             <div class="journey-pane" data-journey-pane="4" hidden="">
               <h3 class="journey-stage-title">5. Brand Palette and Main Palette</h3>
-              <section class="page-background-editor" aria-labelledby="page-background-title">
-                <h4 id="page-background-title">Webpage background</h4>
-                <p class="help" id="page-background-help">Set the page canvas for the current theme. Cards and section surfaces keep their own colours. Switch themes to set the other background.</p>
-                <label for="page-background-colour">Choose background colour</label>
-                <input id="page-background-colour" type="color" aria-describedby="page-background-help">
-                <label for="page-background-hex">Background hex colour</label>
-                <input id="page-background-hex" type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" placeholder="#F3F6FA" aria-describedby="page-background-help">
-                <p class="help" id="page-background-theme"></p>
-                <button id="page-background-reset" type="button" class="ghost">Use default background</button>
-              </section>
-              <p class="help">Use your brief and prototype findings to assign colours a purpose, then evaluate the combinations people will actually see.</p>
+              <p class="help">Use your brief, architecture and wireframe to assign colours a purpose, then evaluate the combinations people will actually see.</p>
               <details class="learning-note build-guide">
                 <summary>How do I choose and check my palette?</summary>
                 <div class="learning-content">
@@ -154,11 +144,11 @@
               </details>
 
               <h4>Brand Palette</h4>
-              <p class="help">Your named brand colours are the reference for the interface. The example palette is a starting point.</p>
+              <p class="help">Name each brand colour, then assign its token name. A token pairs a reusable name with a value, for example --brand-blue: #004780;. The example palette is a starting point.</p>
               <ul id="jBrandSwatches" class="brand-palette-list" tabindex="0" aria-label="Brand Palette colours"></ul>
               <details>
                 <summary>Edit Brand Palette</summary>
-                <p class="help">Edit, add or remove up to 24 named colours. Main Palette dropdowns copy a colour when selected; editing a brand swatch is a separate choice from applying it to the interface.</p>
+                <p class="help">Edit, add or remove up to 24 named colours. Set a unique token suffix using lowercase letters, digits and hyphens; --brand- is added automatically. Changing a colour's display name keeps its token name. Renaming a token updates generated CSS. Main Palette dropdowns copy a colour when selected.</p>
                 <p id="jBrandCount" class="help"></p>
                 <div id="jBrandEditor"></div>
                 <button id="jBrandAdd" class="ghost" type="button">Add brand colour</button>
@@ -199,13 +189,48 @@
                   </output>
                 </div>
               </div>
+              <section class="field" aria-labelledby="neutralPaletteTitle">
+                <h4 id="neutralPaletteTitle">Neutral palette · derived from Primary UI</h4>
+                <p class="help">Neutral greys borrow the Primary UI hue with a restrained tint. They update automatically with Primary UI and the ramp method.</p>
+                <output id="neutralPaletteAnchor" aria-label="Derived neutral midpoint"></output>
+              </section>
               <div class="field">
                 <label for="jRamp">Ramp method</label>
                 <select id="jRamp">
                   <option value="mix">RGB mix</option>
-                  <option value="oklch">OKLCH</option>
+                  <option value="oklch" selected>OKLCH</option>
                 </select>
               </div>
+              <section id="palette-steps-controls" aria-labelledby="palette-steps-title">
+                <h4 id="palette-steps-title">Generate palette steps</h4>
+                <p class="help">Each Main Palette selection generates eleven shade tokens, from 50 to 950. Step 500 keeps your chosen colour. Neutral derives a softer midpoint from Primary UI and generates its own eleven steps. Steps update automatically when the colour or ramp method changes.</p>
+                <div id="main-palette-steps"></div>
+              </section>
+              <section id="status-palette-steps-controls" aria-labelledby="status-palette-steps-title">
+                <h4 id="status-palette-steps-title">Generate state palette steps</h4>
+                <p class="help">Success, Warning and Danger each generate eleven steps, from 50 to 950. Step 500 preserves the current theme's semantic colour. Change these colours in Semantic colours; the ramp method above controls shade generation. Steps update automatically. Use words or icons as well as colour for feedback.</p>
+                <p id="status-palette-theme" class="help"></p>
+                <div id="status-palette-steps"></div>
+              </section>
+              <section class="page-background-editor" aria-labelledby="page-background-title">
+                <h4 id="page-background-title">Webpage backgrounds</h4>
+                <p class="help" id="page-background-help">Choose Body, Header, Main and Footer backgrounds for the current theme after defining your Brand and Main Palettes. All brand colours are available; selecting one copies its hex value. Cards and controls retain their surface colours.</p>
+                <p class="help" id="background-opacity-help">Background opacity: 100% is solid; 0% is transparent. Text stays opaque. Body reveals a Surface-coloured canvas; Header, Main and Footer reveal Body. Changes apply to the current theme.</p>
+                <fieldset class="background-region" id="body-background-controls">
+                <legend>Body background</legend>
+                <p class="help">Body is the canvas behind Header, Main and Footer. Main follows Body until you choose a separate Main background.</p>
+                <label for="page-background-brand">Body · Brand or Neutral Palette</label><select id="page-background-brand"></select>
+                <label for="page-background-colour">Body custom colour</label>
+                <input id="page-background-colour" type="color" aria-describedby="page-background-help">
+                <label for="page-background-hex">Body hex colour</label>
+                <input id="page-background-hex" type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" placeholder="#F3F6FA" aria-describedby="page-background-help">
+                <label for="page-background-opacity">Body background opacity <output id="page-background-opacity-value">100%</output></label>
+                <input id="page-background-opacity" type="range" min="0" max="100" step="1" value="100" aria-describedby="background-opacity-help">
+                <p class="help" id="page-background-theme"></p>
+                <button id="page-background-reset" type="button" class="ghost">Use default body background</button>
+                </fieldset>
+                <div id="webpage-region-controls"></div>
+              </section>
               <p class="journey-tip">
                 <strong>Try it:</strong>
                 Change the primary colour and inspect buttons, surfaces and the generated CSS. Compare light and dark mode; do not assume an attractive colour has sufficient contrast.
@@ -767,7 +792,7 @@
                 <label for="method">Colour ramp method</label>
                 <select id="method">
                   <option value="mix">RGB mix (white/black)</option>
-                  <option value="oklch">OKLCH lightness</option>
+                  <option value="oklch" selected>OKLCH lightness</option>
                 </select>
               </div>
               <div class="field">
@@ -1144,11 +1169,11 @@
                   </div>
                 </div>
               <div class="studio-dock-tabs studio-dock-modes" role="tablist" aria-label="Website sample complexity">
-                <button id="dockModeAdvanced" type="button" role="tab" aria-selected="true" aria-controls="dockSamplePanel">Advanced</button>
-                <button id="dockModeBasic" type="button" role="tab" aria-selected="false" aria-controls="dockSamplePanel" tabindex="-1">Basic</button>
+                <button id="dockModeBasic" type="button" role="tab" aria-selected="true" aria-controls="dockSamplePanel">Basic</button>
+                <button id="dockModeAdvanced" type="button" role="tab" aria-selected="false" aria-controls="dockSamplePanel" tabindex="-1">Advanced</button>
               </div>
-              <div id="dockSamplePanel" role="tabpanel" aria-labelledby="dockModeAdvanced">
-                <p id="sampleModeHelp" class="help">Advanced: the full field guide, planning workshops and component/state gallery.</p>
+              <div id="dockSamplePanel" role="tabpanel" aria-labelledby="dockModeBasic">
+                <p id="sampleModeHelp" class="help">Basic: HTML/CSS essentials. Study examples with your shared design settings.</p>
                 <div class="preview-shell" id="previewShell" role="region" aria-label="Responsive page viewport" tabindex="0">
                   <div class="preview-frame" data-width="fluid" id="previewFrame">
                     <iframe id="previewPage" title="Live generated home page" sandbox="allow-same-origin allow-forms" srcdoc="<!doctype html><html lang='en'><head><meta charset='utf-8'></head><body></body></html>"></iframe>
@@ -1271,7 +1296,7 @@
 
                   <p class="help">Each ramp has 11 steps. The centre step (500) preserves your chosen HEX value.</p>
                 </div>
-                <span class="pill" id="rampMethodLabel">RGB mix</span>
+                <span class="pill" id="rampMethodLabel">OKLCH</span>
               </div>
               <section class="oklch-workbench" aria-labelledby="oklchTitle">
                 <div class="section-head">
@@ -1954,7 +1979,7 @@
                   <li><strong>Brief:</strong> record audience, task, scope, success signal and constraints.</li>
                   <li><strong>Architecture:</strong> inventory and group content with useful page labels.</li>
                   <li><strong>Wireframe:</strong> sketch hierarchy and compare narrow and wide layouts.</li>
-                  <li><strong>Prototype:</strong> follow a task, observe hesitation and revise before palette design.</li>
+                  <li><strong>Prototype:</strong> review the finished live page and generated HTML/CSS after configuring and checking the design system.</li>
                   <li><strong>Choose:</strong> establish colour roles, typography and spacing. Record why each choice helps the audience.</li>
                   <li><strong>Apply:</strong> use those tokens in buttons, cards and forms; compare themes and responsive widths.</li>
                   <li><strong>Test:</strong> inspect contrast, keyboard interaction, text resizing, real content and component states.</li>
@@ -2062,33 +2087,37 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261103-spacing-lesson" defer></script>
-      <script src="src/js/brand-palette.js?v=20261021-process" defer></script>
+      <script src="src/js/studio-registry.js?v=20261104-architecture-overview" defer></script>
+      <script src="src/js/brand-palette.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261103-single-wizard" defer></script>
+      <script src="src/js/design-process.js?v=20261104-architecture-overview" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
-      <script src="src/js/core-state.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/core-state.js?v=20261104-status-palettes" defer></script>
       <script src="src/js/css-dock.js?v=20261103-spacing-lesson" defer></script>
       <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
-      <script src="src/js/journey-library.js?v=20261103-single-wizard" defer></script>
-      <script src="src/js/button-design.js?v=20261103-web-studio" defer></script>
-      <script src="src/js/sample-system.js?v=20261103-sitemap-accordion" defer></script>
-      <script src="src/js/sample-homepage.js?v=20261023-basic-hero" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261104-page-background" defer></script>
-      <script src="src/js/responsive-preview.js?v=20261103-ui-essentials" defer></script>
+      <script src="src/js/journey-library.js?v=20261104-palette-process" defer></script>
+      <script src="src/js/button-design.js?v=20261104-state-colour-dropdowns" defer></script>
+      <script src="src/js/sample-system.js?v=20261104-region-padding" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261104-region-padding" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261104-background-opacity" defer></script>
+      <script src="src/js/responsive-preview.js?v=20261104-cache-recovery" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261103-learning" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261104-all-state-palettes" defer></script>
       <script src="src/js/clamp-explorer.js?v=20261103-single-wizard" defer></script>
-      <script src="src/js/contrast-audit.js?v=20261019-brand-palette" defer></script>
-      <script src="src/js/colour-repair.js?v=20261020-guided-semantics" defer></script>
+      <script src="src/js/contrast-audit.js?v=20261104-background-opacity" defer></script>
+      <script src="src/js/colour-repair.js?v=20261104-body-background" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
       <script src="src/js/section-accordions.js?v=20261103-single-wizard" defer></script>
-      <script src="src/js/site-builder.js?v=20261103-sitemap-crud" defer></script>
-      <script src="src/js/studio-learning.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/site-builder.js?v=20261104-regions" defer></script>
+      <script src="src/js/studio-learning.js?v=20261104-architecture-overview" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
+      <script src="src/js/palette-process.js?v=20261104-status-palettes" defer></script>
+      <script src="src/js/state-palettes.js?v=20261104-state-colour-dropdowns" defer></script>
+      <script src="src/js/webpage-backgrounds.js?v=20261104-background-order" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/section-navigation.js?v=20261104-home-links" defer></script>
     </body>
   </html>

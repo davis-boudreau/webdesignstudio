@@ -1,5 +1,16 @@
 # Architecture
 
+## Validation and publishing
+
+`.github/workflows/ci.yml` runs the dependency-free structure and isolated-profile
+Chrome browser checks on pull requests and exposes the same job via `workflow_call`.
+`.github/workflows/pages.yml` calls it for main pushes and manual publishing, with
+the deployment job requiring successful validation through `needs: validate`.
+Both checkouts use the triggering revision. Validation receives only read access
+to repository contents; the deployment retains Pages and identity-token permissions.
+No application build step or runtime dependency is introduced. This follows
+[GitHub's reusable workflow model](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows).
+
 ## Project identity and teaching model
 
 The public name is Web Design System Studio. The header, page title,
@@ -74,6 +85,12 @@ then emits `stage:change`. `studio-learning.js` selects the matching lesson and
 focuses its heading on deliberate navigation. Startup expands only the preview;
 navigation never marks completion. The step list is a collapsed Choose a step
 disclosure. Numeric indices and existing control/lesson IDs remain compatible.
+`stageOrder` and `orderedStages` define display order independently of the stable
+internal indices. `position` supplies visible numbers. Previous/Next, progress,
+step buttons, phase groups and centre section order follow that sequence. Prototype
+is last, after Deliver; Plan contains Brief, Architecture and Wireframe. Its final
+review actions open the existing preview and inspector or route to Deliver without
+replacing the iframe or project. Earlier task sketches remain in a disclosure.
 
 At 900px and below, existing control panes move directly after their lesson.
 Comment placeholders restore them to the sidebar at wider widths; IDs, bindings
@@ -83,6 +100,20 @@ preserving its browsing context. Other sections remain visible as collapsed
 disclosures. `DSStudio.activateLesson` lets existing fragment and laboratory
 routes select a collapsed lesson before revealing the target.
 Ordinary edits preserve control focus and do not invoke stage navigation.
+
+`section-navigation.js` initializes after the lessons, background/spacing modules
+and control placement. It appends one flow-layout, right-aligned return link to
+each `.studio-section > .panel`, wizard pane and inspector. It does not add links
+to nested cards or sample generators. Native anchors target the focusable studio
+banner `#studio-home`; unmodified activation explicitly scrolls the outer studio
+window to zero and focuses the banner without scrolling, since a sticky banner
+alone cannot reliably represent the document start. It always returns instantly,
+including under reduced-motion preferences, and preserves stage, disclosures,
+project/library data, inspector state and iframe identity. Modified clicks retain
+native link behavior. Links have text, decorative arrows, underlines and at least
+44px targets; the focused destination has an inset outline. Studio-only CSS and
+the module add no saved state or generated CSS/HTML. Node placement survives the
+existing narrow-screen control moves and text-only lesson refreshes.
 
 `learning-path.js` now supplies contextual example connections only. Its former
 beginner task selector, progress, entry button and workspace bar are removed.
@@ -202,30 +233,85 @@ learning. It provides a two-level CRUD editor in Architecture, backed by the sam
 `designProcess.pages` text and bounded parser. `pageLinks.basic/advanced` store
 label-to-fixed-ID mappings (empty string means planned); normalization accepts
 only that sample's inventory IDs and at most 64 bounded labels per mode.
-`showPlanned` is a validated boolean, default false for legacy plans. CRUD saves
-enable planned items in Basic's footer while retaining its Home/Footer exclusion;
-Advanced already displays the complete map. Existing label aliases still work.
+`showPlanned` is a validated boolean, default false for legacy plans. Creation,
+rename, deletion and reordering preserve the current visibility choice; only the
+checkbox explicitly changes it, and Undo restores the preceding plan and choice.
+Basic retains its Home/Footer exclusion; Advanced already displays the complete
+map. Existing label aliases still work.
 Relationships affect the map/footer, not the authored body-section structure.
 Rename preserves child order and assigned destinations; parent deletion removes
 its children. A one-change in-memory undo is cleared by external edits/imports,
 reset and mode changes. Text edits and complete-inventory restoration remain.
 
-The same module binds Palette's background picker/hex/reset directly to validated
-`semanticOverrides[theme].background`; no second background setting is stored.
-Both generators, preview, contrast review, inspector and project flows use that
-semantic role. Basic main sections are transparent so the selected canvas remains
-visible throughout the page; cards, controls, header and footer retain surface roles.
-Partial invalid hex input does not change state. All controls use
-the shared apply/render/autosave paths and labels render through DOM text APIs.
+`webpage-backgrounds.js` initializes after studio learning, binding Palette's
+Body/Header/Main/Footer controls, with Body first and visible alongside the others. They follow
+Brand Palette and Main Palette in the wizard. Every selector offers all validated
+brand references in saved order and copies the selected hex, matching Main Palette
+semantics; later reference edits do not silently recolour existing choices.
+The theme-specific `header-background`, `main-background`, `footer-background`
+semantic overrides share existing import validation, state, autosave and exports.
+Missing overrides resolve from the current Surface, Background and Surface roles,
+respectively, after those roles' own overrides. Older projects preserve their look.
+Body retains the existing `background` override, `--background` token and original
+`page-background-*` control IDs. No new Body setting or migration is needed.
+Both sample headers and the shared footer consume the corresponding region tokens;
+shared foundation CSS paints the main element. Basic's main sections stay transparent
+and cards/controls keep their separate surfaces. The centre Palette lesson shows
+Body as an outer canvas enclosing Header/Main/Footer, and all four resolved colours
+and text/link contrast with complete CSS/HTML inspector
+routes; it adds no duplicate control state. Catalogue routes select the correct theme
+and Palette field. Contrast inventory includes the three backgrounds. Partial invalid
+hex input does not change state. All controls use shared apply/render/autosave paths;
+imported names become text/Option nodes and only validated hex enters colour styles.
 
-The twelve wizard stages are Brief, Architecture, Wireframe, Prototype, Palette,
+Background transparency stores optional `backgroundOpacity[light|dark]` percentage
+maps with only `body`, `header`, `main` and `footer` keys. Imports accept finite
+numbers, clamp to 0–100 and round to integer percentages; missing/invalid values
+default to 100%. It uses existing project JSON/autosave/import/reset paths without
+a schema change or alpha inside the six-digit semantic hex roles.
+Each region exports RGB channels, opacity and a derived `*-background-paint` token.
+Body uses that paint over an explicitly opaque `html` Surface canvas; Header/Main/
+Footer use their paints over Body. Text/controls retain independent opacity and
+the existing whole-card `--surface-opacity` feature stays separate. Changing a
+colour preserves alpha; a region reset clears both its current-theme colour and
+alpha. Catalogue sources route RGB channels to the colour picker and opacity/
+paint to the opacity slider in the correct theme.
+`backgroundLayers()` composites unrounded sRGB channels against the same known
+canvas/parent stack. The contrast audit uses those channels for text/links,
+indicators and button host backgrounds; source colour repair targets stay the
+original validated semantic colours. The centre nested model paints actual alpha
+and shows its percentage, alpha token, blended hex and text/link ratios. It uses
+rounded hex for its readable ratio display; audit ratios use unrounded channels.
+
+Optional `regionPadding[header|main|footer][top|right|bottom|left]` stores shared
+layout insets as integer pixel values (0–64px), independently of theme/sample.
+Imports accept only finite numbers, round/clamp to these bounds and ignore unknown
+regions/sides. Missing values resolve to zero extra padding, preserving existing
+layouts and background settings. Twelve `--*-padding-*` foundation tokens drive
+the outer header/main/footer boxes. Advanced main keeps its existing narrow/wide
+container gutter in addition to the selected left/right padding; its media rule
+uses the saved responsive wide cutoff. Header/Footer inner spacing stays intact.
+Webpage backgrounds includes per-region disclosure controls, summaries, reset and
+centre inset/token examples. Padding reset affects one region only; background
+reset keeps padding. Catalogue/inspection routes use the same controls and complete
+CSS export. Layout values use existing JSON/autosave/import/reset without a new
+schema, independent generator or imported CSS execution.
+
+The twelve wizard stages are Brief, Architecture, Wireframe, Palette,
 Typography, Semantic colours, Buttons, Spacing and surfaces, Responsive layout,
-Accessibility and Deliver. Existing control and centre IDs remain stable; the
+Accessibility, Deliver and Prototype. Existing control and centre IDs remain stable; the
 shared stage registry keeps their routes aligned. Planning artifacts appear in
 the selected lesson; other stage sections are hidden until selected.
 
 The module's initializer binds planning inputs through the existing `apply()` /
-`renderCode()` / autosave paths. It wraps the CSS generator for shared artifact
+`renderCode()` / autosave paths. The centre Architecture lesson provides a brief
+UX requirements-planning overview: identify audience tasks, define essential
+scope/content and ownership/accessibility/dependencies in the brief, group and
+label content, then check a task route with an intended user. Its stated outcome
+is an agreed sitemap ready to guide Wireframe. The authored overview is inserted
+by studio learning after the lesson's heading/introduction and before its practice
+task; it adds no planning fields or automated validation of the learner's decisions.
+The planning module wraps the CSS generator for shared artifact
 styles and the renderer for synchronized controls/lessons. Markup caches preserve
 unchanged artifact nodes and focus through unrelated palette changes. Editing
 replaces the planning object rather than mutating defaults. Existing JSON, local
@@ -277,7 +363,7 @@ stores `brandPalette` entries `{id, name, hex, group}`: unique safe token IDs,
 Normalization accepts 1–24 valid entries and supplies starter references for
 missing/empty/invalid older data. New projects keep the existing `--brand-*` IDs.
 
-The registered module adds step-5 editing and full-brand dropdowns for all three
+The registered module adds step-4 editing and full-brand dropdowns for all three
 Main Palette roles. Selections copy HEX values through the existing core inputs;
 they are independent assignments rather than persistent bindings to reference IDs.
 Picker/advanced/OKLCH changes synchronize the matching option or Custom choice.
@@ -287,6 +373,90 @@ accent picker read the same project palette. Editor nodes stay stable
 across updates; names are rendered as text and escaped in reference markup.
 Contrast candidate identities include the brand token ID to distinguish duplicate
 names and prevent them being mistaken for generated-ramp anchor controls.
+The editor exposes the ID as a token suffix after `--brand-`, validates uniqueness
+and the existing safe-ID grammar before committing, and displays the full CSS
+declaration. Display-name edits do not rename tokens. Token renames reuse the
+editor node, update catalogue/contrast references and preserve copied UI colours.
+Replacing project state restores field values and clears stale input validity.
+
+`palette-process.js` initializes after studio learning and before backgrounds.
+It shows eleven shade declarations for each Main Palette role immediately after
+the ramp-method control, and a centre Brand → Main Palette → shades → semantic
+explanation before background application. It reads `dssReadTokens()` from the
+actual shared CSS export, including both theme values and semantic overrides;
+it does not add another colour generator, saved state or automatic brand binding.
+Anchor 500 is explicitly identified. Text updates retain existing nodes/disclosures;
+all imported display names use textContent and validated colours only paint chips.
+
+Success, Warning and Danger also expose eleven shade tokens in each theme block.
+The shared CSS generator applies `makeRamp()` to each resolved semantic colour,
+including validated theme overrides; step 500 equals that colour. There is no
+separate persisted status anchor, automatic remapping of component states or
+additional colour algorithm. The palette module reads those exported declarations
+for compact wizard and centre status ramps, preserving disclosure nodes across
+theme/method/override updates. Configure actions and catalogue source routes reach
+the matching theme's semantic editor. Existing feedback continues to use its
+semantic colour, with non-colour interaction cues and native behaviour unchanged.
+
+`state-palettes.js` loads after `palette-process.js` and wraps the complete CSS
+generator. It derives ten General controls state ramps from resolved semantic
+roles, plus seven state ramps for each of the five button variants from
+`dssGetButtonContrastData()`. Sources follow the actual component rules: e.g.
+hover/pressed use their specific backgrounds, focus/selected use the ring colour,
+and disabled/loading reuse the base colour alongside their non-colour cues.
+Transparent button backgrounds use the foreground colour as an explicitly labelled
+anchor; the ramps do not represent an alpha-composited disabled/transparent paint.
+Each state exports eleven steps per theme, using the existing ramp generator;
+source hex casing is normalized. Status ramps remain separately available.
+
+The module caches generated declarations by method/source settings and reuses
+ramps for repeated anchors. A cached metadata lookup supplies catalogue routes
+without recomputing colours for each table row. Wizard/centre component selectors
+mirror an ephemeral view choice, never project data. The views read actual exported
+tokens on render, retain disclosures through colour/theme updates and provide
+shade/source inspection and existing source configuration. No component rules,
+native semantics or persistence schema are replaced by these shade options.
+The catalogue reuses unchanged CSS/search output and resolves a row's source once
+when rendering. It also reuses rows whose escaped markup is unchanged, updating
+affected rows instead of reconstructing the entire catalogue for each source edit.
+
+Each interaction ramp includes a labelled colour selector in both mirrored views.
+Default reads the inherited source with only that property's override removed;
+Brand/Main/Neutral/current-ramp choices copy validated hex values to the existing
+semantic or button property. No separate state-colour overrides are persisted.
+General controls use current-theme semantic overrides and the normal apply/save
+path. Button edits use the existing setter, now accepting explicit `null` to
+remove one property override (or restore the default focus colour). A read-only
+default-colour getter uses the same button colour resolver with that override
+removed. Shared sources, cross-theme button settings, global button focus and
+transparent foreground anchors are explained beside each selector.
+
+Choice lists use textContent for imported brand labels and only validated colours.
+Existing custom source colours receive a current-value option. Lists update when
+brand/default/source values change, retaining select/disclosure nodes and focus.
+Malformed selection values restore the control without changing project data.
+Dropdown synchronization ignores unrelated typography and button dimensions.
+General inherited colours are resolved once per sync from base semantic roles;
+sources shared by multiple state rows reuse the same computed default.
+After creating its lesson, the backgrounds module moves the existing interaction
+controls and lesson after the background editor/lesson. This establishes the same
+surface-before-interaction order in both panes while retaining all bound nodes.
+
+`makeNeutralRamp(primary, method)` is part of the core colour generator. It borrows
+Primary UI's OKLCH hue, sets midpoint lightness to 0.6 and reduces midpoint chroma
+to `min(primary chroma * 0.12, 0.025)`. Achromatic sources remain grey. The existing
+RGB mix/OKLCH ramp generator supplies eleven steps from that derived midpoint.
+OKLCH is the foundation default for startup, New, Reset and missing/invalid
+imported methods. Explicit saved `mix` and `oklch` values remain unchanged.
+`palette().n` and `--neutral-50` through `--neutral-950` share that one result;
+there is no editable neutral anchor or extra persisted state. Neutral 500 is
+labelled a derived midpoint, while the three chosen anchors retain their meaning.
+The catalogue routes neutral shades to Primary UI; contrast candidates include
+all neutral steps and use Primary as their source target. Background selectors
+append a Neutral optgroup after all brand references, with the same copy-hex
+semantics. Primary/method edits refresh those options but preserve earlier choices.
+Default semantic surfaces/text/borders remain unchanged; neutral steps are
+available for deliberate assignment and actual foreground/background review.
 
 The centre Brand Colour Palette uses one unified swatch grid and a view-only
 target-role selector. Each entire swatch is a native button that copies its HEX
@@ -554,10 +724,12 @@ choices, FAQ state and other form values participate in preview capture/restore.
 
 ## Basic and Advanced sample modes
 
-`state.sampleMode` is a validated `advanced` / `basic` enum, defaulting to Advanced
-for existing projects, startup, New and Reset. It participates in the existing
-project JSON and local save/load flows. Invalid imported modes fall back to
-Advanced. No separate palette or project state is introduced for Basic.
+`state.sampleMode` is a validated `advanced` / `basic` enum, defaulting to Basic
+for startup, New and Reset. Basic is the left tab and Advanced the right; keyboard
+Home/End and arrow navigation follow that order. Explicit saved choices are restored
+through the existing JSON and local save/load flows. Legacy imports without a mode
+retain Advanced, while invalid explicit modes fall back to Basic. No separate
+palette or project state is introduced for Basic.
 
 `sample-system.js` registers before both sample generators. It captures the
 shared foundation/component CSS generator after planning styles initialize and

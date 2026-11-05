@@ -43,8 +43,8 @@
         buttonTarget(row.state === 'hover' ? 'hover' : row.state === 'active' ? 'active' : 'bg')];
       targets.push(semantic(row.location));
     } else if (row.group === 'Swatch candidates: reference and ramps') {
-      const match = row.name.match(/^(primary|secondary|accent)-\d+ /);
-      if (match) targets.push(anchor(match[1]));
+      const match = row.name.match(/^(primary|secondary|accent|neutral)-\d+ /);
+      if (match) targets.push(anchor(match[1] === 'neutral' ? 'primary' : match[1]));
       if (row.name.endsWith('/ semantic text')) targets.push(semantic('text'));
     } else if (row.group === 'Text and semantic roles') {
       const match = row.name.match(/^--([\w-]+)/);
@@ -78,27 +78,29 @@
         status: threshold === null ? 'exempt' : ['candidate', 'potential'].includes(scope) ? 'candidate' : scope === 'conditional' ? 'conditional' : ratio >= threshold ? 'pass' : 'review' });
     };
     for (const theme of ['light', 'dark']) {
-      const { roles: r, p, s, a } = palettes[theme];
-      const surfaces = ['background', 'surface', 'surface-muted'];
+      const { roles: r, p, s, a, n } = palettes[theme];
+      const layers=backgroundLayers(theme,foundation,r);
+      const visible={...r,background:layers.body,'header-background':layers.header,'main-background':layers.main,'footer-background':layers.footer};
+      const surfaces = ['background', 'surface', 'surface-muted', 'header-background', 'main-background', 'footer-background'];
       for (const bg of surfaces) {
         for (const fg of ['text', 'text-muted'])
-          add(theme, 'Text and semantic roles', `--${fg}`, 'default', `--${bg}`, r[fg], r[bg]);
-        add(theme, 'Text and semantic roles', 'Link text (--primary)', 'default', `--${bg}`, r.primary, r[bg], 4.5, 'Check a non-colour cue such as an underline separately; custom visited or hover styles need their own review.');
+          add(theme, 'Text and semantic roles', `--${fg}`, 'default', `--${bg}`, r[fg], visible[bg]);
+        add(theme, 'Text and semantic roles', 'Link text (--primary)', 'default', `--${bg}`, r.primary, visible[bg], 4.5, 'Uses the blended background where opacity applies. Check a non-colour cue such as an underline separately; custom visited or hover styles need their own review.');
         for (const fg of ['success', 'warning', 'danger']) {
-          add(theme, 'Text and semantic roles', `--${fg} message text`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], r[bg], 4.5, 'Potential use as text; the sample alerts use ordinary body text. This is not a current text failure.', 'potential');
-          add(theme, 'Boundaries and indicators', `--${fg} status indicator`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], r[bg], 3, 'Only required when this colour is necessary to identify status; also provide words or an icon.', 'conditional');
+          add(theme, 'Text and semantic roles', `--${fg} message text`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], visible[bg], 4.5, 'Potential use as text; the sample alerts use ordinary body text. This is not a current text failure.', 'potential');
+          add(theme, 'Boundaries and indicators', `--${fg} status indicator`, fg === 'danger' ? 'invalid' : fg, `--${bg}`, r[fg], visible[bg], 3, 'Only required when this colour is necessary to identify status; also provide words or an icon.', 'conditional');
         }
-        add(theme, 'Boundaries and indicators', 'Semantic focus ring', 'focus', `--${bg}`, r.focus, r[bg], 3, 'Colour check only; verify visibility, area, placement and that focus is not obscured.');
-        add(theme, 'Boundaries and indicators', 'Control border', 'default', `--${bg}`, r['control-border'], r[bg], 3, 'Potential host context: necessary input boundaries need contrast; decorative borders have their own --border role.', 'conditional');
+        add(theme, 'Boundaries and indicators', 'Semantic focus ring', 'focus', `--${bg}`, r.focus, visible[bg], 3, 'Colour check only; verify visibility, area, placement and that focus is not obscured.');
+        add(theme, 'Boundaries and indicators', 'Control border', 'default', `--${bg}`, r['control-border'], visible[bg], 3, 'Potential host context: necessary input boundaries need contrast; decorative borders have their own --border role.', 'conditional');
       }
       for (const variant of ['primary', 'secondary', 'accent'])
         add(theme, 'Text and semantic roles', `--on-${variant}`, 'default', `--${variant}`, r['on-' + variant], r[variant]);
 
       // Both the state matrix and selected sample use theme surfaces; the
       // side-by-side theme cards have one additional, fixed dark background.
-      const hosts = surfaces.map(key => [key, r[key]]);
+      const hosts = surfaces.map(key => [key, visible[key]]);
       const comparison = theme === 'dark' ? '#142434' : '#FFFFFF';
-      if (!hosts.some(([, hex]) => hex.toUpperCase() === comparison)) hosts.push(['theme comparison card', comparison]);
+      if (!hosts.some(([, hex]) => rgbHex(rgb(hex)) === comparison)) hosts.push(['theme comparison card', comparison]);
       for (const [variant, c] of Object.entries(button.themes[theme])) {
         for (const [host, surround] of hosts) {
           const base = c.bg === 'transparent' ? surround : c.bg;
@@ -168,7 +170,7 @@
             `Whole-component opacity ${configuration.opacity ?? adv.opacity}%, composited onto an opaque --surface. Other backgrounds require a separate check.`);
 
       const swatches = [...DSStudio.brandPalette.normalize(foundation.brandPalette).map(item => [`Brand: ${item.name} (--brand-${item.id})`, item.hex]),
-        ...Object.entries({ primary: p, secondary: s, accent: a }).flatMap(([name, ramp]) =>
+        ...Object.entries({ primary: p, secondary: s, accent: a, neutral: n }).flatMap(([name, ramp]) =>
           steps.map(step => [`${name}-${step}`, ramp[step]]))];
       for (const [name, hex] of swatches)
         for (const [label, fg] of [['white text', '#FFFFFF'], ['semantic text', r.text]])

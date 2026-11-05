@@ -17,6 +17,8 @@ app.onload=async()=>{
   const wait=()=>new Promise(resolve=>setTimeout(resolve,100));
   const mode=MODE;
   try{
+    // These existing component specimens belong to Advanced; Basic is now default.
+    d.getElementById('dockModeAdvanced').click();await wait();
     w.dssRevealSection('previewPage',false);
     w.dssRevealSection('bdSingle',false);
     await wait();
@@ -39,6 +41,12 @@ app.onload=async()=>{
       w.dssSelectButtonState('primary','selected');await wait();
       test('Forced colours retain the selected checkmark',()=>pw.getComputedStyle(pd.querySelector('.sample-selected-action'),'::before').borderBottomStyle==='solid');
     }
+    w.dssShowWizardStep(4);await wait();
+    const homeLink=d.querySelector('#brandPalette > .panel > .studio-home-return a');
+    homeLink.scrollIntoView({block:'center',behavior:'instant'});homeLink.focus();
+    test(mode+' section return stays labelled, underlined and large enough',()=>homeLink.textContent.includes('Back to top') && w.getComputedStyle(homeLink).textDecorationLine.includes('underline') && homeLink.getBoundingClientRect().height>=44);
+    homeLink.click();await wait();
+    test(mode+' section return reaches the top and leaves visible destination focus',()=>w.scrollY<=1 && d.activeElement===d.getElementById('studio-home') && w.getComputedStyle(d.getElementById('studio-home')).outlineStyle==='solid' && w.getComputedStyle(d.getElementById('studio-home')).outlineWidth==='3px');
     test(mode+' has no runtime errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Media review completes',pass:false,error:String(error.stack||error)});}
   document.getElementById('results').textContent=JSON.stringify({results,errors:w.__reviewErrors});

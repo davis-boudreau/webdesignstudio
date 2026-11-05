@@ -68,18 +68,21 @@
     id: 'brand-palette', title: 'Brand and main palettes',
     init() {
       const editor = get('jBrandEditor'), rows = new Map();
-      let signature = '';
+      let signature = '', stateIdentity;
       function sync() {
+        const replaced = stateIdentity !== state; stateIdentity = state;
         const items = state.brandPalette;
         const next = JSON.stringify(items);
-        if (next !== signature) {
+        if (next !== signature || replaced) {
           signature = next;
           get('jBrandStatus').textContent = '';
           get('brandFeedback').textContent = 'Brand references updated. Choose a role, then click a swatch to apply its colour.';
           get('jBrandSwatches').replaceChildren(...items.map(item => {
             const li = document.createElement('li'), chip = document.createElement('span'), label = document.createElement('span');
             chip.className = 'brand-palette-chip'; chip.style.backgroundColor = item.hex; chip.setAttribute('aria-hidden', 'true');
-            label.textContent = `${item.name} · ${item.hex}`; li.append(chip, label); return li;
+            label.textContent = `${item.name} · ${item.hex}`;
+            const token = document.createElement('code'); token.textContent = `--brand-${item.id}`;
+            label.append(document.createElement('br'), token); li.append(chip, label); return li;
           }));
           for (const [id, row] of rows) if (!items.some(item => item.id === id)) { row.remove(); rows.delete(id); }
           for (const [index, item] of items.entries()) {
@@ -88,21 +91,25 @@
               row = document.createElement('div'); row.className = 'brand-palette-row field'; row.dataset.brandId = item.id;
               const nameLabel = document.createElement('label'); nameLabel.textContent = 'Colour name';
               const name = document.createElement('input'); name.type = 'text'; name.maxLength = 40; name.dataset.brandField = 'name'; nameLabel.append(name);
+              const tokenLabel = document.createElement('label'); tokenLabel.textContent = 'Token name suffix · --brand-';
+              const token = document.createElement('input'); token.type = 'text'; token.maxLength = 40; token.pattern = '[a-z][a-z0-9-]{0,39}'; token.dataset.brandField = 'id'; tokenLabel.append(token);
               const colourLabel = document.createElement('label'); colourLabel.textContent = 'Colour';
               const colour = document.createElement('input'); colour.type = 'color'; colour.dataset.brandField = 'hex'; colourLabel.append(colour);
               const code = document.createElement('code');
               const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'ghost'; remove.dataset.removeBrand = item.id; remove.textContent = 'Remove colour';
-              row.append(nameLabel, colourLabel, code, remove); rows.set(item.id, row);
+              row.append(nameLabel, tokenLabel, colourLabel, code, remove); rows.set(item.id, row);
             }
             if (editor.children[index] !== row) editor.insertBefore(row, editor.children[index] || null);
-            for (const field of ['name', 'hex']) {
+            for (const field of ['name', 'id', 'hex']) {
               const input = row.querySelector(`[data-brand-field="${field}"]`);
-              if (document.activeElement !== input) input.value = item[field];
+              if (replaced || document.activeElement !== input) { input.value = item[field]; input.setCustomValidity(''); }
             }
-            row.querySelector('code').textContent = item.hex;
+            row.querySelector('code').textContent = `--brand-${item.id}: ${item.hex};`;
+            row.querySelector('[data-brand-field="id"]').setAttribute('aria-label', `Token name suffix for ${item.name}`);
             row.querySelector('[data-brand-field="name"]').setAttribute('aria-label', `Name for brand colour ${index + 1}`);
             row.querySelector('[data-brand-field="hex"]').setAttribute('aria-label', `Colour for ${item.name}`);
             row.querySelector('button').disabled = items.length === 1;
+            row.querySelector('button').dataset.removeBrand = item.id;
             row.querySelector('button').setAttribute('aria-label', `Remove ${item.name}`);
           }
           for (const key of Object.keys(roles)) {
@@ -130,13 +137,26 @@
       }
       function edit(event) {
         const input = event.target.closest('[data-brand-field]'); if (!input) return;
-        if (input.dataset.brandField === 'name' && event.type !== 'change') return;
+        if (['name','id'].includes(input.dataset.brandField) && event.type !== 'change') {
+          input.setCustomValidity(''); return;
+        }
         const id = input.closest('[data-brand-id]').dataset.brandId;
+        if (input.dataset.brandField === 'id') {
+          const value = input.value;
+          if (!/^[a-z][a-z0-9-]{0,39}$/.test(value) || state.brandPalette.some(item=>item.id!==id && item.id===value)) {
+            input.setCustomValidity('Use a unique suffix of 1–40 lowercase letters, digits or hyphens, starting with a letter.');
+            input.reportValidity(); return;
+          }
+          input.setCustomValidity('');
+        }
         const next = normalize(state.brandPalette.map(item => item.id === id ? { ...item, [input.dataset.brandField]: input.value } : item));
         if (JSON.stringify(next) === JSON.stringify(state.brandPalette)) return;
+        if (input.dataset.brandField === 'id') {
+          const row=rows.get(id); rows.delete(id); rows.set(input.value,row); row.dataset.brandId=input.value;
+        }
         state.brandPalette = next;
-        input.value = state.brandPalette.find(item => item.id === id)[input.dataset.brandField];
-        changed('Brand Palette updated. Choose a swatch again to apply its new colour to the Main Palette.');
+        input.value = state.brandPalette.find(item => item.id === (input.dataset.brandField==='id'?input.value:id))[input.dataset.brandField];
+        changed('Brand Palette tokens updated. Main Palette choices keep their copied hex values; select a swatch again to apply a changed reference.');
       }
       editor.addEventListener('input', edit); editor.addEventListener('change', edit);
       editor.addEventListener('click', event => {

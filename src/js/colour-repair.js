@@ -165,7 +165,10 @@
     get('jSemanticReset').disabled = !state.semanticOverrides?.[state.theme]?.[guidedKey];
   }
   const roleDescriptions = {
-    background: ['Page background', 'The canvas behind the page content.'],
+    'header-background': ['Header background', 'The website header, independently of card surfaces.'],
+    'main-background': ['Main background', 'The main content region; defaults to the page canvas.'],
+    'footer-background': ['Footer background', 'The website footer, independently of card surfaces.'],
+    background: ['Body background', 'The body canvas containing Header, Main and Footer; Main follows it by default.'],
     surface: ['Surface', 'Cards, header, footer and form surfaces.'],
     'surface-muted': ['Muted surface', 'Subtle grouped content and read-only fields.'],
     text: ['Body text', 'Default readable text on page and surface colours.'],

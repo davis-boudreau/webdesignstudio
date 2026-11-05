@@ -34,17 +34,18 @@ Browser storage may be unavailable in private or restricted contexts. */
   function showStep(n, focus = true) {
     const labels = DSStudio.stages.map(stage => stage.label);
     step = Math.max(0, Math.min(labels.length - 1, Number.isFinite(n) ? Math.trunc(n) : 0));
+    const position = DSStudio.stageOrder.indexOf(step);
     document.querySelectorAll('[data-journey-pane]').forEach(p => p.hidden = Number(p.dataset.journeyPane) !== step);
     document.querySelectorAll('[data-journey-step]').forEach(b => {
       const i = Number(b.dataset.journeyStep);
       if (i === step) b.setAttribute('aria-current', 'step');
       else b.removeAttribute('aria-current');
     });
-    el('jBack').disabled = step === 0;
-    el('jNext').hidden = step === labels.length - 1;
-    el('jProgress').textContent = `Step ${step+1} of ${labels.length} · ${labels[step]}`;
+    el('jBack').disabled = position === 0;
+    el('jNext').hidden = position === labels.length - 1;
+    el('jProgress').textContent = `Step ${position+1} of ${labels.length} · ${labels[step]}`;
     el('jBack').textContent = 'Previous step';
-    el('jNext').textContent = `Next: ${labels[step + 1] || 'Deliver'}`;
+    el('jNext').textContent = `Next: ${labels[DSStudio.stageOrder[position + 1]] || 'Prototype'}`;
     DSStudio.activeStage = step;
     DSStudio.emit('stage:change', { stage: DSStudio.stages[step], focus });
   }
@@ -214,8 +215,8 @@ Browser storage may be unavailable in private or restricted contexts. */
     const total = document.querySelectorAll('.readiness-item').length;
     el('readinessStatus').textContent = `${count} of ${total} checks completed. These are self-reported, not automated accessibility tests.`;
   }));
-  el('jBack').addEventListener('click', () => showStep(step - 1));
-  el('jNext').addEventListener('click', () => showStep(step + 1));
+  el('jBack').addEventListener('click', () => showStep(DSStudio.stageOrder[Math.max(0, DSStudio.stageOrder.indexOf(step)-1)]));
+  el('jNext').addEventListener('click', () => showStep(DSStudio.stageOrder[Math.min(DSStudio.stageOrder.length-1, DSStudio.stageOrder.indexOf(step)+1)]));
   document.querySelectorAll('[data-journey-step]').forEach(b => b.addEventListener('click', () => showStep(Number(b.dataset.journeyStep))));
   el('jExportJson').addEventListener('click', () => download('design-system-studio.json', projectJson(), 'application/json'));
   el('jViewCss').addEventListener('click', () => {

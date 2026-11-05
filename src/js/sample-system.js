@@ -50,7 +50,7 @@
   }
   function footerCss() {
     return `/* Shared classic footer: main navigation, native sitemap disclosure and return link. */
-.website-footer { border-top: var(--border-width) solid var(--border); background: var(--surface); }
+.website-footer { border-top: var(--border-width) solid var(--border); background: var(--footer-background-paint); }
 .website-footer .footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: var(--space-8); padding-block: var(--space-8); }
 .website-footer .footer-inner > * { min-width: 0; }
 .website-footer .footer-brand { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; color: var(--text); font-family: var(--font-heading); font-weight: var(--heading-weight); overflow-wrap: anywhere; text-decoration: none; }
@@ -93,7 +93,7 @@
     id: 'sample-system', title: 'Shared website design system',
     init() {
       const sharedCss = cssExport;
-      DSStudio.samples.foundationCss = () => sharedCss() + '\n:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n' + navigationCss();
+      DSStudio.samples.foundationCss = () => sharedCss() + '\nbody > main { background: var(--main-background-paint); }\n' + PADDING_REGIONS.map(region=>`body > ${region} { padding: ${PADDING_SIDES.map(side=>`var(--${region}-padding-${side})`).join(' ')}; }`).join('\n') + '\n:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n' + navigationCss();
       cssExport = DSStudio.samples.foundationCss;
     }
   });

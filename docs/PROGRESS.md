@@ -13,6 +13,634 @@ The first tutorial now uses the learner's spacing settings and actual output.
 Next: observe learners using it before extending the pattern to other stages;
 complete manual accessibility/cross-browser checks.
 
+## Backgrounds before interaction palettes (4 November 2026)
+
+- Moved Webpage backgrounds before Generate interaction state palette steps in
+  both Palette wizard and centre lesson. The backgrounds initializer relocates
+  the existing interaction control/lesson nodes after its editor/lesson, retaining
+  their handlers, current values and source relationships. Main Palette and status
+  shade generation remain before backgrounds. No saved data or export logic changed.
+- Updated the existing palette-order browser assertion to cover both panes,
+  README/architecture ordering notes and the background script query version.
+- `python scripts/check_structure.py`: **47 assets verified**; `git diff --check`
+  passed (existing LF/CRLF notices only). `python scripts/browser_review.py` passed
+  **1691/1691**, no captured JavaScript errors (`.background-order-browser.log`),
+  including both order checks and the existing control/preview/export regressions.
+  Earlier results below are historical.
+- No new screenshots or manual keyboard/screen-reader/zoom/cross-browser review
+  for this ordering change. No commit, push or deployment performed.
+- Next: complete the outstanding manual accessibility/browser review.
+
+## Interaction state colour dropdowns (4 November 2026)
+
+- Added an inline colour dropdown above the shade steps for every General
+  controls state and every state in all five button variants, in both wizard and
+  centre views. Default displays the computed inherited source colour. Choices
+  include validated Brand/Main colours, Neutral steps and the state's current
+  shades; loaded custom source colours remain selectable. Choices copy hex values.
+- Edits use existing semantic/button sources and saved fields. General edits
+  affect the current theme. Button edits affect both themes; focus is shared
+  across variants. Help names each source and related states that share it.
+  Transparent variants edit their foreground colour. No independent per-state
+  overrides, persistence schema or component-state rules were introduced.
+- Default removes only that source property's override, using a read-only button
+  default-colour getter backed by the existing resolver. The existing validated
+  button setter now accepts explicit null to reset one property or default focus.
+  Retained other button overrides, source assignments and dimensions.
+- Dropdown nodes, focus and disclosures survive updates; choices are mirrored,
+  refreshed after brand/source changes and labelled with help. Imported labels
+  use textContent and colour choices require validated hex. Invalid selection
+  values restore the control without changing project data. Existing apply/render/
+  autosave paths update preview, inspector, exports and saved projects.
+- Added 36 browser assertions for mirrored controls/defaults and brand options in
+  every state/variant/theme/method, source edits/resets, transparent foregrounds,
+  shared scope, JSON persistence and rejected values. Extended existing assertions
+  for local autosave and all colour-selector target heights at 320/390/1440px.
+  Temporary `python .state-colour-focused.py`: **96/96 passed**, no captured errors
+  (`.state-colour-focused.log`), before the final autosave/target-height extensions.
+  First full run reached its 180-second limit (`.state-colour-browser.log`).
+  Avoided dropdown updates during unrelated typography/button-dimension edits;
+  compute general inherited roles once and reuse shared source defaults per sync.
+  Final focused **96/96 passed**, including autosave and all colour-selector
+  target-height assertions (`.state-colour-focused-final.log`). The next full run
+  also hit 180 seconds (`.state-colour-browser-final.log`). Increased only the
+  harness wall-clock allowance to a bounded 300 seconds for the expanded matrix;
+  virtual-time budget, assertions and pass criteria are unchanged. A check for
+  orphan Chrome processes using the two timed-out profile IDs found none.
+  Final `python scripts/browser_review.py` passed **1691/1691**, no captured
+  JavaScript errors (`.state-colour-browser-complete.log`), with the 300-second
+  allowance. No assertions or virtual-time checks were removed or relaxed.
+- `python scripts/button_states_review.py` passed actual reduced-motion **7/7**
+  and forced-colour **9/9**, no captured errors, including the final default-cache
+  optimization (`.state-colour-media-final.log`; initial `.state-colour-media.log`).
+  `python scripts/check_structure.py`: **47 assets verified**; `git diff --check`
+  passed (existing LF/CRLF notices only). Updated README, architecture and both
+  changed script query versions.
+- Temporary `python .state-colour-visual.py` captured 1440px changed button-hover
+  and exact 390px default Invalid layouts. Inspected both: source/help, selected
+  colour, target sizing and shade tokens wrap correctly. Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review remain unrun. No commit, push or
+  deployment performed.
+- Removed temporary focused/visual helpers and screenshots; logs remain ignored.
+  Final structure and whitespace checks pass. Next: try state choices with real
+  content and complete manual accessibility/browser review. Earlier checks below
+  remain historical.
+
+## All interaction state palette steps (4 November 2026)
+
+- The user clarified again: all states, not only Success/Warning/Danger. Added
+  Generate interaction state palette steps in the Palette wizard and centre
+  lesson. Mirrored component selectors cover General controls and Primary,
+  Secondary, Accent, Outline and Text buttons without changing saved project data.
+- New local `state-palettes.js` derives ten general state ramps (default, hover,
+  focus, active/pressed, selected, disabled, loading, invalid, success, read-only)
+  and seven states for each button variant. Each exports eleven shade tokens per
+  theme (990 additional declarations total) using the existing ramp algorithm.
+  Step 500 preserves the resolved source colour; hex casing is normalized.
+  Existing status ramps remain available. No persistence fields were added.
+- General sources follow semantic roles; button sources use the existing resolved
+  contrast data, including overrides. Focus/selected use their indicator colour.
+  Transparent variants explicitly use their foreground anchor. Notes distinguish
+  shade options from displayed opacity/compositing, native state behaviour and
+  non-colour cues. Generation does not remap component styling.
+- Added catalogue source routes and current-theme shade/source CSS inspection
+  and configuration actions. Views read actual exported declarations and preserve
+  disclosure nodes through theme/colour updates. Selectors use existing field
+  styling and a minimum 44px height. Updated README, architecture and affected
+  runtime asset query versions; structure verifies **47 assets**.
+- First focused run: **38/58**, exposing lowercase button-source versus uppercase
+  exported shade display mismatch; normalized source hex and added lowercase
+  override coverage. Subsequent focused runs passed **58/58**, then **59/59**
+  after catalogue cache coverage (`.all-state-focused-final.log`), no JS errors.
+  Coverage includes both methods/themes, all variants/states and shade tokens,
+  overrides/transparency, inspector/source routing, project-data independence,
+  retained disclosures and expanded 320/390/1440px layouts/selectors.
+- Two full-suite runs hit the existing 180-second wall-clock limit before a
+  report (`.all-state-browser.log`, `.all-state-browser-final.log`). Cached state
+  generation by source settings, shared repeated anchors, cached catalogue source
+  metadata, avoided unchanged catalogue output, and reused unchanged table rows
+  during individual source edits. Added regression checks for row reuse and
+  changed-value refresh. Final `python scripts/browser_review.py` passed
+  **1655/1655** within the unchanged 180-second limit, with no captured JavaScript
+  errors (`.all-state-browser-final-rows.log`). This includes all 59 new assertions
+  and the final selector styling, generation cache and catalogue row reuse.
+- `python scripts/button_states_review.py` passed actual reduced-motion **7/7**
+  and forced-colour **9/9** with no captured errors (`.all-state-media-final.log`),
+  before the final catalogue-only row-reuse change. `python scripts/check_structure.py`
+  and `git diff --check` passed (existing LF/CRLF notices only).
+- Temporary `python .all-state-visual.py` captured exact 1440px/390px layouts;
+  inspected both after the selector styling adjustment. Shade tokens and controls
+  wrap correctly. Manual keyboard-only, screen-reader, zoom and Firefox/Safari
+  review remain unrun. No commit, push or deployment performed.
+- Removed temporary focused/visual helpers and screenshots; logs remain ignored.
+  Final structure/whitespace checks pass. Next: review state shades with real
+  feedback and complete the outstanding manual accessibility/browser review.
+  Earlier status-only work and checks below are historical.
+
+## Status palette steps (4 November 2026)
+
+- User clarified the requested state palettes as Success, Warning and Danger.
+  Added Generate state palette steps after Main Palette generation and before
+  webpage backgrounds, with compact eleven-step ramps in both wizard and centre
+  Palette lesson. The lesson explains feedback meanings, semantic anchors,
+  application to invalid/success feedback and the separate interaction behaviours.
+- Shared CSS export generates 50–950 steps from each theme's resolved semantic
+  status colour using the existing RGB mix/OKLCH generator. Step 500 preserves
+  that colour, including validated overrides. Both themes receive the tokens;
+  defaults and existing component state mappings remain unchanged. No new saved
+  fields, duplicate generator or runtime dependencies were introduced.
+- Current-theme ramp displays read actual exported declarations. Added complete
+  CSS inspection and semantic configuration actions; catalogue rows identify the
+  derived status source and route to its theme/role. Updated README, architecture
+  notes and the three changed runtime script query versions.
+- Added 14 browser assertions for both methods/themes, resolved anchors, exported
+  preview parity, eleven-step teaching lists, independent theme overrides,
+  catalogue routing, inspector/configuration actions and expanded 320/390/1440px
+  layouts. `python scripts/browser_review.py`: **1596/1596 passed**, no captured
+  JavaScript errors (`.status-palettes-browser.log`).
+- `python scripts/check_structure.py`: **46 assets verified**; `git diff --check`
+  passed (existing LF/CRLF notices only). Temporary
+  `python .status-palettes-visual.py` used isolated browser profiles to capture
+  1440px and exact 390px iframe layouts. Inspected both; shade chips, declarations
+  and actions wrap within the lesson. Removed helper and screenshots afterward.
+  Manual keyboard-only, screen-reader, zoom and Firefox/Safari checks were not
+  rerun. No commit, push or deployment performed. Earlier checks below are historical.
+- Next: review status foreground/background combinations in real feedback and
+  complete the outstanding manual accessibility/browser review.
+
+## Architecture UX requirements overview (4 November 2026)
+
+- Revised Step 2's centre lesson into a concise requirements-planning overview:
+  identify audience tasks, define essential scope, group and label content, and
+  check a task route with someone from the intended audience. The stated outcome
+  is an agreed sitemap connecting essential requirements to pages for Wireframe.
+- Updated shared Architecture introduction/practice copy and wizard help; kept
+  the existing sitemap editor, saved planning data and preview workflow. The
+  authored overview adds no new fields or automated assessment. Updated README,
+  architecture notes and the three affected script query versions.
+- Current checks: `python scripts/check_structure.py` verified **46 assets**;
+  `python scripts/browser_review.py` passed **1582/1582**, with no captured
+  JavaScript errors (`.architecture-overview-browser.log`); `git diff --check`
+  passed (LF/CRLF notices only). The browser used an isolated temporary profile.
+- Temporary `python .architecture-overview-visual.py` captured 1440px and 390px
+  layouts. Inspected both: overview, outcome and existing practice task are
+  readable and fit the centre pane. Removed the helper and screenshots afterward.
+  Manual keyboard-only, screen-reader, zoom and Firefox/Safari checks were not
+  rerun for this copy change. No commit, push or deployment performed.
+- Next: review the overview with learners and complete the outstanding manual
+  accessibility/browser review. Earlier verification results below are historical.
+
+## Header/Main/Footer region padding (4 November 2026)
+
+- Added independent top/right/bottom/left padding sliders (0–64px) inside each
+  Header/Main/Footer background fieldset, with summaries, values, help and a
+  separate region reset. Padding is shared across themes/samples and represents
+  extra space inside the outer region, preserving existing content gutters and
+  inner section/component spacing. Body padding was not added.
+- Optional `regionPadding` maps use existing state/autosave/JSON/import/reset.
+  Only known regions/sides and finite numeric values are accepted; round/clamp to
+  0–64px. Missing values resolve to zero. Twelve foundation tokens drive shared
+  outer-region CSS. Advanced Main adds horizontal padding to its existing narrow/
+  wide container gutters at the saved wide breakpoint. Background/opacity resets
+  preserve padding; padding reset affects one region without changing its paint.
+- Added centre padding declarations and inset examples, plus complete-file
+  Inspect padding CSS actions and catalogue source routes to the real sliders.
+  Existing background inspection handlers target only their own action buttons.
+  Updated README, architecture and affected asset query versions. No alternate
+  generator, schema, runtime dependency or user-authored root snapshot change.
+- Added 47 assertions covering zero/max/asymmetric padding, both samples/themes,
+  live/standalone computed values and 320/1440px overflow, preserved gutters,
+  background independence, autosave/import, region reset, inspector/catalogue/
+  focus, hostile imports and expanded 320/390/1440px controls/demos.
+- Temporary `python .region-padding-focused.py`: initial **43/47** exposed
+  Advanced's wide-gutter interaction. Corrected the wide media rule before the
+  full run; subsequent focused **47/47 passed**, no JavaScript errors. Adjusted
+  demo content fill/border for clarity, then final focused **47/47 passed**
+  (`.region-padding-focused.log`). `python scripts/browser_review.py` passed
+  **1582/1582**, no captured JavaScript errors (`.region-padding-browser.log`).
+  The full run started before the last demo fill/border presentation adjustment;
+  the final focused recheck covers that adjustment.
+  `python scripts/check_structure.py`: **46 assets verified**; `git diff --check`
+  passed (earlier LF/CRLF notices only). Isolated browser profiles outside the
+  sandbox do not access user projects/storage.
+- Temporary `python .region-padding-visual.py` captured the 1440px centre inset
+  examples and 390px expanded padding controls with asymmetric values. Inspected
+  both; clear inset boundaries, wrapping and individual values are visible.
+  Manual keyboard-only, screen-reader, zoom and Firefox/Safari review remain unrun.
+  No commits, pushes or deployments changed. Prior results below remain historical.
+- Removed temporary focused/visual helpers and screenshots; logs remain ignored.
+  Final structure and whitespace checks pass. Next: try region styles with real
+  content and complete manual accessibility/browser review; verify hosted CI after push.
+
+## Studio section Back to top links (4 November 2026)
+
+- Clarified scope with the user: studio sections only. Added a native, labelled
+  Back to top link at the bottom right of every studio lesson/preview/reference
+  panel, wizard pane and inspector, using a new local deferred module after
+  lesson initialization. Avoided links on nested example cards or generated pages.
+  Added a focusable studio header destination, decorative hidden arrow, underline,
+  >=44px target and visible destination focus outline. Links remain in normal flow.
+- Activation explicitly returns the outer window to scroll position zero and
+  focuses the header; this avoids sticky-header anchor positioning and animation.
+  Keeps the active step, project/local library, open panels, inspector language/
+  visibility and preview document. Modified clicks retain native link behavior.
+  No saved state, sample generator, exports, dependencies or root snapshots changed.
+- Refreshed affected asset versions and updated README/architecture. Added 35
+  browser assertions covering each container, both themes and 320/901/1440px
+  layout, target sizes, focus/top restoration, state preservation, keyboard-style
+  click activation despite smooth scrolling, all twelve stage routes, inspector
+  retention and exclusion from both sample previews/exports.
+- `python scripts/check_structure.py`: **46 assets verified**; `git diff --check`
+  passed (earlier brand CSS LF/CRLF notice only). Temporary
+  `python .section-home-focused.py`: **35/35 passed**, no JavaScript errors
+  (`.section-home-focused.log`). `python scripts/browser_review.py` passed
+  **1535/1535**, no captured JavaScript errors (`.section-home-browser.log`).
+- Extended optional media checks for the new links under actual Chrome reduced-
+  motion and forced-colour modes. Explicitly select Advanced for that script's
+  existing component specimens now that Basic is the default; no runtime change.
+  `python scripts/button_states_review.py` passed **7/7 reduced-motion** and
+  **9/9 forced-colour** checks, no errors (`.section-home-media.log`). Browser
+  checks use isolated temporary profiles outside the sandbox without user storage.
+- Temporary `python .section-home-visual.py` captured the 1440px Palette section
+  return and 390px Wireframe wizard return. Inspected both: right alignment,
+  wrapping, spacing and non-overlapping flow placement are visible. Removed
+  temporary focused/visual helpers and screenshots; logs remain ignored. Final
+  structure and whitespace checks pass. Actual manual keyboard-only, screen-reader,
+  zoom and Firefox/Safari checks remain unrun; automated checks do not establish
+  full accessibility. No commits, pushes or deployments changed.
+- Next: complete manual navigation and accessibility/browser review; verify hosted
+  validation and Pages after these local changes are committed and pushed.
+
+## Public repository readiness review (4 November 2026)
+
+- Reviewed current README, licence, security/conduct/contribution documents, PR/
+  issue templates, ignore rules, tracked root artifacts and local Actions/Pages
+  workflows. MIT/community documents already exist; the Pages artifact allowlist
+  includes only index.html and src. Root tokens.css/test.html and the legacy
+  standalone file remain tracked in the public repository; no snapshots removed.
+- Identified stale Unreleased changelog descriptions (Advanced default and early
+  Prototype), a PR template missing the required browser check, and Actions still
+  referenced by movable version tags. Recommend a reviewed release checkpoint,
+  public quick-start/demo/storage guidance, deliberate snapshot/archive labelling,
+  Actions update/hardening and completing manual browser/accessibility review.
+  These are recommendations, not implemented changes.
+- Local session changes, including CI's browser suite and the Pages validation
+  dependency, are still uncommitted. The latest 1500/1500 result below belongs to
+  the preceding implementation session; no runtime tests rerun for this review.
+- Consulted official GitHub guidance for branch/status protections, workflow
+  permissions/action pinning, secret scanning/push protection and security policy.
+  Public repository/Pages fetches failed through the web tool. Did not verify
+  remote deployment, branch protections, private vulnerability reporting, secret
+  alerts or other account settings; no full credential/history scan performed.
+- Only added this handoff note. No runtime/settings changes, artifact deletion,
+  commits, pushes or deployments. Next: implement the agreed public-release
+  cleanup, then verify actual hosted CI/Pages and repository security settings.
+
+## Background transparency controls (4 November 2026)
+
+- Clarified scope with the user: Body, Header, Main and Footer backgrounds.
+  Added labelled 0–100% opacity sliders/output for all four, independently per
+  theme. Only background paint changes; region content does not use CSS opacity.
+  Colour/brand/neutral edits preserve alpha; a region reset clears its colour and
+  alpha for the current theme. Existing whole-card opacity remains separate.
+- Optional `backgroundOpacity` state follows existing JSON/autosave/import/reset
+  paths. Only known regions/themes accept finite numeric percentages, clamped to
+  0–100 and rounded to integers; absent/invalid settings remain fully opaque.
+  No six-digit semantic colour validation, schema, dependency or root snapshot
+  changes. New RGB/opacity/paint tokens drive shared preview/export CSS in both
+  samples, with colour/opacity catalogue routes to their actual controls.
+- Defined an opaque Surface canvas on exported html behind Body; Header/Main/
+  Footer blend over Body. The centre model mirrors that stack, displays opacity
+  tokens and blended colours, and calculates corresponding text/link ratios.
+  Contrast inventory composites unrounded channels for text, indicators and
+  button host contexts; colour-repair source targets retain original colours.
+- Updated README, architecture and affected runtime asset query versions. Added
+  38 focused assertions for alpha endpoints/partial values, both samples/themes,
+  standalone/live agreement, opaque content, known blended contrast, autosave/JSON,
+  colour selection, current-region reset, catalogue/inspector/focus, hostile/invalid
+  imports and 320/390/1440px range/model sizing.
+- `python scripts/check_structure.py`: **45 assets verified**; `git diff --check`
+  passed (earlier brand CSS LF/CRLF notice only). Temporary
+  `python .background-opacity-focused.py`: **38/38 passed**, no JavaScript errors
+  (`.background-opacity-focused.log`). `python scripts/browser_review.py` passed
+  **1500/1500**, no captured JavaScript errors (`.background-opacity-browser.log`).
+  Browser profiles are isolated outside the sandbox without user projects/storage.
+- Temporary `python .background-opacity-visual.py` captured the 1440px centre model
+  and 390px controls with Body 50%, Header 35%, Main 70% and Footer 0%. Inspected
+  both: blended paint, opaque text, alpha tokens and readable slider layouts are
+  visible. Removed temporary helpers/screenshots; logs remain ignored. Final
+  structure and whitespace checks pass. Manual keyboard-only, screen-reader,
+  zoom and Firefox/Safari review remain unrun. No commits, pushes or deployments
+  changed. Earlier test counts below remain historical.
+- Next: review transparent backgrounds with real content and complete manual
+  browser/accessibility checks; verify hosted CI after push.
+
+## OKLCH default (4 November 2026)
+
+- Changed the foundation ramp default from RGB mix to OKLCH for startup, New,
+  Reset and missing/invalid imported methods. Explicit saved RGB mix/OKLCH choices
+  still restore normally. All four palette families use the same selected method.
+- Updated both initial method selectors and the initial method pill to OKLCH,
+  refreshed the core script query version and updated README/architecture guidance.
+  Added startup/control/lesson, New/Reset/Neutral, explicit import preservation
+  and missing/invalid-method checks without changing the ramp algorithms.
+- `python scripts/check_structure.py`: **45 assets verified**; `git diff --check`
+  passed (earlier brand CSS LF/CRLF notice only). Temporary
+  `python .oklch-default-focused.py`: **7/7 passed**, no JavaScript errors
+  (`.oklch-default-focused.log`). `python scripts/browser_review.py` passed
+  **1462/1462**, no captured JavaScript errors (`.oklch-default-browser.log`).
+  Browser profiles are isolated outside the sandbox without user data.
+- Manual keyboard-only, screen-reader, screenshots and Firefox/Safari review were
+  not rerun for this default-only change. No root snapshots, dependencies, commits,
+  pushes or deployments changed. Prior results below remain historical.
+- Removed the temporary focused helper; logs remain ignored. Final structure and
+  whitespace checks pass. Next: continue the outstanding manual accessibility/
+  browser and learner reviews; verify hosted CI after push.
+
+## Primary-derived Neutral palette (4 November 2026)
+
+- Added a fourth, derived Neutral family to the shared core generator and palette
+  process. `makeNeutralRamp` borrows Primary UI's OKLCH hue with midpoint lightness
+  0.6 and chroma `min(primary chroma * 0.12, 0.025)`, then uses the selected RGB
+  mix/OKLCH ramp method for eleven 50–950 shades. Achromatic primaries remain grey.
+  Neutral 500 is labelled a derived midpoint, distinct from selected role anchors.
+- Added a read-only Neutral explanation/midpoint in Main Palette, all eleven
+  shade declarations in the wizard and centre, and `--neutral-*` CSS exports in
+  both samples. Primary/method changes regenerate Neutral; Supporting/Accent edits
+  do not. Existing semantic surfaces/text/borders and custom choices remain intact.
+  Neutral introduces no new editable anchor, saved state, schema or dependency.
+- Added Neutral catalogue classification/configuration through Primary UI and
+  candidate contrast rows with Primary source targets. Body/Header/Main/Footer
+  selectors append a Neutral group after all existing brand options. Selecting a
+  step uses the established copy-hex behavior; later generation refreshes options
+  without silently changing prior background assignments. Neutral inspection
+  opens shade declarations or the actual background semantic declaration.
+- Updated current README/architecture guidance, generator comments and affected
+  asset query versions. Added 57 regression assertions for primary hue/chroma,
+  black/white/grey handling, valid/unique/light-to-dark steps, both methods and
+  samples/themes, UI/export agreement, neutral background use, copied-choice
+  preservation, persistence, source routing, contrast candidates, inspection and
+  expanded 320/390/1440px layouts. Updated old candidate-count and brand-only
+  option assertions to include the new family without losing brand order checks.
+- `python scripts/check_structure.py`: **45 assets verified**; `git diff --check`
+  passed (earlier brand CSS LF/CRLF notice only). Temporary
+  `python .neutral-focused.py`: initial **56/56**, final **57/57 passed**, no errors
+  (`.neutral-focused.log`). First `python scripts/browser_review.py` passed
+  **1454/1454**, no JavaScript errors (`.neutral-browser.log`). Final full run with
+  the background-inspection correction/assertion passed **1455/1455**, no captured
+  JavaScript errors (`.neutral-browser-final.log`).
+- Temporary `python .neutral-visual.py` captured 1440px blue-Primary and 390px
+  orange-Primary neutral lessons. Inspected both; cool/warm tint, derived midpoint,
+  complete steps and readable wrapping are visible. Final manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari checks remain unrun. Browser checks use
+  isolated temporary profiles outside the sandbox without user projects/storage.
+  No root snapshots, commits, pushes or deployments changed.
+- Removed temporary focused/visual helpers and screenshots; logs remain ignored.
+  Final structure and whitespace checks pass. Next: try neutral assignments with
+  real content and complete manual browser checks; verify hosted CI after push.
+
+## Basic preview default and tab order (4 November 2026)
+
+- Set startup, New and Reset to Basic. Moved Basic to the left tab and Advanced
+  to the right, including initial HTML selection/tabpanel labelling and matching
+  runtime click, Home/End, arrow-key, focus and tab-stop behavior.
+- Explicit saved Basic/Advanced choices remain restored by imports/local projects.
+  Older imported projects without a sample-mode field retain their historical
+  Advanced page; invalid explicit modes fall back to Basic. Updated current README
+  and architecture guidance and affected core/basic script query versions.
+- Adapted historical feature fixtures to explicitly select Advanced after reset,
+  while default/reset assertions call resetStudio directly. Updated sample-tab
+  keyboard expectations, retained exact Advanced output comparison, and added a
+  startup order/selection assertion. No sample generator or design data change.
+- `python scripts/check_structure.py`: **45 assets verified**; `git diff --check`
+  passed (LF/CRLF normalization notice for the earlier brand-palette.css change).
+  Temporary `python .basic-default-focused.py`: **16/16 passed**, no JavaScript
+  errors (`.basic-default-focused.log`), covering startup, New, Reset, explicit
+  saved modes, pre-selector imports and 320/1440px tab order/keyboard focus.
+  First full `python scripts/browser_review.py`: **1397/1398**, no JavaScript
+  errors (`.basic-default-browser.log`). One planning-workshop fixture still
+  expected Advanced after New; updated it to select that sample explicitly.
+  Final full rerun passed **1398/1398**, no captured JavaScript errors
+  (`.basic-default-browser-final.log`). Browser
+  runs use isolated temporary profiles outside the sandbox, without user data.
+- Manual keyboard-only, screen-reader, screenshot and Firefox/Safari review were
+  not rerun for this small default/order change. No root snapshots, dependencies,
+  commits, pushes or deployments changed. Earlier results below are historical.
+- Removed the temporary focused helper; logs remain ignored. Final structure and
+  whitespace checks pass. Next: verify the default in the user's preview and
+  complete outstanding manual browser checks.
+
+## Palette token process and final Prototype (4 November 2026)
+
+- Added explicit brand token suffix editing after each colour's display name in
+  Edit Brand Palette. The complete `--brand-*` declaration is visible in each row
+  and the reference list. Safe, unique 1–40-character IDs use the existing import
+  grammar; malformed/duplicate edits leave state unchanged. Display-name edits
+  preserve token IDs. Token renames retain their editor node/focus, update exports,
+  catalogue and contrast identities, and keep previously copied Main Palette values.
+  Replacing project state also restores fields and clears stale token validity.
+- Added `palette-process.js` after studio learning and before background lessons.
+  Generate palette steps follows Main Palette/ramp method and precedes backgrounds;
+  it shows all eleven 50–950 shade tokens for each role, with 500 marked as the
+  selected anchor. Values update automatically from the shared CSS export, using
+  the selected RGB mix/OKLCH method. The centre teaches brand declaration → copied
+  Main Palette anchor → shade steps → light/dark semantic role → background use.
+  It distinguishes custom semantic overrides and copied values from live aliases,
+  and provides complete-file inspection actions without another generator/state.
+- At the user's explicit direction, moved Prototype to the final step after
+  Deliver. Plan now contains Brief, Architecture and Wireframe. Stable numeric
+  control routes/IDs are retained internally; a separate ordered sequence drives
+  visible numbering, Previous/Next, progress, phase groups, buttons and centre
+  section order. Palette is step 4; Spacing is step 8; Prototype is step 12.
+  Final review opens the existing live preview/inspector or existing Deliver
+  controls. Saved task notes and earlier paper-style screens remain supporting
+  material in a disclosure. No preview iframe replacement or project migration.
+- Updated current lesson/README/architecture guidance and affected asset query
+  versions. Added 45 focused regression assertions for renaming/validation,
+  persistence, export-derived ramps across both methods/samples/themes, overrides,
+  inspection, 320/390/1440px layout, reset validity and all twelve navigation steps.
+  Adjusted older expected step order/labels and optional-rehearsal focus setup.
+- `python scripts/check_structure.py`: **45 assets verified**; `git diff --check`
+  passed (existing LF/CRLF normalization notice for brand-palette.css).
+  Temporary `python .palette-process-focused.py`: initial **43/43**, then
+  **44/44**, final **45/45 passed**, no errors (`.palette-process-focused.log`). First full
+  `python scripts/browser_review.py`: **1395/1395**, no JavaScript errors
+  (`.palette-process-browser.log`), before the final reset-validity refinement.
+  Subsequent full runs passed **1396/1396** (`.palette-process-final.log`) and
+  **1397/1397** (`.palette-process-order-final.log`), no captured JavaScript errors.
+  Visual review exposed reference tools preceding Plan; corrected centre ordering
+  so all twelve lessons immediately follow the unchanged preview, with references
+  afterward, and covered it in the 1397-check run. Strengthened the final focused
+  fixture afterward to dispatch the ramp control's input event, assert the selected
+  method and change each actual Main Palette dropdown. Final **45/45** passes both
+  methods/samples/themes; runtime code is unchanged since the full run. Browser
+  runs use isolated temporary profiles outside the sandbox without user projects.
+- Temporary `python .palette-process-visual.py` captured desktop shade/token-editor
+  and final Prototype views, plus a 320px token lesson. Inspected all four;
+  recaptured after centre ordering correction and verified the final desktop order.
+  Removed temporary focused/visual helpers and screenshots; logs remain ignored.
+  Final structure and whitespace checks pass. Manual keyboard-only, screen-reader,
+  zoom, Firefox/Safari and learner review remain unrun. No root sample snapshots,
+  dependencies, commits, pushes or deployments changed. Earlier results below
+  remain historical.
+- Next: try the revised palette process with learners and complete manual browser
+  checks; verify hosted validation after these changes are committed and pushed.
+
+## Body background and complete centre model (4 November 2026)
+
+- Promoted the existing page canvas into a visible Body background fieldset before
+  Header, Main and Footer, with the complete Brand Palette, picker, hex field and
+  per-theme reset. Preserved `page-background-*` IDs, `--background` and existing
+  semantic override data; no parallel Body setting, schema change or migration.
+  Main continues following Body until its own override is chosen.
+- Updated the centre Palette model to show Body enclosing Header/Main/Footer,
+  with Body's current value, text/link contrast and complete CSS/HTML inspection
+  actions. Updated semantic wording and Body's catalogue source route to the
+  Palette control in the selected token theme. Refreshed changed asset versions
+  and current README/architecture guidance.
+- Extended existing background checks for visible Body ordering, model nesting,
+  brand choices, both themes and samples, live/standalone computed body colour,
+  inspector output, autosave/load, JSON round trip, reset/default lifecycle,
+  catalogue routing and 320/390/1440px sizing/focus. Structure check: **44 assets**;
+  `git diff --check` passed. Temporary `python .body-background-focused.py` passed
+  **65/65**, no JavaScript errors (`.body-background-focused.log`).
+  `python scripts/browser_review.py` passed **1351/1351**, no captured JavaScript
+  errors (`.body-background-browser.log`).
+- Temporary `python .body-background-visual.py` captured desktop/320px centre
+  views. Inspected both; reduced narrow-screen nesting insets to keep the model
+  readable. Final focused recheck after that CSS adjustment passed **65/65**;
+  the full suite started before that presentation adjustment. Recaptured both
+  screenshots afterward and inspected the final narrow model. Removed temporary
+  focused/visual helpers and screenshots; logs remain ignored. Final structure
+  and whitespace checks pass. Browser checks use isolated temporary profiles
+  outside the sandbox without user data.
+- Manual keyboard-only, screen-reader, zoom and Firefox/Safari review remain
+  unrun. No root snapshots, dependencies, commits, pushes or deployments changed.
+- Next: review Body/Main colour combinations with real content and complete
+  manual accessibility/browser checks; verify hosted CI after push.
+
+## Header, Main and Footer backgrounds (4 November 2026)
+
+- Expanded Palette's Webpage backgrounds after Brand Palette, Main Palette and
+  ramp controls. Header, Main and Footer appear in page order, each with all
+  named brand colours in saved order, picker, validated hex input and per-theme
+  reset. Retained the original Page canvas controls/IDs in a disclosure. Brand
+  selections copy hex values like Main Palette; reference edits refresh choices
+  without silently changing earlier background assignments.
+- Added `webpage-backgrounds.js` after studio learning, using existing semantic
+  overrides, import validation, apply/autosave and generators. Three region tokens
+  default to Surface, Background and Surface after existing overrides resolve;
+  legacy projects preserve their defaults. Both sample headers, the shared main
+  rule and shared footer consume those tokens. Cards and controls keep surfaces.
+  Removed background binding from sitemap editing without changing its behavior.
+- Added a centre Palette section showing the current theme/region colours and
+  text/link contrast, with direct complete CSS/HTML inspection actions. Added
+  region backgrounds to the contrast inventory and semantic editor, and routed
+  catalogue Configure source to Palette in the token's theme. No duplicate editor
+  state, new project schema, dependency or executable imported content.
+- Updated affected asset query versions, README and architecture. Added 52 browser
+  assertions covering brand/order, both samples/themes, standalone files, inspector,
+  autosave/load, JSON round trips, invalid input/imports, safe brand labels, copy
+  behavior, default/reset lifecycle and 320/390/1440px layouts/focus/target heights.
+- `python scripts/check_structure.py`: **44 assets verified**; `git diff --check`
+  passed. Existing full browser suite passed **1286/1286**, no errors
+  (`.background-regions-browser.log`). Temporary `python .background-focused.py`
+  passed **52/52**, no errors (`.background-focused.log`). Full suite with the
+  new assertions passed **1338/1338**, no captured JavaScript errors
+  (`.background-regions-final.log`). A final presentation adjustment made dropdowns
+  and hex inputs at least 44px high and clarified the contrast copy. Re-ran the
+  focused checks afterward: **52/52**, including enhanced target-height assertions
+  for brand, picker and hex inputs at all three widths. The 1338-check full run
+  precedes that final presentation adjustment. Browser runs use isolated temporary
+  profiles outside the sandbox without user projects/storage.
+- Temporary `python .background-visual.py` captured desktop/390px lesson views
+  and the desktop background controls. Inspected all three; re-captured and
+  inspected desktop controls after the final sizing adjustment. Removed temporary
+  focused/visual helpers and screenshots; logs remain ignored and no screenshot
+  baselines were added. Structure and whitespace checks pass on final files.
+  Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review remain unrun; automated checks
+  do not establish full accessibility. No root snapshots, commits, pushes or
+  deployments changed. Earlier recovery results below remain historical.
+- Next: try the background choices with real content and complete manual
+  accessibility/browser checks; verify the hosted validation workflow after push.
+
+## Recovery corrections and publishing validation (4 November 2026)
+
+- Corrected sitemap commit's default to preserve the current Show planned entries
+  choice. Creation, rename and deletion now behave like reordering; the checkbox
+  remains the explicit visibility control, and Undo restores the preceding plan.
+  Advanced's existing complete-map behavior is retained. Added regressions across
+  both samples and both visibility states for all four operations, destination
+  retention, Undo, checkbox changes, project JSON and live/exported footer output.
+  Older planned-entry fixtures now explicitly select their intended visibility.
+- Assigned fresh query versions to responsive-preview.js and the changed
+  site-builder.js. Preserved the newer preview implementation and script order.
+  This repairs the confirmed asset-identity rollback; no deployed-cache failure
+  or returning-browser cache test is claimed.
+- Reconciled README's collapsed Sitemap guidance and the page-background help
+  with Basic's transparent main sections. Updated the architecture's visibility
+  contract and contribution/README validation instructions.
+- Made CI reusable for the existing Pages workflow, running structure and browser
+  checks on pull requests and through the Pages caller on main pushes/manual runs.
+  Deployment requires successful validation of the triggering revision; validation
+  has contents-read permission and a ten-minute job limit. Reviewed against GitHub's
+  reusable-workflow and job-dependency documentation. No added runtime dependency.
+- Current `python scripts/check_structure.py`: **43 assets verified**;
+  `git diff --check`: passed. Initial browser launch hit the Chrome temporary-profile
+  sandbox restriction; completed runs used isolated profiles outside the sandbox,
+  without user projects/storage. First `python scripts/browser_review.py` run passed
+  **1285/1286**, including all 40 new sitemap assertions, with no JavaScript errors.
+  The failure was the previously recorded intermittent 1280px inspector-focus check
+  (opener top 47.8px vs header bottom 67.8px). Final full rerun passed **1286/1286**,
+  no captured JavaScript errors (`.maintenance-20261104-browser-rerun.log`). No
+  inspector code or assertions were changed to obtain that result; its intermittent
+  failure remains a known verification concern. Earlier counts below are historical.
+- Hosted Actions/deployment, manual keyboard-only/screen-reader/zoom/pointer/touch,
+  screenshots and Firefox/Safari checks have not been run in this session. No
+  root snapshots, saved-project schema, commits, pushes or deployments changed.
+- Next: verify the first hosted validation run after these changes are committed
+  and pushed, investigate the intermittent inspector-focus check if it recurs, and
+  complete the manual accessibility/browser review.
+
+## Merge and recovery audit (4 November 2026)
+
+- Audited clean starting revision `20eb0d4` against both merge parents,
+  `a253630` and `40228d4`, their shared `e9c05eb` baseline, current source,
+  architecture, contribution instructions and earlier audit/product decisions.
+  Added [recovery audit](RECOVERY_AUDIT_2026-11-04.md) with evidence, limits,
+  reproduction steps, preserved decisions and recommended corrections.
+- Confirmed the wizard, app header, 25% builder/right-inspector cap, native
+  inspector, responsive preview startup, live Spacing lesson, footer Sitemap
+  accordion, sitemap editor and newer Basic background fix remain present.
+  Found no missing implementation among those reviewed features.
+- Confirmed merge rollback of the responsive-preview asset query from
+  `20261103-learning` to the older `20261103-ui-essentials` despite retaining
+  newer source. Returning-browser cache behavior is a conditional risk; no
+  deployed-cache failure was reproduced. Also confirmed a pre-existing sitemap
+  bug: renaming a linked entry silently enables Show planned entries because
+  save/delete use commit's true default. Undo/link retention pass. Recorded
+  contradictory current footer guidance and the existing CI/publishing gap.
+- Current `python scripts/check_structure.py`: **43 assets verified**;
+  `python scripts/browser_review.py`: **1246/1246 passed**, no captured errors
+  (`.reaudit-20261104-browser.log`). Initial sandbox launch failed on Chrome's
+  temporary-profile access; completed runs used isolated profiles outside the
+  sandbox without user projects/storage. `python scripts/button_states_review.py`:
+  **5/5 reduced-motion**, **7/7 forced-colour**, no errors
+  (`.reaudit-20261104-states.log`). `git diff --check` passed.
+- Temporary `python .reaudit-20261104-probes.py`: **7/8 passed**, the failing
+  assertion intentionally exposing visibility loss on rename, with no errors.
+  Verified both themes' Basic section/background behavior, link retention and
+  Undo separately. Removed the helper; ignored probe log remains. These findings
+  are additional to the passing existing suite, not corrected runtime defects.
+- No new screenshot/manual accessibility, Firefox/Safari, remote/deployed-site
+  or real-font CDN review. Available history cannot establish absent uncommitted
+  work from another computer. No app/source recovery, runtime changes, new
+  dependencies, root snapshot edits, commits, pushes or deployments.
+- Next: fix preview cache identity and sitemap visibility preservation with
+  regression coverage; reconcile current documentation. Historical results below
+  remain distinct from this audit.
+
 ## Footer Sitemap accordion (3 November 2026)
 
 - Wrapped the shared Basic/Advanced Sitemap in native details/summary, initially
@@ -2319,8 +2947,8 @@ this HTML startup-default change.
 
 ## Open work / next session
 
-1. Add the browser suite to CI and gate Pages publishing on validation. Current
-   CI only checks structure; deployment is a separate workflow.
+1. Verify the first hosted run of the new shared structure/browser validation and
+   Pages dependency gate after these local changes are committed and pushed.
 2. Complete manual keyboard, screen-reader, zoom and visual review; test Firefox
    and Safari. Automated interaction checks do not replace these checks.
 3. Review browser download permissions, successful clipboard access and real

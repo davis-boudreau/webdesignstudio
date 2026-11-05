@@ -13,8 +13,21 @@ No separate hardcoded values: the table stays synchronized with the export. */
     const name = row.name;
     const source = (step, control, mode = 'Direct setting', extra = {}) => ({ step, control, mode, ...extra });
     if (name.startsWith('--brand-')) return source(4, 'jBrandEditor', 'Brand reference', { brand: name.slice(8) });
+    if (/^--(header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return source(4,name.slice(2),'Region padding shared across themes');
+    const backgroundPaint=name.match(/^--(body|header|main|footer)-background-(opacity|rgb|paint)$/);
+    if(backgroundPaint) return source(4,(backgroundPaint[1]==='body'?'page':backgroundPaint[1])+'-background-'+(backgroundPaint[2]==='rgb'?'colour':'opacity'),backgroundPaint[2]==='opacity'?'Background opacity / theme setting':'Derived background paint from colour and opacity',{background:true});
+    if (name === '--background') return source(4, 'page-background-colour', 'Body background / optional theme override', { background: true });
+    if (/^--(header|main|footer)-background$/.test(name)) return source(4, name.slice(2) + '-colour', 'Theme background / optional override', { background: true });
+    if (/^--neutral-\d+$/.test(name)) return source(4, 'jPrimary', 'Derived from Primary UI hue with reduced chroma and the ramp method');
     const ramp = name.match(/^--(primary|secondary|accent)-\d+$/);
     if (ramp) return source(4, 'j'+ramp[1][0].toUpperCase()+ramp[1].slice(1), 'Derived from the Main Palette anchor and ramp method');
+    const statusRamp = name.match(/^--(success|warning|danger)-\d+$/);
+    if (statusRamp) return source(6, 'jSemanticRole', 'Derived from the theme status colour and ramp method', { semantic: statusRamp[1] });
+    const interactionRamp=name.match(/^(--(?:button-(primary|secondary|accent|outline|text)-)?state-(default|hover|focus|active|selected|disabled|loading|invalid|success|readonly))-\d+$/);
+    if(interactionRamp) {
+      const entry=DSStudio.statePalettes.sourceFor(interactionRamp[1],row.scope==='Dark'?'dark':'light');
+      if(entry)return source(entry.variant?7:6,entry.control,'Derived from the resolved state colour and ramp method',{...(entry.variant?{variant:entry.variant}:{semantic:entry.semantic})});
+    }
     if (SEMANTIC_COLOUR_KEYS.includes(name.slice(2))) return source(6, 'jSemanticRole', 'Theme role / optional override', { semantic: name.slice(2) });
     const button = name.match(/^--button-(primary|secondary|accent|outline|text)-(source|bg|text|border|hover|active|hover-text|active-text)$/);
     if (button) return source(7, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
@@ -42,9 +55,14 @@ No separate hardcoded values: the table stays synchronized with the export. */
   window.dssTokenSource = sourceFor;
 
   const describe = (name, type) => {
+    if (/^--(header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return 'Additional padding inside the website region; existing content gutters and section spacing still apply. Shared by light and dark themes.';
+    if (/^--(body|header|main|footer)-background-(opacity|rgb|paint)$/.test(name)) return 'Background paint and alpha; text and controls remain independently opaque. Transparent regions blend over their parent background.';
     if (name.startsWith('--page-')) return 'Responsive page maximum width or side gutter; configure in the Responsive phase.';
     if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Extra character spacing in em, relative to the element font size.';
     if (name.startsWith('--brand-')) return 'Project Brand Palette reference; choose separately for a Main Palette UI role.';
+    if (/^--(?:button-(?:primary|secondary|accent|outline|text)-)?state-/.test(name)) return 'Generated state shade; 500 preserves the resolved source colour. Transparent backgrounds use the foreground anchor. Native behaviour, opacity and non-colour cues still apply.';
+    if (/^--neutral-\d+$/.test(name)) return 'Neutral shade derived from the Primary UI hue with a restrained tint; 500 is its generated midpoint.';
+    if (/^--(success|warning|danger)-\d+$/.test(name)) return 'Generated status shade for this theme; 500 preserves its resolved semantic colour. Check contrast and use text or icons alongside colour.';
     if (/^--(primary|secondary|accent)-\d+$/.test(name))
       return 'Generated colour ramp step; 500 preserves the selected anchor colour.';
     if (name.includes('hover-text')) return 'Foreground colour for the button hover state.';
@@ -64,9 +82,12 @@ No separate hardcoded values: the table stays synchronized with the export. */
   };
 
   const classify = name => {
+    if (/^--(header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return 'Layout';
+    if (/^--(body|header|main|footer)-background-(opacity|rgb|paint)$/.test(name)) return 'Surface & controls';
     if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Typography';
     if (name.startsWith('--brand-')) return 'Brand palette';
-    if (/^--(primary|secondary|accent)-\d+$/.test(name)) return 'Colour ramp';
+    if (/^--(?:button-(?:primary|secondary|accent|outline|text)-)?state-/.test(name)) return 'Colour ramp';
+    if (/^--(primary|secondary|accent|neutral|success|warning|danger)-\d+$/.test(name)) return 'Colour ramp';
     if (name.startsWith('--button-')) return 'Button component';
     if (/^--(font|text-|type-ratio|body-leading|heading-leading|heading-weight|reading-measure)/.test(name)) return 'Typography';
     if (/^--(space|radius)/.test(name)) return 'Spacing & shape';
@@ -107,23 +128,42 @@ No separate hardcoded values: the table stays synchronized with the export. */
       "'": '&#39;'
     } [char]));
 
-  const filtered = () => {
+  const filtered = (css = cssExport()) => {
     const q = search.value.trim().toLowerCase();
-    return readTokens().filter(row => [row.type, row.name, row.value, row.description, row.scope]
+    return readTokens(css).filter(row => [row.type, row.name, row.value, row.description, row.scope]
       .some(value => value.toLowerCase().includes(q)));
   };
 
+  let renderedSignature='',renderedRows=new Map();
   const update = () => {
-    const rows = filtered();
+    const css=cssExport(),signature=css+'\u0000'+search.value;
+    if(signature===renderedSignature)return;
+    const rows = filtered(css);
     count.textContent = `${rows.length} tokens shown${search.value ? ' (filtered)' : ''}.`;
-    table.innerHTML = rows.map(row => {
+    const nextRows=new Map();
+    const nodes=rows.map((row,index) => {
+      const source=sourceFor(row);
       const colour = /^#[0-9a-f]{6}$/i.test(row.value) ?
         `<span class="token-dot" style="background:${row.value}" aria-hidden="true"></span>` : '';
-      return `<tr><td>${escapeHtml(row.type)}</td><td><code>${escapeHtml(row.name)}</code></td>` +
+      const html=`<tr><td>${escapeHtml(row.type)}</td><td><code>${escapeHtml(row.name)}</code></td>` +
         `<td><div class="token-value">${colour}<code>${escapeHtml(row.value)}</code></div></td>` +
         `<td>${escapeHtml(row.description)} <small class="muted">(${escapeHtml(row.scope)})</small>` +
-        (sourceFor(row) ? `<p class="help">${escapeHtml(sourceFor(row).mode)} · wizard step ${sourceFor(row).step + 1}</p><button type="button" class="ghost" data-token-name="${escapeHtml(row.name)}" data-token-scope="${escapeHtml(row.scope)}" aria-label="Configure source for ${escapeHtml(row.name)} (${escapeHtml(row.scope)})">Configure source</button>` : '<p>Configuration source unavailable.</p>') + '</td></tr>';
-    }).join('') || '<tr><td colspan="4">No matching tokens.</td></tr>';
+        (source ? `<p class="help">${escapeHtml(source.mode)} · wizard step ${source.step + 1}</p><button type="button" class="ghost" data-token-name="${escapeHtml(row.name)}" data-token-scope="${escapeHtml(row.scope)}" aria-label="Configure source for ${escapeHtml(row.name)} (${escapeHtml(row.scope)})">Configure source</button>` : '<p>Configuration source unavailable.</p>') + '</td></tr>';
+      const key=index+'\u0000'+row.scope+'\u0000'+row.name;
+      let entry=renderedRows.get(key);
+      if(!entry || entry.html!==html) {
+        const template=document.createElement('template');template.innerHTML=html;
+        entry={html,node:template.content.firstElementChild};
+      }
+      nextRows.set(key,entry);return entry.node;
+    });
+    if(!nodes.length) {
+      const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=4;cell.textContent='No matching tokens.';row.append(cell);nodes.push(row);
+    }
+    if(table.children.length===nodes.length)nodes.forEach((node,index)=>{if(table.children[index]!==node)table.children[index].replaceWith(node);});
+    else table.replaceChildren(...nodes);
+    renderedRows=nextRows;
+    renderedSignature=signature;
   };
 
   window.dssUpdateTokenCatalogue = update;

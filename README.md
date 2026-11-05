@@ -28,7 +28,12 @@ named **Next** action, or open **Choose a step** to jump directly. Planning,
 foundations, application and review are phases of this same journey.
 The app opens directly into the workspace; its introduction lives beneath
 Build your design system, with the project name retained in the app header.
+Studio lesson panels, wizard panes and the inspector end with a right-aligned
+**Back to top** link. It returns keyboard focus to the studio header while keeping
+the current step, project and preview intact. These links stay out of generated websites.
 
+New projects and Reset select **Basic**, shown in the left preview tab; **Advanced**
+is on the right. Saved sample choices are restored when loading projects.
 The page preview stays visible while you work. **Basic / Advanced** chooses the
 sample beside it. **Inspect CSS**, **Inspect HTML** and planning's **Inspect
 project data** open the live inspector and select the relevant output. It starts
@@ -59,7 +64,7 @@ live token declarations. Configure selects the token's source step and control.
 optional **Select in preview** mode inspects one example click, then restores
 normal actions; Escape and switching samples also cancel selection.
 
-**Step 9: Spacing and surfaces** includes the first tutorial driven by your own
+**Step 8: Spacing and surfaces** includes the first tutorial driven by your own
 design: Understand, Try, Observe, Inspect and Reflect. It compares a session
 starting point with current exported spacing values, shows the actual sample
 section and links to complete HTML/CSS. Basic's responsive overrides are included:
@@ -111,15 +116,33 @@ footer without a link; editing does not create new content sections. The text
 editor remains available for bulk edits. The plan updates the responsive preview,
 live HTML inspector, exports and saved projects.
 
-**Palette → Webpage background** sets the canvas colour for the active theme,
-using a picker or hex value. Light and dark backgrounds are saved independently;
-the reset restores the theme default. Basic's main sections show this canvas colour;
-cards, controls, header and footer retain their own surface colours.
+**Palette → Webpage backgrounds** follows the Brand and Main Palettes. Choose
+Body, Header, Main and Footer backgrounds from every Brand Palette colour, a generated
+Neutral step, a custom
+picker or hex value. Choices copy the hex value and are saved independently for
+light and dark themes. Header and Footer default to Surface; Main follows the
+Body background until overridden. Reset each region to follow its default again.
+Body is the outer canvas containing Header, Main and Footer. The centre model
+shows this nesting, including Body's current colour, contrast and inspection actions.
+Each region also has **background opacity**, from 0% transparent to 100% solid,
+saved separately for light and dark themes. This changes background paint while
+text and controls stay opaque. Body blends over an opaque Surface canvas; Header,
+Main and Footer blend over Body. The centre model and contrast checks use those
+blended colours. A background reset restores both its colour and full opacity
+for the current theme. Older projects default to fully opaque backgrounds.
+Header, Main and Footer also offer **Padding** controls for independent top,
+right, bottom and left insets, from 0–64 px. Padding is shared across themes and
+samples, and adds space around existing content gutters and section spacing.
+The centre pane shows the tokens and an inset example. **Reset padding** restores
+that region's zero extra padding without changing its background or opacity.
+Basic's main sections remain transparent so the Main background shows through;
+cards and controls retain their surface colours. The centre Palette lesson shows
+the current region colours, text/link contrast and direct CSS/HTML inspector actions.
 
 The starter maps all sections and content
 groups in the selected Basic or Advanced sample, including cards, lessons and
 workshop topics. Both sample footers use this map, with links to existing content.
-The footer map is always visible; identity, key links and Back to top stay readily available.
+The footer Sitemap accordion starts collapsed; identity, key links and Back to top stay readily available.
 The original six-entry starter upgrades automatically. Complete sample maps
 follow mode changes; custom edits are preserved. **Use complete Basic/Advanced
 sitemap** restores the selected inventory, confirms section/topic counts and
@@ -181,21 +204,25 @@ are demonstrations with no message delivery.
 
 
 The wizard configures the system through twelve steps: Brief, Architecture,
-Wireframe, Prototype, Palette, Typography, Semantic colours, Buttons,
-Spacing and surfaces, Responsive layout, Accessibility and Deliver.
+Wireframe, Palette, Typography, Semantic colours, Buttons,
+Spacing and surfaces, Responsive layout, Accessibility, Deliver and Prototype.
 Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
 component examples, token relationships and practice tasks. Selecting a step
 opens its matching lesson automatically, with contextual inspection actions.
 Interactive labs remain available for experiments and contrast review.
 
-The four planning lessons come before palette design. Record audience, main task,
-scope, success signal and constraints. Write a content map with up to 64
+Brief, Architecture and Wireframe come before palette design. Record the audience,
+main task, scope, success signal and constraints in the brief.
+Use Architecture's short UX planning overview to identify tasks, define scope,
+group and label content, and check a route with the intended audience. Its outcome
+is an agreed sitemap connecting essential requirements to pages for the wireframe.
+Write a content map with up to 64
 entries (`Lessons > Layout` creates a child), compare split/stacked wireframes,
-and follow a linked Discover, Choose and Review prototype. Save observations and
-revise before styling. The prototype is a low-detail navigation exercise with no
-submission backend. The brief and architecture feed the wireframe and prototype;
-they are project notes, not generated CSS tokens.
+and compare the hierarchy before styling. Prototype is the final review step:
+use the finished live page and exported HTML/CSS to test your task, themes and
+responsive layout. Earlier Discover, Choose and Review rehearsal screens remain
+available in its supporting disclosure. Task notes remain saved project data.
 
 Planning fields travel in local saves, project JSON and the HTML sample. Older
 projects receive editable starter planning data. The sample remains a teaching
@@ -215,9 +242,12 @@ Saved/imported projects retain their explicitly chosen ratio.
 See [the teaching and token-configuration review](docs/TOKEN_CONFIGURATION_2026-10-20.md)
 for the complete coverage map and the reasoning behind this organization.
 
-In **2. Brand Palette and Main Palette**, keep named brand references separate
+In **Palette (step 4)**, keep named brand references separate
 from the interface roles. Start with the example colours, or edit names/HEX
-values and add/remove colours in **Edit Brand Palette** (up to 24). Each Main
+values, assign unique token suffixes and add/remove colours in **Edit Brand Palette**
+(up to 24). Each declaration shows the complete `--brand-*` token name and hex.
+Display-name edits preserve token names; token-name edits update CSS and the catalogue.
+Each Main
 Palette role—Primary UI colour, Supporting colour and Accent colour—has a dropdown
 containing the complete Brand Palette plus a custom colour picker.
 
@@ -228,14 +258,61 @@ The reference display, `--brand-*` tokens, catalogue and contrast candidates use
 the project's palette. Renaming a colour preserves its token ID. Imported older
 projects receive the starter brand references while retaining their UI colours.
 
-The centre-pane **2. Brand Colour Palette** shows current Main Palette assignments.
+**Generate palette steps**, after Main Palette, displays all eleven generated
+50–950 shade tokens for Primary, Supporting, Accent and Neutral; 500 preserves each chosen
+anchor for the first three. Neutral borrows the Primary UI hue at reduced chroma
+and generates its own grey midpoint, so it follows Primary without a separate
+colour assignment. Its `--neutral-50` through `--neutral-950` tokens update with
+Primary and the selected RGB mix/OKLCH method. They also appear in the catalogue,
+contrast candidates and all four background selectors. Existing semantic and
+background choices stay unchanged until you select a new value. The centre
+lesson reads the actual exported CSS to show brand declarations, shade tokens and
+light/dark semantic roles, including custom overrides and inspection actions.
+
+OKLCH is the default for new projects and Reset; saved method choices are preserved.
+
+**Generate state palette steps** extends this process to Success, Warning and
+Danger. Each has eleven theme-specific shade tokens, such as `--success-50`
+through `--success-950`; step 500 preserves the resolved semantic colour.
+Change its colour in Semantic colours or change the ramp method to regenerate
+the steps. The wizard and centre lesson show the current theme's exported values,
+with CSS inspection and configuration links. Both themes appear in exported CSS
+and the catalogue. Existing component state mappings retain their semantic
+colours; choose shade pairs deliberately and use text or icons alongside feedback.
+
+**Generate interaction state palette steps** covers every State Explorer state:
+Default, Hover, Focus-visible, Active/pressed, Selected, Disabled, Loading, Invalid,
+Valid/success and Read-only. Choose General controls or any of the five button
+variants to see its state ramps in the wizard and centre lesson. All ramps export
+eleven steps per theme, with step 500 preserving the resolved state colour.
+Their catalogue sources and inspector actions lead to the existing semantic or
+button colour controls. Transparent buttons use their foreground as the ramp
+anchor and say so. Disabled opacity, selected/focus rings, progress indicators and
+native behaviour remain part of the state design; shade generation does not
+automatically remap component styling. The component selector is a view preference
+and does not change project data.
+
+Webpage backgrounds comes before Generate interaction state palette steps in
+both the wizard and centre lesson.
+
+Every interaction state ramp also has a colour dropdown, starting with its
+computed **Default** colour. Choose a Brand colour, Main Palette colour, Neutral
+step or shade from the state's current ramp; choices copy a hex value into its
+existing source. Default removes that source override. The wizard and centre
+dropdowns mirror each other, retain focus and update previews, inspection and
+saved projects. General colours apply to the current theme; button colours apply
+to both themes, and button focus is shared across variants. Help names the source
+and related states affected by a shared edit. Transparent variants edit their
+foreground source. Existing custom colours remain selectable after loading a project.
+
+The centre-pane **Palette** shows current Main Palette assignments.
 Choose **the UI role to change**, then click any swatch card to set Primary UI,
 Supporting or Accent colour. Each card names its action and lists the roles using
 that colour; a status message confirms the result. The preview, guided dropdowns,
-CSS and active local save update together. **Edit Brand Palette** opens the step-5
+CSS and active local save update together. **Edit Brand Palette** opens the step-4
 editor and keeps project settings intact.
 
-In wizard step **4**, **Semantic colour roles** shows all theme roles with readable
+In wizard step **6**, **Semantic colour roles** shows all theme roles with readable
 names, CSS tokens, a colour swatch and current HEX/status. Choose the preview theme
 and role, then **Preview / edit role colour** to review contrast effects before
 applying. **Use generated colour** removes that role's custom override. Changes
@@ -364,6 +441,11 @@ Browser checks require Chrome/Chromium or Edge. Set `CHROME_BIN` if the executab
 is not detected automatically. The tests run against a temporary local server.
 The regular suite uses local font-face fixtures for deterministic loading/failure
 checks; the separate CDN check requires an internet connection.
+
+CI runs structure and browser checks for pull requests and pushes to main through
+the reusable validation workflow. Pages publishing, including manual runs, uses
+the same validation and waits for it to pass before deploying the checked revision.
+GitHub-hosted Ubuntu runners supply Chrome; the application gains no runtime dependencies.
 
 ## Licence
 

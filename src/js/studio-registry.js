@@ -5,18 +5,23 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
 (() => {
   const modules = new Map();
   const listeners = new Map();
+  // Stable control indices keep existing routes compatible; positions set the
+  // learner's sequence independently of those internal identifiers.
+  const stageOrder = Object.freeze([0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 3]);
 
   const DSStudio = {
     version: '4.1.0',
+    stageOrder,
+    get orderedStages() { return stageOrder.map(index => this.stages[index]); },
 
     // One identity for builder controls, lessons and output connections. These
     // fixed IDs are UI metadata; imported projects cannot supply routes or code.
     stages: [
       ['brief', 'Brief', 'process-brief', 'Plan', '', 'Record the purpose and audience. Check that the brief describes one useful visitor task.'],
-      ['architecture', 'Architecture', 'process-ia', 'Plan', '', 'Group your content and choose a destination. Compare the live sitemap with the preview footer.'],
+      ['architecture', 'Architecture', 'process-ia', 'Plan', '', 'Use the brief to map essential pages around one key user task. Check the labels with someone, then compare your sitemap with the preview footer.'],
       ['wireframe', 'Wireframe', 'process-wireframe', 'Plan', '', 'Choose a layout and compare the wireframe below. This plans hierarchy; it does not rebuild the sample page.'],
-      ['prototype', 'Prototype', 'process-prototype', 'Plan', '', 'Follow Discover, Choose and Review below. Record where the path needs clearer labels.'],
-      ['palette', 'Palette', 'brandPalette', 'Foundations', '--primary:', 'Change the main colour. Compare the page in light and dark themes and follow its semantic role into CSS.'],
+      ['prototype', 'Prototype', 'process-prototype', 'Review and deliver', '', 'Review the finished live prototype using your brief and task. Test both samples, themes and viewport sizes, record observations, then export the HTML and CSS.'],
+      ['palette', 'Palette', 'brandPalette', 'Foundations', '--primary:', 'Name a brand token, assign a Main Palette role and compare its generated shade steps. Follow the light and dark semantic values into the page and CSS.'],
       ['typography', 'Typography', 'studio-section-2', 'Foundations', '--font-size-base:', 'Change the base text size. Compare headings and body text, then inspect the generated type scale.'],
       ['semantic', 'Semantic colours', 'studio-section-1', 'Foundations', '--surface:', 'Choose a purpose-based colour. Compare the affected text or surface in the current theme.'],
       ['buttons', 'Buttons', 'buttonDesignLab', 'Apply', '--button-primary-bg:', 'Change the primary button background. Compare the page action, check its text contrast and follow the token into CSS.'],
@@ -24,7 +29,7 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
       ['responsive', 'Responsive layout', 'responsiveDesign', 'Apply', '--grid-card-min:', 'Compare 390 px and Fluid. Change the narrow cutoff and find the rule that stacks the layout. Preview widths test rules; they do not save breakpoints.'],
       ['accessibility', 'Accessibility', 'studio-section-5', 'Review and deliver', '--focus-width:', 'Review the contrast results, then use Tab on real controls. Check visible focus and meaning without colour.'],
       ['deliver', 'Deliver', 'studio-section-6', 'Review and deliver', '', 'Download index.html and tokens.css together and reopen the page. Save project JSON separately so you can resume editing in the studio.']
-    ].map(([id, label, lesson, phase, find, task], index) => Object.freeze({ id, label, lesson, phase, find, task, index })),
+    ].map(([id, label, lesson, phase, find, task], index) => Object.freeze({ id, label, lesson, phase, find, task, index, position: stageOrder.indexOf(index) })),
 
     /** Register a feature module: { id, title, init(ctx), exportCss?(), exportTokens?() } */
     register(mod) {

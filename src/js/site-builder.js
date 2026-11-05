@@ -1,8 +1,8 @@
 'use strict';
-/* Edit the existing bounded plan and semantic roles; previews and exports keep
+/* Edit the existing bounded plan; previews and exports keep
    using their shared generators. Imported labels are always rendered as text. */
 DSStudio.register({
-  id: 'site-builder', title: 'Sitemap editor and webpage background',
+  id: 'site-builder', title: 'Sitemap editor',
   init() {
     const get = id => document.getElementById(id);
     const root = get('sitemap-editor');
@@ -56,13 +56,8 @@ DSStudio.register({
         get('sitemap-planned').checked = current.showPlanned;
         edit();
       }
-      const colour = palette().roles.background;
-      get('page-background-colour').value = colour;
-      if (document.activeElement !== get('page-background-hex')) get('page-background-hex').value = colour;
-      get('page-background-theme').textContent = `${state.theme === 'dark' ? 'Dark' : 'Light'} theme · ${colour}`;
-      get('page-background-reset').disabled = !state.semanticOverrides?.[state.theme]?.background;
     }
-    function commit(map, links, message, showPlanned = true) {
+    function commit(map, links, message, showPlanned = plan().showPlanned) {
       const pages = map.flatMap(([label,children])=>[label,...children.map(child=>`${label} > ${child}`)]).join('\n');
       if (map.reduce((n,[,children])=>n+1+children.length,0)>64 || pages.length>8400) {
         selected = null;
@@ -121,14 +116,6 @@ DSStudio.register({
       if(!previous)return;
       state.designProcess=previous;previous=null;signature='';apply();get('sitemap-undo').disabled=true;get('sitemap-status').textContent='Last sitemap change undone.';
     });
-    function background(value) {
-      if(!validHex(value))return;
-      state.semanticOverrides={...state.semanticOverrides,[state.theme]:{...state.semanticOverrides?.[state.theme],background:value.toUpperCase()}};
-      apply();
-    }
-    get('page-background-colour').addEventListener('input',event=>{get('page-background-hex').value=event.target.value.toUpperCase();background(event.target.value);});
-    get('page-background-hex').addEventListener('input',event=>background(event.target.value));
-    get('page-background-reset').addEventListener('click',()=>{if(state.semanticOverrides?.[state.theme])delete state.semanticOverrides[state.theme].background;apply();});
     for (const event of ['dss:reset','dss:imported']) document.addEventListener(event,()=>{previous=null;get('sitemap-undo').disabled=true;get('sitemap-status').textContent='';signature='';sync();});
     const previousRender=renderCode;
     renderCode=function(){previousRender();sync();};

@@ -89,12 +89,17 @@ DSStudio.register({
       const lesson = panel.querySelector(':scope > .studio-lesson');
       section.dataset.stage = String(stage.index);
       const heading = section.querySelector(':scope > summary h2');
-      heading.textContent = `Step ${stage.index + 1} of ${DSStudio.stages.length}: ${stage.label}`;
+      heading.textContent = `Step ${stage.position + 1} of ${DSStudio.stages.length}: ${stage.label}`;
       pane(stage.index).querySelector('.journey-stage-title').textContent = stage.label;
-      document.querySelector(`[data-journey-step="${stage.index}"]`).textContent = `${stage.index + 1} · ${stage.label}`;
+      document.querySelector(`[data-journey-step="${stage.index}"]`).textContent = `${stage.position + 1} · ${stage.label}`;
       const task = document.createElement('p'); task.className = 'step-task';
       task.textContent = stage.task;
       lesson.replaceChildren(lesson.querySelector('h3'), lesson.querySelector('p'), task);
+      if(stage.id==='architecture') {
+        const overview=document.createElement('div');overview.className='architecture-overview';
+        overview.innerHTML='<ol><li><strong>Identify tasks.</strong> Prioritise the main audience’s goals and the information or functions needed to complete them.</li><li><strong>Define scope.</strong> List essential pages and content. Confirm content owners, accessibility needs and dependencies in the brief; note open questions.</li><li><strong>Group and label.</strong> Organise related content into a simple hierarchy using language the audience understands.</li><li><strong>Check the route.</strong> Ask someone where they would start a key task using the sitemap. Revise unclear labels before wireframing.</li></ol><p><strong>Outcome:</strong> An agreed sitemap connecting essential requirements to pages, ready to guide the wireframe.</p>';
+        lesson.insertBefore(overview,task);
+      }
       const actions = document.createElement('div'); actions.className = 'button-row step-output';
       const inspect = (label, language, find = '') => {
         const button = document.createElement('button');
@@ -105,22 +110,33 @@ DSStudio.register({
       };
       if (stage.index < 4) inspect('Inspect project data', 'json');
       if (stage.index === 1) inspect('Inspect footer HTML', 'html', 'website-footer');
-      if (stage.index >= 4) {
+      if (stage.index >= 4 || stage.id === 'prototype') {
         inspect('Inspect CSS', 'css', stage.find);
         inspect('Inspect HTML', 'html', stage.index === 7 ? 'ds-button--primary' : '<main');
       }
       lesson.append(actions);
-      if (stage.index >= 4) {
+      if (stage.id === 'prototype') {
+        const previewButton = document.createElement('button'); previewButton.type='button'; previewButton.className='ghost'; previewButton.id='reviewFinalPrototype'; previewButton.textContent='Review live prototype';
+        previewButton.addEventListener('click',()=>{preview.open=true;const summary=preview.querySelector('summary');summary.focus();preview.scrollIntoView({block:'start',behavior:'instant'});});
+        actions.prepend(previewButton);
+        const exportButton = document.createElement('button'); exportButton.type='button';exportButton.className='ghost';exportButton.id='reviewPrototypeExport';exportButton.textContent='Review export files';exportButton.addEventListener('click',()=>window.dssShowWizardStep(11));actions.append(exportButton);
+      }
+      if (stage.index >= 4 || stage.id === 'prototype') {
         const more = document.createElement('details'); more.className = 'step-more';
-        const summary = document.createElement('summary'); summary.textContent = `More about ${stage.label.toLowerCase()}`;
+        const summary = document.createElement('summary'); summary.textContent = stage.id==='prototype'?'Earlier task rehearsal and notes':`More about ${stage.label.toLowerCase()}`;
         more.append(summary);
         for (const child of [...panel.children]) if (child !== lesson) more.append(child);
         panel.append(more);
       }
     }
     // Group headings describe the one step list; they are not another menu.
+    const stageEnd=document.createComment('ordered wizard lessons');preview.after(stageEnd);
+    for (const stage of DSStudio.orderedStages) {
+      document.querySelector('.journey-steps').append(document.querySelector(`[data-journey-step="${stage.index}"]`));
+      main.insertBefore(get(stage.lesson),stageEnd);
+    }
     let previousPhase = '';
-    for (const stage of DSStudio.stages) {
+    for (const stage of DSStudio.orderedStages) {
       if (stage.phase !== previousPhase) {
         const title = document.createElement('span'); title.className = 'journey-phase'; title.textContent = stage.phase;
         document.querySelector(`[data-journey-step="${stage.index}"]`).before(title);
@@ -206,7 +222,7 @@ DSStudio.register({
       const source = window.dssTokenSource(row);
       if (!source) return;
       window.dssShowWizardStep(source.step, false);
-      if (source.semantic || source.variant) {
+      if (source.semantic || source.variant || source.background) {
         state.theme = row.scope === 'Dark' ? 'dark' : 'light';
         if (source.semantic) get('jSemanticRole').value = source.semantic;
         apply();
@@ -220,7 +236,7 @@ DSStudio.register({
       window.dssRevealSection(control.id || control.closest('[id]').id, false);
       control.scrollIntoView({ block: 'center', behavior: 'instant' });
       control.focus();
-      announce(`${row.name}: ${source.mode}. Configure its source in wizard step ${source.step + 1}.`);
+      announce(`${row.name}: ${source.mode}. Configure its source in wizard step ${DSStudio.stages[source.step].position + 1}.`);
     };
     window.dssUpdateTokenCatalogue();
   }

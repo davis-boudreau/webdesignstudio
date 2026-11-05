@@ -27,8 +27,8 @@ function renderBrand() {
 const DEFAULT = {
   project: 'My Project',
   theme: 'light',
-  sampleMode: 'advanced',
-  method: 'mix',
+  sampleMode: 'basic',
+  method: 'oklch',
   primary: '#004780',
   secondary: '#495965',
   accent: '#cbdb2a',
@@ -131,6 +131,14 @@ function makeRamp(hex, method) {
   }));
 }
 
+function makeNeutralRamp(primary, method) {
+  const [, chroma, hue] = rgbToOklch(primary);
+  // A consistent middle grey borrows the Primary hue with a restrained tint.
+  // Achromatic primaries remain grey; the existing ramp method supplies steps.
+  const anchor = oklchHex(.6, Math.min(chroma * .12, .025), hue);
+  return makeRamp(anchor, method);
+}
+
 function lum(hex) {
   const v = hexRgb(hex).map(srgbToLinear);
   return .2126 * v[0] + .7152 * v[1] + .0722 * v[2];
@@ -145,13 +153,36 @@ function onColor(hex) {
   return contrast(hex, '#FFFFFF') >= contrast(hex, '#14253A') ? '#FFFFFF' : '#14253A';
 }
 
-const SEMANTIC_COLOUR_KEYS = ['background', 'surface', 'surface-muted', 'text', 'text-muted', 'border', 'control-border', 'primary', 'on-primary', 'primary-hover', 'secondary', 'on-secondary', 'accent', 'on-accent', 'success', 'warning', 'danger', 'focus'];
+const SEMANTIC_COLOUR_KEYS = ['background', 'header-background', 'main-background', 'footer-background', 'surface', 'surface-muted', 'text', 'text-muted', 'border', 'control-border', 'primary', 'on-primary', 'primary-hover', 'secondary', 'on-secondary', 'accent', 'on-accent', 'success', 'warning', 'danger', 'focus'];
+const STATUS_PALETTE_ROLES = ['success', 'warning', 'danger'];
+const BACKGROUND_REGIONS = ['body', 'header', 'main', 'footer'];
+const PADDING_REGIONS = ['header', 'main', 'footer'];
+const PADDING_SIDES = ['top', 'right', 'bottom', 'left'];
+
+function regionPadding(region, side, foundation = state) {
+  const value = foundation.regionPadding?.[region]?.[side];
+  return typeof value === 'number' && Number.isFinite(value) ? Math.round(clamp(value, 0, 64)) : 0;
+}
+
+function backgroundOpacity(region, theme = state.theme, foundation = state) {
+  const value = foundation.backgroundOpacity?.[theme]?.[region];
+  return typeof value === 'number' && Number.isFinite(value) ? Math.round(clamp(value, 0, 100)) / 100 : 1;
+}
+
+function backgroundLayers(theme = state.theme, foundation = state, roles = palette(theme, foundation).roles) {
+  const mix = (hex, below, alpha) => hexRgb(hex).map((channel, i) => channel * alpha + below[i] * (1 - alpha));
+  const canvas = hexRgb(roles.surface);
+  const body = mix(roles.background, canvas, backgroundOpacity('body', theme, foundation));
+  return { canvas, body, ...Object.fromEntries(['header','main','footer'].map(region => [region, mix(roles[region+'-background'], body, backgroundOpacity(region, theme, foundation))])) };
+}
 
 function resolvedSemanticRoles(roles, theme, foundation = state) {
   const overrides = foundation.semanticOverrides?.[theme] || {};
   const result = { ...roles };
   for (const key of SEMANTIC_COLOUR_KEYS)
     if (typeof overrides[key] === 'string' && /^#[0-9a-f]{6}$/i.test(overrides[key])) result[key] = overrides[key].toUpperCase();
+  for (const [region, fallback] of [['header', 'surface'], ['main', 'background'], ['footer', 'surface']])
+    if (!validHex(overrides[region + '-background'])) result[region + '-background'] = result[fallback];
   if (!overrides['control-border']) result['control-border'] = result.border;
   return result;
 }
@@ -159,7 +190,8 @@ function resolvedSemanticRoles(roles, theme, foundation = state) {
 function palette(theme = state.theme, foundation = state) {
   const p = makeRamp(foundation.primary, foundation.method),
     s = makeRamp(foundation.secondary, foundation.method),
-    a = makeRamp(foundation.accent, foundation.method);
+    a = makeRamp(foundation.accent, foundation.method),
+    n = makeNeutralRamp(foundation.primary, foundation.method);
   const dark = theme === 'dark';
   const roles = dark ? {
     background: '#0B1422',
@@ -202,6 +234,7 @@ function palette(theme = state.theme, foundation = state) {
     p,
     s,
     a,
+    n,
     roles: resolvedSemanticRoles(roles, theme, foundation)
   };
 }
@@ -373,25 +406,33 @@ function cssExport() {
     p,
     s,
     a,
+    n,
     roles
   } = palette('light');
   const darkRoles = palette('dark').roles;
   const foundation = Object.entries({
     primary: p,
     secondary: s,
-    accent: a
+    accent: a,
+    neutral: n
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
-  const semantic = r => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).join('\n');
+  const semantic = (r, theme) => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).concat(STATUS_PALETTE_ROLES.flatMap(role => {
+    const ramp = makeRamp(r[role], state.method);
+    return steps.map(step => `  --${role}-${step}: ${ramp[step]};`);
+  }), BACKGROUND_REGIONS.map(region => {
+    const colour = r[region === 'body' ? 'background' : region+'-background'];
+    return `  --${region}-background-rgb: ${hexRgb(colour).join(' ')};\n  --${region}-background-opacity: ${backgroundOpacity(region, theme)};\n  --${region}-background-paint: rgb(var(--${region}-background-rgb) / var(--${region}-background-opacity));`;
+  })).join('\n');
   const sz = sizes();
   const fonts = DSStudio.fonts.resolve();
   // The default 4px unit provides an 8px rhythm and 4px fine adjustments.
   const spacing = SPACING_STEPS
     .map(n => `  --space-${n}: calc(var(--space-unit) * ${n});`).join("\n");
-  return `/* Web Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(state.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 is your chosen HEX. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
+  return `/* Web Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(state.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 keeps selected anchors; Neutral uses a derived midpoint. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
 --text-h1: ${fluidTypeCss(4)};
 --text-h2: ${fluidTypeCss(3)};
 --text-body: ${fluidTypeCss(0)};
---text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: ${state.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n${spacing}\n${DSStudio.responsive.tokens()}\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles)}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles)}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--background); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding-inline: var(--page-gutter); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
+--text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: ${state.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n${spacing}\n${PADDING_REGIONS.flatMap(region => PADDING_SIDES.map(side => `  --${region}-padding-${side}: ${regionPadding(region, side)}px;`)).join('\n')}\n${DSStudio.responsive.tokens()}\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles, 'light')}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles, 'dark')}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nhtml { background: var(--surface); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--body-background-paint); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding-inline: var(--page-gutter); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
 .heading-1 { font-size: var(--text-h1); line-height: var(--heading-leading); }
 .heading-2 { font-size: var(--text-h2); line-height: var(--heading-leading); }
 .small-text { font-size: var(--text-small); }\n.card-grid { display: grid; }\n.card { padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;
@@ -478,6 +519,8 @@ function importConfig(obj) {
     if (validHex(obj[k])) n[k] = obj[k].toLowerCase();
   if (['light', 'dark'].includes(obj.theme)) n.theme = obj.theme;
   if (['basic', 'advanced'].includes(obj.sampleMode)) n.sampleMode = obj.sampleMode;
+  // Projects predating sample selection used the Advanced page.
+  if (!Object.hasOwn(obj, 'sampleMode')) n.sampleMode = 'advanced';
   if (['mix', 'oklch'].includes(obj.method)) n.method = obj.method;
   if (['Arial, Helvetica, sans-serif', "Georgia, 'Times New Roman', serif", 'Verdana, Geneva, sans-serif', 'system-ui, sans-serif'].includes(obj.font)) n.font = obj.font;
   n.fontSettings = DSStudio.fonts.normalize(obj.fontSettings);
@@ -509,6 +552,20 @@ function importConfig(obj) {
     if (typeof value === 'number' && Number.isFinite(value)) clampConfig[key] = clamp(value, min, max);
   }
   n.semanticOverrides = { light: {}, dark: {} };
+  n.regionPadding = {};
+  for (const region of PADDING_REGIONS) {
+    const sides = {};
+    for (const side of PADDING_SIDES) {
+      const value = obj.regionPadding?.[region]?.[side];
+      if (typeof value === 'number' && Number.isFinite(value)) sides[side] = Math.round(clamp(value, 0, 64));
+    }
+    if (Object.keys(sides).length) n.regionPadding[region] = sides;
+  }
+  n.backgroundOpacity = { light: {}, dark: {} };
+  for (const theme of ['light', 'dark']) for (const region of BACKGROUND_REGIONS) {
+    const value = obj.backgroundOpacity?.[theme]?.[region];
+    if (typeof value === 'number' && Number.isFinite(value)) n.backgroundOpacity[theme][region] = Math.round(clamp(value, 0, 100));
+  }
   for (const theme of ['light', 'dark'])
     for (const key of SEMANTIC_COLOUR_KEYS)
       if (validHex(obj.semanticOverrides?.[theme]?.[key])) n.semanticOverrides[theme][key] = obj.semanticOverrides[theme][key].toUpperCase();

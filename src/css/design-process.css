@@ -14,3 +14,27 @@
 .sitemap-editor button { min-height: 44px; white-space: normal; }
 .sitemap-planned-toggle { display: flex; gap: .5rem; align-items: flex-start; }
 .page-background-editor input[type="color"] { min-height: 44px; }
+.page-background-editor input[type="range"] { min-height: 44px; margin: 0; }
+.page-background-editor select { width: 100%; min-width: 0; }
+.page-background-editor select, .page-background-editor input[type="text"] { box-sizing: border-box; min-height: 44px; padding: 8px; border: 1px solid var(--control-border); border-radius: var(--radius-base); background: var(--surface); color: var(--text); font: inherit; }
+#webpage-region-controls, .background-region { display: grid; gap: var(--studio-space, 1rem); min-width: 0; }
+.background-region { margin: 0; padding: var(--studio-space, 1rem); border: 1px solid var(--border); border-radius: var(--radius-base); }
+.background-region legend { font-weight: 700; padding-inline: .25rem; }
+.background-region button { white-space: normal; }
+.webpage-background-lesson { margin-top: var(--studio-group, 1.5rem); padding-top: var(--studio-space, 1rem); border-top: 1px solid var(--border); min-width: 0; }
+.background-page-model { display: grid; gap: var(--studio-space, 1rem); padding: var(--studio-space, 1rem); border: 1px solid var(--border); border-radius: var(--radius-base); }
+.background-model-region { padding: var(--studio-space, 1rem); border: 1px solid var(--border); border-radius: var(--radius-base); min-width: 0; }
+.background-model-region h5 { font-size: 1rem; margin: 0 0 .5rem; }
+.background-model-region code, .background-model-region p { overflow-wrap: anywhere; }
+.region-padding-controls { min-width: 0; }
+.region-padding-controls > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 700; overflow-wrap: anywhere; }
+.region-padding-controls > label { display: block; margin-top: 12px; }
+.region-padding-controls button, .region-padding-example button { min-height: 44px; max-width: 100%; white-space: normal; }
+.region-padding-demo { box-sizing: border-box; width: 100%; min-width: 0; border: 1px dashed var(--border); margin-block: 12px; }
+.region-padding-demo > span { display: block; box-sizing: border-box; min-width: 0; padding: 8px; border: 1px solid var(--border); background: var(--surface-muted); color: var(--text); overflow-wrap: anywhere; }
+.background-contained-regions { display: grid; gap: var(--studio-space, 1rem); margin-top: var(--studio-space, 1rem); min-width: 0; }
+@media (max-width: 600px) {
+  .background-page-model { padding: 0; }
+  .background-model-body { padding: 8px; }
+  .background-contained-regions > .background-model-region { padding: 12px; }
+}
