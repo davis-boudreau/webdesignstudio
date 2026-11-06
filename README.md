@@ -32,6 +32,31 @@ Studio lesson panels, wizard panes and the inspector end with a right-aligned
 **Back to top** link. It returns keyboard focus to the studio header while keeping
 the current step, project and preview intact. These links stay out of generated websites.
 
+**Studio: Light / Dark** in the header changes only the editing workspace. Its
+appearance is a local browser preference, independent of the project. **Page
+theme** in Responsive page preview changes the generated page, design examples
+and theme-specific colour editors. The inspector's Page theme control uses that
+same project setting. You can design a light page in a dark Studio, or the reverse.
+Project colours, font size, spacing and corners leave lesson text, editing controls
+and inspector styling stable. Component and typography specimens retain project
+styling. Studio appearance stays out of saved project JSON and website exports;
+project reset/import/load preserve the browser preference.
+
+In **Deliver**, the centre lesson **From CSS tokens to Tailwind utilities** traces
+current project values into Tailwind v4 theme names and example utilities. Compare
+component CSS with utility HTML for the same four properties, then expand the
+live mapping table or theme source. Spacing, colours, fonts, type, separate card/
+button radii and saved breakpoint values follow the existing project settings.
+
+**Copy/Download Tailwind theme source** produces an optional `tailwind-theme.css`
+snapshot containing the mapped source tokens for both themes and their aliases.
+Import it after Tailwind in a consuming Tailwind v4 project and compile there.
+Fonts need their installed families or separately loaded font files. The source
+maps selected foundations; it does not convert the page's component classes or
+implement all states. The Studio keeps its dependency-free runtime and existing
+website HTML/CSS exports. No Tailwind compiler or stylesheet runs in the preview.
+Re-download the snapshot after edits. The lesson links to official setup guidance.
+
 New projects and Reset select **Basic**, shown in the left preview tab; **Advanced**
 is on the right. Saved sample choices are restored when loading projects.
 The page preview stays visible while you work. **Basic / Advanced** chooses the
@@ -313,7 +338,7 @@ CSS and active local save update together. **Edit Brand Palette** opens the step
 editor and keeps project settings intact.
 
 In wizard step **6**, **Semantic colour roles** shows all theme roles with readable
-names, CSS tokens, a colour swatch and current HEX/status. Choose the preview theme
+names, CSS tokens, a colour swatch and current HEX/status. Choose the page theme
 and role, then **Preview / edit role colour** to review contrast effects before
 applying. **Use generated colour** removes that role's custom override. Changes
 update the preview, CSS and saved project; Light and Dark remain independent.

@@ -98,7 +98,7 @@ function applyAdvanced() {
   };
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   const roles = palette().roles;
-  for (const key of Object.keys(adv.colors)) root.style.setProperty('--' + key, roles[key]);
+  for (const key of Object.keys(adv.colors)) root.style.setProperty('--project-' + key, roles[key]);
   document.querySelectorAll('.preview-grid').forEach(el => {
     el.style.gridTemplateColumns = `repeat(auto-fit,minmax(min(100%,${adv.columns}px),1fr))`;
     el.style.gap = adv.gap + 'px';
@@ -110,8 +110,8 @@ function applyAdvanced() {
     el.style.removeProperty('letter-spacing');
   });
   document.querySelectorAll('.preview-card,.component.muted-surface').forEach(el => el.style.opacity = adv.opacity / 100);
-  document.querySelectorAll('a').forEach(el => {
-    if (!el.closest('.studio-section-nav, .brand')) el.style.textDecoration = adv.underline ? 'underline' : 'none';
+  document.querySelectorAll('.project-preview a').forEach(el => {
+    el.style.textDecoration = adv.underline ? 'underline' : 'none';
   });
   document.querySelectorAll('.demo-btn').forEach(el => el.style.transitionDuration = (adv.reduce ? 0 : adv.motion) + 'ms');
   const btn = document.getElementById('advDemoButton'),

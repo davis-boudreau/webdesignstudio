@@ -28,6 +28,71 @@ It distinguishes CSS properties from DOM object properties and methods, with
 escaped HTML and a token-based CSS example. No imported content is executed.
 The explanation follows the WHATWG HTML/DOM and W3C Selectors/Cascade standards.
 
+## Studio appearance and project styling
+
+`studio-appearance.js` loads after the registry and before core state. It owns the
+root `data-theme` and `color-scheme`, the header toggle and the validated local
+`dss-studio-appearance` preference (light/dark, default light). Blocked storage
+falls back to session operation. Cross-tab storage changes refresh appearance
+without invoking project apply/render/autosave. This preference is outside state,
+project JSON and website exports; project reset/import/load leave it alone.
+
+`studio-appearance.css` defines fixed `--studio-*` colour tokens with light/dark
+values and aliases the existing UI role names to them. Studio foundation values
+remain the fixed defaults in `base-tokens.css`. Core `apply()` writes project
+roles/foundations as `--project-*` variables and root `data-project-theme` instead
+of replacing Studio values. The advanced feedback writer uses the same prefix;
+its link underline setting is scoped to project examples. Demo-only advanced and
+font variables continue to supply their existing specimens.
+
+Authored `.project-preview` regions and the button/type/state specimen selectors
+map project variables into local role names, font size, leading, tracking and
+native control colour scheme. Lesson prose, captions around typography samples,
+readouts, navigation, controls and code panels retain Studio styling. Swatch and
+background illustrations retain their explicit validated paint values. The real
+page remains isolated in its iframe and uses the unchanged export generators.
+`state.theme` remains the shared project choice for the preview, inspector and
+guided editor, persisted with projects and emitted into standalone HTML. Both
+sample modes continue to share one project; CSS still exports both themes.
+
+## Tailwind mapping lesson and optional source target
+
+`tailwind-bridge.js` registers after the learning/spacing lessons and before
+section return links. It appends a section inside Deliver's existing centre
+lesson, retaining the twelve stages and existing inspector languages. Scoped
+`tailwind-bridge.css` styles that teaching UI only. The existing HTML/CSS generators,
+website classes, project schema and preview document are unchanged.
+
+The module reads actual CSS export declarations through `dssReadTokens`, keeping
+last definitions per light/base and dark scope. A fixed map traces 24 source
+variables into Tailwind v4 names, plus two saved responsive cutoff values. The
+source includes mapped raw tokens in a theme layer, `@theme inline` aliases,
+literal breakpoint declarations and an attribute-based custom dark variant.
+It is a self-contained foundation snapshot without page component rules, font
+requests or automatic HTML conversion. Distinct aliases avoid self-references
+and the existing text-colour/font-size namespace ambiguity. Tailwind defaults
+remain available alongside mapped theme names.
+
+`DSStudio.tailwind.source()` reads the latest settings without mutating project
+state. Its output is excluded from the registry's shared CSS export. Copy and
+`tailwind-theme.css` download actions use current source, retain the website
+inspector and explain compilation in the consuming project's Tailwind v4 build.
+Font files/links remain the consuming project's responsibility. Copy failure
+opens the source for manual selection; delayed feedback identifies an earlier
+snapshot if settings changed during the clipboard request.
+
+Display refreshes coalesce through a microtask after renderCode and run while
+Deliver is open; opening it and explicit source actions refresh immediately.
+Parsing is cached by unchanged exported CSS. Table rows and unchanged source
+text nodes survive updates. Project values use textContent, with no CSS evaluation
+or arbitrary imported token names/selectors. The table scrolls locally at narrow
+widths with a labelled focusable region. No Tailwind code executes in the Studio.
+
+This additive lesson/source phase precedes the component/cascade cleanup proposed
+in the page export review, following the user's preference to preserve existing
+page CSS. Compilation and utility/component integration are separate verification
+work; mapping-source checks alone do not establish full Tailwind rendering parity.
+
 ## Wizard configuration and centre lessons
 
 `spacing-lesson.js` registers after studio learning/example connections, with

@@ -39,10 +39,6 @@ and use locally available fonts. Arial is the default system font. */
   --button-radius: calc(var(--radius-base)*.7)
 }
 
-:root[data-theme="dark"] {
-  --studio-background: var(--background);
-}
-
 * {
   box-sizing: border-box
 }

@@ -5,7 +5,8 @@
     <meta content="width=device-width,initial-scale=1" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Web Design System Studio V4.1</title>
-    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261103-studio-background">
+    <link rel="stylesheet" href="src/css/base-tokens.css?v=20261105-studio-appearance">
+    <link rel="stylesheet" href="src/css/studio-appearance.css?v=20261105-studio-appearance">
     <link rel="stylesheet" href="src/css/layout.css?v=20261020-section-menu">
     <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-wizard-divider">
     <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-state-practices">
@@ -17,6 +18,7 @@
     <link rel="stylesheet" href="src/css/design-process.css?v=20261104-region-padding">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
+    <link rel="stylesheet" href="src/css/tailwind-bridge.css?v=20261105-tailwind-mapping">
     <link rel="stylesheet" href="src/css/spacing-lesson.css?v=20261103-spacing-lesson">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
     <link rel="stylesheet" href="src/css/brand-palette.css?v=20261104-all-state-palettes">
@@ -33,7 +35,7 @@
           </span>
         </a>
         <div class="top-actions">
-          <button id="themeToggle" type="button">Switch to dark</button>
+          <button id="themeToggle" type="button">Studio: Light</button>
           <button id="resetBtn" type="button">Reset</button>
           <button id="saveBtn" type="button">Save JSON</button>
           <button id="loadBtn" type="button">Load JSON</button>
@@ -327,7 +329,7 @@
                   <dl>
                     <dt>Spacing base</dt><dd>Sets a repeatable unit. A 4 px base creates 8 px, 16 px and 24 px multiples. Use tighter gaps within a group and larger gaps between groups.</dd>
                     <dt>Corner radius</dt><dd>Shapes the general cards and demo controls. Keep related surfaces consistent; the Button Laboratory has its own radius setting.</dd>
-                    <dt>Preview theme</dt><dd>Switches the studio between light and dark semantic roles. Dark mode changes colour relationships; it is not simply an inverted image. Inspect borders, text and focus separately.</dd>
+                    <dt>Page theme</dt><dd>Switches the generated page and design examples between light and dark semantic roles. Studio appearance is independent. Dark mode changes colour relationships; it is not simply an inverted image. Inspect borders, text and focus separately.</dd>
                     <dt>Wizard refinements</dt><dd>Typography includes readability and responsive limits. Layout includes spacing, surfaces and grid rules. Accessibility includes control height, focus thickness, link cues and motion. Change one category at a time so its effect is clear.</dd>
                   </dl>
                   <p>Spacing separates content; padding creates room inside a component. A shadow is optional, and reducing surface opacity also fades its text. The Button Laboratory's geometry and state colours are edited separately from the general demos.</p>
@@ -354,7 +356,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="jTheme">Preview theme</label>
+                <label for="jTheme">Page theme</label>
                 <select id="jTheme">
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
@@ -1160,6 +1162,7 @@
                     <label class="preview-theme" for="previewTheme">Page theme
                       <select id="previewTheme"><option value="light">Light</option><option value="dark">Dark</option></select>
                     </label>
+                    <p class="help preview-theme-help">Page theme applies to the page and design examples. Studio appearance is controlled in the header.</p>
                     <div aria-label="Preview width" class="tabs" role="group">
                     <button aria-pressed="false" class="tab" data-width="mobile" type="button">390 px</button>
                     <button aria-pressed="false" class="tab" data-width="tablet" type="button">768 px</button>
@@ -1499,7 +1502,7 @@
                 <div class="section-head">
                   <div>
                     <h3 id="clampLabTitle">Interactive Clamp Calculator</h3>
-                    <p class="help">Explore how base size, modular ratio, viewport boundaries and mobile scaling generate CSS <code>clamp()</code>. Changes update the Studio typography, preview and CSS inspector.</p>
+                    <p class="help">Explore how base size, modular ratio, viewport boundaries and mobile scaling generate CSS <code>clamp()</code>. Changes update the typography examples, page preview and CSS inspector.</p>
                   </div>
                   <button type="button" class="ghost" id="clampReset">Reset responsive limits</button>
                 </div>
@@ -1697,7 +1700,7 @@
                   </div>
                   <div>
                     <h3>Surface layers</h3>
-                    <div class="component">
+                    <div class="component project-preview">
                       <strong>Surface</strong>
                       <p class="mini muted">--surface · main card background</p>
                       <div class="component muted-surface">
@@ -1709,7 +1712,7 @@
                 </div>
                 <hr />
                 <h3>Buttons and states</h3>
-                <div class="button-row">
+                <div class="button-row project-preview">
                   <button class="demo-btn" type="button">Primary</button>
                   <button class="demo-btn secondary" type="button">Secondary</button>
                   <button class="demo-btn accent" type="button">Accent</button>
@@ -1718,7 +1721,7 @@
                 </div>
                 <p class="help">Use Tab to inspect focus-visible; hover over buttons to observe their hover states.</p>
                 <div class="grid2" style="margin-top:16px">
-                  <div class="component">
+                  <div class="component project-preview">
                     <h3>Form control</h3>
                     <label for="demoEmail">Email address</label>
                     <input class="demo-input"
@@ -1727,7 +1730,7 @@
                            type="email" />
                     <p class="help">Try keyboard focus and inspect the border token.</p>
                   </div>
-                  <div class="component">
+                  <div class="component project-preview">
                     <h3>Validation state</h3>
                     <label for="demoInvalid">Required field</label>
                     <input aria-describedby="invalidHelp"
@@ -1739,15 +1742,15 @@
                   </div>
                 </div>
                 <div class="grid3" style="margin-top:14px">
-                  <div class="alert">
+                  <div class="project-preview alert">
                     <strong>Success</strong>
                     <div class="mini">Changes saved (example).</div>
                   </div>
-                  <div class="alert warn">
+                  <div class="project-preview alert warn">
                     <strong>Warning</strong>
                     <div class="mini">Review contrast values.</div>
                   </div>
-                  <div class="alert error">
+                  <div class="project-preview alert error">
                     <strong>Error</strong>
                     <div class="mini">Check required fields.</div>
                   </div>
@@ -1940,7 +1943,7 @@
                           type="button">HTML example</button>
                 </div>
                 <div class="button-row">
-                  <button class="demo-btn" id="copyCode" type="button">Copy visible code</button>
+                  <button class="ghost" id="copyCode" type="button">Copy visible code</button>
                   <button class="ghost" id="downloadCode" type="button">Download visible code</button>
                 </div>
                 <pre class="code" id="codeView" role="tabpanel" aria-labelledby="viewCss" tabindex="0"></pre>
@@ -2088,14 +2091,15 @@
 
 
       <script src="src/js/studio-registry.js?v=20261104-architecture-overview" defer></script>
+      <script src="src/js/studio-appearance.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/brand-palette.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
       <script src="src/js/design-process.js?v=20261104-architecture-overview" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
-      <script src="src/js/core-state.js?v=20261104-status-palettes" defer></script>
+      <script src="src/js/core-state.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/css-dock.js?v=20261103-spacing-lesson" defer></script>
-      <script src="src/js/advanced-params.js?v=20261019-brand-palette" defer></script>
+      <script src="src/js/advanced-params.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/journey-library.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-design.js?v=20261104-state-colour-dropdowns" defer></script>
       <script src="src/js/sample-system.js?v=20261104-region-padding" defer></script>
@@ -2118,6 +2122,7 @@
       <script src="src/js/state-palettes.js?v=20261104-state-colour-dropdowns" defer></script>
       <script src="src/js/webpage-backgrounds.js?v=20261104-background-order" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/tailwind-bridge.js?v=20261105-tailwind-mapping" defer></script>
       <script src="src/js/section-navigation.js?v=20261104-home-links" defer></script>
     </body>
   </html>

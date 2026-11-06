@@ -47,6 +47,56 @@ app.onload = async () => {
   test('Startup defaults to OKLCH across state, both method controls and lesson output',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && d.getElementById('method').value==='oklch' && d.getElementById('rampMethodLabel').textContent==='OKLCH' && d.getElementById('palette-method-status').textContent.includes('OKLCH'));
   test('New projects start with Basic on the left and Advanced on the right',()=>evaluate('state.sampleMode')==='basic' && [...d.querySelectorAll('[aria-label="Website sample complexity"] [role="tab"]')].map(el=>el.id).join(',')==='dockModeBasic,dockModeAdvanced' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockModeBasic').tabIndex===0 && d.getElementById('dockModeAdvanced').tabIndex===-1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic');
   d.getElementById('dockModeAdvanced').click();await wait();
+  // Studio appearance is a browser preference; project theme and samples are independent.
+  const appearanceToggle=d.getElementById('themeToggle');
+  const styleSnapshot=element=>{
+    const cs=w.getComputedStyle(element);
+    return ['color','backgroundColor','fontFamily','fontSize','lineHeight','letterSpacing','borderRadius','borderColor'].map(key=>cs[key]).join('|');
+  };
+  const chromeSnapshot=()=>[d.body,d.querySelector('.topbar'),d.querySelector('.sidebar .panel'),d.getElementById('journeyTitle'),d.getElementById('inspectorToggle'),d.getElementById('previewTheme')].map(styleSnapshot).join('~');
+  test('Studio starts light with a labelled appearance toggle',()=>d.documentElement.dataset.theme==='light' && appearanceToggle.textContent==='Studio: Light' && appearanceToggle.getAttribute('aria-pressed')==='false' && appearanceToggle.getAttribute('aria-label').includes('Studio appearance'));
+  for(const studio of ['light','dark']) {
+    if(d.documentElement.dataset.theme!==studio)appearanceToggle.click();
+    const fixedChrome=chromeSnapshot();
+    for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+      d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();
+      input('previewTheme',theme,'change');await wait();
+      test(studio+' Studio supports '+theme+' '+mode+' page independently',()=>d.documentElement.dataset.theme===studio && previewDoc().documentElement.dataset.theme===theme && d.getElementById('jTheme').value===theme && d.getElementById('dockTheme').value===theme && chromeSnapshot()===fixedChrome);
+      test(studio+' Studio keeps '+theme+' '+mode+' design examples in project colours',()=>{
+        const sample=w.getComputedStyle(d.getElementById('bdSingle'));
+        return sample.getPropertyValue('--text').trim()===evaluate('palette().roles.text') && sample.backgroundColor===evaluate("'rgb('+hexRgb(palette().roles['surface-muted']).join(', ')+')'");
+      });
+    }
+    input('jBase',22);input('jRadius',28);input('jSpacing',8);input('jPrimary','#883366');input('jLeading',1.9);
+    input('advColor_success','#661144');d.getElementById('advUnderline').checked=false;d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));
+    test(studio+' Studio type, controls and surfaces survive project foundation edits',()=>chromeSnapshot()===fixedChrome && w.getComputedStyle(d.body).fontSize==='16px' && w.getComputedStyle(d.getElementById('mobileType').querySelector('.sample')).fontSize!=='16px');
+    reset();await wait();
+  }
+  // Verify preference persistence in a fresh document, never the user's profile.
+  const beforeAppearance=evaluate('[projectJson(),htmlExport(),cssExport()]');
+  const appearanceDocument=previewDoc(),appearanceCssNode=d.getElementById('dockCss').firstChild;
+  appearanceToggle.focus();appearanceToggle.click();await wait(); // Dark -> Light.
+  test('Studio changes preserve project, exports, inspector text, focus and preview document',()=>JSON.stringify(evaluate('[projectJson(),htmlExport(),cssExport()]'))===JSON.stringify(beforeAppearance) && previewDoc()===appearanceDocument && d.getElementById('dockCss').firstChild===appearanceCssNode && d.activeElement===appearanceToggle);
+  appearanceToggle.click();
+  const nativePreferenceWrite=w.Storage.prototype.setItem;
+  w.Storage.prototype.setItem=function(){throw new w.DOMException('Storage blocked','SecurityError');};
+  appearanceToggle.click();
+  test('Studio appearance works when preference storage is blocked',()=>d.documentElement.dataset.theme==='light' && !w.__reviewErrors.length);
+  appearanceToggle.click();w.Storage.prototype.setItem=nativePreferenceWrite;
+  const fresh=d.createElement('iframe');fresh.style.display='none';
+  const loadFresh=()=>new Promise(resolve=>{fresh.onload=resolve;fresh.src='/index.html?appearance-review='+Math.random();if(!fresh.isConnected)d.body.append(fresh);});
+  await loadFresh();
+  test('A fresh document restores dark Studio appearance while its new project stays light',()=>fresh.contentDocument.documentElement.dataset.theme==='dark' && fresh.contentWindow.eval('state.theme')==='light' && fresh.contentDocument.getElementById('themeToggle').getAttribute('aria-pressed')==='true');
+  w.localStorage.setItem('dss-studio-appearance','<img src=x onerror=alert(1)>');await loadFresh();
+  test('Invalid stored Studio appearance falls back to light without inserting content',()=>fresh.contentDocument.documentElement.dataset.theme==='light' && fresh.contentDocument.getElementById('themeToggle').textContent==='Studio: Light' && !fresh.contentDocument.querySelector('img[onerror]'));
+  fresh.remove();
+  if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();
+  for(const width of [320,390,1440])for(const studio of ['light','dark']) {
+    app.style.width=width+'px';if(d.documentElement.dataset.theme!==studio)appearanceToggle.click();await wait();
+    test(studio+' Studio appearance controls fit '+width+'px with visible focus',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && appearanceToggle.getBoundingClientRect().height>=44 && appearanceToggle.getBoundingClientRect().right<=w.innerWidth+1 && w.getComputedStyle(appearanceToggle).outlineStyle!=='none');
+  }
+  app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();reset();await wait();
+
   test('Startup selects Minor Third 1.2 throughout the typography controls and export', () => evaluate('state.ratio===1.2 && cssExport().includes("--type-ratio: 1.2;")') && ['jScalePreset','clampScalePreset'].every(id=>d.getElementById(id).value==='minor-third') && ['ratio','jRatio','clampRatio'].every(id=>d.getElementById(id).value==='1.2'));
   test('Startup gives the expanded preview its space with lessons collapsed and inspector hidden', () => d.querySelector('#main > :first-child').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(section=>!section.hidden && section.open===(section.id==='studio-section-4')) && !d.querySelector('.studio-code-dock').open && !d.getElementById('studioInspector').open);
   test('Hidden inspector leaves one quarter for the desktop builder and the rest for the preview', () => Math.abs(d.querySelector('.sidebar').getBoundingClientRect().width-(d.querySelector('.layout').clientWidth-16)/4)<1 && d.getElementById('dockCss').getBoundingClientRect().height===0);
@@ -87,7 +137,7 @@ app.onload = async () => {
   }
   test('Known contrast ratios', () => evaluate("contrast('#000000','#FFFFFF')===21 && contrast('#FFFFFF','#FFFFFF')===1"));
   input('jTheme','dark');
-  test('Dark theme and guided controls synchronize', () => d.documentElement.dataset.theme==='dark' && d.getElementById('jTheme').value==='dark');
+  test('Page theme and guided controls synchronize independently of Studio appearance', () => d.documentElement.dataset.projectTheme==='dark' && d.documentElement.dataset.theme==='light' && d.getElementById('jTheme').value==='dark');
   test('Dark theme exports both theme blocks', () => evaluate('cssExport().includes(\'[data-theme="dark"]\') && cssExport().includes("--background: #F3F6FA")'));
   reset();
   input('clampMinWidth',480); input('clampMaxWidth',1440); input('clampFactor',.7);
@@ -1026,15 +1076,23 @@ app.onload = async () => {
   const themedProject=d.getElementById('jProjects').value;
   const bothThemeCss=evaluate('cssExport()');
   input('dockTheme','dark','change'); await wait();
-  test('Inspector theme selection synchronizes the studio, preview and exported HTML', () => evaluate('state.theme')==='dark' && d.documentElement.dataset.theme==='dark' && d.getElementById('jTheme').value==='dark' && d.getElementById('previewTheme').value==='dark' && previewDoc().documentElement.dataset.theme==='dark' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('previewPage').title.includes('dark'));
+  test('Inspector theme selection synchronizes project editors, preview and exported HTML', () => evaluate('state.theme')==='dark' && d.documentElement.dataset.projectTheme==='dark' && d.documentElement.dataset.theme==='light' && d.getElementById('jTheme').value==='dark' && d.getElementById('previewTheme').value==='dark' && previewDoc().documentElement.dataset.theme==='dark' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('previewPage').title.includes('dark'));
   test('Inspector theme is saved to the active project', () => JSON.parse(w.localStorage.getItem('dss-v27-projects'))[themedProject].data.theme==='dark');
   test('Theme selection retains a CSS export containing both theme definitions', () => evaluate('cssExport()')===bothThemeCss && evaluate('cssExport()').includes('[data-theme="dark"]'));
   input('previewTheme','light','change'); await wait();
   test('Preview theme control synchronizes the inspector and saved project', () => d.getElementById('dockTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[themedProject].data.theme==='light');
+  const savedBeforeStudioToggle=JSON.stringify(saved()), filesBeforeStudioToggle=evaluate('[projectJson(),htmlExport(),cssExport()]');
   d.getElementById('themeToggle').click(); await wait();
-  test('Global theme toggle keeps both new theme controls synchronized', () => d.getElementById('dockTheme').value==='dark' && d.getElementById('previewTheme').value==='dark' && previewDoc().documentElement.dataset.theme==='dark');
-  evaluate('importConfig({project:"Imported theme",theme:"light"})'); await wait();
+  test('Studio appearance leaves the active saved project and exported files unchanged',()=>JSON.stringify(saved())===savedBeforeStudioToggle && JSON.stringify(evaluate('[projectJson(),htmlExport(),cssExport()]'))===JSON.stringify(filesBeforeStudioToggle));
+  test('Studio appearance toggle leaves page theme controls and preview unchanged', () => d.documentElement.dataset.theme==='dark' && d.getElementById('dockTheme').value==='light' && d.getElementById('previewTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light');
+  evaluate('importConfig({project:"Imported theme",theme:"light",studioAppearance:"light"})'); await wait();
   test('Imported theme reaches both selectors and the generated preview', () => d.getElementById('dockTheme').value==='light' && d.getElementById('previewTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light' && previewDoc().title.includes('Imported theme'));
+  test('Imported project cannot override the local Studio preference',()=>d.documentElement.dataset.theme==='dark' && w.localStorage.getItem('dss-studio-appearance')==='dark');
+  d.getElementById('jProjects').value=themedProject;d.getElementById('jLoadLocal').click();await wait();
+  test('Loading a saved project preserves Studio appearance and restores its page theme',()=>d.documentElement.dataset.theme==='dark' && evaluate('state.theme')==='light' && d.getElementById('previewTheme').value==='light');
+  reset();await wait();
+  test('Project reset preserves Studio appearance',()=>d.documentElement.dataset.theme==='dark' && evaluate('state.theme')==='light');
+  d.getElementById('themeToggle').click();
   input('jProject','Live preview'); input('jPrimary','#294f77'); input('bdSize','lg'); await wait();
   test('Preview imagery and component classes follow live project changes', () => previewDoc().querySelector('.sample-brand').textContent.includes('Live preview') && decodeURIComponent(previewDoc().querySelector('img').src).includes(evaluate('palette().roles.primary')) && !!previewDoc().querySelector('.ds-button--lg') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
   test('Tutorial palette readouts and swatches follow live semantic roles', () => {
@@ -2779,6 +2837,76 @@ app.onload = async () => {
     test(mode+' preview and exported files contain no studio return controls',()=>!previewDoc().querySelector('.studio-home-return,.studio-home-link,#studio-home') && !evaluate('htmlExport()').includes('studio-home') && !evaluate('cssExport()').includes('studio-home'));
   }
   // End studio section return checks.
+
+  // Tailwind is an optional source mapping; the website generators remain authoritative.
+  reset();await wait();w.dssShowWizardStep(11);await wait();
+  const bridgeSource=()=>w.DSStudio.tailwind.source();
+  const bridgeSnapshot=()=>JSON.stringify(evaluate('[projectJson(),htmlExport(),cssExport()]'));
+  const bridgeCell=source=>d.querySelector('#tailwindMappingRows tr[data-source="'+source+'"] td code');
+  test('Deliver presents the Tailwind explanation inside its existing centre lesson',()=>d.getElementById('tailwindBridge').closest('.studio-section').id==='studio-section-6' && d.getElementById('tailwindBridge').closest('.studio-lesson') && w.DSStudio.activeStage===11);
+  test('Tailwind example teaches the same four properties without executing its markup',()=>d.getElementById('tailwindCssExample').textContent.includes('padding: var(--space-6)') && ['p-6','bg-surface','text-content','rounded-card'].every(value=>d.getElementById('tailwindHtmlExample').textContent.includes(value)) && !d.getElementById('tailwindHtmlExample').querySelector('article'));
+  const bridgeInitial=bridgeSource();
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('previewTheme',theme,'change');await wait();
+    test(mode+' '+theme+' mapping follows exported semantic roles independently of Studio appearance',()=>bridgeCell('--surface').textContent===evaluate('palette().roles.surface') && bridgeCell('--text').textContent===evaluate('palette().roles.text') && d.getElementById('tailwindContext').textContent.includes(theme==='dark'?'Dark':'Light'));
+    test(mode+' '+theme+' selection leaves the two-theme Tailwind source unchanged',()=>bridgeSource()===bridgeInitial);
+  }
+  test('Tailwind source maps colour/font/type/radius/spacing without self-references or component CSS',()=>bridgeSource().includes('--color-content: var(--text);') && bridgeSource().includes('--font-display: var(--font-heading);') && bridgeSource().includes('--spacing: var(--space-unit);') && bridgeSource().includes('@theme inline') && !/--([\w-]+): var\(--\1\);/.test(bridgeSource()) && !bridgeSource().includes('.ds-button {') && !bridgeSource().includes('@import'));
+  const bridgeRows=[...d.querySelectorAll('#tailwindMappingRows tr')];
+  input('jSpacing',8);input('jRadius',26);input('bdRadius',18);input('jBase',20);await wait();
+  test('Spacing and independent card/button corners trace current project values',()=>bridgeCell('--space-unit').textContent==='8px' && d.getElementById('tailwindSpacingExample').textContent.includes('48px') && bridgeCell('--radius-base').textContent==='26px' && bridgeCell('--button-radius').textContent==='18px');
+  test('Tailwind type mapping reads the exact fluid export declaration',()=>bridgeCell('--text-body').textContent===w.dssReadTokens().find(row=>row.name==='--text-body').value && bridgeSource().includes('--text-body: '+bridgeCell('--text-body').textContent+';'));
+  const bridgeFont=d.getElementById('jFont').options[1].value;input('jFont',bridgeFont);await wait();
+  test('Font mapping reads the project font stack instead of the Studio font',()=>bridgeCell('--font-body').textContent===w.dssReadTokens().find(row=>row.name==='--font-body').value && bridgeSource().includes('--font-body: '+bridgeCell('--font-body').textContent+';'));
+  evaluate("state.semanticOverrides={light:{surface:'#F0E0D0',text:'#332211'},dark:{surface:'#112233',text:'#DDEEFF'}};apply()");await wait();
+  input('previewTheme','light','change');await wait();
+  test('Light mapping reflects overrides and source preserves both theme values',()=>bridgeCell('--surface').textContent==='#F0E0D0' && bridgeSource().includes('--surface: #F0E0D0;') && bridgeSource().includes('--surface: #112233;') && bridgeSource().includes('@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))'));
+  input('previewTheme','dark','change');await wait();
+  test('Dark mapping reflects its own overrides without replacing the light definitions',()=>bridgeCell('--text').textContent==='#DDEEFF' && bridgeSource().includes('--text: #332211;'));
+  evaluate('state.responsiveDesign={stack:640,wide:1120,maxWidth:1152,gutter:16,wideGutter:32};apply()');await wait();
+  test('Tailwind breakpoints use saved literal lengths outside the inline alias block',()=>bridgeSource().includes('@theme {\n  --breakpoint-page-stack: 40rem;\n  --breakpoint-page-wide: 70rem;') && !bridgeSource().includes('--breakpoint-page-stack: var(') && bridgeCell('Saved stacking cutoff').textContent==='40rem');
+  evaluate('renderCode()');await wait();
+  test('Mapping rows and unchanged source text survive refreshes',()=>bridgeRows.every((row,index)=>row===d.querySelectorAll('#tailwindMappingRows tr')[index]));
+  const bridgeText=d.getElementById('tailwindSource').firstChild;evaluate('renderCode()');await wait();
+  test('Unchanged Tailwind source retains its selectable text node',()=>d.getElementById('tailwindSource').firstChild===bridgeText);
+  const bridgeBeforeActions=bridgeSnapshot(),bridgePreview=previewDoc();
+  const bridgeDownloads=[],bridgeDownload=w.download,bridgeClipboard=w.navigator.clipboard;
+  w.download=(name,text,type)=>bridgeDownloads.push({name,text,type});
+  let bridgeCopied='';Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async text=>{bridgeCopied=text;}}});
+  d.getElementById('tailwindMappings').open=true;d.getElementById('tailwindSourceDetails').open=true;
+  d.getElementById('tailwindCopy').click();await wait();d.getElementById('tailwindDownload').click();
+  test('Tailwind copy and download use current source with a distinct filename and MIME type',()=>bridgeCopied===bridgeSource() && bridgeDownloads.length===1 && bridgeDownloads[0].name==='tailwind-theme.css' && bridgeDownloads[0].type==='text/css' && bridgeDownloads[0].text===bridgeSource() && d.getElementById('tailwindStatus').textContent.includes('download requested'));
+  test('Bridge interactions preserve exact project JSON, website HTML/CSS and preview document',()=>bridgeSnapshot()===bridgeBeforeActions && previewDoc()===bridgePreview && !evaluate('cssExport()').includes('@theme') && !evaluate('htmlExport()').includes('tailwindBridge'));
+  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.reject(new Error('Clipboard denied'))}});
+  d.getElementById('tailwindSourceDetails').open=false;d.getElementById('tailwindCopy').click();await wait();
+  test('Denied Tailwind clipboard access opens source and explains manual copying',()=>d.getElementById('tailwindSourceDetails').open && d.getElementById('tailwindStatus').textContent.includes('copy it manually'));
+  let bridgeFinishCopy;Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:()=>new Promise(resolve=>{bridgeFinishCopy=resolve;})}});
+  d.getElementById('tailwindCopy').click();input('jSpacing',3);await wait();bridgeFinishCopy();await wait();
+  test('Delayed Tailwind clipboard feedback identifies an older settings snapshot',()=>d.getElementById('tailwindStatus').textContent.includes('earlier theme source'));
+  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:bridgeClipboard});w.download=bridgeDownload;
+  d.getElementById('tailwindInspect').click();await wait();
+  test('Mapping inspection opens the complete existing website CSS',()=>d.getElementById('studioInspector').open && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
+  evaluate('importConfig({project:"<img src=x onerror=alert(1)>",spacing:1e10,radius:-100,font:"Arial; color:red",responsiveDesign:{stack:-1,wide:1e10},semanticOverrides:{light:{surface:"red; color:green"}}})');await wait();
+  test('Hostile imports cannot inject mapping markup or executable theme declarations',()=>!d.getElementById('tailwindBridge').querySelector('img,script,style') && !bridgeSource().includes('onerror') && !bridgeSource().includes('color:green') && !bridgeSource().includes('Arial;') && bridgeCell('--space-unit').textContent==='8px' && bridgeSource().includes('--breakpoint-page-stack: 30rem;'));
+  reset();await wait();
+  test('Project reset refreshes mapping defaults without adding persistence fields',()=>bridgeCell('--space-unit').textContent==='4px' && !Object.keys(JSON.parse(evaluate('projectJson()'))).some(key=>/tailwind/i.test(key)));
+  for(const width of [320,390,1440])for(const studio of ['light','dark']) {
+    app.style.width=width+'px';if(d.documentElement.dataset.theme!==studio)d.getElementById('themeToggle').click();
+    w.dssShowWizardStep(11);d.getElementById('tailwindMappings').open=true;d.getElementById('tailwindSourceDetails').open=true;await wait();
+    test(studio+' Tailwind lesson stays readable and scrolls its table locally at '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['tailwindCopy','tailwindDownload','tailwindInspect'].every(id=>{const r=d.getElementById(id).getBoundingClientRect();return r.height>=44 && r.left>=0 && r.right<=w.innerWidth+1;}) && (width>390 || d.querySelector('.tailwind-table-scroll').scrollWidth>d.querySelector('.tailwind-table-scroll').clientWidth));
+  }
+  app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')d.getElementById('themeToggle').click();reset();await wait();
+  // Compare against an otherwise identical document without this optional module.
+  const bridgeBaselineHtml=(await (await w.fetch('/index.html')).text()).replace(/<script[^>]+src="src\/js\/tailwind-bridge\.js[^>]*><\/script>/g,'').replace(/<link[^>]+href="src\/css\/tailwind-bridge\.css[^>]*>/g,'');
+  const bridgeBaseline=d.createElement('iframe');bridgeBaseline.hidden=true;
+  await new Promise(resolve=>{bridgeBaseline.onload=resolve;bridgeBaseline.srcdoc=bridgeBaselineHtml;d.body.append(bridgeBaseline);});
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+    const config=JSON.parse(evaluate('projectJson()'));config.sampleMode=mode;config.theme=theme;config.spacing=7;config.radius=20;
+    w.importConfig(config);bridgeBaseline.contentWindow.importConfig(config);await wait();
+    test(mode+' '+theme+' website exports are byte-identical with and without the Tailwind bridge',()=>!bridgeBaseline.contentWindow.DSStudio.tailwind && evaluate('cssExport()')===bridgeBaseline.contentWindow.cssExport() && evaluate('htmlExport()')===bridgeBaseline.contentWindow.htmlExport() && evaluate('projectJson()')===bridgeBaseline.contentWindow.projectJson());
+  }
+  bridgeBaseline.remove();reset();await wait();
+
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
 };

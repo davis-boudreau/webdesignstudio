@@ -246,21 +246,19 @@ function apply() {
     a,
     roles
   } = palette(), root = document.documentElement;
-  root.dataset.theme = state.theme;
-  root.style.colorScheme = state.theme;
-  for (const [k, v] of Object.entries(roles)) root.style.setProperty('--' + k, v);
-  root.style.setProperty('--font-ui', state.font);
-  root.style.setProperty('--base-size', state.base + 'px');
-  root.style.setProperty('--body-leading', state.leading);
-  root.style.setProperty('--heading-leading', state.headingLeading);
-  root.style.setProperty('--heading-letter-spacing', state.headingTracking + 'em');
-  root.style.setProperty('--body-letter-spacing', state.bodyTracking + 'em');
-  root.style.setProperty('--space-unit', state.spacing + 'px');
-  root.style.setProperty('--radius-base', state.radius + 'px');
-  root.style.setProperty('--card-radius', state.radius + 'px');
-  root.style.setProperty('--button-radius', Math.round(state.radius * .7) + 'px');
-  root.style.setProperty('--primary-hover', roles['primary-hover']);
-  $('themeToggle').textContent = state.theme === 'light' ? 'Switch to dark' : 'Switch to light';
+  root.dataset.projectTheme = state.theme;
+  for (const [k, v] of Object.entries(roles)) root.style.setProperty('--project-' + k, v);
+  root.style.setProperty('--project-font-ui', state.font);
+  root.style.setProperty('--project-base-size', state.base + 'px');
+  root.style.setProperty('--project-body-leading', state.leading);
+  root.style.setProperty('--project-heading-leading', state.headingLeading);
+  root.style.setProperty('--project-heading-letter-spacing', state.headingTracking + 'em');
+  root.style.setProperty('--project-body-letter-spacing', state.bodyTracking + 'em');
+  root.style.setProperty('--project-space-unit', state.spacing + 'px');
+  root.style.setProperty('--project-radius-base', state.radius + 'px');
+  root.style.setProperty('--project-card-radius', state.radius + 'px');
+  root.style.setProperty('--project-button-radius', Math.round(state.radius * .7) + 'px');
+  root.style.setProperty('--project-primary-hover', roles['primary-hover']);
   $('rampMethodLabel').textContent = state.method === 'mix' ? 'RGB mix' : 'OKLCH';
   ['primary', 'secondary', 'accent'].forEach(k => $(k + 'Out').textContent = state[k].toUpperCase());
   ['base', 'ratio', 'leading', 'spacing', 'radius'].forEach(k => $(k + 'Out').textContent = state[k] + (k === 'base' || k === 'spacing' || k === 'radius' ? 'px' : ''));
@@ -583,10 +581,6 @@ $('brandAccent').addEventListener('change', e => {
     $('accent').value = state.accent;
     apply();
   }
-});
-$('themeToggle').addEventListener('click', () => {
-  state.theme = state.theme === 'light' ? 'dark' : 'light';
-  apply();
 });
 $('resetBtn').addEventListener('click', () => {
   if (confirm('Reset all studio settings to the example defaults?')) resetStudio('Settings reset.');

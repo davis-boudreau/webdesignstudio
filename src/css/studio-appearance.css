@@ -1,0 +1,105 @@
+/* Studio tokens never read project settings. Existing UI rules use these aliases. */
+:root {
+  --studio-background: #e8edf3;
+  --studio-surface: #ffffff;
+  --studio-surface-muted: #edf2f7;
+  --studio-text: #14253a;
+  --studio-text-muted: #53657a;
+  --studio-border: #c5d0dd;
+  --studio-control-border: #60748d;
+  --studio-primary: #004780;
+  --studio-on-primary: #ffffff;
+  --studio-primary-hover: #003765;
+  --studio-secondary: #495965;
+  --studio-on-secondary: #ffffff;
+  --studio-accent: #cbdb2a;
+  --studio-on-accent: #261a02;
+  --studio-success: #15803d;
+  --studio-warning: #a85c00;
+  --studio-danger: #b91c1c;
+  --studio-focus: #9d5700;
+  --surface: var(--studio-surface);
+  --surface-muted: var(--studio-surface-muted);
+  --text: var(--studio-text);
+  --text-muted: var(--studio-text-muted);
+  --border: var(--studio-border);
+  --control-border: var(--studio-control-border);
+  --primary: var(--studio-primary);
+  --on-primary: var(--studio-on-primary);
+  --primary-hover: var(--studio-primary-hover);
+  --secondary: var(--studio-secondary);
+  --on-secondary: var(--studio-on-secondary);
+  --accent: var(--studio-accent);
+  --on-accent: var(--studio-on-accent);
+  --success: var(--studio-success);
+  --warning: var(--studio-warning);
+  --danger: var(--studio-danger);
+  --focus: var(--studio-focus);
+  --background: var(--studio-background);
+}
+:root[data-theme="dark"] {
+  --studio-background: #0b1422;
+  --studio-surface: #152236;
+  --studio-surface-muted: #20324b;
+  --studio-text: #eef4fc;
+  --studio-text-muted: #b8c8db;
+  --studio-border: #60748d;
+  --studio-control-border: #8a9bb0;
+  --studio-primary: #9bc9f5;
+  --studio-on-primary: #0b1422;
+  --studio-primary-hover: #bfddfa;
+  --studio-secondary: #bdcbd5;
+  --studio-on-secondary: #0b1422;
+  --studio-accent: #cbdb2a;
+  --studio-on-accent: #261a02;
+  --studio-success: #4ade80;
+  --studio-warning: #fbbf24;
+  --studio-danger: #fca5a5;
+  --studio-focus: #fbbf24;
+}
+
+/* Project tokens cross into authored specimens only, never lesson/control panels.
+   Dynamic cells and type samples use the same boundary after every render. */
+:where(.project-preview, .bd-single, .bd-cell, .state-tile, .type-row .sample, .bd-button) {
+  --background: var(--project-background);
+  --surface: var(--project-surface);
+  --surface-muted: var(--project-surface-muted);
+  --text: var(--project-text);
+  --text-muted: var(--project-text-muted);
+  --border: var(--project-border);
+  --control-border: var(--project-control-border);
+  --primary: var(--project-primary);
+  --on-primary: var(--project-on-primary);
+  --primary-hover: var(--project-primary-hover);
+  --secondary: var(--project-secondary);
+  --on-secondary: var(--project-on-secondary);
+  --accent: var(--project-accent);
+  --on-accent: var(--project-on-accent);
+  --success: var(--project-success);
+  --warning: var(--project-warning);
+  --danger: var(--project-danger);
+  --focus: var(--project-focus);
+  --font-ui: var(--project-font-ui);
+  --base-size: var(--project-base-size);
+  --body-leading: var(--project-body-leading);
+  --heading-leading: var(--project-heading-leading);
+  --heading-letter-spacing: var(--project-heading-letter-spacing);
+  --body-letter-spacing: var(--project-body-letter-spacing);
+  --space-unit: var(--project-space-unit);
+  --radius-base: var(--project-radius-base);
+  --card-radius: var(--project-card-radius);
+  --button-radius: var(--project-button-radius);
+  color: var(--text);
+  background-color: var(--surface);
+  font-family: var(--font-body, var(--font-ui));
+  font-size: var(--base-size);
+  line-height: var(--body-leading);
+  letter-spacing: var(--body-letter-spacing);
+  color-scheme: light;
+}
+:root[data-project-theme="dark"] :where(.project-preview, .bd-single, .bd-cell, .state-tile, .type-row .sample, .bd-button) { color-scheme: dark; }
+
+/* Keep readouts and labels in the Studio theme; the bar itself is project colour. */
+.spacer-bars i { background: var(--project-primary); }
+.preview-theme-help { order: 1; flex-basis: 100%; margin: 0; font-size: .78rem; }
+#themeToggle { min-height: 44px; }

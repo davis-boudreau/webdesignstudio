@@ -1,17 +1,146 @@
 # Project progress
 
-Updated: 4 November 2026 (America/Halifax).
+Updated: 5 November 2026 (America/Halifax).
 
 ## Current objective
 
-Simplify Build your design system into one wizard with integrated centre lessons,
-guided by: Change a design decision, see it on the page, then follow it into HTML
-and CSS. The inspector uses the same native disclosure arrow as the preview,
-keeping the builder at 25% in either inspector state; expanded code
-returns on the right capped at 25% of desktop workspace width.
-The first tutorial now uses the learner's spacing settings and actual output.
-Next: observe learners using it before extending the pattern to other stages;
-complete manual accessibility/cross-browser checks.
+Keep Studio appearance independent of project design settings while preserving
+one integrated wizard: Change a design decision, see it on the page, then follow
+it into HTML and CSS. The header controls workspace appearance; Page theme
+controls project examples and the Basic/Advanced page. The builder remains 25%
+on desktop and the expanded inspector is capped at 25%. The first detailed
+lesson uses the learner's spacing settings and actual output. Deliver now adds an
+optional live CSS-to-Tailwind mapping lesson and theme-source snapshot without
+changing website exports.
+Next: observe learners using the lessons, verify the adapter in a consuming
+Tailwind build and complete manual accessibility/cross-browser checks.
+
+## Additive Tailwind mapping lesson (5 November 2026)
+
+- The user preferred preserving current page CSS and using the centre pane to
+  explain the mapping. Added the adapter/lesson first; deferred the earlier
+  component/cascade cleanup recommendation. No existing website generator,
+  component class, project schema or export format was changed in this phase.
+- New local tailwind-bridge JS/CSS assets append From CSS tokens to Tailwind
+  utilities inside Deliver's existing lesson. Authored CSS and Tailwind HTML
+  examples teach the same four declarations; a live spacing calculation connects
+  both forms to the saved unit. A disclosure contains 24 token mappings and two
+  saved cutoffs, with current page-theme values and locally scrolling table.
+- Optional Copy/Download Tailwind theme source actions produce tailwind-theme.css:
+  mapped raw token snapshots for both themes, @theme inline aliases, literal
+  breakpoint values and the data-theme custom dark variant. This is a selected
+  foundation mapping, without page/component conversion or font loading. The
+  lesson explains import/compilation in the consuming Tailwind v4 project,
+  separate font setup, reset effects and snapshot refresh after edits.
+- Values come from the actual CSS export via dssReadTokens, with responsive
+  literals from the existing normalized settings. Fixed source/target names,
+  textContent, unchanged-row/text-node reuse, cached parsing and lazy/coalesced
+  refresh preserve validation, focus and performance. Module contributes no
+  shared export CSS. Copy rejection opens source for manual selection; delayed
+  feedback identifies an earlier snapshot. Existing Inspect website CSS action
+  opens the full current export without adding an inspector language or stage.
+- Added 36 browser assertions for both modes/themes, live foundation/semantic/
+  font/type/radius/breakpoint mappings, source independence from theme/sample
+  choice, copy/download/denied/delayed feedback, inspector output, hostile imports,
+  reset, responsive controls and byte-identical website CSS/HTML/JSON compared
+  with an otherwise identical document that omits the bridge. Both exports and
+  the live preview document are also preserved through lesson interactions.
+- Temporary `python .tailwind-focused.py`: **36/36 passed**, no captured JS errors
+  (`.tailwind-focused.log`). First extraction helper attempt did not complete
+  because a comment prefix was omitted; corrected the helper before this result.
+  Final `python scripts/browser_review.py`: **1760/1760 passed**, no captured
+  JavaScript errors (`.tailwind-browser.log`), including all 36 new assertions.
+- `python scripts/check_structure.py`: **51 assets verified**; `git diff --check`
+  passed. Added fresh query versions for the new assets and updated README and
+  architecture. Browser commands used approved isolated temporary Chrome profiles.
+- Temporary `python .tailwind-visual.py` captured 1440px light and exact 390px dark
+  layouts. Inspected the lesson, code comparison and desktop table. The helper's
+  first captures showed an intermediate smooth-scroll position; used instant
+  scrolling to capture/review the actual lesson. Mobile code and copy wrap, table
+  overflow stays local and Studio styling remains independent of page theme.
+  Removed temporary focused/visual helpers and screenshots after review; logs
+  remain ignored.
+- Rechecked current official Tailwind theme/dark-mode/CLI guidance. No local Node,
+  npm or Tailwind compiler was found; no packages/compiler were installed. Actual
+  Tailwind compilation/rendering parity remains unverified. Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review also remain unrun. Earlier test
+  results below remain historical. No commit, push or deployment performed.
+- Final structure and whitespace rechecks passed after documentation/temporary-file
+  cleanup. Next: try the lesson with learners, complete the outstanding manual
+  checks and validate the optional source in a consuming Tailwind v4 build.
+
+## Page export and Tailwind analysis (5 November 2026)
+
+- Reviewed current shared/Basic/Advanced generators, button/advanced export
+  wrappers, responsive settings and catalogue reader after Studio separation.
+  Compared with official Tailwind v4 documentation (displaying v4.3), including
+  theme aliases, layers/Preflight, container queries, dark attributes, hover
+  capability, browser baseline and local compilation.
+- Added [page export review](PAGE_EXPORT_REVIEW_2026-11-05.md): existing semantic
+  and modern-CSS strengths, prioritized source findings, proposed export boundaries
+  and verification criteria. Advanced already has container queries; Basic already
+  has intrinsic auto-fit Grid. No blanket layout rewrite is recommended.
+- Recommended shared component ownership and cascade cleanup before an optional
+  Tailwind theme adapter. Preserve dependency-free standalone exports and project
+  values. Actual utility output requires a separate compiled export target;
+  neither the adapter nor that target is implemented or verified.
+- Documentation-only work; no runtime/dependency/export changes. No browser tests
+  or manual checks rerun. Prior 1724/1724 is historical evidence for appearance,
+  not proof of Tailwind integration. `python scripts/check_structure.py` verified
+  **49 assets**; `git diff --check` passed in this analysis session.
+- Next: implement the shared component/cascade phase if requested, preserving
+  preview/export parity and updating catalogue/lesson readers and regression tests.
+
+## Independent Studio appearance (5 November 2026)
+
+- Separated the header's Studio: Light/Dark appearance toggle from project Page
+  theme. Studio appearance is validated browser-local preference state, restored
+  on reload and synchronized across tabs; unavailable storage allows session use.
+  Project import/load/reset do not replace it. Page theme continues to synchronize
+  preview, inspector and guided editors, saved projects and standalone HTML.
+- Added local studio-appearance JS/CSS modules without dependencies or changed
+  relative script ordering. Fixed Studio colours, typography, spacing and corners
+  keep builder controls, lessons, inspector and preview toolbar stable. Core now
+  publishes project roles/foundations under --project-*; authored component/type/
+  state examples map these into their local styling. The real iframe still reads
+  the shared, unchanged website generators. Both Basic/Advanced share one project.
+- Scoped advanced feedback writes and link-underline changes to project styling.
+  The hidden legacy Copy visible code action now uses Studio button styling.
+  Added explanatory Page theme copy, consistent editor labels, refreshed affected
+  asset query versions and updated README/architecture. No project schema change.
+- Added browser regression coverage for every Studio/page theme combination in
+  both samples, stable workspace styling through foundation edits, retained
+  exports/inspector/preview/focus, blocked preference writes, fresh-document
+  preference reload, hostile stored values, responsive controls and import/load/
+  reset/active-project independence. Updated earlier expectations that intentionally
+  coupled the page and Studio themes.
+- `python scripts/check_structure.py`: **49 assets verified**; `git diff --check`
+  passed. Initial sandbox Chrome launch failed creating/cleaning its temporary
+  profile (WinError 5); subsequent browser commands used approved unsandboxed
+  isolated profiles, without user projects/storage.
+- First full browser run stopped on an invalid new fixture control ID; corrected
+  the fixture. Next full run: **1711/1719**, no captured JS errors
+  (`.studio-appearance-browser.log`). Its eight failed assertions came from an
+  accidental text-encoding conversion of six existing UTF-8 expectation lines;
+  restored those exact original expectations. No runtime or assertion relaxation
+  was needed. Final `python scripts/browser_review.py`: **1724/1724 passed**,
+  no captured JavaScript errors (`.studio-appearance-browser-final.log`), covering
+  final runtime and the added saved-project/import/reset checks.
+- Temporary `python .studio-appearance-focused.py`: **32/32 passed**, no captured
+  JS errors (`.studio-appearance-focused.log`), covering final appearance runtime,
+  blocked writes, fresh preference reads and 320/390/1440px controls.
+  `python scripts/button_states_review.py`: **7/7 reduced-motion**, **9/9
+  forced-colour**, no captured errors (`.studio-appearance-media.log`).
+- Temporary `python .studio-appearance-visual.py` captured opposite Studio/page
+  themes at 1440px and an exact 390px iframe. Inspected desktop preview, mobile
+  header and scrolled mobile toolbar/preview: wrapping, theme boundaries and
+  reading flow are clear. Manual keyboard-only/screen-reader/zoom/Firefox/Safari
+  review remains unrun; passing these checks does not establish full accessibility.
+  Removed temporary helpers/screenshots after review; logs remain ignored.
+  No commit, push or deployment performed. Earlier entries remain historical.
+- Final structure and whitespace rechecks passed after documentation/temporary-file
+  cleanup. Next: review the separated interface with learners and complete manual
+  accessibility/cross-browser checks.
 
 ## Backgrounds before interaction palettes (4 November 2026)
 
