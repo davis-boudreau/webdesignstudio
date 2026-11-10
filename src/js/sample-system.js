@@ -23,7 +23,7 @@
     const basic = mode === 'basic';
     const navigation = basic ? basicNavigationHtml() : [['Home','home'],['About','about'],['Resources','resources'],['Contact','contact']]
       .map(([label, id]) => `<li><a href="#${id}">${label}</a></li>`).join('');
-    const sitemap = basic ? DSStudio.process.sitemapHtml({ linksOnly: true, parentIds: ['features', 'lists', 'signup'] }) : DSStudio.process.sitemapHtml();
+    const sitemap = DSStudio.process.sitemapHtml({ linksOnly: true });
     return `<footer class="website-footer ${basic ? 'site-footer' : 'sample-footer'}" id="footer">
     <div class="container">
       <div class="footer-inner">

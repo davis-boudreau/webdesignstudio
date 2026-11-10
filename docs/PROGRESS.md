@@ -1,6 +1,551 @@
 # Project progress
 
-Updated: 5 November 2026 (America/Halifax).
+Updated: 10 November 2026 (America/Halifax).
+
+## Actual content inventory and expandable IA editor (10 November 2026)
+
+- User approved all recommendations from the IA reassessment. Implemented the
+  primary Website content structure as an expandable/searchable outline with
+  native details/lists, a selected-entry detail form, Add child/sibling/root,
+  subtree reparent/reorder/delete, Undo, planning status/notes and per-mode restore.
+  Current sample content remains read-only; planned content is stored separately,
+  including deliberately empty drafts. Repeated role labels use separate stable
+  IDs and remain editable. Parent choices and submission reject cycles/deep moves.
+- New content-architecture model inspects only local authored HTML generators.
+  Basic currently has 132 content entries and Advanced 395; each has five levels.
+  Header logo/wordmark/navigation, Home/Hero copy and CTAs, image alt/caption,
+  component content, lists/tables, form fields/options and Footer are represented.
+  CSS-only wrappers and decorative SVG internals are omitted. Generated IA and
+  footer sitemap views are referenced rather than recursively inventoried.
+- `contentPlan.basic/advanced` is additive validated project data: null derives
+  the live inventory, arrays save planning snapshots. Stable IDs/source keys keep
+  actual values refreshed independently of edited labels/parents. Bounds: 1,000
+  rows, twelve levels and 500,000 serialized characters per mode, plus individual
+  string limits. Imported references are text, not hrefs; source keys are map
+  lookups, not selectors/code. Malformed identities/cycles are rejected; missing
+  parents are promoted to roots. Planning labels/drafts/notes are escaped.
+- Content containment and navigation remain separate. The previous destination
+  editor/text outline are secondary collapsed panels, preserving legacy metadata,
+  fixed-ID aliases, custom outlines and sitemap choices. Canonical sections open
+  their matching destination controls; navigation references have no independent
+  membership. Removing Header from the content plan does not suppress Home.
+  Custom legacy outlines attach actual known sections to saved relationships and
+  retain unknown planned entries without duplicating canonical content subtrees.
+- Centre lesson/Advanced exports share the escaped collapsible content artifact;
+  centre open branches survive rerenders by stable IDs. Model renders/normalizes
+  through child indexes, suppresses recursive collection and caches source
+  signatures. The editor defers refresh outside Architecture and catches up on
+  stage entry. No runtime dependencies were added. Updated asset versions, lesson,
+  README and architecture. JSON upload limit raised from 100 KB to 4 MB after code
+  review found richer saved plans could exceed the old limit; aggregate per-mode
+  bounds keep complete exported plans within that upload limit.
+- Verification so far: `python scripts/check_structure.py` verified **57 assets**;
+  `git diff --check` passed with the existing tailwind-bridge LF/CRLF warning.
+  Initial focused harness timed out at 300s because embedded hostile test text
+  prematurely closed its script; a second run was interrupted while diagnosing.
+  Diagnostic runs found that fixture error plus an extra test parenthesis. Fixed
+  both. A valid focused run was **13/16**, exposing numeric progress values needing
+  string conversion plus a fixture confusing Home's navigation reference with its
+  canonical section. Next run **55/63** exposed Add child's chosen parent being
+  omitted from its parent options. Fixed the parent filtering. Corrected focused
+  run: **63/63 passed**, no captured JS errors (`.content-focused-corrected.log`).
+- `python .content-visual.py` reviewed light Basic/Advanced desktop outlines and
+  dark Basic content controls at an actual 390px iframe width, with 131/393 entries,
+  depth five and no captured errors (`.content-visual.log`). Added regression checks
+  for numeric progress, independently editable repeated labels, actual JSON file
+  round trips and aggregate plan bounds. Full suite was interrupted to fix the
+  upload limit before final verification. Expanded focused
+  `python .content-focused.py`: **69/69 passed**, no captured errors
+  (`.content-focused-file.log`), including actual file input and aggregate bounds.
+- Full `python scripts/browser_review.py` reached **1,990 checks** before its
+  135,000ms virtual-time budget expired (`.content-browser-final.log`). This is
+  incomplete, not a passing full run. Increased the bounded virtual budget to
+  150,000ms and process timeout from 300s to 360s based on that measured run; all
+  assertions are retained. Completed expanded run: **2028/2030 passed**, no captured
+  JS errors (`.content-browser-complete.log`). Two Advanced byte-identical export
+  checks exposed stale content because the collector's cache key omitted the
+  separate `adv` settings object. Included it and added an Advanced-only feedback
+  refresh regression. Targeted `python .content-bridge.py`: **5/5 passed**, including
+  both samples/themes with/without the optional Tailwind module.
+- Coverage review found named div groups (Card grid, Resource library, layout
+  comparison) were being omitted with CSS-only wrappers. Retained all authored
+  destination IDs as meaningful content entries and added per-mode canonical
+  coverage checks. Named destination roles are labelled by purpose. Final visual
+  refresh: **132 Basic / 395 Advanced entries**, depth five, no errors
+  (`.content-visual-final.log`). Inspected the refreshed Basic desktop artifact.
+  Final focused `python .content-focused.py`: **72/72 passed**, no captured errors
+  (`.content-focused-final.log`). Structure check remains **57 assets verified**;
+  diff check passed. `python scripts/button_states_review.py`: **7/7 reduced-motion**
+  and **9/9 forced-colour checks passed**, no captured JS errors (`.content-states.log`).
+  Removed temporary implementation/test/visual helpers and screenshots; the new
+  regressions remain in the tracked browser suite. Ignored logs remain. Final
+  `python scripts/browser_review.py`: **2033/2033 passed**, no captured JS errors
+  (`.content-browser-verified.log`). Final structure check verified **57 assets**;
+  `git diff --check` passed after cleanup and documentation updates (existing
+  tailwind-bridge LF/CRLF warning only). No commit, push or deployment performed.
+- Next after verification: observe learners using the deeper outline and complete
+  manual keyboard-only, screen-reader, zoom and Firefox/Safari review. Passing the
+  automated Chrome suites does not establish full accessibility.
+  Historical results below apply to earlier work, not this redesign.
+
+## IA reassessment: actual content and deeper hierarchy (10 November 2026)
+
+- User clarified that the IA should expose most actual website content, including
+  Header logo/wordmark/navigation items and Home hero image/text/CTAs, with several
+  nesting levels where needed. This turn reviews the approach; no runtime redesign
+  has been implemented or approved as a final specification.
+- Inspected current `design-process.js`, `site-builder.js`, Basic HTML generator
+  and architecture notes. Current IA is an inventory of linked destinations with
+  selected descriptive details; it omits Header and Home's actual content parts.
+  The three-level cap and flat listbox are inadequate for the clarified goal.
+  Basic's hero already has an image/caption, eyebrow, heading, intro, two named
+  CTAs and a supporting note; Header has logo, project wordmark and navigation.
+- Recommended a content inventory/structure supporting the IA lesson: meaningful
+  regions, pages/sections, groups and actual text/image/link/form content. Show
+  actual values beside role labels, and references for navigation links to canonical
+  destinations. Shared Header/Footer are site-wide regions; avoid duplicating
+  destination content beneath every navigation occurrence or representing CSS-only
+  wrappers as information. Reviewed NN/g's IA/sitemap article again, which includes
+  content inventories among IA activities and distinguishes sitemap artifacts.
+- Proposed a collapsible, searchable outline with a selected-entry detail editor,
+  Add child/Add sibling, reorder/reparent and Undo controls. Permit meaningful
+  deeper nesting with technical safety bounds, replacing the three-level teaching
+  restriction. Keep initial branches collapsed for readability. Actual content
+  coverage must include both Basic and Advanced, with missing/planned items labelled.
+- Sitemap membership must be based on destinations rather than layout ancestry:
+  excluding Header must not suppress Home just because a navigation reference sits
+  beneath Header. Existing ancestor-suppression behavior needs reassessment for
+  this richer model. A destination's content and its navigation references are
+  separate relationships. Content visibility remains independent of sitemap choice.
+- Next implementation scope proposed: richer model with stable node identities,
+  parent relationships, actual content values/references and migration of existing
+  saved plans/choices; then the outline/detail controls and updated lesson/tests.
+  Whether editing a content value should also change generated website content
+  remains an implementation decision, not an existing capability.
+- Read-only review plus this handoff update. No browser/structure tests rerun;
+  historical 1962-check results below apply to the preceding implementation.
+
+## Three-level information planning for both samples (9 November 2026)
+
+- User approved another information level for Basic and Advanced. Added third-level
+  content planning examples beneath existing components/topics: Basic now has 28
+  IA entries and Advanced 49. New details default to content items excluded from
+  sitemap navigation; existing linked destinations and authored body content stay
+  intact. The lesson explains that three IA levels may describe one page, suggests
+  fewer levels where sufficient, and links NN/g's flat/deep hierarchy guidance.
+  Three levels is this editor's teaching limit, not a universal IA prescription.
+- Added the full recursive `DSStudio.process.tree()` and flattened depth/position
+  data. Kept `hierarchy()` as a two-level projection for existing lesson/wireframe
+  readers. The full IA, selected sitemap, preview and exports share the new tree.
+- Extended the structured editor to add/edit third-level entries, rename/reparent
+  complete branches, reorder siblings, delete branches and undo. Parent choices
+  prevent cycles and moves beyond three levels, including descendant height;
+  submit validation also rejects forged choices. Ancestor exclusion disables
+  descendants without changing their saved inclusion choices. Third-level controls
+  have distinct indentation. New third-level entries default to excluded content.
+- Previous complete two-level sample outlines resolve to the expanded examples
+  without rewriting stored text or losing existing metadata. Custom outlines stay
+  custom across modes. Metadata accepts paths of one to three labels, bounded to
+  192 entries per mode for 64 raw lines with three derived nodes each. Structural
+  edits retain the 64-entry/8,400-character limit; metadata-only edits preserve raw
+  text. Fourth-level raw lines remain saved but are excluded from rendered trees
+  and flagged with field validation/status; deeper imported metadata is rejected.
+- Updated outline help, sample feedback, README, architecture and affected runtime
+  query versions. Added three-level browser regressions and adjusted only existing
+  expectations affected by the richer sample inventory and new depth limit.
+- Current-session checks so far: `python scripts/check_structure.py` verified
+  **54 assets**; `git diff --check` passed with an existing LF/CRLF warning for
+  tailwind-bridge.js. Initial `python .third-level-focused.py`: **91/92 passed**,
+  no captured JS errors (`.third-level-focused.log`). Its failed assertion exposed
+  the fourth-level editing warning being cleared by render; moved status feedback
+  after apply. First full `python scripts/browser_review.py`: **1958/1961 passed**,
+  no captured JS errors (`.third-level-browser.log`). Two failures exposed long
+  listbox options overflowing at 320px; allowed wrapped option text. The remaining
+  security fixture expected an over-depth line to appear in the full IA; updated
+  it to assert the explicit depth validation and retained all nonexecution/link
+  checks. Added valid third-level hostile-label coverage and listbox width checks.
+- Final focused `python .third-level-focused.py`: **93/93 passed**, no captured
+  JS errors (`.third-level-focused-final.log`). Visual `python .third-level-visual.py`
+  reviewed light Basic/Advanced desktop outlines and dark Basic inclusion/editor
+  controls at an actual 390px iframe width. Final polish uses nonbreaking option
+  indentation and normal-weight third-level detail text to distinguish levels.
+  Final `python scripts/check_structure.py`: **54 assets verified**. Final full
+  `python scripts/browser_review.py` after that polish: **1962/1962 passed**, no
+  captured JS errors (`.third-level-browser-final.log`). `git diff --check` passed
+  with the existing LF/CRLF warning. Temporary implementation/test/visual helpers
+  and screenshots were removed; the new regressions remain in the tracked suite.
+  Ignored logs remain. `python scripts/button_states_review.py`: **7/7 reduced-motion**
+  and **9/9 forced-colour checks passed**, no captured JS errors
+  (`.third-level-states.log`). Final `git diff --check` passed after cleanup/docs.
+- No commit, push or deployment performed. Next: try the expanded plans with
+  learners and complete manual keyboard-only, screen-reader, zoom and Firefox/
+  Safari review. Passing the Chrome suites does not establish full accessibility.
+  Historical results below predate this enhancement.
+
+## Full IA with selected visitor sitemap and NN/g lesson (9 November 2026)
+
+- User approved the IA/sitemap proposal and requested integration of NN/g's
+  Information Architecture vs. Sitemaps guidance. Reviewed the source article and
+  paraphrased the distinction with attribution/link in the shared Architecture
+  artifact: Brief establishes release scope, IA organizes information and its
+  relationships, and the visitor sitemap is a selected navigation artifact.
+  The Contact/Opening hours example illustrates content retained without a
+  sitemap link. Shared guidance/full IA/sitemap preview also reach Advanced HTML.
+- Architecture now shows the complete outline in both samples, including
+  Forms/Footer and sitemap-excluded information. The visitor preview and footer
+  use the same selected sitemap generator. Removed Basic's hardcoded parent
+  allowlist; Home/Footer default to excluded for legacy compatibility but can be
+  included explicitly. Selected unlinked entries require the planned-entry toggle
+  consistently in both samples. Planned text has no fabricated destination.
+- Added native inclusion checkboxes for every parent/child in a labelled, locally
+  scrolling region. Excluding a parent suppresses its branch and disables child
+  controls while retaining their saved choices. Reused checkbox rows preserve
+  focus through apply/render. The editor adds page/section/group/content types;
+  groups are nonlinked headings. Neither inclusion nor type hides authored page
+  content or generates arbitrary pages. Existing two-level outline editing remains.
+- Additive `designProcess.iaEntries.basic/advanced` metadata stores validated
+  stable IDs, one/two-label paths, type and inclusion. Existing JSON without it
+  receives compatible defaults. Structured rename/reparent/reorder preserve
+  identity and selection; delete/undo, JSON and local autosave retain metadata.
+  Other-sample metadata survives mode changes and current-sample restoration.
+  Raw edits retain matching paths; new paths represent new entries. Metadata is
+  bounded to 128 rows per sample for legacy 64-line outlines; unchanged-structure
+  inclusion/type/destination edits preserve raw text and do not truncate it.
+  Structural CRUD retains its 64-entry limit and fixed destination allowlist.
+- Studio sitemap-preview links use valid #previewShell proxies and fixed target
+  metadata, revealing/focusing the actual iframe destination without changing
+  project data or phase. Exported maps retain ordinary in-page fragment links.
+  Imported labels use escaped text/textContent; imported metadata validates ID,
+  path, depth, type and duplicates. No executable content or dependency added.
+- Updated builder labels/help, stage task/overview, README, architecture and changed
+  asset query versions. Early focused runs were **32/35**, then **34/35**: corrected
+  fixture comparisons for resolved legacy plans, Basic reset and Basic export
+  whitespace. First full suite: **1894/1904**, no captured JS errors (`.ia-browser.log`).
+  Nine failures reflected intentional full-IA/planned-visibility/feedback changes;
+  one exposed Studio links pointing to iframe-only IDs, fixed with preview proxies.
+  Updated expectations while retaining geometry, destinations and state checks.
+  Final focused `python .ia-focused.py`: **38/38 passed**, no captured errors
+  (`.ia-focused-final.log`), including navigation, identity, branch inclusion,
+  persistence, safe imports, raw legacy bounds and 320/390/1440px controls.
+- Added 37 IA assertions to the tracked browser suite. Full
+  `python scripts/browser_review.py`: **1907/1907 passed**, no captured errors
+  (`.ia-browser-final.log`). Visual review then identified native-sized editor
+  fields; styled selects/text fields and sitemap-preview link targets to at least
+  44px, added those checks to existing responsive assertions and corrected remaining
+  builder/Brief wording that conflated the IA outline with a sitemap. Full rerun:
+  **1907/1907 passed**, no captured JS errors (`.ia-browser-polished.log`).
+- Temporary `python .ia-visual.py` reviewed 1440px light full IA/selected sitemap
+  and 390px dark inclusion controls, lesson/IA and visitor sitemap. The excluded
+  Content card stays in the IA and page but is absent from sitemap navigation.
+  Final Studio-only panel spacing uses its available spacing-unit token rather
+  than relying on export-only spacing multiples. This does not alter website CSS
+  or functional JS. Final focused verification after that cosmetic CSS change:
+  **38/38 passed**, no captured errors (`.ia-focused-layout.log`), including the
+  expanded 44px controls/link checks. Refreshed screenshots after the spacing fix
+  and inspected the desktop model and phone sitemap again. Removed implementation/
+  focused/visual helpers, test-extraction source and screenshots; ignored logs
+  remain. Final structure/whitespace rechecks passed after handoff cleanup.
+  `python scripts/check_structure.py`: **54 assets verified**; `git diff --check`
+  passed (Git LF/CRLF notice for tailwind-bridge.js). Chrome runs used isolated
+  profiles and were serialized. No commit/push/deployment.
+- Next: observe learners and complete
+  manual keyboard-only, screen-reader, zoom and Firefox/Safari review. Passing the
+  automated suite does not establish full accessibility. Earlier results below
+  are historical.
+
+## Information architecture versus sitemap review (9 November 2026)
+
+- User requested validation and recommendations before implementation: model key
+  information and relationships in Architecture and choose which entries appear
+  in the visitor-facing Sitemap. Reviewed design-process hierarchy, normalization,
+  sitemap generator and the architecture notes, plus NN/g's IA/sitemap/navigation
+  guidance and the W3C WAI visitor sitemap.
+- Current implementation stores a bounded two-level pages/content-group outline,
+  per-sample fixed-target link assignments and a global showPlanned option. The
+  IA artifact is labelled a sitemap plan and Basic hides Forms/Footer in that
+  view; the Basic footer also has fixed parent/destination filtering. Editing the
+  plan does not automatically generate arbitrary website content/pages.
+- Proposed distinction (recommendation, not implemented/approved): Brief defines
+  purpose and agreed release scope; IA inventories and organizes that content and
+  its relationships; the HTML sitemap is a selected navigation view derived from
+  the IA. Keep content scope/display separate from Include in sitemap. Recommend
+  one inclusion checkbox per entry at each supported depth, stable node identities,
+  explicit parent/child filtering behaviour and valid destination requirements.
+  Show the full agreed IA independently of sitemap exclusions; make any scope-driven
+  content rendering an explicit separate capability rather than silently coupling
+  it to sitemap visibility.
+- No runtime/model/UI changes, browser or manual tests in this review. Earlier
+  1870/1870 is historical. Next: settle the proposed interaction/model rules before
+  implementation, preserving preview/download/JSON consistency and existing plans.
+  Only this handoff note changed; `git diff --check` passed. No commit/push/deployment.
+
+## Active lesson expanded at startup and on reload (9 November 2026)
+
+- The user requested that the centre Brief accordion be expanded when Step 1 is
+  active on reload, with the same behaviour for all twelve steps. Removed the
+  startup-only exception in studio-learning's shared activation handler: startup
+  now opens the active lesson as well as the preview. Normal loads start at Brief;
+  selecting any other step opens its corresponding lesson through the same path.
+  Other lesson accordions remain collapsed. Startup does not move keyboard focus.
+- Real reload coverage exposed a second issue: startup fragment restoration used
+  requestAnimationFrame before deferred modules necessarily initialized, allowing
+  lesson initialization to close the destination again. section-accordions now
+  restores initial fragments after DSStudio's ready event. Interactive hash/step
+  navigation remains unchanged. Reloading an existing step section link restores
+  its active builder step and open lesson. No new phase persistence, storage or
+  project schema change; preview/export generators are untouched.
+- Added a fresh default-Brief startup assertion and twelve real document-reload
+  assertions in display order, including Prototype as Step 12. Each reload starts
+  with a manually collapsed active lesson and checks new document identity,
+  matching builder selection/control pane, exactly the matching lesson open,
+  unchanged project JSON and no captured errors. The visible temporary test frame
+  lets startup animation/fragment routing run normally. Updated the older test
+  expectation that intentionally required all startup lessons collapsed.
+- First temporary `python .active-lesson-focused.py`: **34/45**, no captured
+  JavaScript errors (`.active-lesson-focused.log`); normal Brief startup passed,
+  while the eleven other section reloads exposed the fragment initialization race.
+  After the ready-event fix, focused rerun: **45/45 passed**, no captured errors
+  (`.active-lesson-focused-final.log`). `python scripts/check_structure.py`:
+  **54 assets verified**; `git diff --check` passed (existing Git LF/CRLF notice for
+  tailwind-bridge.js). Fresh query versions cover both changed runtime scripts.
+  Updated README and architecture startup notes.
+- Required `python scripts/browser_review.py`: **1870/1870 passed**, no captured
+  JavaScript errors (`.active-lesson-browser.log`), using an isolated Chrome profile.
+  The full suite includes all thirteen new startup/reload assertions as well as
+  existing all-stage navigation, manual native disclosure, preview/project/export,
+  focus and responsive regressions. No test limits or assertions were relaxed.
+- Temporary `python .active-lesson-visual.py` captured and reviewed 1440px light
+  Brief startup, exact 390px dark Brief startup and 390px dark Prototype section
+  startup: correct expanded headings, matching content and usable inline controls.
+  Removed focused/visual helpers and screenshots; ignored logs remain. Final
+  structure and whitespace rechecks passed after documentation/temporary cleanup.
+  Manual keyboard-only, screen-reader, zoom and Firefox/Safari review remain open.
+  No commit, push or deployment performed. Earlier results below belong to prior
+  work. Next: verify the startup behaviour in the user's browser and complete the
+  outstanding manual review.
+
+## Articulated design-system learning transition (9 November 2026)
+
+- Reviewed the palette/token explanations, Spacing and local-CSS lesson, token
+  catalogue, workflow, Deliver/Tailwind lesson and exported Advanced learning FAQ.
+  The path was present but implied in places. Added an explicit ordered sequence
+  to Spacing: local component `.card { padding: var(--space-6); }`, locally authored
+  utility `.p-6 { padding: var(--space-6); }`, then Tailwind-generated p-6 using the
+  mapped spacing theme. The examples focus on padding, not a complete component.
+- Explained consistently that tokens store decisions and classes apply them to
+  HTML. Palette/catalogue/workflow guidance connects to the Spacing example;
+  Deliver restates the progression, and the Advanced page's learning FAQ carries
+  the same path. Local component CSS stays in the inspector/preview/downloads;
+  optional utilities and Tailwind remain separate practice exercises. No schema,
+  framework dependency, website CSS or export-generation behaviour change; the
+  Advanced HTML FAQ's authored prose changes intentionally.
+- Clarified the actual mapping: the supplied theme aliases --spacing to
+  --space-unit, so the component's --space-6, authored p-6 and mapped Tailwind p-6
+  represent six units. Deliver's existing live calculation now names all three
+  and the mapping. Checked official Tailwind padding/theme documentation; actual
+  Tailwind compilation remains unverified. Updated README/architecture and fresh
+  query versions for the four changed JS assets.
+- `python scripts/check_structure.py`: **54 assets verified**; `git diff --check`
+  passed (Git LF/CRLF normalization notice for tailwind-bridge.js only). Existing
+  `python scripts/browser_review.py`: **1857/1857 passed**, no captured JavaScript
+  errors (`.learning-transition-browser.log`), using an isolated temporary Chrome
+  profile. No tests added merely to mirror prose. No commit/push/deployment.
+- Temporary `python .learning-transition-visual.py` captured 1440px light and
+  exact 390px dark Spacing progression views plus the 390px dark Deliver lesson.
+  Inspected all three: ordered examples, code wrapping, shared-token explanation
+  and optional practice links remain readable. Removed helper/screenshots;
+  ignored logs remain. Final structure and whitespace rechecks passed after
+  documentation and temporary-file cleanup.
+- Next: observe learners using the transition. Manual keyboard, screen-reader,
+  zoom and Firefox/Safari checks remain open, as does actual Tailwind compilation.
+  Earlier results below are historical.
+
+## Live inspector aligned with local component CSS (9 November 2026)
+
+- The user wanted the live CSS/HTML inspector to demonstrate the local,
+  framework-free approach. Removed the remaining exercise classes from both
+  sample articles and stopped page-utilities.js from wrapping cssExport. The
+  inspector, preview and website downloads continue to use the same generators;
+  their website output now uses the original component/composition classes and
+  contains no optional utility-rule bundle. No project schema changes.
+- The 20 fixed utility definitions remain available to the optional lesson only.
+  Practice now shows the actual exported article, then a prospective tag with
+  exactly one selected utility and its authored rule. Added p-4 as a selectable
+  comparison. Instructions say to copy the rule and add its class in a separate
+  practice copy; measurements explicitly describe the unchanged component
+  preview. Examples use fixed names and textContent, with no imported CSS or HTML
+  execution. No runtime dependency or framework added.
+- Added Inspect card CSS to the initial local-CSS lesson. Both it and the practice
+  component-CSS action open the actual full stylesheet at .card. Updated action
+  labels, inspector notes, Tailwind transition wording, README, architecture and
+  changed script query versions. No filtered or substitute framework source is
+  presented as the website's real code.
+- Reworked utility regression coverage to execute the optional rules in a
+  separate isolated iframe: default/custom values, both samples/themes and
+  320/1440px appearance parity, padding changes, cascade order and theme colours.
+  Added website utility exclusion, unchanged preview/export assertions, explicit
+  practice/source separation and direct local-inspector action checks. Responsive
+  checks include the new local-first action. Existing tests remain for shared
+  preview, projects, imports and website exports.
+- Read current handoff, contribution/architecture notes and the linked page-export
+  review. Shared component ownership/cascade cleanup remains separate architecture
+  work; this change makes the output boundary match the local-CSS teaching path.
+  `python scripts/check_structure.py`: **54 assets verified**; `git diff --check`
+  passed (Git LF/CRLF normalization notice for tailwind-bridge.js only).
+- First full `python scripts/browser_review.py`: **1856/1857 passed**, no captured
+  JavaScript errors (`.local-inspector-browser.log`). The remaining dark 320px
+  spacing assertion measured cached button geometry inside closed utility practice.
+  Temporary focused diagnostics reproduced both themes (**73/75**), showing no
+  document/lesson overflow and correctly sized visible controls; only a hidden
+  button's cached right edge failed. Updated the fixture to open practice before
+  measuring all controls, await layout and restore its original disclosure state.
+  All assertions and target sizes were retained.
+  Focused rerun: **75/75 passed**, no captured errors
+  (`.local-inspector-focused-final.log`). The next full run ended without a
+  completion report (`.local-inspector-browser-final.log`), so it is not a pass.
+  Added a harness-title progress marker to incomplete-run diagnostics without
+  changing completion/pass criteria. The retry also ended without a complete
+  report; its marker identified **1854 checks reached**, with the three final
+  navigation/completion assertions still pending at the 120-second virtual-time
+  boundary (`.local-inspector-browser-retry.log`). Increased only Chrome's bounded
+  virtual-time budget from 120 to 135 seconds. Per-check waits, assertions and the
+  300-second process limit are unchanged. Final full
+  `python scripts/browser_review.py`: **1857/1857 passed**, no captured JavaScript
+  errors (`.local-inspector-browser-complete.log`). All Chrome runs used isolated
+  profiles. Structure and whitespace rechecks passed after final handoff cleanup.
+- Temporary `python .local-inspector-visual.py` captured the 1440px light inspector
+  focused at the real .card rule, 390px dark local lesson and expanded 390px dark
+  practice. Inspected all three: the inspector retains actual component CSS;
+  proposed practice HTML is separate from the real tag, code wraps and controls
+  fit. Removed focused/visual helpers and screenshots; ignored logs remain.
+  Structure/whitespace checks passed after cleanup. Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review remain unrun, and actual Tailwind
+  compilation remains unverified. No commit, push or deployment performed.
+- Next: complete learner observation and manual accessibility/cross-browser review.
+  Checks below belong to earlier sessions.
+
+## Local CSS first, optional utility and Tailwind progression (6 November 2026)
+
+- The user asked for the simplest local-CSS teaching path with a later transition
+  to utilities/Tailwind. Step 8 now starts with semantic HTML, one linked local
+  stylesheet and the actual base `.card` rule read from the current CSS export.
+  A labelled minimal example teaches component reuse and shared tokens. Local
+  CSS remains a complete way to finish the website; no universal performance or
+  maintenance advantage is claimed for either approach.
+- Simplified both sample generators: most cards and layouts retain their original
+  component/composition classes. Only the single traced article in each sample
+  adds p-6/bg-surface/text-content/rounded-card for comparison. The 20 authored
+  utility rules remain available in the local CSS export, without applying
+  redundant utility classes throughout the generated markup.
+- Utility practice is now a closed native disclosure, with the full vocabulary
+  in a second closed disclosure. Opening practice refreshes measured output.
+  The exercise asks whether a shared component change or one utility fits the
+  intended scope. A next-step fragment link activates Deliver's existing lesson;
+  its return link activates the local CSS lesson without replacing project state.
+- Deliver explicitly makes Tailwind optional, distinguishes locally authored
+  rules from framework-generated utilities and explains that custom names need
+  the mapped theme. Its transition exercise uses a separate Tailwind v4 practice
+  project, the existing source snapshot and one article, then compares generated
+  CSS/computed properties. No framework, build tool or network dependency added.
+  Reviewed the official utility-class guidance; actual compilation is still
+  unverified. Updated README, architecture and affected asset query versions.
+- Added regressions for default collapsed practice/vocabulary, visible local CSS
+  and escaped minimal HTML, current exported component rules in both samples/
+  themes, utilities confined to the teaching article, and next/return navigation
+  preserving project and preview. Existing expanded responsive checks now open
+  both explicit disclosures.
+- Initial `python scripts/browser_review.py`: **1851/1851 passed**, no captured
+  JavaScript errors (`.local-css-first-browser.log`). Formatted the displayed base
+  card rule onto separate declaration lines afterward; it differs from the actual
+  export only in whitespace, which the regression now normalizes. Final full
+  `python scripts/browser_review.py`: **1851/1851 passed**, no captured JavaScript
+  errors (`.local-css-first-browser-final.log`). Chrome runs used isolated
+  temporary profiles and ran serially.
+- Temporary `python .local-css-first-visual.py` completed before and after that
+  formatting change. Inspected 1440px light/390px dark local-first views and the
+  expanded 390px utility practice: readable examples, closed initial practice,
+  wrapped code and usable controls. Removed helper and screenshots after review;
+  ignored logs remain. `python scripts/check_structure.py`: **54 assets verified**;
+  `git diff --check` passed, including after cleanup (Git LF/CRLF normalization
+  notice for tailwind-bridge.js only). Manual keyboard-only, screen-reader, zoom,
+  Firefox/Safari and actual Tailwind compilation remain unrun. No commit, push or
+  deployment performed. Earlier results below are historical.
+- Final structure and whitespace rechecks passed after documentation and temporary
+  file cleanup. Next: observe learners and complete manual accessibility/browser
+  checks and consuming Tailwind compilation.
+
+## Native page utilities and class-tracing lesson (6 November 2026)
+
+- Resumed the interrupted implementation: 20 fixed, single-declaration plain CSS
+  utilities now accompany existing component/composition classes in both sample
+  HTML generators. Their token-based rules append to the shared CSS export, so
+  preview, inspector and downloaded files use the same output. No framework,
+  compiler, network dependency or saved-project schema change was introduced.
+- Step 8 continues after Reflect with Read a class, follow its CSS. Four choices
+  trace an actual sample article's opening tag, exported rule, current-theme token
+  and measured preview value. Existing actions inspect full files, configure the
+  source control and show the article; a disclosure lists all 20 utilities. Fixed
+  selectors and textContent preserve the untrusted-data boundary. The lesson
+  explains semantic HTML, component defaults, CSS source order and a downloaded
+  p-6/p-4 exercise separately from the optional Tailwind source target.
+- Diagnosed the recovered four spacing failures: the old exact-heading assertion
+  counted the appended utility section as a sixth core teaching part. Retained
+  the exact five-part check while excluding that named supplemental section;
+  utility coverage now also requires placement immediately after Reflect.
+- Fixed Show article in preview to scroll the Studio to the preview shell before
+  focusing the article. Added a viewport-visibility regression and refreshed its
+  runtime query version. Updated README and architecture; kept sample-generator
+  versions and new assets from the interrupted work.
+- Current-session `python scripts/check_structure.py`: **54 assets verified**;
+  `git diff --check` passed, including after temporary review-file cleanup.
+  Initial sandbox browser run failed accessing its temporary profile (WinError 5).
+  First escalated full run hit the existing 300-second timeout without a report;
+  a concurrent screenshot attempt also hit its 60-second timeout. Windows briefly
+  reported insufficient paging-file capacity during concurrent Chrome work.
+  Subsequent Chrome runs were serialized. No suite limit or assertion was relaxed.
+- Temporary `python .utilities-visual.py` then completed twice using isolated
+  profiles: reviewed 1440px light and exact 390px dark Studio layouts, including
+  wrapped code and usable controls. The first successful images clipped the
+  heading behind the sticky header; corrected the helper's scroll offset and
+  inspected the final images. Removed temporary focused/preparation/test-extraction/
+  visual helpers and screenshots; ignored logs remain. No manual keyboard-only,
+  screen-reader, zoom, Firefox or Safari checks were run. No commit/push/deployment.
+- Final `python scripts/browser_review.py`, run alone with an isolated temporary
+  profile: **1828/1828 passed**, no captured JavaScript errors
+  (`.utilities-browser-final.log`). Its 68 utility assertions include computed
+  appearance parity with utility-free pages in both samples/themes, default and
+  custom values at 320/1440px, actual utility edits/cascade order, live lesson
+  tokens/measurements, inspection/configuration, preserved project/preview and
+  preview visibility, plus usable lesson controls at 320/390/1440px. Earlier
+  67/67 and 1823/1827 results in the recovery entry below are historical only.
+- Next: try the utility lesson with learners and complete manual accessibility/
+  cross-browser checks. Actual Tailwind compilation remains separate, unverified
+  work. Final structure and whitespace rechecks passed after handoff cleanup.
+
+## Recovered interrupted utility work (6 November 2026)
+
+- Re-established the checkpoint from the working tree and saved local logs after
+  a disconnect. Latest commit is `4e00578` (updated the architecture to be aligned
+  with tailwind). Uncommitted work adds `page-utilities.js`, `utility-lesson.js`
+  and `utility-lesson.css`, wires them into index.html, adds utility classes to
+  both sample generators and adds browser regression assertions. This work is
+  incomplete; the older current-objective summary below predates these changes.
+- Existing `.utilities-focused-final.log` reports **67/67 passed** with no captured
+  errors. Existing `.utilities-browser.log` reports **1823/1827 passed**, with no
+  captured interaction JavaScript errors. The four failures are the spacing lesson
+  "connects five teaching parts without replacing the design" assertions, in both
+  samples and both themes. These are recovered results, not tests rerun during
+  this recovery session; their cause has not yet been diagnosed.
+- Recovery-session commands: read handoff/contribution/architecture/export-review
+  notes, inspected git status/diffs/history, temporary helpers and saved test logs;
+  `python scripts/check_structure.py` passed (**54 assets verified**) and
+  `git diff --check` passed before this documentation update. No browser suite or
+  manual checks rerun. No runtime edits, commit, push or deployment performed.
+- Next: diagnose the four spacing-lesson failures, review the unfinished utility
+  implementation, complete documentation and visual review, rerun required checks
+  and remove temporary `.utilities-focused.py`, `.utilities-prepare.py` and
+  `.utilities-tests.js` when no longer needed. Preserve outstanding manual
+  accessibility/cross-browser and consuming Tailwind build checks below.
 
 ## Current objective
 
@@ -11,7 +556,9 @@ controls project examples and the Basic/Advanced page. The builder remains 25%
 on desktop and the expanded inspector is capped at 25%. The first detailed
 lesson uses the learner's spacing settings and actual output. Deliver now adds an
 optional live CSS-to-Tailwind mapping lesson and theme-source snapshot without
-changing website exports.
+changing website exports through that adapter. Step 8 starts with reusable local
+component CSS, then offers closed utility practice in a separate copy of an article.
+Tailwind is an optional next exercise with a route back to local CSS.
 Next: observe learners using the lessons, verify the adapter in a consuming
 Tailwind build and complete manual accessibility/cross-browser checks.
 

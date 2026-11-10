@@ -295,7 +295,7 @@ ${sectionActions(['#components', 'Explore component states'], ['#contact', 'Ask 
         <div class="sample-faq">
           <details id="getting-started" open><summary>How do I use this field guide?</summary><p>Start with the brief, content map, wireframe and prototype before choosing a palette. Then choose a lesson, inspect the example and change one design decision in the studio. Compare the preview with the generated HTML and CSS. Write down what changed and why it helped.</p></details>
           <details id="working-together"><summary>What belongs in my review checklist?</summary><p>Check a narrow viewport, long headings, keyboard focus, form labels and text contrast in both themes. Test intermediate widths too. Record anything that still needs a human review before sharing your work.</p></details>
-          <details id="learning-from-exports"><summary>Can I learn from the exported page?</summary><p>Yes. Save the HTML and its companion CSS together, open the page and trace a component class back to its design tokens. The planning artifacts, linked prototype, Grid, Flexbox and native menu work without a JavaScript framework.</p></details>
+          <details id="learning-from-exports"><summary>Can I learn from the exported page?</summary><p>Yes. Save the HTML and its companion CSS together, open the page and trace a component class back to its design tokens. The planning artifacts, linked prototype, Grid, Flexbox and native menu work without a JavaScript framework.</p><p>Learn the progression: use a token in a local component rule such as <code>.card</code>, write a one-purpose local utility such as <code>.p-6</code> in a practice copy, then compare a Tailwind-generated <code>p-6</code> using the mapped spacing theme in a separate exercise. Local CSS remains a complete way to build this page.</p></details>
         </div>
       </div>
       <aside id="practice-tip" class="sample-notice" aria-label="Practice tip"><strong>Change one decision at a time.</strong> Compare before and after, test at another width, and write down the reason for your choice.</aside>
@@ -515,6 +515,7 @@ ${flexRecipe}
     title: 'Sample home page',
     init() {
       DSStudio.samples.illustration = illustration;
+      DSStudio.samples.advancedHtml = homepageHtml;
       const previousCss = cssExport;
       cssExport = () => previousCss() + '\n' + homepageCss() + DSStudio.samples.footerCss();
       htmlExport = homepageHtml;

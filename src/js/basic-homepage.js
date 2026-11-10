@@ -311,6 +311,7 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
     title: 'Basic and Advanced website samples',
     init() {
       const advancedHtml = htmlExport, advancedCss = cssExport;
+      DSStudio.samples.basicHtml = basicHtml;
       htmlExport = () => state.sampleMode === 'basic' ? basicHtml() : advancedHtml();
       cssExport = () => state.sampleMode === 'basic' ? basicCss() : advancedCss();
       const tabs = ['dockModeBasic', 'dockModeAdvanced'];

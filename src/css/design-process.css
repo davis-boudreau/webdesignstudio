@@ -9,9 +9,20 @@
 .studio-section .process-screens > li { scroll-margin-top: var(--studio-section-scroll-offset, 125px); }
 .sitemap-editor, #sitemap-form, .page-background-editor { display: grid; gap: .65rem; min-width: 0; margin-block: 1rem; }
 .sitemap-editor select, .sitemap-editor input:not([type="checkbox"]), .page-background-editor input { width: 100%; min-width: 0; }
+.sitemap-editor select, .sitemap-editor input:not([type="checkbox"]) { box-sizing: border-box; min-height: 44px; padding: 8px; border: 1px solid var(--control-border); border-radius: var(--radius-base); background: var(--surface); color: var(--text); font: inherit; }
+.sitemap-editor summary, .sitemap-editor .sitemap-planned-toggle { min-height: 44px; align-content: center; }
 .sitemap-editor select[size] { min-height: 12rem; }
+.sitemap-editor select[size] option { white-space: pre-wrap; overflow-wrap: anywhere; }
 .sitemap-editor .button-row { flex-wrap: wrap; }
 .sitemap-editor button { min-height: 44px; white-space: normal; }
+.sitemap-editor .sitemap-choices { max-height: 22rem; overflow: auto; min-width: 0; }
+.sitemap-editor .sitemap-choices label { display: flex; align-items: center; gap: .5rem; min-height: 44px; padding: .25rem; overflow-wrap: anywhere; }
+.sitemap-editor .sitemap-choices label.is-child { margin-inline-start: 1rem; }
+.sitemap-editor .sitemap-choices label.is-grandchild { margin-inline-start: 2rem; }
+.sitemap-editor .sitemap-choices input { flex: 0 0 auto; }
+.sitemap-editor .sitemap-choices span { min-width: 0; }
+.studio-section .process-ia-guidance { margin-block: calc(var(--space-unit) * 4); }
+.studio-section .process-sitemap-preview { margin-block: calc(var(--space-unit) * 4); padding: calc(var(--space-unit) * 4); }
 .sitemap-planned-toggle { display: flex; gap: .5rem; align-items: flex-start; }
 .page-background-editor input[type="color"] { min-height: 44px; }
 .page-background-editor input[type="range"] { min-height: 44px; margin: 0; }

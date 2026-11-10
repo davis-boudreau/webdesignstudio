@@ -1,0 +1,9 @@
+/* Studio teaching UI only; page utility rules come from page-utilities.js. */
+.utility-lesson { min-width: 0; display: grid; gap: var(--studio-space, 16px); padding-top: 24px; border-top: 1px solid var(--border); }
+.utility-lesson .field { margin: 0; }
+.utility-lesson > details { min-width: 0; }
+.utility-lesson #utilityPractice > :not(summary) { margin-top: var(--studio-space, 16px); }
+.utility-lesson select { min-height: 44px; }
+.utility-lesson .utility-table-scroll { min-width: 0; max-width: 100%; overflow-x: auto; }
+.utility-lesson table { min-width: 28rem; }
+.utility-lesson pre { max-height: 240px; }

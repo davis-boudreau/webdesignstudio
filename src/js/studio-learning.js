@@ -66,9 +66,9 @@ DSStudio.register({
       ['studio-section-3',8,'Spacing, surfaces and responsive layout', 'A shared spacing unit creates related gaps and padding. Grid constraints decide when cards wrap; surfaces and borders clarify groups.', '--space-unit → --space-6 → card padding; --grid-gap → card gutters', 'Compare spacing bars with card padding. Resize the page and find the width where the card grid changes columns.'],
       ['stateExplorer',10,'Native behaviour and visual feedback', 'Focus, disabled, invalid and read-only are different behaviours. A simulation teaches appearance; native HTML supplies real interaction.', '--focus + --focus-width → keyboard outline', 'Compare simulated states, then use Tab on real controls. Explain why read-only text still needs readable contrast.'],
       ['studio-section-5',10,'Evaluate accessibility in context', 'Contrast belongs to a foreground/background pair. Check each theme and state, then review keyboard behaviour and meaning without colour.', '--text on --surface; --control-border beside --background', 'Filter required contrast problems. Preview a repair and check whether it creates new problems before applying.'],
-      ['studio-section-6',11,'Deliver the decisions, not just a screenshot', 'CSS implements the tokens; sample HTML demonstrates their use; JSON preserves editable project settings.', 'Project settings → tokens.css + index.html + project JSON', 'Export CSS and HTML together. Identify one component class and trace its values back to the catalogue.'],
+      ['studio-section-6',11,'Deliver the decisions, not just a screenshot', 'Local component CSS applies the tokens; semantic HTML uses those classes; JSON preserves editable project settings. Optional exercises continue from a locally authored utility to a Tailwind-generated utility using the mapped theme.', 'Project settings → tokens.css + index.html + project JSON', 'Export CSS and HTML together. Identify one component class and trace its values back to the catalogue.'],
       ['studio-section-7',0,'Explain and review your decisions', 'A design system records reusable choices and the reasons behind them. Evaluate the result with real content before extending it.', 'Audience → design decision → token → component → review', 'Write one reason for your palette, typography and layout choices, then list what still needs human testing.'],
-      ['studio-section-8',11,'Read the token catalogue', 'Direct tokens store a decision. Derived tokens are calculated scales or aliases; configure their source to keep the system consistent.', '--space-unit → --space-2, --space-4, --space-6', 'Choose Configure source beside a token. Change its wizard setting and compare the catalogue, preview and exported CSS.']
+      ['studio-section-8',11,'Read the token catalogue', 'Tokens store design decisions; classes apply them to HTML. Direct tokens store a value; derived tokens are calculated scales or aliases. Start by using them in local component CSS, then explore an optional local utility and its Tailwind theme mapping.', '--space-unit → --space-6 → .card padding', 'Choose Configure source beside a token. Change its wizard setting and compare the catalogue, preview and exported CSS.']
     ];
     for (const [id, step, title, explanation, chain, exercise] of lessons) {
       const lesson = document.createElement('section');
@@ -97,7 +97,7 @@ DSStudio.register({
       lesson.replaceChildren(lesson.querySelector('h3'), lesson.querySelector('p'), task);
       if(stage.id==='architecture') {
         const overview=document.createElement('div');overview.className='architecture-overview';
-        overview.innerHTML='<ol><li><strong>Identify tasks.</strong> Prioritise the main audience’s goals and the information or functions needed to complete them.</li><li><strong>Define scope.</strong> List essential pages and content. Confirm content owners, accessibility needs and dependencies in the brief; note open questions.</li><li><strong>Group and label.</strong> Organise related content into a simple hierarchy using language the audience understands.</li><li><strong>Check the route.</strong> Ask someone where they would start a key task using the sitemap. Revise unclear labels before wireframing.</li></ol><p><strong>Outcome:</strong> An agreed sitemap connecting essential requirements to pages, ready to guide the wireframe.</p>';
+        overview.innerHTML='<ol><li><strong>Identify tasks.</strong> Prioritise the main audience’s goals and the information or functions needed to complete them.</li><li><strong>Define scope.</strong> List essential pages and content. Confirm content owners, accessibility needs and dependencies in the brief; note open questions.</li><li><strong>Group and label.</strong> Organise the full agreed content into a clear hierarchy using language the audience understands, including information within pages.</li><li><strong>Select sitemap destinations.</strong> Choose which IA entries belong in visitor navigation without removing their content. Ask someone where they would start a key task. Revise unclear labels before wireframing.</li></ol><p><strong>Outcome:</strong> An agreed information architecture with a selected visitor sitemap, ready to guide the wireframe.</p>';
         lesson.insertBefore(overview,task);
       }
       const actions = document.createElement('div'); actions.className = 'button-row step-output';
@@ -180,13 +180,13 @@ DSStudio.register({
     placeControls();
     narrow.addEventListener('change', placeControls);
     DSStudio.on('lesson:content', placeControls);
-    const activate = ({ stage, focus, initial = false }) => {
+    const activate = ({ stage, focus }) => {
       // A step can be selected before a queued media-query change is delivered.
       // Place the existing controls using the current viewport on every route.
       placeControls();
       stepList.open = false;
       for (const section of sections) {
-        const active = !initial && section.id === stage.lesson;
+        const active = section.id === stage.lesson;
         section.hidden = false;
         if (section !== preview) section.open = active;
       }
@@ -217,7 +217,7 @@ DSStudio.register({
       button.addEventListener('click', () => window.dssShowWizardStep(DSStudio.activeStage));
       section.querySelector('.panel').prepend(button);
     }
-    activate({ stage: DSStudio.stages[DSStudio.activeStage || 0], focus: false, initial: true });
+    activate({ stage: DSStudio.stages[DSStudio.activeStage || 0], focus: false });
     window.dssConfigureToken = row => {
       const source = window.dssTokenSource(row);
       if (!source) return;

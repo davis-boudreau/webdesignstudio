@@ -32,7 +32,32 @@
       ['Footer','footer']
     ]
   };
-  const samplePages = (mode = state.sampleMode) => inventories[mode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,,children=[]]) => [label,...children.map(([child])=>`${label} > ${child}`)]).join('\n');
+  const sampleInformation = {
+    basic: {
+      'basic-structure': ['Heading and introduction','Card destination link'],
+      'basic-layout': ['Name and role','Availability status'],
+      'basic-usability': ['Question and answer'],
+      'list-collection': ['Checklist items'], 'list-workflow': ['Workflow steps'],
+      'list-terms': ['Terms and definitions'],
+      'contact-form': ['Name and email','Enquiry topic and message'],
+      'form-options': ['Preferred contact method'], 'basic-signup-note': ['Validation and delivery note']
+    },
+    advanced: {
+      'brief-lab': ['Purpose and audience','Scope and delivery'],
+      'ia-lab': ['Content relationships','Sitemap choices'],
+      'lesson-brief': ['Learning objective','Practice destination'],
+      'grid-example': ['Tracks and column spans'],
+      'resource-library': ['Resource name and category'],
+      'component-actions': ['Button variants and labels'],
+      'component-feedback': ['Status and recovery guidance'],
+      'component-progress': ['Progress and confidence values']
+    }
+  };
+  const twoLevelPages = mode => inventories[mode].flatMap(([label,,children=[]])=>[label,...children.map(([child])=>`${label} > ${child}`)]).join('\n');
+  const samplePages = (mode = state.sampleMode) => {
+    mode = mode === 'basic' ? 'basic' : 'advanced';
+    return inventories[mode].flatMap(([label,,children=[]])=>[label,...children.flatMap(([child,id])=>[`${label} > ${child}`,...(sampleInformation[mode][id] || []).map(info=>`${label} > ${child} > ${info}`)])]).join('\n');
+  };
   const previousMockPages = "Home\nServices\nServices > Website design\nServices > Content planning\nServices > Responsive websites\nResources\nResources > Project checklist\nResources > How we work\nResources > Useful terms\nContact\nContact > Enquiry form\nContact > Common questions\nFooter";
   const previousTutorialPages = 'Hero\nFlexbox\nFlexbox > Semantic HTML\nFlexbox > Flexbox layout\nFlexbox > Responsive navigation\nGrid & lists\nGrid & lists > Unordered lists\nGrid & lists > Ordered lists\nGrid & lists > Description lists\nForms\nFooter';
   const previousBasicPages = 'Home\nWhat you can learn\nWhat you can learn > Give content meaning\nWhat you can learn > Let the layout adapt\nWhat you can learn > Make the basics easy\nLists\nLists > What to include\nLists > A simple workflow\nLists > Useful terms\nSign up\nFooter';
@@ -40,13 +65,15 @@
   function currentPlan() {
     const plan = normalize(state.designProcess);
     // Upgrade the old starter, and keep complete sample inventories in sync with mode.
-    if ([legacyPages,previousBasicPages,previousTutorialPages,previousMockPages,samplePages('basic'),samplePages('advanced')].includes(plan.pages)) plan.pages = samplePages();
+    if ([legacyPages,previousBasicPages,previousTutorialPages,previousMockPages,twoLevelPages('basic'),twoLevelPages('advanced'),samplePages('basic'),samplePages('advanced')].includes(plan.pages)) plan.pages = samplePages();
     return plan;
   }
   const defaults = () => ({
     ...Object.fromEntries(briefFields.map(({key}) => [key, ''])),
     pages: samplePages('advanced'),
     pageLinks: { basic: {}, advanced: {} },
+    iaEntries: { basic: [], advanced: [] },
+    contentPlan: { basic: null, advanced: null },
     showPlanned: false,
     layout: 'split',
     wireframeNotes: 'Lead with the main task, group related lessons and keep supporting notes close.',
@@ -62,49 +89,97 @@
     if (['split', 'stack'].includes(value.layout)) result.layout = value.layout;
     result.showPlanned = value.showPlanned === true;
     for (const mode of ['basic', 'advanced']) {
+      result.contentPlan[mode] = DSStudio.contentArchitecture?.normalizeNodes(value.contentPlan?.[mode],mode) ?? null;
       const allowed = new Set(inventories[mode].flatMap(([,id,children=[]]) => [id,...children.map(([,childId])=>childId)]));
       const links = value.pageLinks?.[mode];
       if (links && typeof links === 'object' && !Array.isArray(links)) result.pageLinks[mode] = Object.fromEntries(Object.entries(links).slice(0,64).filter(([label,id]) => label.trim() && label.length<=64 && !/[>\r\n]/.test(label) && (id==='' || allowed.has(id))));
+      const ids = new Set(), paths = new Set();
+      for (const entry of (Array.isArray(value.iaEntries?.[mode]) ? value.iaEntries[mode] : []).slice(0,192)) {
+        if (!entry || typeof entry !== 'object' || !/^ia-[1-9]\d{0,4}$/.test(entry.id || '') || ids.has(entry.id) ||
+            !Array.isArray(entry.path) || ![1,2,3].includes(entry.path.length) || entry.path.some(part=>typeof part!=='string' || !part.trim() || part.length>64 || /[>\r\n]/.test(part))) continue;
+        const path = entry.path.map(part=>part.trim()), key = JSON.stringify(path);
+        if (paths.has(key)) continue;
+        ids.add(entry.id); paths.add(key);
+        result.iaEntries[mode].push({id:entry.id,path,type:['page','section','group','content'].includes(entry.type)?entry.type:'section',includeInSitemap:entry.includeInSitemap!==false});
+      }
     }
     return result;
   }
-  function hierarchy(value) {
-    const groups = new Map();
-    // Bounded depth and counts keep imported or pasted plans readable.
-    for (const line of value.split('\n').filter(line => line.trim()).slice(0, 64)) {
-      const [parent, child] = line.split('>').slice(0, 2).map(part => part.trim().slice(0, 64));
-      if (!parent) continue;
-      if (!groups.has(parent)) groups.set(parent, []);
-      if (child && !groups.get(parent).includes(child)) groups.get(parent).push(child);
+  function tree(value) {
+    const roots = [];
+    // At most 64 lines, three levels and 64 characters per label.
+    for (const line of value.split('\n').filter(line=>line.trim()).slice(0,64)) {
+      const parts=line.split('>').map(part=>part.trim().slice(0,64));
+      if(parts.length>3)continue;
+      while(parts.length && !parts.at(-1))parts.pop();
+      if(!parts.length || parts.some(part=>!part))continue;
+      let siblings=roots;
+      for(const label of parts){
+        let node=siblings.find(node=>node.label===label);
+        if(!node){node={label,children:[]};siblings.push(node);}
+        siblings=node.children;
+      }
     }
-    return [...groups];
+    return roots;
+  }
+  // Compatibility projection for existing top-level wireframe/lesson readers.
+  const hierarchy = value => tree(value).map(node=>[node.label,node.children.map(child=>child.label)]);
+  const labelKey = label => label.toLowerCase().replace(/[\s-]+/g, ' ').trim();
+  function linkTargets(plan, mode = state.sampleMode) {
+    const destinations = inventories[mode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,id,children=[]])=>[[label,id],...children]);
+    if (mode === 'basic') destinations.push(['Services','features'],['Resources','lists'],['Contact','signup'],['Common questions','basic-faq'],['Hero','home'],['Flexbox','features'],['Grid & lists','lists'],['Forms','signup'],['What you can learn','features'],['Features','features'],['Lists','lists'],['Project toolkit','lists'],['Sign up','signup'],['Signup','signup']);
+    const targets = new Map();
+    for (const [label,id,aliases=[]] of destinations) for (const name of [label,...aliases]) targets.set(labelKey(name),id);
+    for (const [label,id] of Object.entries(plan.pageLinks[mode])) {
+      if (id) targets.set(labelKey(label),id); else targets.delete(labelKey(label));
+    }
+    return targets;
+  }
+  function entries(plan = currentPlan(), mode = state.sampleMode) {
+    const stored = plan.iaEntries[mode], targets = linkTargets(plan,mode);
+    const byPath = new Map(stored.map(entry=>[JSON.stringify(entry.path),entry]));
+    const used = new Set(stored.map(entry=>entry.id)); let next = 1;
+    const result = [];
+    const add = (path,parentId=null,position=[]) => {
+      const existing = byPath.get(JSON.stringify(path));
+      while (used.has('ia-'+next)) next++;
+      const id = existing?.id || 'ia-'+next++;
+      used.add(id);
+      const label = path.at(-1);
+      const defaultType=targets.has(labelKey(label))?'section':path.length===3?'content':'page';
+      const entry = {id,path,label,parentId,position,depth:path.length,type:existing?.type || defaultType,includeInSitemap:existing?.includeInSitemap ?? (defaultType!=='content' && !(mode==='basic' && path.length===1 && ['home','footer'].includes(targets.get(labelKey(label)))))};
+      result.push(entry); return entry;
+    };
+    function visit(nodes,path=[],parentId=null,position=[]) {
+      nodes.forEach((node,index)=>{
+        const entry=add([...path,node.label],parentId,[...position,index]);
+        visit(node.children,entry.path,entry.id,entry.position);
+      });
+    }
+    visit(tree(plan.pages));
+    return result;
   }
   const stages = [
-    ['brief', 'Project brief', 'Write a brief for a website project.', 'A website project brief is a short agreement about what you are building, who it serves, what is included and how it will be delivered. Start with a few clear sentences before planning the sitemap or choosing a visual style.', 'Choose a small website, such as a café, portfolio or community group. Answer the seven prompts below in one sentence each. Use the seven matching fields in the first wizard step to save your answers in this order.'],
-    ['ia', 'Information architecture', 'Turn requirements into a clear content structure.', 'Use the brief to decide what people need to find, understand and do. Turn those requirements into pages, clear labels and navigation paths.', 'Map essential pages around one key user task. Check the labels with someone from the intended audience before wireframing.'],
+    ['brief', 'Project brief', 'Write a brief for a website project.', 'A website project brief is a short agreement about what you are building, who it serves, what is included and how it will be delivered. Start with a few clear sentences before organizing information or choosing a visual style.', 'Choose a small website, such as a café, portfolio or community group. Answer the seven prompts below in one sentence each. Use the seven matching fields in the first wizard step to save your answers in this order.'],
+    ['ia', 'Information architecture', 'Organize the information, then choose sitemap destinations.', 'The Brief sets the agreed release scope. Information architecture organizes the content, labels and relationships needed to fulfil it. A sitemap is one view of that architecture, not the whole IA.', 'Keep the full information structure visible. Choose which entries belong in the visitor sitemap, then test whether someone can find one important item.'],
     ['wireframe', 'Wireframing', 'Test hierarchy before decoration.', 'A wireframe is a low-detail plan for content and priority. Begin with the main task, then add navigation, supporting content and a clear next action.', 'Compare the split and stacked arrangements. Explain what a person sees first and how the reading order works on a phone.'],
     ['prototype', 'Prototyping', 'Review your finished website prototype.', 'The live page and exported HTML/CSS are this studio’s prototype output. Use the brief and your task to review the assembled colours, typography, components and responsive layout. Earlier paper-style task screens remain supporting rehearsal material.', 'Ask someone to try the live prototype without coaching. Record hesitation, check keyboard use and narrow layouts, then revise and export the files.']
   ];
   const text = value => escapeHtml(value || 'Not recorded yet.');
-  function sitemapHtml({ topLevelLinksOnly = false, linksOnly = false, standaloneIds = [], parentIds = null } = {}) {
-    const plan = currentPlan(), map = hierarchy(plan.pages);
-    const destinations = inventories[state.sampleMode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,id,children=[]])=>[[label,id],...children]);
-    if (state.sampleMode === 'basic') destinations.push(['Services','features'],['Resources','lists'],['Contact','signup'],['Common questions','basic-faq'],['Hero','home'],['Flexbox','features'],['Grid & lists','lists'],['Forms','signup'],['Home','home'],['What you can learn','features'],['Features','features'],['Lists','lists'],['Project toolkit','lists'],['Sign up','signup'],['Signup','signup']);
-    const key = label => label.toLowerCase().replace(/[\s-]+/g, ' ').trim();
-    const targets = new Map();
-    for (const [label,id,aliases = []] of destinations)
-      for (const name of [label,...aliases]) targets.set(key(name), id);
-    for (const [label,id] of Object.entries(plan.pageLinks[state.sampleMode])) {
-      if (id) targets.set(key(label), id);
-      else targets.delete(key(label));
+  const renderTree = (nodes,depth=0) => `<ul>${nodes.map(node=>`<li>${depth<2?`<strong>${text(node.label)}</strong>`:text(node.label)}${node.children.length?renderTree(node.children,depth+1):''}</li>`).join('')}</ul>`;
+  function sitemapHtml({ topLevelLinksOnly = false, linksOnly = false, previewLinks = false } = {}) {
+    const plan = currentPlan(), nodes = entries(plan), targets = linkTargets(plan);
+    const eligible = node => node.includeInSitemap && (targets.has(labelKey(node.label)) || node.type==='group' || !linksOnly || plan.showPlanned);
+    const item = node => node.type==='group' ? `<span>${text(node.label)}</span>` : targets.has(labelKey(node.label)) ? `<a href="#${previewLinks?'previewShell':targets.get(labelKey(node.label))}"${previewLinks?` data-sitemap-target="${targets.get(labelKey(node.label))}"`:''}>${text(node.label)}</a>` : `<span>${text(node.label)} <small class="sitemap-planned">${node.type==='content'?'No linked destination':'Planned page'}</small></span>`;
+    function branch(parentId=null) {
+      return nodes.filter(node=>node.parentId===parentId && eligible(node)).map(node=>{
+        const children=branch(node.id);
+        if(node.type==='group' && !children)return '';
+        return `<li>${item(node)}${!topLevelLinksOnly && children?`<ul>${children}</ul>`:''}</li>`;
+      }).join('');
     }
-    const planned = linksOnly && plan.showPlanned;
-    const visible = topLevelLinksOnly || linksOnly ? map
-      .filter(([parent]) => planned ? !['home','footer'].includes(targets.get(key(parent))) : targets.has(key(parent)) && (!parentIds || parentIds.includes(targets.get(key(parent)))))
-      .map(([parent, children]) => [parent, standaloneIds.includes(targets.get(key(parent))) ? [] : linksOnly && !planned ? children.filter(child => targets.has(key(child))) : children]) : map;
-    const item = label => targets.has(key(label)) ? `<a href="#${targets.get(key(label))}">${text(label)}</a>` : `<span>${text(label)} <small class="sitemap-planned">Planned page</small></span>`;
-    if (!visible.length) return map.length ? '<p>No linked top-level sections. Add existing section labels in Architecture.</p>' : '<p>Add page labels in Architecture to create your sitemap.</p>';
-    return `<ul class="sitemap-list">${visible.map(([parent,children])=>`<li>${item(parent)}${!topLevelLinksOnly && children.length ? `<ul>${children.map(child=>`<li>${item(child)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ul>`;
+    const markup=branch();
+    return markup?`<ul class="sitemap-list">${markup}</ul>`:'<p>No sitemap destinations selected. Review inclusion and link destinations in Architecture.</p>';
   }
   function artifactHtml(stage, prefix = 'plan') {
     const plan = currentPlan(), map = hierarchy(plan.pages);
@@ -115,15 +190,16 @@
       </ol>
       <p class="process-brief-template"><strong>Start with:</strong> Build [website] for [audience] so they can [main action]. Include [pages and features]; leave out [not included]. [Owner] supplies [content] by [date]. Deliver [website or files] by [deadline] within [budget or time limit]. Check success by [test].</p>
       <section class="process-brief-example" aria-label="Example website project brief"><h4>Example: a small café website</h4><p>Build a three-page website for local customers to check the menu and plan a visit. Include Home, Menu and Visit pages with opening hours, an address and a map link; online ordering is out of scope. The owner supplies the logo, menu and photos in week one. Use the café's existing branding and support phones and keyboard use. Hand over HTML/CSS files within two weeks and the agreed budget; the owner approves the content and arranges updates. Test whether a new visitor can find today's opening hours and the menu without help.</p></section>
-      <p><strong>Before moving on:</strong> Agree the brief with the project owner. Mark unknowns as &ldquo;to confirm&rdquo;. Use the agreed pages and content to start your sitemap.</p>
+      <p><strong>Before moving on:</strong> Agree the brief with the project owner. Mark unknowns as &ldquo;to confirm&rdquo;. Use the agreed pages and content to start your information architecture.</p>
       <p class="learning-reference">Optional further reading: <a href="https://www.smashingmagazine.com/2018/02/comprehensive-website-planning-guide-part1/">Smashing Magazine: website planning and needs assessment</a>.</p>${draft}`;
     }
     if (stage === 'ia') {
       const basic = state.sampleMode === 'basic';
-      const visible = basic ? map.filter(([parent]) => !['forms', 'sign up', 'signup', 'footer'].includes(parent.toLowerCase().replace(/[\s-]+/g, ' ').trim())) : map;
-      const empty = map.length ? 'Forms and Footer are hidden in this Basic plan view. Add other sections in Architecture to display them here.' : 'Add page labels in the architecture step to begin the map.';
-      const note = basic ? 'Read the section groups from left to right, with related topics underneath. Forms and Footer are hidden only in this view; the full plan remains in the editor and saved project.' : 'This maps sections and content groups on a single page. The footer uses the same plan: existing content is linked; new page ideas are labelled Planned page. Navigation can show a shorter selection of key destinations.';
-      return `<div class="process-map${basic ? ' process-map--basic' : ''}"><p><strong>${text(state.project)}</strong> / ${basic ? 'Basic' : 'Advanced'} sitemap plan</p>${visible.length ? `<ul>${visible.map(([parent,children]) => `<li><strong>${text(parent)}</strong>${children.length ? `<ul>${children.map(child=>`<li>${text(child)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ul>` : `<p>${empty}</p>`}<p>${note}</p></div>`;
+      return `<section class="process-ia-guidance"><h4>Information architecture and sitemap: different jobs</h4><p>The Brief agrees what belongs in this release. Information architecture organizes that information: its labels, groups and relationships, including content inside pages. A sitemap represents part of that structure. Here, the footer Sitemap is a visitor-facing navigation list.</p><p>For example, Contact and Opening hours both belong in the information architecture. Contact can appear in the sitemap while Opening hours remains content on the page. Unchecking its sitemap choice does not remove those hours from the website.</p><p>Keep the full structure in view, select useful sitemap destinations, then ask someone to find an important piece of information. Check labels and relationships as well as links.</p><p class="learning-reference">Further reading: <a href="https://www.nngroup.com/articles/information-architecture-sitemaps/">Nielsen Norman Group: Information Architecture vs. Sitemaps</a>. IA includes ongoing decisions about content and findability; a sitemap is one of its artifacts.</p></section>
+      <p>Plan meaningful containers, subcontainers and actual content, as deeply as needed. For example: Header &gt; Main navigation &gt; Home, and Home &gt; Hero &gt; Hero image &gt; Alternative text. Navigation items reference destinations; they do not duplicate those destinations. A deeper content outline does not require extra pages or clicks. Keep it shallow where clear labels suffice. <a href="https://www.nngroup.com/articles/flat-vs-deep-hierarchy/">NN/g: balancing flat and deep hierarchies</a>.</p>
+      ${DSStudio.contentArchitecture?.markup() || ''}
+      <details class="ia-destination-map"><summary>Sitemap destination hierarchy</summary><p>This separate navigation plan includes selected and unselected entries. Content containment, such as a link inside Header, does not determine sitemap ancestry. Manage destinations in the sitemap controls.</p><div class="process-map${basic ? ' process-map--basic' : ''}"><p><strong>${text(state.project)}</strong> / sitemap destination outline</p>${tree(plan.pages).length ? renderTree(tree(plan.pages)) : '<p>Add destination labels in Architecture to begin the sitemap plan.</p>'}<p>This is the destination outline, including entries excluded from the sitemap. Sitemap choices do not remove website content or create new pages.</p></div></details>
+      <section class="process-sitemap-preview" aria-label="Visitor sitemap preview"><h4>Visitor sitemap preview</h4>${sitemapHtml({linksOnly:true,previewLinks:prefix==='studio-plan'})}<p>Only selected, eligible destinations appear here and in the footer Sitemap. An excluded parent hides its branch; its child choices are retained.</p></section>`;
     }
     if (stage === 'wireframe') return `<figure class="process-wireframe process-wireframe--${plan.layout}"><div class="process-wire-header"><strong>Header / project identity</strong><p>${text(state.project)}</p></div><div class="process-wire-nav"><strong>Navigation</strong><p>${map.map(([label])=>text(label)).join(' / ') || 'Add navigation labels in the architecture step.'}</p></div><div class="process-wire-main"><strong>Main content / first priority</strong><p>${text(plan.goal)}</p><span class="process-wire-action">Main action / choose a lesson</span></div><div class="process-wire-aside"><strong>Supporting content</strong><p>${text(plan.scope)}</p></div><div class="process-wire-footer"><strong>Footer / next steps</strong></div><figcaption>${text(plan.wireframeNotes)} This is a structural sketch; neutral surfaces keep attention on hierarchy.</figcaption></figure>`;
     return `<div class="process-prototype"><p><strong>Task:</strong> ${text(plan.prototypeTask)}</p><p>Follow these fragment links between three paper-style screens. They demonstrate navigation, not a working registration or submission.</p><ol class="process-screens">
@@ -143,9 +219,20 @@
 .process-map { padding: calc(var(--space-unit) * 4); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); overflow-wrap: anywhere; }
 .process-map ul { padding-inline-start: calc(var(--space-unit) * 6); }
 .process-map li { margin-block: calc(var(--space-unit) * 2); }
+.process-ia-guidance, .process-sitemap-preview { min-width: 0; margin-block: var(--space-4); overflow-wrap: anywhere; }
+.process-sitemap-preview { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-base); }
+.process-sitemap-preview a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; }
 .process-map--basic > ul { display: flex; flex-wrap: wrap; align-items: flex-start; gap: calc(var(--space-unit) * 6); margin-block: calc(var(--space-unit) * 4); padding: 0; list-style: none; }
 .process-map--basic > ul > li { flex: 1 1 9rem; min-width: 0; margin: 0; }
 .process-map--basic > ul > li > ul { margin: calc(var(--space-unit) * 2) 0 0; padding: 0; list-style: none; }
+
+.ia-content-map { min-width: 0; padding: var(--space-4, 1rem); border: 1px solid var(--border); border-radius: var(--radius-base); overflow-wrap: anywhere; }
+.ia-content-map ul { list-style: none; padding-inline-start: .75rem; margin: .5rem 0; min-width: 0; border-inline-start: 1px solid var(--border); }
+.ia-content-map li { margin-block: .5rem; min-width: 0; }
+.ia-content-map summary, .ia-destination-map > summary { cursor: pointer; min-height: 44px; align-content: center; }
+.ia-content-map p { white-space: pre-wrap; margin-block: .5rem; }
+.ia-content-map small { font-weight: 400; }
+.ia-destination-map { margin-block: 1rem; }
 .process-wireframe { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: calc(var(--space-unit) * 4); margin: 0; }
 .process-wireframe > div { min-width: 0; padding: calc(var(--space-unit) * 4); border: 1px dashed var(--text-muted); background: var(--surface-muted); color: var(--text); overflow-wrap: anywhere; }
 .process-wireframe p { margin: calc(var(--space-unit) * 2) 0 0; }
@@ -162,7 +249,7 @@
 @media (max-width: 48rem) { .process-wireframe { grid-template-columns: minmax(0, 1fr); } }
 `;
   const processCss = () => artifactCss.replace('@media (max-width: 48rem)', `@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)})`);
-  DSStudio.process = { defaults, normalize, hierarchy, stages, briefFields, artifactHtml, sitemapHtml, samplePages, currentPlan, inventory: mode => inventories[mode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,id,children=[]])=>[[label,id],...children.map(([name,target])=>[name,target])]), css: processCss };
+  DSStudio.process = { defaults, normalize, hierarchy, tree, entries, stages, briefFields, artifactHtml, sitemapHtml, samplePages, currentPlan, destinationId:(label,plan=currentPlan(),mode=state.sampleMode)=>linkTargets(plan,mode).get(labelKey(label))||'', inventory: mode => inventories[mode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,id,children=[]])=>[[label,id],...children.map(([name,target])=>[name,target])]), css: processCss };
   DSStudio.register({
     id: 'design-process',
     title: 'Brief, architecture, wireframes and prototypes',
@@ -178,21 +265,32 @@
       document.getElementById('plan-brief-fields').innerHTML = briefFields.map(({key,label,prompt,limit},index)=>`<div class="field process-editor"><label for="plan-${key}">${index+1}. ${label}</label><p class="help" id="plan-${key}-help">${escapeHtml(prompt)}</p><textarea id="plan-${key}" data-process-field="${key}" aria-describedby="plan-${key}-help" placeholder="Write one or two sentences." maxlength="${limit}" rows="3"></textarea></div>`).join('');
       const controls = [...document.querySelectorAll('[data-process-field]')];
       const rendered = new Map();
+      document.getElementById('process-ia').addEventListener('click',event=>{
+        const link=event.target.closest('a[data-sitemap-target]');if(!link || event.defaultPrevented || event.button!==0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
+        event.preventDefault();
+        const frame=document.getElementById('previewPage'), target=frame.contentDocument?.getElementById(link.dataset.sitemapTarget);
+        if(!target)return;
+        window.dssRevealSection('previewShell',false);
+        const shell=document.getElementById('previewShell');shell.scrollIntoView({block:'start',behavior:'instant'});shell.focus({preventScroll:true});
+        frame.contentWindow.scrollTo({top:frame.contentWindow.scrollY+target.getBoundingClientRect().top-24,behavior:'instant'});
+        target.tabIndex=-1;target.focus({preventScroll:true});
+      });
       document.getElementById('plan-use-sample').addEventListener('click', () => {
         const pages = samplePages(state.sampleMode);
         const alreadyApplied = currentPlan().pages === pages;
-        state.designProcess = normalize({ ...state.designProcess, pages, pageLinks: { ...currentPlan().pageLinks, [state.sampleMode]: {} }, showPlanned: false });
+        state.designProcess = normalize({ ...state.designProcess, pages, pageLinks: { ...currentPlan().pageLinks, [state.sampleMode]: {} }, iaEntries: { ...currentPlan().iaEntries, [state.sampleMode]: [] }, showPlanned: false });
         apply();
         feedbackPages = pages;
         const groups = hierarchy(pages);
-        const topics = groups.reduce((total, [, children]) => total + children.length, 0);
-        document.getElementById('plan-sample-status').textContent = `${state.sampleMode === 'basic' ? 'Basic' : 'Advanced'} sitemap ${alreadyApplied ? 'already complete' : 'applied'}: ${groups.length} sections and ${topics} content groups. Review the centre map or open Sitemap in the preview footer. This updates the plan; it does not create new pages.`;
+        const topics = entries(currentPlan()).filter(node=>node.depth>1).length;
+        document.getElementById('plan-sample-status').textContent = `${state.sampleMode === 'basic' ? 'Basic' : 'Advanced'} destination outline ${alreadyApplied ? 'already complete' : 'applied'}: ${groups.length} sections and ${topics} content groups. Review the centre map or open Sitemap in the preview footer. This updates the plan; it does not create new pages.`;
         window.dssRevealSection('process-ia', false);
       });
       for (const control of controls) control.addEventListener('input', () => {
+        control.setCustomValidity(control.dataset.processField==='pages' && control.value.split('\n').some(line=>line.split('>').length>3)?'Use at most three information levels: Parent > Child > Detail.':'');
         state.designProcess = normalize({ ...state.designProcess, [control.dataset.processField]: control.value });
-        document.getElementById('plan-sample-status').textContent = '';
         apply();
+        document.getElementById('plan-sample-status').textContent = control.validationMessage;
       });
       let feedbackMode = state.sampleMode, feedbackPages = null;
       const previousRender = renderCode;
@@ -202,12 +300,19 @@
         const plan = currentPlan();
         if (feedbackMode !== state.sampleMode || plan.pages !== feedbackPages) document.getElementById('plan-sample-status').textContent = '';
         feedbackMode = state.sampleMode;
-        document.getElementById('plan-use-sample').textContent = `Use complete ${state.sampleMode === 'basic' ? 'Basic' : 'Advanced'} sitemap`;
-        for (const control of controls) if (control.value !== plan[control.dataset.processField]) control.value = plan[control.dataset.processField];
+        document.getElementById('plan-use-sample').textContent = `Use complete ${state.sampleMode === 'basic' ? 'Basic' : 'Advanced'} destination outline`;
+        for (const control of controls) {
+          if (control.value !== plan[control.dataset.processField]) control.value = plan[control.dataset.processField];
+          if (control.dataset.processField==='pages') control.setCustomValidity(control.value.split('\n').some(line=>line.split('>').length>3)?'Use at most three information levels: Parent > Child > Detail.':'');
+        }
         for (const target of document.querySelectorAll('[data-process-artifact]')) {
           const markup = artifactHtml(target.dataset.processArtifact, 'studio-plan');
           if (rendered.get(target) !== markup) {
+            const openBranches=new Set([...target.querySelectorAll('.ia-content-map details[open][data-content-branch]')].map(node=>node.dataset.contentBranch));
+            const destinationOpen=target.querySelector('.ia-destination-map')?.open;
             target.innerHTML = markup;
+            for(const branch of target.querySelectorAll('.ia-content-map details[data-content-branch]'))branch.open=openBranches.has(branch.dataset.contentBranch);
+            if(destinationOpen && target.querySelector('.ia-destination-map'))target.querySelector('.ia-destination-map').open=true;
             rendered.set(target, markup);
           }
         }

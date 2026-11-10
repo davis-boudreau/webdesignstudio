@@ -12,7 +12,11 @@ DSStudio.register({
     bridge.setAttribute('aria-labelledby', 'tailwindTitle');
     // Authored markup only. Project values below enter through textContent.
     bridge.innerHTML = `<h4 id="tailwindTitle">From CSS tokens to Tailwind utilities</h4>
+      <p><strong>Optional next step.</strong> Your local CSS is a complete way to build this website. Start here when you can explain the component rule and the small utility in <a href="#utilityLesson">Spacing's local CSS lesson</a>.</p>
       <p>A design token records a decision. Your page uses it in component CSS; a Tailwind utility can use the same decision through a theme alias.</p>
+      <p><strong>The learning transition:</strong> local component <code>.card { padding: var(--space-6); }</code> → local utility <code>.p-6 { padding: var(--space-6); }</code> → Tailwind-generated <code>p-6</code>. The first groups card styles; the second is one rule you author; the third is generated in your Tailwind practice project. The spacing decision stays shared.</p>
+      <p>In the optional local utility exercise, you write the <code>p-6</code> rule in a practice copy. In a Tailwind project, Tailwind generates that utility from its configured spacing theme. The familiar class name connects the two exercises; it needs the corresponding CSS in each project. Project names such as <code>bg-surface</code> and <code>rounded-card</code> need the theme mapping below. The live website inspector keeps the local component CSS.</p>
+      <p><strong>Transition exercise:</strong> keep your local website as a reference. In a separate Tailwind v4 practice project, import the theme source below, use the four classes shown here on one article, then compile. Inspect its generated CSS and compare the four computed properties with the local example before moving on to responsive styles or interaction states. Choose the approach that keeps your project understandable and manageable.</p>
       <p><strong>Try it:</strong> change Spacing or a Semantic colour, then return here. Follow the updated value from the project token to its Tailwind name.</p>
       <p class="help" id="tailwindContext"></p>
       <div class="tailwind-example-pair">
@@ -147,7 +151,7 @@ ${mappings.map(([from, to]) => `  ${to}: var(${from});`).join('\n')}
       const unit = view.active.get('--space-unit');
       // Bounded pixel source emitted by the existing generator, never CSS evaluation.
       const pixels = /^\d+(?:\.\d+)?px$/.test(unit) ? Number.parseFloat(unit) * 6 : null;
-      setText(get('tailwindSpacingExample'), `Current spacing: --space-unit is ${unit}. Both --space-6 and p-6 use six units${pixels === null ? '.' : `, giving ${round(pixels, 2)}px of padding.`}`);
+      setText(get('tailwindSpacingExample'), `Current spacing: --space-unit is ${unit}. The supplied theme maps --spacing to --space-unit. The component's --space-6, the local p-6 exercise and Tailwind p-6 with that mapping all use six units${pixels === null ? '.' : `, giving ${round(pixels, 2)}px of padding.`}`);
       if (view.source !== renderedSource) {
         setText(get('tailwindSource'), view.source);
         get('tailwindStatus').textContent = '';

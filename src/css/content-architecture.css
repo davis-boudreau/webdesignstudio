@@ -1,0 +1,24 @@
+/* Local content-planning controls. Exported artifact rules live with the model. */
+.ia-content-editor { display: grid; gap: .75rem; min-width: 0; margin-block: 1.5rem; }
+.ia-content-editor h3, .ia-content-editor h4 { margin-block: .5rem; }
+.ia-content-editor form { display: grid; gap: .65rem; min-width: 0; }
+.ia-content-editor :is(input:not([type="checkbox"]),textarea,select) { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: .5rem; border: 1px solid var(--control-border); border-radius: var(--radius-base); background: var(--surface); color: var(--text); font: inherit; }
+.ia-content-editor textarea { resize: vertical; }
+.ia-content-editor :is(button,summary), #sitemap-destination-editor > summary, #sitemap-outline-editor > summary { min-height: 44px; align-content: center; white-space: normal; overflow-wrap: anywhere; }
+.ia-content-editor .button-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ia-content-editor .help, #ia-current-path { overflow-wrap: anywhere; }
+.ia-outline { max-height: 34rem; overflow: auto; min-width: 0; padding: .25rem; border: 1px solid var(--border); border-radius: var(--radius-base); }
+.ia-outline ul { list-style: none; padding-inline-start: .6rem; margin: 0; min-width: 0; }
+.ia-outline > ul { padding: 0; }
+.ia-outline li { min-width: 0; border-inline-start: 1px solid var(--border); }
+.ia-outline summary { display: flex; align-items: flex-start; gap: .25rem; cursor: pointer; }
+.ia-outline summary::before { content: '▸'; flex: 0 0 auto; padding-top: .75rem; }
+.ia-outline details[open] > summary::before { content: '▾'; }
+.ia-outline .ia-select { display: grid; gap: .25rem; width: 100%; min-width: 0; text-align: start; padding: .65rem; border: 1px solid transparent; background: transparent; color: var(--text); border-radius: var(--radius-base); cursor: pointer; font: inherit; overflow-wrap: anywhere; }
+.ia-outline .ia-select[aria-pressed="true"] { border-color: var(--control-border); background: var(--surface-muted); box-shadow: inset 3px 0 var(--primary); }
+.ia-outline .ia-select[aria-pressed="true"] > span::before { content: '✓ '; }
+.ia-outline .ia-select:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.ia-outline .ia-select small { display: block; font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
+.ia-outline .ia-kind { font-style: italic; }
+.ia-checkbox { display: flex; align-items: flex-start; gap: .5rem; min-height: 44px; }
+.ia-checkbox input { flex: 0 0 auto; }

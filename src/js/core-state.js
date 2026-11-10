@@ -594,7 +594,8 @@ $('loadFile').addEventListener('change', async e => {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
-    if (file.size > 100000) throw Error('JSON file is too large');
+    // Two bounded content plans can exceed the former small token-only limit.
+    if (file.size > 4000000) throw Error('JSON file is too large (maximum 4 MB)');
     importConfig(JSON.parse(await file.text()));
     document.dispatchEvent(new Event('dss:imported'));
     announce('Project configuration loaded.');

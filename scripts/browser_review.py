@@ -30,8 +30,12 @@ app.onload = async () => {
   const test = (name, fn) => {
     try { if (!fn()) throw Error('Assertion failed'); results.push({name, pass:true}); }
     catch (e) { results.push({name, pass:false, error:String(e)}); }
+    document.title='Browser review: '+results.length+' checks; last: '+name;
   };
+  // Destination-editor fixtures explicitly reveal its secondary controls.
+  const revealDestinationPlan=()=>{d.querySelectorAll('#sitemap-destination-editor, #sitemap-outline-editor, #process-ia .ia-destination-map').forEach(el=>el.open=true);};
   const input = (id, value, type='input') => {
+    if(id.startsWith('sitemap-') || id==='plan-pages')revealDestinationPlan();
     const el=d.getElementById(id); el.value=value;
     el.dispatchEvent(new w.Event(type,{bubbles:true}));
   };
@@ -44,6 +48,7 @@ app.onload = async () => {
   const saved = () => Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects')))[0].data;
   const wait = (ms=100) => new Promise(resolve => setTimeout(resolve,ms));
   test('No startup JavaScript errors', () => !w.__reviewErrors.length);
+  test('Fresh startup opens the Brief centre accordion that matches the active builder step',()=>w.DSStudio.activeStage===0 && d.querySelector('[data-journey-step="0"]').getAttribute('aria-current')==='step' && d.getElementById('process-brief').open && !d.getElementById('process-brief').hidden && !d.getElementById('process-ia').open);
   test('Startup defaults to OKLCH across state, both method controls and lesson output',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && d.getElementById('method').value==='oklch' && d.getElementById('rampMethodLabel').textContent==='OKLCH' && d.getElementById('palette-method-status').textContent.includes('OKLCH'));
   test('New projects start with Basic on the left and Advanced on the right',()=>evaluate('state.sampleMode')==='basic' && [...d.querySelectorAll('[aria-label="Website sample complexity"] [role="tab"]')].map(el=>el.id).join(',')==='dockModeBasic,dockModeAdvanced' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockModeBasic').tabIndex===0 && d.getElementById('dockModeAdvanced').tabIndex===-1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic');
   d.getElementById('dockModeAdvanced').click();await wait();
@@ -89,6 +94,19 @@ app.onload = async () => {
   test('A fresh document restores dark Studio appearance while its new project stays light',()=>fresh.contentDocument.documentElement.dataset.theme==='dark' && fresh.contentWindow.eval('state.theme')==='light' && fresh.contentDocument.getElementById('themeToggle').getAttribute('aria-pressed')==='true');
   w.localStorage.setItem('dss-studio-appearance','<img src=x onerror=alert(1)>');await loadFresh();
   test('Invalid stored Studio appearance falls back to light without inserting content',()=>fresh.contentDocument.documentElement.dataset.theme==='light' && fresh.contentDocument.getElementById('themeToggle').textContent==='Studio: Light' && !fresh.contentDocument.querySelector('img[onerror]'));
+  // Reload real documents, preserving each section fragment and reopening a
+  // manually collapsed active lesson. Phase indices differ from display order.
+  fresh.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:10000';
+  for(const stage of w.DSStudio.orderedStages) {
+    const fw=fresh.contentWindow,fd=fresh.contentDocument;
+    fw.dssShowWizardStep(stage.index,false);
+    fw.history.replaceState(null,'','#'+stage.lesson);
+    fd.getElementById(stage.lesson).open=false;
+    const priorDoc=fd,priorProject=fw.eval('projectJson()');
+    await new Promise(resolve=>{fresh.onload=resolve;fw.location.reload();});await wait();
+    const reloaded=fresh.contentWindow,doc=fresh.contentDocument;
+    test('Reload opens Step '+(stage.position+1)+' '+stage.label+' and matches the active builder',()=>doc!==priorDoc && reloaded.DSStudio.activeStage===stage.index && doc.querySelector('[data-journey-step="'+stage.index+'"]').getAttribute('aria-current')==='step' && doc.getElementById(stage.lesson).open && !doc.getElementById(stage.lesson).hidden && !doc.querySelector('[data-journey-pane="'+stage.index+'"]').hidden && [...doc.querySelectorAll('#main > .studio-section')].filter(section=>section.id!=='studio-section-4').every(section=>section.open===(section.id===stage.lesson)) && reloaded.eval('projectJson()')===priorProject && !reloaded.__reviewErrors.length);
+  }
   fresh.remove();
   if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();
   for(const width of [320,390,1440])for(const studio of ['light','dark']) {
@@ -98,7 +116,7 @@ app.onload = async () => {
   app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();reset();await wait();
 
   test('Startup selects Minor Third 1.2 throughout the typography controls and export', () => evaluate('state.ratio===1.2 && cssExport().includes("--type-ratio: 1.2;")') && ['jScalePreset','clampScalePreset'].every(id=>d.getElementById(id).value==='minor-third') && ['ratio','jRatio','clampRatio'].every(id=>d.getElementById(id).value==='1.2'));
-  test('Startup gives the expanded preview its space with lessons collapsed and inspector hidden', () => d.querySelector('#main > :first-child').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(section=>!section.hidden && section.open===(section.id==='studio-section-4')) && !d.querySelector('.studio-code-dock').open && !d.getElementById('studioInspector').open);
+  test('Startup keeps the preview and active Brief expanded with inspector hidden', () => d.querySelector('#main > :first-child').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(section=>!section.hidden && section.open===(section.id==='studio-section-4' || section.id==='process-brief')) && !d.querySelector('.studio-code-dock').open && !d.getElementById('studioInspector').open);
   test('Hidden inspector leaves one quarter for the desktop builder and the rest for the preview', () => Math.abs(d.querySelector('.sidebar').getBoundingClientRect().width-(d.querySelector('.layout').clientWidth-16)/4)<1 && d.getElementById('dockCss').getBoundingClientRect().height===0);
   test('Inspector has a native details/summary disclosure arrow in both states',()=>d.getElementById('studioInspector').tagName==='DETAILS' && d.getElementById('inspectorToggle').tagName==='SUMMARY' && d.getElementById('inspectorToggle').textContent==='Live CSS/HTML Inspector' && w.getComputedStyle(d.getElementById('inspectorToggle')).display==='list-item' && d.getElementById('inspectorToggle').tabIndex===0 && d.getElementById('inspectorToggle').getBoundingClientRect().height>=44);
   test('Competing beginner and centre navigation is removed', () => !d.getElementById('workspaceNav') && !d.getElementById('beginnerStart') && !d.getElementById('beginnerPath') && !d.querySelector('.studio-section-nav') && !d.querySelector('[data-configure-step]'));
@@ -737,7 +755,7 @@ app.onload = async () => {
   const beforeBadFile=evaluate('projectJson()');
   await importFile('{broken json');
   test('Invalid JSON reports an error without changing the project', () => alerts.length===1 && evaluate('projectJson()')===beforeBadFile);
-  await importFile(' '.repeat(100001));
+  await importFile(' '.repeat(4000001));
   test('Oversized JSON files are rejected without changing the project', () => alerts.at(-1).includes('too large') && evaluate('projectJson()')===beforeBadFile);
   w.alert=originalAlert;
   const originalClipboard=w.navigator.clipboard;
@@ -2208,7 +2226,7 @@ app.onload = async () => {
       const page=previewDoc(), links=[...page.querySelectorAll('#sitemap a')], ids=new Set(links.map(a=>a.hash.slice(1)));
       const expected=w.DSStudio.process.samplePages(mode);
       const fullCount=expected.split('\n').length, topCount=w.DSStudio.process.hierarchy(expected).length;
-      return d.getElementById('plan-pages').value===expected && links.length===(mode==='basic'?fullCount-2:fullCount) && !page.querySelector('#sitemap .sitemap-planned') && links.every(a=>page.querySelectorAll('[id="'+a.hash.slice(1)+'"]').length===1) && [...page.querySelectorAll(mode==='basic'?'main > section:not(#home)':'main > section, main article, footer[id]')].every(el=>el.id && ids.has(el.id)) && d.querySelectorAll('#process-ia .process-map li').length===(mode==='basic'?fullCount-5:fullCount) && (mode!=='basic'||page.querySelectorAll('#sitemap ul ul a').length===11) && evaluate('htmlExport()').includes('id="sitemap"');
+      return d.getElementById('plan-pages').value===expected && links.length===w.DSStudio.process.inventory(mode).length-(mode==='basic'?2:0) && !page.querySelector('#sitemap .sitemap-planned') && links.every(a=>page.querySelectorAll('[id="'+a.hash.slice(1)+'"]').length===1) && [...page.querySelectorAll(mode==='basic'?'main > section:not(#home)':'main > section, main article, footer[id]')].every(el=>el.id && ids.has(el.id)) && d.querySelectorAll('#process-ia .process-map li').length===fullCount && (mode!=='basic'||page.querySelectorAll('#sitemap ul ul a').length===11) && evaluate('htmlExport()').includes('id="sitemap"');
     });
   }
   d.getElementById('process-ia').open=true;
@@ -2220,23 +2238,23 @@ app.onload = async () => {
       test(theme+' Basic plan aligns parent groups and related children at '+width+'px', () => {
         const map=d.querySelector('#process-ia .process-map--basic'), list=map.querySelector(':scope > ul'), groups=[...list.children];
         const gap=parseFloat(w.getComputedStyle(list).columnGap), bounds=list.getBoundingClientRect(), boxes=groups.map(group=>group.getBoundingClientRect());
-        const inline=list.clientWidth>=3*144+2*gap;
-        return groups.map(group=>group.querySelector('strong').textContent).join(',')==='Home,Components,Layouts' && w.getComputedStyle(list).display==='flex' && boxes.every(box=>box.left>=bounds.left-1 && box.right<=bounds.right+1) && (!inline||boxes.every(box=>Math.abs(box.top-boxes[0].top)<1)) && groups.every(group=>{
+        const inline=list.clientWidth>=groups.length*144+(groups.length-1)*gap;
+        return groups.map(group=>group.querySelector('strong').textContent).join(',')==='Home,Components,Layouts,Forms,Footer' && w.getComputedStyle(list).display==='flex' && boxes.every(box=>box.left>=bounds.left-1 && box.right<=bounds.right+1) && (!inline||boxes.every(box=>Math.abs(box.top-boxes[0].top)<1)) && groups.every(group=>{
           const children=group.querySelector('ul'), title=group.querySelector('strong').getBoundingClientRect();
           return !children||(children.getBoundingClientRect().top>=title.bottom && Math.abs(children.getBoundingClientRect().left-title.left)<1);
-        }) && map.querySelectorAll('ul ul > li').length===8 && d.documentElement.scrollWidth<=width+1 && evaluate('state.designProcess.pages')===planBeforeBasicView && d.getElementById('plan-pages').value.includes('Forms') && d.getElementById('plan-pages').value.includes('Footer') && previewDoc().querySelector('#signup') && previewDoc().querySelector('footer');
+        }) && map.querySelectorAll('ul ul > li').length===w.DSStudio.process.entries().filter(node=>node.depth>1).length && d.documentElement.scrollWidth<=width+1 && evaluate('state.designProcess.pages')===planBeforeBasicView && d.getElementById('plan-pages').value.includes('Forms') && d.getElementById('plan-pages').value.includes('Footer') && previewDoc().querySelector('#signup') && previewDoc().querySelector('footer');
       });
     }
   }
   app.style.width='1440px'; input('jTheme','light');
   input('plan-pages','Home\nSIGN-UP\n footer \nFlexbox > Forms'); await wait();
-  test('Basic plan hides Forms/Footer parent aliases and retains related children and saved data', () => [...d.querySelectorAll('#process-ia .process-map > ul > li > strong')].map(el=>el.textContent).join(',')==='Home,Flexbox' && d.querySelector('#process-ia .process-map ul ul li').textContent==='Forms' && evaluate('state.designProcess.pages')==='Home\nSIGN-UP\n footer \nFlexbox > Forms');
+  test('Basic IA shows Forms/Footer aliases as part of its full model', () => [...d.querySelectorAll('#process-ia .process-map > ul > li > strong')].map(el=>el.textContent).join(',')==='Home,SIGN-UP,footer,Flexbox' && d.querySelector('#process-ia .process-map ul ul li').textContent==='Forms' && evaluate('state.designProcess.pages')==='Home\nSIGN-UP\n footer \nFlexbox > Forms');
   input('plan-pages','Forms\nFooter'); await wait();
-  test('A Basic plan containing only hidden groups has an explicit empty view', () => !d.querySelector('#process-ia .process-map > ul') && d.querySelector('#process-ia .process-map').textContent.includes('hidden in this Basic plan view') && evaluate('state.designProcess.pages')==='Forms\nFooter');
+  test('Basic IA retains Forms and Footer even when not sitemap destinations', () => d.querySelectorAll('#process-ia .process-map > ul > li').length===2 && d.querySelector('#process-ia .process-map').textContent.includes('sitemap destination outline') && evaluate('state.designProcess.pages')==='Forms\nFooter');
   input('plan-pages',w.DSStudio.process.samplePages('basic')); await wait();
   test('Basic footer contains only Components, Layouts and Forms while the complete plan is preserved', () => {
     const full=new w.DOMParser().parseFromString(evaluate('DSStudio.process.sitemapHtml()'),'text/html');
-    return previewDoc().querySelectorAll('#sitemap a').length===14 && full.querySelectorAll('a').length===16 && full.querySelector('ul ul') && [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li > a')].map(a=>a.textContent).join(',')==='Components,Layouts,Forms' && previewDoc().querySelectorAll('#sitemap ul ul a').length===11 && [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].every((group,i)=>Boolean(group.querySelector('ul')));
+    return previewDoc().querySelectorAll('#sitemap a').length===14 && full.querySelectorAll('a').length===14 && full.querySelector('ul ul') && [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li > a')].map(a=>a.textContent).join(',')==='Components,Layouts,Forms' && previewDoc().querySelectorAll('#sitemap ul ul a').length===11 && [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].every((group,i)=>Boolean(group.querySelector('ul')));
   });
   input('plan-pages','Home > Forms\nFuture > Flexbox\nGrid & lists'); await wait();
   test('Basic expanded sitemap keeps known children under their parent and never promotes orphan children', () => [...previewDoc().querySelectorAll('#sitemap a')].map(a=>a.hash).join(',')==='#lists' && !previewDoc().querySelector('#sitemap ul ul') && evaluate('state.designProcess.pages')==='Home > Forms\nFuture > Flexbox\nGrid & lists' && d.querySelectorAll('#process-ia .process-map li').length===5);
@@ -2264,18 +2282,18 @@ app.onload = async () => {
   test('Architecture edits update the centre map, Basic footer and downloadable HTML together', () => d.querySelector('#process-ia .process-map').textContent.includes('Learn') && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && !previewDoc().querySelector('#sitemap a[href="#features"]') && !evaluate('htmlExport()').includes('Articles') && evaluate('projectJson()').includes('Articles'));
   const customSitemap=d.getElementById('plan-pages').value, customSitemapExport=evaluate('projectJson()');
   d.getElementById('dockModeAdvanced').click(); await wait();
-  test('Custom sitemap survives mode changes and appears in the Advanced footer', () => d.getElementById('plan-pages').value===customSitemap && previewDoc().querySelector('#sitemap').textContent.includes('Articles'));
+  test('Custom IA survives mode changes while unlinked sitemap entries remain hidden', () => d.getElementById('plan-pages').value===customSitemap && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && d.querySelector('#process-ia .process-map').textContent.includes('Articles'));
   evaluate('importConfig('+customSitemapExport+')'); await wait();
   test('Custom sitemap survives JSON round trip while Basic omits unlinked entries', () => d.getElementById('plan-pages').value===customSitemap && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && previewDoc().querySelectorAll('#sitemap a').length===1);
   input('plan-pages','<img src=x onerror=alert(1)> > <script>bad<\/script>'); await wait();
   test('Sitemap labels cannot inject HTML or arbitrary destinations', () => {
     const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return !page.querySelector('#sitemap img, #sitemap script, #sitemap a') && !page.querySelector('#sitemap').textContent.includes('onerror=alert(1)') && page.querySelector('#sitemap').textContent.includes('No linked top-level sections') && d.querySelector('#process-ia .process-map').textContent.includes('onerror=alert(1)');
+    return !page.querySelector('#sitemap img, #sitemap script, #sitemap a') && !page.querySelector('#sitemap').textContent.includes('onerror=alert(1)') && page.querySelector('#sitemap').textContent.includes('No sitemap destinations selected') && d.getElementById('plan-pages').validationMessage.includes('three information levels') && !d.querySelector('#process-ia .process-map img, #process-ia .process-map script');
   });
   input('plan-pages',''); await wait();
-  test('Empty Architecture has an honest empty sitemap and keeps real footer navigation', () => previewDoc().querySelector('#sitemap').textContent.includes('Add page labels') && previewDoc().querySelector('footer .footer-brand[href="#home"]'));
+  test('Empty Architecture has an honest empty sitemap and keeps real footer navigation', () => previewDoc().querySelector('#sitemap').textContent.includes('No sitemap destinations selected') && previewDoc().querySelector('footer .footer-brand[href="#home"]'));
   d.getElementById('plan-use-sample').click(); await wait();
-  test('Use complete sitemap restores the full Basic mock-site plan and expanded footer links', () => d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===14 && d.querySelectorAll('#process-ia .process-map li').length===11);
+  test('Use complete sitemap restores the full Basic mock-site plan and expanded footer links', () => d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===14 && d.querySelectorAll('#process-ia .process-map li').length===w.DSStudio.process.samplePages('basic').split('\n').length);
   for (const mode of ['advanced','basic']) {
     d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click(); await wait();
     input('plan-pages','Home\nCustom > Future page'); await wait();
@@ -2283,7 +2301,7 @@ app.onload = async () => {
     d.getElementById('plan-use-sample').click(); await wait();
     test(mode+' sitemap button restores stored/editor/centre/preview/inspector content and gives visible feedback', () => {
       const expected=w.DSStudio.process.samplePages(mode), parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-      return evaluate('state.designProcess.pages')===expected && d.getElementById('plan-pages').value===expected && d.getElementById('process-ia').open && !d.querySelector('#process-ia .process-map').textContent.includes('Future page') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap').innerHTML===parsed.querySelector('#sitemap').innerHTML && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()') && d.getElementById('plan-sample-status').textContent.includes('sitemap applied:');
+      return evaluate('state.designProcess.pages')===expected && d.getElementById('plan-pages').value===expected && d.getElementById('process-ia').open && !d.querySelector('#process-ia .process-map').textContent.includes('Future page') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap').innerHTML===parsed.querySelector('#sitemap').innerHTML && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()') && d.getElementById('plan-sample-status').textContent.includes('destination outline applied:');
     });
     const restored=evaluate('projectJson()');
     d.getElementById('plan-use-sample').click(); await wait();
@@ -2384,8 +2402,8 @@ app.onload = async () => {
     const visibilityMatches=()=>evaluate('state.designProcess.showPlanned')===visible &&
       d.getElementById('sitemap-planned').checked===visible &&
       JSON.parse(evaluate('projectJson()')).designProcess.showPlanned===visible &&
-      Boolean(previewDoc().querySelector('#sitemap .sitemap-planned'))===(mode==='advanced'||visible) &&
-      Boolean(new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap .sitemap-planned'))===(mode==='advanced'||visible);
+      Boolean(previewDoc().querySelector('#sitemap .sitemap-planned'))===visible &&
+      Boolean(new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap .sitemap-planned'))===visible;
     const undoSitemap=async action=>{
       d.getElementById('sitemap-undo').click();await wait();
       test(mode+' '+visible+' Undo restores '+action+' and visibility',()=>evaluate('JSON.stringify(state.designProcess)')===initial && visibilityMatches() && d.getElementById('sitemap-undo').disabled);
@@ -2395,7 +2413,7 @@ app.onload = async () => {
     test(mode+' '+visible+' rename preserves visibility and destination',()=>visibilityMatches() && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Renamed entry' && a.hash==='#'+destination));
     await undoSitemap('rename');
     await saveSitemap('New planned page');
-    test(mode+' '+visible+' creation preserves visibility',()=>visibilityMatches() && evaluate('state.designProcess.pages').includes('New planned page') && previewDoc().querySelector('#sitemap').textContent.includes('New planned page')===(mode==='advanced'||visible));
+    test(mode+' '+visible+' creation preserves visibility',()=>visibilityMatches() && evaluate('state.designProcess.pages').includes('New planned page') && previewDoc().querySelector('#sitemap').textContent.includes('New planned page')===visible);
     await undoSitemap('creation');
     input('sitemap-items','0:0','change');d.getElementById('sitemap-delete').click();await wait();
     test(mode+' '+visible+' deletion preserves visibility',()=>visibilityMatches() && !evaluate('state.designProcess.pages').includes('Linked entry') && !previewDoc().querySelector('#sitemap').textContent.includes('Linked entry'));
@@ -2711,7 +2729,7 @@ app.onload = async () => {
     d.querySelector('[data-journey-step="8"]').click();await wait();
     const spacingNode=d.querySelector('#studio-section-3 > .panel > .spacing-lesson');
     const exampleId=mode==='basic'?'lists':'services',exampleSelector=mode==='basic'?'.section':'.sample-section';
-    test(mode+' '+theme+' spacing lesson connects five teaching parts without replacing the design',()=>spacingNode && [...spacingNode.querySelectorAll(':scope > section > h4')].map(heading=>heading.textContent).join('|')==='Understand|Try|Observe|Inspect|Reflect' && evaluate('projectJson()')===beforeSpacingLesson && d.getElementById('spacingPrompt').textContent.includes('4 px to 6 px'));
+    test(mode+' '+theme+' spacing lesson connects five teaching parts without replacing the design',()=>spacingNode && [...spacingNode.querySelectorAll(':scope > section:not(#utilityLesson) > h4')].map(heading=>heading.textContent).join('|')==='Understand|Try|Observe|Inspect|Reflect' && evaluate('projectJson()')===beforeSpacingLesson && d.getElementById('spacingPrompt').textContent.includes('4 px to 6 px'));
     test(mode+' '+theme+' lesson starts its comparison from current exported spacing',()=>d.getElementById('spacingBeforeUnit').textContent==='4 px' && d.getElementById('spacingBefore4').textContent==='16 px' && d.getElementById('spacingBefore8').textContent==='32 px' && d.getElementById('spacingCss').textContent.includes('--space-4: calc(var(--space-unit) * 4);'));
     d.getElementById('spacingEdit').click();
     test(mode+' '+theme+' lesson routes to the actual spacing control',()=>d.activeElement===d.getElementById('jSpacing') && evaluate('DSStudio.activeStage')===8);
@@ -2767,14 +2785,21 @@ app.onload = async () => {
   test('Reset starts a fresh comparison and clears optional reflection',()=>d.getElementById('spacingBeforeUnit').textContent==='4 px' && !d.getElementById('spacingReflection').value);
   input('jProject','Spacing lesson test');d.getElementById('jSaveLocal').click();input('spacingReflection','Clear after local load');d.getElementById('jLoadLocal').click();await wait();
   test('Loading even identical saved project values starts a fresh tutorial session comparison',()=>!d.getElementById('spacingReflection').value && d.getElementById('spacingBeforeUnit').textContent==='4 px');
+  const spacingPracticeWasOpen=d.getElementById('utilityPractice').open;
   for (const theme of ['light','dark']) for (const width of [320,901,1440]) {
     app.style.width=width+'px';input('jTheme',theme);await wait();d.querySelector('[data-journey-step="8"]').click();
+    // Measure displayed controls, not cached geometry inside a closed disclosure.
+    d.getElementById('utilityPractice').open=true;await wait();
     test(theme+' spacing tutorial stays within its lesson at '+width+'px',()=>{
       const lesson=d.querySelector('.spacing-lesson'),box=lesson.getBoundingClientRect();
       const source=d.getElementById('jSpacing'),inline=source.closest('.spacing-lesson > section');
-      return d.documentElement.scrollWidth<=w.innerWidth+1 && lesson.scrollWidth<=lesson.clientWidth+1 && (width>900?source.closest('.studio-journey')!==null:inline?.querySelector('h4').textContent==='Try') && [...lesson.querySelectorAll('.button-row > button')].every(button=>{const b=button.getBoundingClientRect();return b.height>=44 && b.left>=box.left-1 && b.right<=box.right+1;});
+      const buttons=[...lesson.querySelectorAll('.button-row > button')].map(button=>{const b=button.getBoundingClientRect();return {id:button.id,height:b.height,left:b.left,right:b.right,closedPractice:button.closest('#utilityPractice')?.open===false};});
+      const fits=d.documentElement.scrollWidth<=w.innerWidth+1 && lesson.scrollWidth<=lesson.clientWidth+1 && (width>900?source.closest('.studio-journey')!==null:inline?.querySelector('h4').textContent==='Try') && buttons.every(b=>b.height>=44 && b.left>=box.left-1 && b.right<=box.right+1);
+      if(!fits)throw Error(JSON.stringify({documentWidth:d.documentElement.scrollWidth,viewport:w.innerWidth,lessonWidth:lesson.clientWidth,lessonScroll:lesson.scrollWidth,left:box.left,right:box.right,inline:inline?.querySelector('h4').textContent,desktop:!!source.closest('.studio-journey'),buttons}));
+      return true;
     });
   }
+  d.getElementById('utilityPractice').open=spacingPracticeWasOpen;
   app.style.width='1440px';reset();await wait();
   // Collapsing code releases the complete column and safely restores focus.
   d.getElementById('dockModeBasic').click();input('dockSection','footer','change');
@@ -2907,6 +2932,327 @@ app.onload = async () => {
   }
   bridgeBaseline.remove();reset();await wait();
 
+  // Working plain-CSS utilities retain semantic HTML and component defaults.
+  reset();await wait();
+  w.dssShowWizardStep(8);await wait();
+  test('Local CSS starts with a linked stylesheet and utility practice stays optional',()=>d.getElementById('localCardHtml').textContent.includes('<link rel="stylesheet" href="tokens.css">') && d.getElementById('localCardHtml').textContent.includes('<article class="card">') && !d.getElementById('localCardHtml').querySelector('article,link') && !d.getElementById('utilityPractice').open && !d.getElementById('utilityVocabularyDetails').open && d.getElementById('localCardCss').getBoundingClientRect().height>0);
+  test('Optional utility examples are bounded native CSS and excluded from website CSS',()=>w.DSStudio.utilities.definitions.length===20 && new Set(w.DSStudio.utilities.definitions.map(item=>item.name)).size===20 && w.DSStudio.utilities.definitions.every(item=>w.CSS.supports(item.property,item.value) && w.DSStudio.utilities.css().includes(w.DSStudio.utilities.rule(item.name)) && !evaluate('cssExport()').includes(w.DSStudio.utilities.rule(item.name))) && w.DSStudio.utilities.rule('__proto__')==='');
+  const utilityParityFrame=d.createElement('iframe');utilityParityFrame.style.cssText='border:0;position:absolute;left:-10000px';d.body.append(utilityParityFrame);
+  const utilityNames=new Set(w.DSStudio.utilities.definitions.map(item=>item.name));
+  const utilityStyleKeys=['display','flexDirection','flexWrap','alignItems','justifyContent','gap','padding','backgroundColor','color','borderRadius','border','boxShadow','opacity','fontFamily','fontSize','lineHeight','width','height'];
+  const utilitySignature=(el,view)=>{const cs=view.getComputedStyle(el);return utilityStyleKeys.map(key=>cs[key]).join('|');};
+  const utilityTargets='.card,.media-object,.hero-layout,.skills-layout,.list-grid,.sample-flex-row,.sample-flex-media,.sample-flex-stack';
+  async function loadUtilityPractice() {
+    const parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+    parsed.getElementById(evaluate('state.sampleMode')==='basic'?'basic-structure':'lesson-brief').classList.add('p-6','bg-surface','text-content','rounded-card');
+    const utilityBlob=w.URL.createObjectURL(new w.Blob([evaluate('cssExport()')+w.DSStudio.utilities.css()],{type:'text/css'}));
+    parsed.querySelector('link[href="tokens.css"]').href=utilityBlob;
+    utilityParityFrame.style.width=previewWindow().innerWidth+'px';utilityParityFrame.style.height=previewWindow().innerHeight+'px';
+    await new Promise(resolve=>{utilityParityFrame.onload=resolve;utilityParityFrame.srcdoc='<!doctype html>'+parsed.documentElement.outerHTML;});
+    w.URL.revokeObjectURL(utilityBlob);
+  }
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
+    for(const custom of [false,true]) {
+      if(custom){input('jSpacing',8);input('jRadius',26);input('advGap',32);input('advOpacity',75);input('advShadow','medium','change');}
+      for(const width of [320,1440]) {
+        app.style.width=width+'px';d.querySelector('[data-width="fluid"]').click();await wait();
+        await loadUtilityPractice();
+        const actual=[...previewDoc().querySelectorAll(utilityTargets)],native=[...utilityParityFrame.contentDocument.querySelectorAll(utilityTargets)];
+        test(mode+' '+theme+' '+(custom?'custom':'default')+' separate utility practice matches component appearance at '+width+'px',()=>actual.length>0 && actual.length===native.length && actual.every((el,index)=>utilitySignature(el,previewWindow())===utilitySignature(native[index],utilityParityFrame.contentWindow)));
+        const article=previewDoc().getElementById(mode==='basic'?'basic-structure':'lesson-brief');
+        test(mode+' '+theme+' '+(custom?'custom':'default')+' website HTML keeps component classes without exercise utilities at '+width+'px',()=>![...previewDoc().querySelectorAll('[class]')].some(el=>[...el.classList].some(name=>utilityNames.has(name))) && !evaluate('cssExport()').includes('OPTIONAL PRACTICE'));
+        test(mode+' '+theme+' '+(custom?'custom':'default')+' semantic article uses its shared local card rule at '+width+'px',()=>article.tagName==='ARTICLE' && article.classList.contains('card') && Math.abs(parseFloat(previewWindow().getComputedStyle(article).paddingTop)-evaluate('state.spacing')*6)<.01 && !previewDoc().querySelector('script'));
+      }
+    }
+  }
+  app.style.width='1440px';reset();await wait();
+  const beforeUtilityExercise=evaluate('htmlExport()+cssExport()+projectJson()'),beforeExerciseDoc=previewDoc();
+  await loadUtilityPractice();
+  const exerciseWindow=utilityParityFrame.contentWindow;
+  const utilityArticle=utilityParityFrame.contentDocument.getElementById('lesson-brief'),utilityOriginalClass=utilityArticle.className;
+  utilityArticle.classList.replace('p-6','p-4');
+  test('Practice-only p-4 changes padding and retains article meaning and component border',()=>exerciseWindow.getComputedStyle(utilityArticle).paddingTop==='16px' && utilityArticle.tagName==='ARTICLE' && utilityArticle.classList.contains('card') && parseFloat(exerciseWindow.getComputedStyle(utilityArticle).borderTopWidth)>0);
+  utilityArticle.className='p-6 p-4 card bg-surface text-content rounded-card';const utilityFirstOrder=exerciseWindow.getComputedStyle(utilityArticle).paddingTop;
+  utilityArticle.className='p-4 p-6 card bg-surface text-content rounded-card';
+  test('Conflicting practice utilities follow stylesheet order rather than HTML class order',()=>utilityFirstOrder==='24px' && exerciseWindow.getComputedStyle(utilityArticle).paddingTop===utilityFirstOrder);
+  utilityArticle.className=utilityOriginalClass;utilityArticle.classList.replace('bg-surface','bg-primary');utilityArticle.classList.replace('text-content','text-on-primary');
+  test('Practice colour utilities consume active project theme roles',()=>exerciseWindow.getComputedStyle(utilityArticle).backgroundColor===evaluate("'rgb('+hexRgb(palette().roles.primary).join(', ')+')'") && exerciseWindow.getComputedStyle(utilityArticle).color===evaluate("'rgb('+hexRgb(palette().roles['on-primary']).join(', ')+')'"));
+  test('Utility practice leaves website preview and all exports unchanged',()=>previewDoc()===beforeExerciseDoc && evaluate('htmlExport()+cssExport()+projectJson()')===beforeUtilityExercise && previewWindow().getComputedStyle(previewDoc().getElementById('lesson-brief')).paddingTop==='24px');
+  utilityParityFrame.remove();
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);w.dssShowWizardStep(8);await wait();
+    const id=mode==='basic'?'basic-structure':'lesson-brief';
+    test(mode+' '+theme+' local CSS example reads the exported component rule',()=>evaluate('cssExport()').replace(/\s+/g,'').includes(d.getElementById('localCardCss').textContent.replace(/\s+/g,'')) && d.getElementById('localCardCss').textContent.startsWith('.card {\n  ') && d.getElementById('localCardCss').textContent.includes('padding: var(--space-6)'));
+    d.getElementById('utilityPractice').open=true;await wait();
+    test(mode+' '+theme+' lesson follows spacing reflection and reads the real article tag',()=>d.getElementById('utilityLesson').closest('.studio-lesson').classList.contains('spacing-lesson') && d.getElementById('utilityLesson').previousElementSibling.querySelector('h4').textContent==='Reflect' && d.getElementById('utilityHtml').textContent.includes('id="'+id+'"') && evaluate('htmlExport()').includes(d.getElementById('utilityHtml').textContent));
+    for(const name of ['p-6','p-4','bg-surface','text-content','rounded-card']) {
+      input('utilityClass',name,'change');await wait();const definition=w.DSStudio.utilities.definitions.find(item=>item.name===name);
+      test(mode+' '+theme+' lesson separates practice '+name+' from actual component output',()=>d.getElementById('utilityRule').textContent===w.DSStudio.utilities.rule(name) && !evaluate('cssExport()').includes(d.getElementById('utilityRule').textContent) && d.getElementById('utilityPracticeHtml').textContent.includes(' '+name+'"') && !evaluate('htmlExport()').includes(d.getElementById('utilityPracticeHtml').textContent) && !d.getElementById('utilityPracticeHtml').children.length && d.getElementById('utilityToken').textContent.includes(definition.token+':') && d.getElementById('utilityMeasured').textContent.includes('component preview measures '+definition.property+': '+previewWindow().getComputedStyle(previewDoc().getElementById(id)).getPropertyValue(definition.property)));
+    }
+  }
+  input('utilityClass','p-6','change');input('jSpacing',7);await wait();
+  test('Source edits refresh lesson and page padding',()=>d.getElementById('utilityToken').textContent.includes('--space-unit: 7px') && d.getElementById('utilityMeasured').textContent.includes('42px'));
+  d.getElementById('utilityConfigure').click();
+  test('Utility configuration focuses the existing spacing control',()=>d.activeElement===d.getElementById('jSpacing') && w.DSStudio.activeStage===8);
+  d.getElementById('utilityInspectCss').click();await wait();
+  test('Component CSS inspection keeps the complete local stylesheet',()=>d.getElementById('studioInspector').open && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockNote').textContent.includes('No framework needed') && !d.getElementById('dockCss').textContent.includes('.p-6 {'));
+  d.getElementById('dockTabHtml').click();d.getElementById('localInspectCss').click();await wait();
+  test('Local-first action opens component CSS from the HTML inspector',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.activeElement===d.getElementById('dockCss'));
+  d.getElementById('utilityInspectHtml').click();await wait();
+  test('Utility HTML inspection keeps the complete semantic page',()=>d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
+  const utilityProject=evaluate('projectJson()'),utilityDocument=previewDoc();d.getElementById('utilityPreview').click();await wait();
+  test('Showing the utility article retains project and preview document',()=>previewDoc()===utilityDocument && previewDoc().activeElement===previewDoc().getElementById('lesson-brief') && evaluate('projectJson()')===utilityProject);
+  test('Showing the utility article brings the preview into view',()=>d.getElementById('previewShell').getBoundingClientRect().top>=0 && d.getElementById('previewShell').getBoundingClientRect().top<w.innerHeight);
+  for(const width of [320,390,1440])for(const theme of ['light','dark']) {
+    app.style.width=width+'px';input('jTheme',theme);w.dssShowWizardStep(8);d.querySelectorAll('#utilityLesson details').forEach(details=>details.open=true);await wait();
+    test(theme+' utility lesson fits '+width+'px with usable controls',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['localInspectCss','utilityClass','utilityPreview','utilityInspectHtml','utilityInspectCss','utilityConfigure'].every(id=>{const r=d.getElementById(id).getBoundingClientRect();return r.height>=44 && r.left>=0 && r.right<=w.innerWidth+1;}) && (width>390 || d.querySelector('.utility-table-scroll').scrollWidth>d.querySelector('.utility-table-scroll').clientWidth));
+  }
+  app.style.width='1440px';reset();await wait();
+  w.dssShowWizardStep(8);await wait();
+  const beforeLearningPath=evaluate('projectJson()'),learningPathDoc=previewDoc();
+  d.getElementById('utilityToTailwind').click();await wait();
+  test('Optional next step reaches Tailwind without changing the local website',()=>w.DSStudio.activeStage===11 && !d.getElementById('studio-section-6').hidden && evaluate('projectJson()')===beforeLearningPath && previewDoc()===learningPathDoc && d.getElementById('tailwindBridge').textContent.includes('separate Tailwind v4 practice project'));
+  d.querySelector('#tailwindBridge a[href="#utilityLesson"]').click();await wait();
+  test('Tailwind exercise links back to the local CSS lesson',()=>w.DSStudio.activeStage===8 && !d.getElementById('studio-section-3').hidden && evaluate('projectJson()')===beforeLearningPath && previewDoc()===learningPathDoc);
+
+  // Full information architecture and independently selected visitor sitemap.
+  const iaNodes=()=>{revealDestinationPlan();return w.DSStudio.process.entries();};
+  const iaNode=label=>iaNodes().find(node=>node.label===label);
+  const iaChoice=label=>[...d.querySelectorAll('#sitemap-choices input')].find(input=>input.dataset.iaId===iaNode(label)?.id);
+  const iaSelect=label=>{const option=[...d.getElementById('sitemap-items').options].find(option=>option.textContent.replace(/^\s*—\s*/,'').trim()===label);input('sitemap-items',option.value,'change');};
+  const iaFooterHas=label=>[...previewDoc().querySelectorAll('#sitemap a, #sitemap span')].some(el=>el.firstChild?.textContent===label);
+  for(const mode of ['basic','advanced']) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+    const parent=mode==='basic'?'Components':'Lessons',child=mode==='basic'?'Content card':'Brief lesson';
+    const target=mode==='basic'?'basic-structure':'lesson-brief';
+    test(mode+' IA shows every parent and child including sitemap exclusions',()=>d.querySelectorAll('#process-ia .process-map li').length===iaNodes().length && d.querySelector('#process-ia .process-map').textContent.includes('Footer') && d.querySelector('#process-ia .process-map').textContent.includes('Home') && d.querySelectorAll('#sitemap-choices input').length===iaNodes().length);
+    test(mode+' lesson distinguishes IA from the visitor sitemap and cites NN/g',()=>d.querySelector('#process-ia .process-ia-guidance a').href==='https://www.nngroup.com/articles/information-architecture-sitemaps/' && d.querySelector('#process-ia .process-ia-guidance').textContent.includes('not remove those hours') && JSON.stringify([...d.querySelectorAll('#process-ia .process-sitemap-preview a')].map(a=>[a.textContent,a.dataset.sitemapTarget]))===JSON.stringify([...previewDoc().querySelectorAll('#sitemap a')].map(a=>[a.textContent,a.hash.slice(1)])));
+    const previewLink=d.querySelector('#process-ia .process-sitemap-preview a'),linkedId=previewLink.dataset.sitemapTarget,linkedDoc=previewDoc(),beforePreviewLink=evaluate('projectJson()');
+    previewLink.click();await wait();
+    test(mode+' visitor sitemap preview links focus the real iframe destination safely',()=>previewLink.hash==='#previewShell' && previewDoc()===linkedDoc && previewDoc().activeElement.id===linkedId && w.DSStudio.activeStage===1 && evaluate('projectJson()')===beforePreviewLink);
+    const beforePages=evaluate('DSStudio.process.currentPlan().pages'),beforeCss=evaluate('cssExport()'),beforeBodySections=previewDoc().querySelectorAll('main > section').length;
+    const original=iaNode(child),control=iaChoice(child);control.focus();control.click();await wait();
+    test(mode+' child exclusion changes only sitemap navigation and retains checkbox focus',()=>!iaFooterHas(child) && iaNode(child).id===original.id && !iaNode(child).includeInSitemap && evaluate('DSStudio.process.currentPlan().pages')===beforePages && evaluate('cssExport()')===beforeCss && previewDoc().getElementById(target) && previewDoc().querySelectorAll('main > section').length===beforeBodySections && d.querySelector('#process-ia .process-map').textContent.includes(child) && d.activeElement===control);
+    iaChoice(parent).click();await wait();
+    test(mode+' excluded parent suppresses its branch without losing child choices',()=>!iaFooterHas(parent) && iaChoice(child).disabled && !iaChoice(child).checked && iaNodes().filter(node=>node.parentId===iaNode(parent).id).some(node=>node.includeInSitemap));
+    iaChoice(parent).click();await wait();
+    test(mode+' restoring parent respects individual child exclusions',()=>iaFooterHas(parent) && !iaChoice(child).disabled && !iaFooterHas(child) && !iaChoice(child).checked);
+    iaSelect(child);input('sitemap-label','Renamed information');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' renaming excluded information preserves identity and inclusion',()=>iaNode('Renamed information').id===original.id && !iaNode('Renamed information').includeInSitemap && !iaFooterHas('Renamed information') && d.querySelector('#process-ia .process-map').textContent.includes('Renamed information'));
+    const destinationParent=mode==='basic'?'Layouts':'Layout workshop';
+    input('sitemap-parent',String(w.DSStudio.process.hierarchy(w.DSStudio.process.currentPlan().pages).findIndex(([label])=>label===destinationParent)),'change');
+    input('sitemap-type','content','change');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' reparenting keeps stable identity, type and sitemap choice',()=>iaNode('Renamed information').id===original.id && iaNode('Renamed information').path[0]===destinationParent && iaNode('Renamed information').type==='content' && !iaNode('Renamed information').includeInSitemap);
+    d.getElementById('sitemap-undo').click();await wait();
+    test(mode+' undo restores the previous relationship and its inclusion',()=>iaNode('Renamed information').id===original.id && iaNode('Renamed information').path[0]===parent && !iaNode('Renamed information').includeInSitemap);
+    iaSelect('Renamed information');d.getElementById('sitemap-delete').click();await wait();d.getElementById('sitemap-undo').click();await wait();
+    test(mode+' delete and undo restore identity and exclusion',()=>iaNode('Renamed information').id===original.id && !iaNode('Renamed information').includeInSitemap);
+    const savedIa=evaluate('projectJson()');w.importConfig(JSON.parse(savedIa));await wait();
+    test(mode+' IA identities and inclusion survive project JSON round trip',()=>iaNode('Renamed information').id===original.id && !iaNode('Renamed information').includeInSitemap && !iaFooterHas('Renamed information'));
+    d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value;
+    iaChoice(parent).click();await wait();
+    test(mode+' sitemap inclusion autosaves with the active project',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectId].data.designProcess.iaEntries[mode].some(node=>node.id===iaNode(parent).id && node.includeInSitemap===false));
+    const exportDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+    test(mode+' standalone HTML and inspector use the same selected sitemap',()=>exportDoc.querySelector('#sitemap').innerHTML===previewDoc().querySelector('#sitemap').innerHTML && ![...exportDoc.querySelectorAll('#sitemap a, #sitemap span')].some(el=>el.firstChild?.textContent===parent));
+  }
+  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);await wait();
+  iaChoice('Home').click();await wait();
+  test('Explicit Home inclusion overrides the former Basic fixed omission',()=>iaFooterHas('Home') && iaNode('Home').includeInSitemap);
+  iaChoice('Content card').click();await wait();d.getElementById('dockModeAdvanced').click();await wait();iaChoice('Brief lesson').click();await wait();d.getElementById('dockModeBasic').click();await wait();
+  test('Sample switches preserve each sample inclusion choices',()=>!iaChoice('Content card').checked && w.DSStudio.process.currentPlan().iaEntries.advanced.some(node=>node.includeInSitemap===false));
+  iaSelect('Components');input('sitemap-label','Teaching group');input('sitemap-type','group','change');d.getElementById('sitemap-form').requestSubmit();await wait();
+  test('Group type is a nonlinked heading with selected child destinations',()=>[...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].some(li=>li.querySelector(':scope > span')?.textContent==='Teaching group' && li.querySelector('ul a')) && iaNode('Teaching group').type==='group');
+  const groupId=iaNode('Teaching group').id;iaChoice('Teaching group').click();await wait();iaSelect('Teaching group');input('sitemap-label','Renamed group');d.getElementById('sitemap-form').requestSubmit();await wait();
+  test('Parent rename preserves its own identity and descendant exclusions',()=>iaNode('Renamed group').id===groupId && !iaNode('Renamed group').includeInSitemap && !iaNode('Content card').includeInSitemap && iaNode('Content card').path[0]==='Renamed group' && !iaFooterHas('Profile row'));
+  for(const width of [320,390,1440]) {
+    app.style.width=width+'px';w.dssShowWizardStep(1);await wait();
+    test('IA inclusion controls and both lesson views fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#sitemap-editor select, #sitemap-editor input:not([type=checkbox]), #process-ia .process-sitemap-preview a')].every(el=>el.getBoundingClientRect().height>=44) && d.getElementById('sitemap-choices').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && [...d.querySelectorAll('#sitemap-choices label')].every(row=>row.getBoundingClientRect().height>=44) && ['.process-map','.process-sitemap-preview'].every(selector=>{const el=d.querySelector('#process-ia '+selector);return el.scrollWidth<=el.clientWidth+1;}));
+  }
+  app.style.width='1440px';reset();d.getElementById('dockModeBasic').click();
+  const bulkIa=Array.from({length:64},(_,i)=>'Group '+i+' > Item '+i).join('\n');
+  input('plan-pages',bulkIa);await wait();iaChoice('Item 63').click();await wait();
+  test('Inclusion works for bounded legacy outlines without rewriting or truncating their lines',()=>evaluate('state.designProcess.pages')===bulkIa && iaNodes().length===128 && !iaNode('Item 63').includeInSitemap && iaNode('Item 63').path[0]==='Group 63');
+  app.style.width='1440px';reset();await wait();
+  const invalidIa=w.DSStudio.process.normalize({iaEntries:{basic:[{id:'ia-1',path:['Safe'],type:'<script>',includeInSitemap:false},{id:'ia-1',path:['Duplicate']},{id:'<img>',path:['Bad']},{id:'ia-2',path:['Too','Many','Nested','Levels']},{id:'ia-3',path:[null]}]}});
+  test('Imported IA metadata validates identities, paths, types and duplicate IDs',()=>invalidIa.iaEntries.basic.length===1 && invalidIa.iaEntries.basic[0].type==='section' && invalidIa.iaEntries.basic[0].includeInSitemap===false);
+  w.importConfig({sampleMode:'basic',designProcess:{pages:'Research <img src=x onerror=alert(1)',showPlanned:true,iaEntries:{basic:[{id:'ia-1',path:['Research <img src=x onerror=alert(1)'],type:'page',includeInSitemap:true}]}}});w.dssShowWizardStep(1);await wait();
+  test('Imported IA labels remain safe text in controls, full IA and sitemap',()=>!d.querySelector('#sitemap-choices img, #process-ia img, #process-ia script') && !previewDoc().querySelector('#sitemap img, #sitemap script') && d.getElementById('sitemap-choices').textContent.includes('<img') && previewDoc().querySelector('#sitemap').textContent.includes('<img'));
+  evaluate('resetStudio()');await wait();
+  test('Reset clears saved IA metadata and restores default sample inclusion',()=>!evaluate('state.designProcess.iaEntries.basic.length') && !evaluate('state.designProcess.iaEntries.advanced.length') && iaNodes().every(node=>node.includeInSitemap===(node.depth<3 && node.label!=='Home' && node.label!=='Footer')));
+
+  // Three information levels retain a separate visitor sitemap in both samples.
+  for(const mode of ['basic','advanced']) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+    const parent=mode==='basic'?'Components':'Design process',branch=mode==='basic'?'Profile row':'Project brief';
+    const detail=mode==='basic'?'Availability status':'Purpose and audience';
+    const sibling=mode==='basic'?'Name and role':'Scope and delivery';
+    const target=mode==='basic'?'basic-layout':'brief-lab';
+    const original=iaNodes().filter(node=>node.path.includes(branch)).map(node=>({id:node.id,label:node.label,include:node.includeInSitemap}));
+    const sectionCount=previewDoc().querySelectorAll('main > section').length;
+    test(mode+' sample includes excluded third-level content planning without invented links',()=>iaNode(detail).depth===3 && iaNode(detail).type==='content' && !iaNode(detail).includeInSitemap && !iaFooterHas(detail) && !d.querySelector('#process-ia .process-map a') && d.querySelector('#process-ia .process-map ul ul ul').textContent.length>0 && d.querySelector('#process-ia a[href="https://www.nngroup.com/articles/flat-vs-deep-hierarchy/"]'));
+    iaChoice(detail).click();await wait();
+    test(mode+' selected unlinked detail stays out of the visitor sitemap by default',()=>iaNode(detail).includeInSitemap && !iaFooterHas(detail));
+    d.getElementById('sitemap-planned').click();await wait();
+    test(mode+' planned detail appears at the correct third sitemap level as text',()=>[...previewDoc().querySelectorAll('#sitemap ul ul ul > li > span')].some(el=>el.firstChild.textContent===detail+' ') && ![...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent===detail));
+    iaSelect(detail);input('sitemap-target',target,'change');d.getElementById('sitemap-form').requestSubmit();await wait();
+    const detailId=iaNode(detail).id;
+    test(mode+' third-level destination uses an existing safe anchor in preview and export',()=>[...previewDoc().querySelectorAll('#sitemap ul ul ul a')].some(a=>a.textContent===detail && a.hash==='#'+target) && new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap ul ul ul a[href="#'+target+'"]') && previewDoc().querySelectorAll('main > section').length===sectionCount);
+    iaChoice(parent).click();await wait();
+    test(mode+' excluded ancestor suppresses third-level links while retaining choices',()=>iaChoice(detail).disabled && iaChoice(detail).checked && !iaFooterHas(detail));
+    iaChoice(parent).click();await wait();iaChoice(branch).click();await wait();
+    test(mode+' excluded immediate parent also suppresses the third level',()=>iaChoice(detail).disabled && iaChoice(detail).checked && !iaFooterHas(detail));
+    iaChoice(branch).click();await wait();
+    iaSelect(branch);
+    test(mode+' branch parent options exclude descendants and fourth-level moves',()=>[...d.getElementById('sitemap-parent').options].every(option=>!option.textContent.includes(branch) && option.value.split(':').length<2));
+    input('sitemap-label','Renamed branch');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' branch rename preserves every descendant identity and inclusion',()=>original.every(old=>iaNode(old.label===branch?'Renamed branch':old.label)?.id===old.id) && iaNode(detail).path[1]==='Renamed branch' && iaNode(detail).includeInSitemap && !iaNode(sibling).includeInSitemap && iaFooterHas(detail));
+    const destination=mode==='basic'?'Layouts':'Lessons',dest=iaNode(destination);
+    input('sitemap-parent',dest.position.join(':'),'change');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' moving a two-level branch retains third-level relationships and identities',()=>iaNode(detail).id===detailId && iaNode(detail).path.join(' / ')===destination+' / Renamed branch / '+detail && iaFooterHas(detail));
+    iaSelect(detail);input('sitemap-label','Renamed detail');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' detail rename preserves its ID and explicit link mapping',()=>iaNode('Renamed detail').id===detailId && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Renamed detail' && a.hash==='#'+target));
+    iaSelect('Renamed detail');const orderBefore=iaNodes().filter(node=>node.parentId===iaNode('Renamed detail').parentId).map(node=>node.id).join(',');
+    d.getElementById(mode==='basic'?'sitemap-up':'sitemap-down').click();await wait();
+    test(mode+' detail siblings reorder without losing their identities',()=>iaNodes().filter(node=>node.parentId===iaNode('Renamed detail').parentId).map(node=>node.id).join(',')!==orderBefore && iaNode('Renamed detail').id===detailId);
+    d.getElementById('sitemap-undo').click();await wait();
+    test(mode+' undo restores third-level sibling order',()=>iaNodes().filter(node=>node.parentId===iaNode('Renamed detail').parentId).map(node=>node.id).join(',')===orderBefore);
+    iaSelect('Renamed branch');const beforeDelete=evaluate('projectJson()');d.getElementById('sitemap-delete').click();await wait();
+    test(mode+' deleting a branch removes all descendants from the plan',()=>!iaNode('Renamed branch') && !iaNode('Renamed detail') && !iaNode(sibling));
+    d.getElementById('sitemap-undo').click();await wait();
+    test(mode+' undo restores the complete three-level branch and metadata',()=>evaluate('projectJson()')===beforeDelete && iaNode('Renamed detail').id===detailId);
+    const roundTrip=JSON.parse(evaluate('projectJson()'));w.importConfig(roundTrip);await wait();
+    test(mode+' third-level identities and choices survive JSON import',()=>iaNode('Renamed detail').id===detailId && iaNode('Renamed detail').includeInSitemap && !iaNode(sibling).includeInSitemap && iaFooterHas('Renamed detail'));
+    d.getElementById('jSaveLocal').click();const savedId=d.getElementById('jProjects').value;
+    test(mode+' third-level paths and IDs persist in local project storage',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[savedId].data.designProcess.iaEntries[mode].some(node=>node.id===detailId && node.path.length===3));
+    iaSelect('Renamed branch');const unchanged=evaluate('projectJson()');
+    const forged=new w.Option('Invalid descendant',iaNode('Renamed detail').position.join(':'));d.getElementById('sitemap-parent').add(forged);input('sitemap-parent',forged.value,'change');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' forged cycle or fourth-level parent is rejected without changing saved data',()=>evaluate('projectJson()')===unchanged && d.getElementById('sitemap-status').textContent.includes('at most three'));
+    d.getElementById('sitemap-new').click();input('sitemap-label','New planning detail');const newParent=iaNode(mode==='basic'?'Content card':'Information architecture');input('sitemap-parent',newParent.position.join(':'),'change');d.getElementById('sitemap-form').requestSubmit();await wait();
+    test(mode+' adding a third-level item defaults to content excluded from the sitemap',()=>iaNode('New planning detail').depth===3 && iaNode('New planning detail').type==='content' && !iaNode('New planning detail').includeInSitemap);
+  }
+  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);await wait();
+  const oldTwoLevel=w.DSStudio.process.samplePages('basic').split('\n').filter(line=>line.split('>').length<=2).join('\n');
+  w.importConfig({sampleMode:'basic',designProcess:{pages:oldTwoLevel,iaEntries:{basic:[{id:'ia-88',path:['Components','Profile row'],type:'section',includeInSitemap:false}]}}});await wait();
+  test('Previous complete two-level samples gain planning details without losing saved IDs or exclusions',()=>iaNode('Profile row').id==='ia-88' && !iaNode('Profile row').includeInSitemap && iaNode('Availability status').depth===3 && iaChoice('Availability status').disabled && evaluate('state.designProcess.pages')===oldTwoLevel);
+  const customThree='Services\nServices > Consultation\nServices > Consultation > Duration\nServices > Consultation > Price\nAbout';input('plan-pages',customThree);await wait();
+  test('Raw third-level outlines share a single parent tree and remain custom across modes',()=>iaNodes().length===5 && w.DSStudio.process.tree(customThree)[0].children[0].children.length===2 && w.DSStudio.process.hierarchy(customThree)[0][1].length===1);
+  d.getElementById('dockModeAdvanced').click();await wait();
+  test('Sample switches preserve a custom three-level outline',()=>evaluate('DSStudio.process.currentPlan().pages')===customThree && iaNode('Duration').depth===3);
+  input('plan-pages','Root > Branch > Detail > Too deep');await wait();
+  test('Raw fourth-level lines are visibly flagged and excluded from rendered IA',()=>!d.getElementById('plan-pages').checkValidity() && d.getElementById('plan-sample-status').textContent.includes('three information levels') && iaNodes().length===0);
+  const bulkThree=Array.from({length:64},(_,i)=>'Group '+i+' > Item '+i+' > Detail '+i).join('\n');input('plan-pages',bulkThree);await wait();iaChoice('Detail 63').click();await wait();
+  test('Three-level legacy line limits retain all 192 derived entries and choices',()=>iaNodes().length===192 && evaluate('state.designProcess.pages')===bulkThree && iaNode('Detail 63').includeInSitemap && evaluate('state.designProcess.iaEntries.advanced.length')===192 && d.getElementById('plan-pages').checkValidity());
+  input('plan-pages','Root > Branch > <img src=x onerror=alert(1)');await wait();
+  test('Valid third-level hostile labels remain escaped text in the IA and editor',()=>iaNodes().length===3 && !d.querySelector('#process-ia img, #process-ia script, #sitemap-choices img') && d.querySelector('#process-ia .process-map').textContent.includes('<img src=x onerror=alert(1)') && d.getElementById('sitemap-choices').textContent.includes('<img') && !d.getElementById('plan-pages').validationMessage);
+  const bounded=w.DSStudio.process.normalize({iaEntries:{basic:Array.from({length:200},(_,i)=>({id:'ia-'+(i+1),path:['Root '+i,'Branch','Detail'],type:'content',includeInSitemap:false}))}});
+  test('Imported third-level metadata retains valid depth and a bounded 192-entry maximum',()=>bounded.iaEntries.basic.length===192 && bounded.iaEntries.basic.every(node=>node.path.length===3 && !node.includeInSitemap));
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);await wait();
+    for(const width of [320,390,1440]) {
+      app.style.width=width+'px';await wait();
+      test(mode+' '+theme+' third-level IA fits '+width+'px with usable controls',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && d.getElementById('sitemap-choices').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && d.getElementById('sitemap-items').scrollWidth<=d.getElementById('sitemap-items').clientWidth+1 && [...d.querySelectorAll('#sitemap-choices .is-grandchild')].every(el=>el.getBoundingClientRect().height>=44) && ['.process-map','.process-sitemap-preview'].every(selector=>{const el=d.querySelector('#process-ia '+selector);return el.scrollWidth<=el.clientWidth+1;}));
+    }
+  }
+  app.style.width='1440px';reset();await wait();
+
+  // Complete content inventory, independent destination references and deep editing.
+  {
+  await w.DSStudio.ready;
+  d.getElementById('sitemap-destination-editor').open=false;
+  const model=w.DSStudio.contentArchitecture;
+  const contentNodes=()=>model.nodes();
+  const contentNode=(label,value)=>contentNodes().find(node=>node.type!=='link' && node.label===label && (value===undefined || node.value===value))||contentNodes().find(node=>node.label===label && (value===undefined || node.value===value));
+  const selectContent=id=>{const button=d.querySelector('[data-content-id="'+id+'"]');let ancestor=button.parentElement;while(ancestor){if(ancestor.tagName==='DETAILS')ancestor.open=true;ancestor=ancestor.parentElement;}button.click();};
+  const saveContent=async()=>{d.getElementById('ia-form').requestSubmit();await wait();};
+  test('Content outline starts without runtime errors',()=>!w.__reviewErrors.length && d.getElementById('ia-content-editor') && !d.getElementById('sitemap-destination-editor').open);
+  for(const mode of ['basic','advanced']) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+    const nodes=contentNodes(),header=contentNode('Header'),home=contentNode('Home'),hero=nodes.find(node=>node.parentId===home.id && node.label==='Hero');
+    test(mode+' inventories actual shared header, hero, footer and deep content',()=>nodes.length>100 && nodes.length<=1000 && header.type==='region' && contentNode('Footer').type==='region' && hero && nodes.some(node=>model.path(nodes,node).length>3));
+    test(mode+' inventory contains actual heading, logo, wordmark, image alternative text and CTA wording',()=>contentNode('Wordmark').value===evaluate('state.project') && contentNode('Logo') && nodes.some(node=>node.label==='Heading' && node.value===(mode==='basic'?'Start with the essentials.':'A better web starts with one good decision.')) && contentNode('Alternative text') && nodes.some(node=>node.label==='Primary CTA' && node.value===(mode==='basic'?'Explore components':'Find your first lesson')));
+    if(mode==='advanced')test('Numeric progress controls are captured as safe text values',()=>nodes.some(node=>node.type==='field' && node.value==='3' && node.label.includes('Practice checklist')));
+    const nav=nodes.find(node=>node.label==='Main navigation' && node.parentId===header.id);
+    const homeRef=nodes.find(node=>node.parentId===nav.id && node.label==='Home');
+    test(mode+' navigation references canonical destinations without duplicating their content',()=>homeRef.type==='link' && homeRef.target==='home' && homeRef.reference==='#home' && nodes.filter(node=>node.target==='home' && node.type!=='link').length===1 && !nodes.some(node=>node.parentId===homeRef.id));
+    test(mode+' every authored sitemap destination has exactly one canonical content entry',()=>w.DSStudio.process.inventory(mode).every(([,id])=>nodes.filter(node=>node.target===id && node.type!=='link').length===1));
+    test(mode+' native outline starts collapsed and center/export content roles remain safe text',()=>[...d.querySelectorAll('#ia-outline details')].every(el=>!el.open) && d.querySelectorAll('#process-ia .ia-content-map details').length>10 && !d.querySelector('#process-ia .ia-content-map img, #process-ia .ia-content-map script'));
+    input('ia-search','alternative text');await wait();
+    test(mode+' search reveals matching deep content and ancestor context',()=>d.getElementById('ia-count').textContent.includes('matching') && [...d.querySelectorAll('#ia-outline details')].some(el=>el.open) && d.getElementById('ia-outline').textContent.includes('Alternative text'));
+    input('ia-search','');d.getElementById('ia-collapse').click();
+    const heading=nodes.find(node=>node.type==='text' && node.label==='Heading' && model.path(nodes,node).includes('Hero'));
+    const beforeBody=previewDoc().getElementById('hero-title').textContent,beforeFooter=previewDoc().querySelector('#sitemap').innerHTML;
+    selectContent(heading.id);input('ia-draft','A proposed new heading');input('ia-notes','Confirm with the project owner');input('ia-status','planned','change');await saveContent();
+    test(mode+' planned content saves alongside current source content without rewriting the sample',()=>contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && contentNodes().find(node=>node.id===heading.id).value===beforeBody && previewDoc().getElementById('hero-title').textContent===beforeBody && previewDoc().querySelector('#sitemap').innerHTML===beforeFooter && d.getElementById('ia-actual').value===beforeBody);
+    input('ia-draft','');await saveContent();
+    test(mode+' an explicitly empty draft is retained',()=>contentNodes().find(node=>node.id===heading.id).draft==='');
+    d.getElementById('ia-undo').click();await wait();
+    test(mode+' undo restores planned wording',()=>contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading');
+    const project=JSON.parse(evaluate('projectJson()'));w.importConfig(project);await wait();
+    test(mode+' JSON round trip retains content identities, notes and draft separately from actual content',()=>contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && contentNodes().find(node=>node.id===heading.id).notes==='Confirm with the project owner' && contentNodes().find(node=>node.id===heading.id).value===beforeBody);
+    d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value;
+    test(mode+' local save contains full content planning data',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectId].data.designProcess.contentPlan[mode].some(node=>node.id===heading.id && node.draft==='A proposed new heading'));
+    const fileJson=evaluate('projectJson()'),fileTransfer=new w.DataTransfer(),fileAlerts=[],previousAlert=w.alert;
+    w.alert=message=>fileAlerts.push(message);fileTransfer.items.add(new w.File([fileJson],'content-plan.json',{type:'application/json'}));d.getElementById('loadFile').files=fileTransfer.files;d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));await wait(200);w.alert=previousAlert;
+    test(mode+' actual exported JSON file reimports through Load JSON with the complete content plan',()=>!fileAlerts.length && contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && evaluate('projectJson()')===fileJson);
+    selectContent(header.id);d.getElementById('ia-delete').click();await wait();
+    test(mode+' removing the header planning branch does not remove Home from sitemap or page',()=>!contentNode('Header') && previewDoc().querySelector('#sitemap').innerHTML===beforeFooter && previewDoc().getElementById('home'));
+    d.getElementById('ia-undo').click();await wait();
+    test(mode+' branch deletion undo restores all descendant identities',()=>contentNode('Header').id===header.id && contentNodes().some(node=>node.id===homeRef.id));
+    selectContent(homeRef.id);
+    test(mode+' navigation references do not offer separate sitemap membership',()=>d.getElementById('ia-manage-sitemap').disabled && d.getElementById('ia-sitemap-summary').textContent.includes('do not have separate sitemap membership'));
+    selectContent(home.id);d.getElementById('ia-manage-sitemap').click();await wait();
+    test(mode+' canonical section reaches its existing sitemap destination controls',()=>d.getElementById('sitemap-destination-editor').open && d.getElementById('sitemap-label').value==='Home');
+    selectContent(hero.id);d.getElementById('ia-add-child').click();input('ia-label','New content group');input('ia-type','group','change');await saveContent();
+    const newGroup=contentNode('New content group');
+    test(mode+' add child retains the selected container relationship',()=>newGroup.parentId===hero.id && newGroup.status==='planned');
+    d.getElementById('ia-add-child').click();input('ia-label','New text');input('ia-draft','Actual planned copy');await saveContent();const child=contentNode('New text');
+    selectContent(newGroup.id);input('ia-label','Renamed content group');input('ia-parent',header.id,'change');await saveContent();
+    test(mode+' rename and reparent preserve descendant identities and planned copy',()=>contentNode('Renamed content group').id===newGroup.id && contentNode('Renamed content group').parentId===header.id && contentNode('New text').id===child.id && contentNode('New text').parentId===newGroup.id && contentNode('New text').draft==='Actual planned copy');
+    const unchanged=evaluate('projectJson()'),forged=new w.Option('Cycle',child.id);d.getElementById('ia-parent').add(forged);input('ia-parent',child.id,'change');await saveContent();
+    test(mode+' forged cyclic reparent does not mutate saved content',()=>evaluate('projectJson()')===unchanged && d.getElementById('ia-status-message').textContent.includes('outside this branch'));
+    selectContent(child.id);d.getElementById('ia-add-sibling').click();input('ia-label','Second text');await saveContent();
+    const siblingsBefore=contentNodes().filter(node=>node.parentId===newGroup.id).map(node=>node.id).join(',');d.getElementById('ia-up').click();await wait();
+    test(mode+' sibling reorder preserves the whole branch and changes order',()=>contentNodes().filter(node=>node.parentId===newGroup.id).map(node=>node.id).join(',')!==siblingsBefore && contentNode('New text').id===child.id);
+    const footerBeforeRestore=previewDoc().querySelector('#sitemap').innerHTML;d.getElementById('ia-restore').click();await wait();
+    test(mode+' restoring sample inventory clears only that sample content edits and retains sitemap',()=>!contentNode('Renamed content group') && previewDoc().querySelector('#sitemap').innerHTML===footerBeforeRestore && evaluate('state.designProcess.contentPlan.'+mode)===null);
+    d.getElementById('ia-undo').click();await wait();
+    test(mode+' restore can be undone',()=>contentNode('Renamed content group').id===newGroup.id);
+    const paragraphs=contentNodes().filter(node=>node.label==='Paragraph');
+    selectContent(paragraphs[0].id);input('ia-notes','Repeated role labels use separate identities');await saveContent();
+    test(mode+' repeated paragraph role labels remain independently editable',()=>contentNodes().find(node=>node.id===paragraphs[0].id).notes==='Repeated role labels use separate identities' && contentNodes().find(node=>node.id===paragraphs[1].id).notes!== 'Repeated role labels use separate identities');
+  }
+  reset();d.getElementById('dockModeBasic').click();await wait();
+  selectContent(contentNode('Wordmark').id);input('ia-notes','Basic only');await saveContent();d.getElementById('dockModeAdvanced').click();await wait();
+  test('Sample switches retain independent content plans',()=>!contentNode('Wordmark').notes);d.getElementById('dockModeBasic').click();await wait();
+  test('Switching back restores the saved content plan',()=>contentNode('Wordmark').notes==='Basic only');
+  input('jProject','Renamed live project');await wait();
+  test('Current content refreshes from authored source while preserving planned notes and IDs',()=>contentNode('Wordmark').value==='Renamed live project' && contentNode('Wordmark').notes==='Basic only');
+  reset();await wait();const invalidContentConfig=JSON.parse(evaluate('projectJson()'));invalidContentConfig.advanced.state='invalid';w.importConfig(invalidContentConfig);await wait();
+  test('Advanced-only state changes refresh actual source feedback rather than reusing stale cached text',()=>contentNodes().some(node=>node.value==='Enter an email address in the format name@example.com.'));
+  w.importConfig({sampleMode:'basic',designProcess:{pages:'Home\nHome > Future content\nFuture destination',iaEntries:{basic:[{id:'ia-77',path:['Home'],type:'section',includeInSitemap:false}]}}});await wait();
+  test('Previous custom plans migrate into the content structure without losing destination choices',()=>contentNode('Future content') && contentNode('Future destination') && contentNode('Home').id==='content-legacy-ia-77' && contentNodes().filter(node=>node.target==='home' && node.type!=='link').length===1 && !w.DSStudio.process.entries().find(node=>node.label==='Home').includeInSitemap);
+  const deep=Array.from({length:12},(_,i)=>({id:'content-depth-'+i,parentId:i?'content-depth-'+(i-1):null,label:'Level '+(i+1),type:i===11?'text':'group',draft:i===11?'Twelve levels of useful content':null,status:'planned'}));
+  w.importConfig({sampleMode:'basic',designProcess:{contentPlan:{basic:deep}}});w.dssShowWizardStep(1);await wait();
+  test('Content structures support twelve levels independently from the destination outline',()=>contentNodes().length===12 && model.path(contentNodes(),contentNode('Level 12')).length===12 && d.querySelectorAll('#ia-outline details').length===11);
+  selectContent(contentNode('Level 12').id);test('Depth limit disables adding a child at the boundary',()=>d.getElementById('ia-add-child').disabled);
+  const unsafe=[{id:'content-safe',parentId:null,label:'<img src=x onerror=alert(1)>',type:'text',draft:'<script>alert(1)<\/script>',notes:'<svg onload=alert(1)>',status:'planned',target:'javascript:alert(1)'},{id:'content-cycle-a',parentId:'content-cycle-b',label:'Cycle A'},{id:'content-cycle-b',parentId:'content-cycle-a',label:'Cycle B'},{id:'content-safe',label:'Duplicate'}];
+  const sanitized=model.normalizeNodes(unsafe,'basic');
+  test('Content imports validate identities, targets and cycles',()=>sanitized.length===1 && !sanitized[0].target && sanitized[0].label.includes('<img'));
+  w.importConfig({sampleMode:'advanced',designProcess:{contentPlan:{advanced:unsafe}}});await wait();
+  test('Hostile content labels, drafts and notes stay inert in controls and exported artifacts',()=>!d.querySelector('#ia-content-editor img, #ia-content-editor script, #process-ia .ia-content-map img, #process-ia .ia-content-map svg') && d.getElementById('ia-outline').textContent.includes('<script>') && !new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#ia-lab .ia-content-map img, #ia-lab .ia-content-map script'));
+  const oversized=Array.from({length:1010},(_,i)=>({id:'content-bound-'+i,label:'Node '+i,parentId:null,type:'text'}));test('Content imports bound inventory size',()=>model.normalizeNodes(oversized,'basic').length===1000);
+  const textHeavy=model.normalizeNodes(Array.from({length:1000},(_,i)=>({id:'content-heavy-'+i,label:'Large '+i,value:'x'.repeat(2400),draft:'y'.repeat(2400),notes:'z'.repeat(1200)})),'basic');
+  test('Content imports bound aggregate plan data as well as individual values',()=>textHeavy.length>0 && textHeavy.length<1000 && JSON.stringify(textHeavy).length<=model.MAX_PLAN_CHARS);
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);await wait();d.getElementById('ia-expand').click();
+    for(const width of [320,390,1440]) {app.style.width=width+'px';await wait();
+      test(mode+' '+theme+' deep outline and content controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && d.getElementById('ia-outline').scrollWidth<=d.getElementById('ia-outline').clientWidth+1 && [...d.querySelectorAll('#ia-content-editor input:not([type=checkbox]), #ia-content-editor select, #ia-content-editor textarea, #ia-content-editor button')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.right<=d.getElementById('ia-content-editor').getBoundingClientRect().right+1;}) && !w.__reviewErrors.length);
+    }
+  }
+  app.style.width='1440px';reset();await wait();
+  }
+
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
 };
@@ -2982,13 +3328,17 @@ def main():
         with tempfile.TemporaryDirectory(prefix='studio-review-') as profile:
             run = subprocess.run([browser, '--headless', '--disable-gpu', '--no-first-run',
                                   '--no-default-browser-check', '--disable-background-networking',
-                                  '--user-data-dir=' + profile, '--virtual-time-budget=120000',
+                                  # The content-outline matrix reached 1990 checks at 135s;
+                                  # leave bounded headroom for its remaining fixtures.
+                                  '--user-data-dir=' + profile, '--virtual-time-budget=150000',
                                   '--dump-dom', f'http://127.0.0.1:{server.server_port}/__review__'],
-                                 # The full state/colour matrix can exceed three minutes on Windows.
-                                 capture_output=True, encoding='utf-8', errors='replace', timeout=300)
+                                 # The expanded matrix approached five minutes on Windows.
+                                 capture_output=True, encoding='utf-8', errors='replace', timeout=360)
             match = re.search(r'<pre id="results">(.*?)</pre>', run.stdout, re.S)
             if not match or match[1] == 'RUNNING':
-                raise SystemExit('Browser review did not complete.\n' + run.stderr[-2000:])
+                progress = re.search(r'<title>(.*?)</title>', run.stdout, re.S)
+                raise SystemExit('Browser review did not complete.\n' +
+                                 (unescape(progress[1]) + '\n' if progress else '') + run.stderr[-2000:])
             report = json.loads(unescape(match[1]))
             for item in report['results']:
                 print(('PASS' if item['pass'] else 'FAIL') + ': ' + item['name'] +

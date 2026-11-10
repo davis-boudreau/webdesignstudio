@@ -75,9 +75,11 @@ Above 900 px, the builder uses 25% of available workspace in both inspector
 states. With code collapsed, the preview/lessons use the rest. Opening code above
 1280 px restores three columns: approximately 25% builder, 50% centre and 25%
 inspector after accounting for gutters.
-The centre starts with
-**Responsive page preview** expanded at the top and all other sections collapsed.
-Choosing a wizard step opens its lesson below the preview. At 1280 px and below,
+The centre starts with **Responsive page preview** expanded at the top and the
+active step's lesson expanded below it: **Brief** on a normal page load. The same
+behaviour applies to all twelve steps, including reloading a step's section link.
+Other lesson accordions start collapsed. Choosing a wizard step opens its matching
+lesson below the preview. At 1280 px and below,
 the inspector stacks after the centre. At 900 px and below, the actual controls
 join the selected lesson beneath its explanation. Previous/Next follows the output. The
 preview iframe is retained across stage changes, preserving its document and
@@ -98,6 +100,49 @@ width. Grid gap is explained as a separate setting. On narrow screens, the real
 spacing controls appear within Try. Comparison history and optional reflection
 notes stay in this tab; resetting or loading a project clears them, and they do
 not enter saved project JSON or website exports. No completion score is inferred.
+
+The same step continues with **Read a class, follow its CSS**, starting with
+semantic HTML, one linked local stylesheet and the actual exported `.card` rule.
+Sample cards reuse component classes. This is the starting approach for the
+course: shared rules and tokens keep related styles together. Students can build
+and export the whole website with local CSS; no framework transition is required.
+
+The learning transition follows one spacing decision through three forms:
+
+1. **Local component:** `.card { padding: var(--space-6); }`
+2. **Local utility:** `.p-6 { padding: var(--space-6); }`
+3. **Tailwind:** generates `p-6` using the mapped spacing theme.
+
+A token stores the decision; a class applies it to HTML. The supplied theme maps
+Tailwind's `--spacing` to the project's `--space-unit`, so all three examples use
+six spacing units. The utility and Tailwind exercises use separate practice
+copies, with Tailwind setup and compilation required for the third step. This
+progression also connects the palette/token explanations, catalogue, workflow,
+Deliver lesson and the exported Advanced page's learning FAQ.
+
+**Inspect card CSS** opens the actual local stylesheet at `.card`. The inspector,
+responsive preview and website downloads share the same component HTML/CSS.
+Exercise utilities and framework theme source are excluded from those files.
+
+The closed **Next: try one local utility class** disclosure shows a separate
+practice version of a sample article. Select a class to see its proposed HTML,
+authored rule and current source token. The measurement describes the original
+component preview, before applying a utility. Copy the rule to the end of a
+practice copy of `tokens.css`, then add the class in that copy's HTML. Compare
+`p-6` and `p-4` one at a time, and explain why other cards keep their padding.
+An optional nested disclosure lists 20 lesson examples. They are not automatically
+added to the website stylesheet. Conflicting utilities follow CSS order and
+specificity, regardless of their order in the HTML class attribute.
+
+An optional next-step link leads to Deliver's Tailwind comparison, with a return
+link. The exercise uses a separate Tailwind practice project, the mapped theme
+source and one article. Students compare generated CSS and computed properties
+before extending the example. Local utilities are authored CSS; Tailwind generates
+utilities from its theme. Familiar names need the corresponding CSS in each
+project, including the theme aliases for custom names. See the official
+[utility-class explanation](https://tailwindcss.com/docs/styling-with-utility-classes).
+The [padding reference](https://tailwindcss.com/docs/padding) explains how
+Tailwind's numeric padding utilities use the spacing theme.
 
 The learner trial is prepared in [LEARNER_TRIAL.md](docs/LEARNER_TRIAL.md).
 No participant trial has been run yet.
@@ -134,12 +179,53 @@ settings. Basic keeps a simpler page layout; planning workshops and state
 demonstrations belong to Advanced. Changing modes starts a fresh preview
 browsing session.
 
-**Architecture is the sitemap plan.** In **Build your design system → Architecture**, select an entry to edit
-its label, parent or existing-section destination. Add/delete entries, move them
-within their level and undo the last change. Planned items can appear in the
-footer without a link; editing does not create new content sections. The text
-editor remains available for bulk edits. The plan updates the responsive preview,
-live HTML inspector, exports and saved projects.
+**Information Architecture and Sitemap have different jobs.** The Brief agrees the
+release scope. Architecture organizes the full content structure, labels and
+relationships, including information inside pages. The visitor sitemap is a
+selected navigation view. The lesson includes a Contact/Opening hours example and
+[NN/g's IA/sitemap guidance](https://www.nngroup.com/articles/information-architecture-sitemaps/).
+
+In **Build your design system → Architecture**, the main control is an expandable,
+searchable **Website content structure**. It shows meaningful containers and the
+actual sample content: Header logo/wordmark/navigation, Home's Hero heading,
+paragraphs, image/alternative text/caption and CTAs, component content, lists,
+tables, form fields/options and Footer. Basic currently has 132 entries and
+Advanced 395; both samples contain five levels of content. CSS-only wrappers are
+omitted. Navigation links reference their destinations instead of duplicating
+the destination's content. Header and Footer are shared regions.
+
+Expand individual branches, search content or use Expand all / Collapse all.
+Select an entry to inspect its current content and destination reference, change
+its planning label/type/parent, write planned content and notes, and set a planning
+status. Add child/sibling/top-level entries, move sibling branches, reparent or
+delete a branch, and undo the last content change. The content editor supports up
+to twelve levels and 1,000 entries as safety bounds, not recommended IA depths.
+Repeated role labels, such as Paragraph, have distinct identities and are editable.
+
+**Current sample content and planned content are separate.** Current content is
+read from local authored sample HTML and refreshed when the project changes.
+Planned wording (including an explicitly empty draft) and notes are saved in project
+JSON/local storage; they do not rewrite the teaching website or create pages.
+Restore current sample content discards that sample's content planning edits and
+is undoable. The other sample's plan and sitemap choices are retained.
+
+**Manage sitemap destinations** is a separate, initially collapsed panel. Its
+destination hierarchy and inclusion checkboxes preserve existing custom outlines,
+stable identities, link bindings and per-sample choices. Excluding a destination
+parent suppresses its sitemap branch while retaining descendant choices. Removing
+Header from the content plan does not suppress Home: containment and navigation
+are different relationships. Select a canonical section and use **Edit this
+sitemap destination** to reach its existing destination controls. Navigation
+references have no separate sitemap membership.
+
+Groups are unlinked sitemap headings; the planned-entry toggle allows selected
+unlinked destinations as labelled text. Basic defaults Home/Footer to excluded,
+but explicit choices can include them. The selected sitemap updates in the
+preview, HTML inspector and downloaded HTML. The secondary text/destination editor
+retains its previous three-level bounds; these do not constrain the full content
+outline. Existing custom outlines migrate into the content plan, attaching actual
+section content where a known destination matches and retaining unknown planned
+entries. Saved content plans retain their identities across rename/move/import.
 
 **Palette → Webpage backgrounds** follows the Brand and Main Palettes. Choose
 Body, Header, Main and Footer backgrounds from every Brand Palette colour, a generated
@@ -164,21 +250,19 @@ Basic's main sections remain transparent so the Main background shows through;
 cards and controls retain their surface colours. The centre Palette lesson shows
 the current region colours, text/link contrast and direct CSS/HTML inspector actions.
 
-The starter maps all sections and content
-groups in the selected Basic or Advanced sample, including cards, lessons and
-workshop topics. Both sample footers use this map, with links to existing content.
-The footer Sitemap accordion starts collapsed; identity, key links and Back to top stay readily available.
-The original six-entry starter upgrades automatically. Complete sample maps
-follow mode changes; custom edits are preserved. **Use complete Basic/Advanced
-sitemap** restores the selected inventory, confirms section/topic counts and
-opens the centre map for review. Repeated clicks confirm when it is already
-complete. Browse **Sitemap** in the preview footer for its links. Use `Parent > Child` for two levels,
-up to 64 entries and 64 characters per label. New, unbuilt entries are marked
-**Planned page**. This is a single-page content map: main navigation can show a
-shorter selection of key destinations. Basic's lists demonstrate `ul`, `ol` and
-`dl`, with a tall checklist beside workflow/terms panels when space allows.
-Sections stack on smaller screens; shared gap, card minimum, reading width and
-responsive settings continue to drive the exported layouts.
+The destination starter maps the selected sample's existing section anchors.
+Both footers use its selected entries; the footer Sitemap accordion starts
+collapsed while identity, key links and Back to top remain readily available.
+Older complete outlines upgrade automatically. Complete destination maps follow
+mode changes; custom edits are preserved. **Use complete Basic/Advanced destination
+outline** restores that sample's destination plan, leaving the full content plan
+unchanged. The optional sitemap text editor uses `Parent > Child > Detail` for
+three navigation levels, up to 64 nonempty lines and 64 characters per label.
+
+The full content structure above it can describe several levels within one page,
+such as Home → Hero → Hero image → Image → Alternative text. Use only the depth
+needed to understand content and relationships. Basic's lists demonstrate `ul`,
+`ol` and `dl`; layouts continue to use the shared responsive design tokens.
 
 The **Project brief** lesson teaches seven website-specific basics: purpose,
 audience, pages/features, content, design requirements, delivery and success.
@@ -241,7 +325,7 @@ Brief, Architecture and Wireframe come before palette design. Record the audienc
 main task, scope, success signal and constraints in the brief.
 Use Architecture's short UX planning overview to identify tasks, define scope,
 group and label content, and check a route with the intended audience. Its outcome
-is an agreed sitemap connecting essential requirements to pages for the wireframe.
+is an agreed information architecture and selected visitor sitemap for the wireframe.
 Write a content map with up to 64
 entries (`Lessons > Layout` creates a child), compare split/stacked wireframes,
 and compare the hierarchy before styling. Prototype is the final review step:

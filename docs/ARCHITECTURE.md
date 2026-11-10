@@ -55,13 +55,73 @@ page remains isolated in its iframe and uses the unchanged export generators.
 guided editor, persisted with projects and emitted into standalone HTML. Both
 sample modes continue to share one project; CSS still exports both themes.
 
+## Local CSS first and optional page utilities
+
+`page-utilities.js` exposes a fixed 20-rule vocabulary for lesson examples only.
+It does not register an export contributor or wrap `cssExport()`. Neither sample
+adds its exercise utility classes to exported HTML. The live inspector, preview
+and downloaded website therefore share the same component HTML and local CSS,
+with normalized project tokens supplying values. The vocabulary covers Flexbox/
+Grid, spacing, theme colours, corners and fonts. No imported names, selectors or
+declarations are accepted, and there is no framework, compiler, network dependency
+or project-schema change.
+
+The optional exercise instructs learners to append a selected rule to a practice
+copy of the local stylesheet and add its class in the copied HTML. Equal-specificity
+conflicts use stylesheet order; HTML class order has no effect. Higher-specificity
+component rules still apply. These rules are a bounded teaching vocabulary, not
+a general Tailwind implementation or a new cascade-layer contract.
+
+`utility-lesson.js` initializes after `spacing-lesson.js` and appends a labelled
+section after its five teaching parts. Its stylesheet affects Studio teaching UI
+only. The initial view teaches semantic HTML, a linked local stylesheet and the
+base `.card` rule read directly from the current CSS export. A minimal example
+is labelled separately from the complete page. Local CSS is the course's starting
+approach, with reusable component rules and shared tokens; it remains a complete
+route to a finished website.
+
+The lesson explicitly orders the learning transition: local component
+`.card { padding: var(--space-6); }`, locally authored utility
+`.p-6 { padding: var(--space-6); }`, then Tailwind-generated `p-6` in a separate
+practice project. It explains that tokens hold decisions and classes apply them
+to HTML. The supplied Tailwind source maps `--spacing` to `--space-unit`, retaining
+the same six-unit spacing decision. Palette/token guidance, the catalogue,
+workflow, Deliver and the exported Advanced learning FAQ reinforce that sequence;
+they do not introduce a framework dependency into the website.
+
+A closed native disclosure introduces optional utility practice, keeping the
+20-class vocabulary in a second closed disclosure. Five class choices (including
+both p-6 and p-4) connect an authored practice rule to a current-theme source token.
+Separate code panels show the actual exported article and a prospective practice
+tag with only the selected utility added. Measurements explicitly describe the
+unchanged component preview, before the exercise. Reads use fixed IDs and the
+shared token parser; project/output strings enter via
+textContent. Token parsing is cached by exported CSS and unchanged text nodes
+survive refresh. Stage/preview/disclosure events refresh the visible lesson.
+The initial Inspect card CSS action opens the real full stylesheet at `.card`.
+Practice inspection actions also open the real component HTML/CSS, never a
+substitute exercise export. Existing configuration routes retain shared state;
+the preview action focuses the article without changing project data. Selection
+is session UI only. Opening utility practice refreshes measurements. The vocabulary
+table scrolls locally on narrow screens. An ordinary fragment link leads to the
+Tailwind section in Deliver; its return link leads back to this local CSS lesson.
+Existing section navigation activates the corresponding stage without changing
+project values or replacing the preview document.
+
 ## Tailwind mapping lesson and optional source target
 
 `tailwind-bridge.js` registers after the learning/spacing lessons and before
 section return links. It appends a section inside Deliver's existing centre
 lesson, retaining the twelve stages and existing inspector languages. Scoped
-`tailwind-bridge.css` styles that teaching UI only. The existing HTML/CSS generators,
-website classes, project schema and preview document are unchanged.
+`tailwind-bridge.css` styles that teaching UI only. This module leaves the existing
+HTML/CSS generators, website classes, project schema and preview document unchanged.
+
+The introduction makes the framework exercise optional and connects locally
+authored utilities with Tailwind-generated utilities. It directs students to a
+separate practice project, the mapped theme and one article, then asks them to
+compare generated rules and computed properties before extending the example.
+Custom utility names need that theme mapping. No full website conversion or
+automatic migration is offered, and local CSS remains a valid finished result.
 
 The module reads actual CSS export declarations through `dssReadTokens`, keeping
 last definitions per light/base and dark scope. A fixed map traces 24 source
@@ -147,8 +207,13 @@ and states remain secondary references rather than a second numbered curriculum.
 labels, phases, lesson IDs, tasks and CSS declaration targets. The existing
 `dssShowWizardStep(n, focus)` updates controls, location and `DSStudio.activeStage`,
 then emits `stage:change`. `studio-learning.js` selects the matching lesson and
-focuses its heading on deliberate navigation. Startup expands only the preview;
-navigation never marks completion. The step list is a collapsed Choose a step
+focuses its heading on deliberate navigation. Startup expands the active lesson
+(Brief on a normal load) as well as the preview, without moving focus. Reloading
+a step's section fragment activates and opens that lesson after the registry's
+`ready` event, so early fragment scrolling cannot be undone by lesson initialization.
+The same activation
+path opens matching lessons for all twelve steps; navigation never marks
+completion. The step list is a collapsed Choose a step
 disclosure. Numeric indices and existing control/lesson IDs remain compatible.
 `stageOrder` and `orderedStages` define display order independently of the stable
 internal indices. `position` supplies visible numbers. Previous/Next, progress,
@@ -283,29 +348,135 @@ Feature scripts still share globals (notably `cssExport` is wrapped by advanced 
 
 ## Project planning workflow
 
+### Actual website content structure
+
+The primary Architecture control is now the content outline, distinct from the
+visitor sitemap's destination hierarchy described below. `content-architecture.js`
+loads after `design-process.js` and before core state so the shared normalizer can
+validate additive `designProcess.contentPlan.basic/advanced` data. A null mode
+means use the current sample inventory; an array is a saved content planning
+snapshot, including an intentionally empty array.
+
+`sample-homepage.js` and `basic-homepage.js` expose their local authored generators
+as `DSStudio.samples.advancedHtml/basicHtml`. The content model parses these inert
+strings with DOMParser and visits semantic regions/groups/content, omitting CSS
+wrappers, scripts, styles and decorative SVG internals. It captures headings,
+paragraphs, CTAs and fragment references, figures/alternative text/captions,
+lists/terms/tables, form controls/options and shared Header/Footer content. Header
+logo/wordmark and Home/Hero are explicit. Numeric progress values become strings.
+Default Basic has 132 entries and Advanced 395, with five levels in each.
+
+The IA lesson within the Advanced sample is represented as a generated planning
+view, and the footer sitemap as generated destinations. Their recursive contents
+are not inventoried, preventing the content model from containing itself. The
+collector suppresses content-map generation during source inspection, caches each
+mode's source signature including the separate Advanced settings object, and uses parent/child indexes for rendering/normalization.
+The UI defers refresh while Architecture is inactive and catches up on stage entry.
+
+Content records have stable `content-*` IDs, parentId, label, type
+(region/page/section/group/text/image/link/field), actual value, textual source
+reference, sourceKey, nullable draft, planning status and notes. Destination
+references use that sample's fixed-ID allowlist. Source keys associate saved
+records with current actual values independently of edited labels/parents. A
+missing source is identified in the selected-entry editor. New source items are
+available through explicit sample restoration rather than silently undoing a
+learner's deliberate deletions.
+
+Imported rows are bounded to 1,000 per mode and twelve levels; cycles/duplicate IDs
+are rejected, missing parents are promoted to roots, and valid rows are ordered by
+parent/sibling relationships. Label/value/reference/notes lengths are bounded to
+120/2,400/1,000/1,200 characters. Draft is null or a bounded string; empty draft is
+distinct from no draft. Content is always escaped or set with textContent/value.
+Each mode's normalized plan is also bounded to 500,000 serialized characters;
+structural edits that exceed the budget are rejected rather than partially saved.
+Project JSON uploads accept up to 4 MB so both bounded plans can round-trip through
+the real file picker; this replaces the token-only application's 100 KB limit.
+Imported source keys are map lookups, never selectors or executable code. Imported
+references are displayed as text, never assigned to href or fetched. No imported
+HTML is passed to the collector or inserted into the document.
+
+For old projects without contentPlan, the model inventories actual sample content.
+Complete sample outlines keep their existing destination metadata. Custom outlines
+are incorporated into the content plan with `content-legacy-ia-N` identities;
+matching canonical sections retain their actual child content, while unknown
+entries remain planned. Aliases and explicit pageLinks resolve through the same
+`DSStudio.process.destinationId()` helper as sitemap output. Repeated references to
+a claimed destination become links rather than duplicate destination subtrees.
+
+`content-outline.js` initializes after site-builder and before studio-learning. It
+replaces the primary flat IA interaction with native nested details/lists and
+selection buttons, search with ancestor context, expand/collapse, a labelled detail
+form, child/sibling/root creation, subtree reparent/reorder/delete and one-change
+Undo. IDs preserve identity with repeated labels, rename and moves. Parent options
+omit descendants and moves beyond the depth bound; submit revalidates forged
+choices. Current sample content is read-only; draft text/status/notes plan changes
+without rewriting sample HTML. Per-mode snapshots persist via existing JSON/local
+flows. Restoration affects only the current mode and can be undone. Mode changes,
+reset/import and external planning changes clear incompatible Undo history.
+
+The old destination editor and raw text outline are secondary collapsed panels.
+Canonical sections can open their corresponding destination controls; navigation
+references cannot set independent membership. Deleting or moving Header in the
+content plan never suppresses Home. Sitemap ancestor suppression applies only
+inside the separate destination hierarchy, not inside content containment.
+
+The centre lesson and Advanced HTML share an escaped, collapsible full-content
+artifact. Open centre branches survive rerender by stable content IDs. The legacy
+destination outline is a separate optional disclosure beside the visitor sitemap
+preview. Exported artifact CSS is supplied by design-process; Studio control CSS is
+`content-architecture.css`. Existing token, CSS inspector, live page and export
+generation remain shared and dependency-free.
+
+### Destination planning and compatibility
+
+
 `design-process.js` loads after the registry/font helpers and before core state.
 Its `DSStudio.process` API provides fresh defaults, normalization, a bounded
 sitemap parser, shared artifact HTML and artifact CSS. `state.designProcess` holds
 plain text goal/audience/scope/content/constraints/delivery/success, a multiline
-two-level page map,
+three-level destination outline plus per-mode content planning snapshots,
 `split`/`stack` wireframe arrangement, wireframe notes, prototype task and notes.
 Imports bound text lengths and accept only the two arrangements; missing or invalid
 planning objects receive starter data. Empty draft strings remain empty. No plan
 text becomes executable markup, a URL, a CSS declaration or a token.
 
 `site-builder.js` registers after the existing feature modules and before studio
-learning. It provides a two-level CRUD editor in Architecture, backed by the same
+learning. It provides the secondary three-level sitemap CRUD editor in Architecture, backed by the same
 `designProcess.pages` text and bounded parser. `pageLinks.basic/advanced` store
 label-to-fixed-ID mappings (empty string means planned); normalization accepts
 only that sample's inventory IDs and at most 64 bounded labels per mode.
-`showPlanned` is a validated boolean, default false for legacy plans. Creation,
-rename, deletion and reordering preserve the current visibility choice; only the
-checkbox explicitly changes it, and Undo restores the preceding plan and choice.
-Basic retains its Home/Footer exclusion; Advanced already displays the complete
-map. Existing label aliases still work.
+`showPlanned` is a validated boolean, default false, now applied consistently to
+selected unlinked entries in both samples. Existing label aliases still work.
+`iaEntries.basic/advanced` store stable `ia-N` identities, one/two/three-label paths,
+page/section/group/content types and boolean `includeInSitemap` values. Invalid or
+duplicate IDs/paths, excessive depth and non-string labels are rejected. Each
+sample's metadata is capped at 192 rows (the maximum derived from 64 outline lines);
+the structured editor continues to bound structural changes to 64 entries.
+Metadata-only changes preserve raw outlines with up to 192 derived nodes.
+`tree()` exposes the full recursive outline; `hierarchy()` keeps its two-level
+projection for existing wireframe/lesson readers. `entries()` adds depth and index
+positions to flattened records. Depth, positions and parent IDs are derived from
+the outline rather than persisted in metadata.
+
+`DSStudio.process.entries()` reconciles the outline with metadata by path, retaining
+matched identities and assigning bounded fresh IDs to new paths. Structured rename
+and reparent update paths while preserving IDs, types and inclusion. Reordering
+retains IDs. Bulk text edits retain matching paths; a newly typed path is a new
+entry. The saved destination outline remains visible independently of sitemap selection. Legacy plans
+without metadata default first/second-level entries to selected except Basic
+Home/Footer, which can be included explicitly. New third-level content details
+default to excluded. Each sample retains its own choices.
+
+The labelled, locally scrolling inclusion region has one native checkbox per entry.
+Excluding an ancestor disables descendant controls without changing saved choices.
+Unchanged rows/inputs survive updates to retain focus. Groups are nonlinked headings
+when they have eligible children; missing destinations remain labelled text when
+enabled, never fabricated links. Undo restores the complete preceding plan.
 Relationships affect the map/footer, not the authored body-section structure.
-Rename preserves child order and assigned destinations; parent deletion removes
-its children. A one-change in-memory undo is cleared by external edits/imports,
+Rename and reparent preserve the full descendant subtree, identities, choices and
+assigned destinations. Parent choices exclude cycles and moves deeper than three
+levels, including subtree height. Reorder moves whole sibling branches; deletion
+removes the complete selected branch. A one-change in-memory undo is cleared by external edits/imports,
 reset and mode changes. Text edits and complete-inventory restoration remain.
 
 `webpage-backgrounds.js` initializes after studio learning, binding Palette's
@@ -373,7 +544,7 @@ The module's initializer binds planning inputs through the existing `apply()` /
 UX requirements-planning overview: identify audience tasks, define essential
 scope/content and ownership/accessibility/dependencies in the brief, group and
 label content, then check a task route with an intended user. Its stated outcome
-is an agreed sitemap ready to guide Wireframe. The authored overview is inserted
+is an agreed IA and selected visitor sitemap ready to guide Wireframe. The authored overview is inserted
 by studio learning after the lesson's heading/introduction and before its practice
 task; it adds no planning fields or automated validation of the learner's decisions.
 The planning module wraps the CSS generator for shared artifact
@@ -705,12 +876,12 @@ must not shift the saved open state of a FAQ or mobile menu.
 Basic includes titled unordered/ordered/description list examples. Its equal-width auto-fit card grid uses the saved minimum
 and gap rules, adding columns as space permits without manual row spans. Both samples
 have a footer Sitemap navigation generated by `DSStudio.process.sitemapHtml()`.
-Both samples share one classic footer template and its complete CSS in
-`sample-system.js`. Main navigation sits beside the brand and the sitemap is
-always visible below it. Advanced keeps its full map; Basic shows only Components,
-Layouts and Forms and their known child links. It has no separate Explore
-menu, Home/Footer navigation groups or sitemap disclosure. The helper call uses
-linksOnly plus a fixed parentIds allowlist. Parent groups occupy responsive Grid
+Both samples share one classic footer template and its CSS in `sample-system.js`.
+Both call `sitemapHtml({linksOnly:true})`; no fixed Basic parent allowlist remains.
+Per-entry inclusion, branch suppression, type and valid destinations determine
+what appears. Basic defaults to omitting Home/Footer but explicit choices override
+that default. Selected unlinked entries require showPlanned in either sample.
+Parent groups occupy responsive Grid
 columns, with child links stacked vertically in semantic nested lists.
 The Sitemap heading is left-aligned. The capped-width column grid is centred,
 with each group's heading and vertically stacked sublinks centred in its column.
@@ -725,16 +896,17 @@ the inner map reveal the ancestor in standalone exports; preview fragment
 handling already opens ancestor disclosures. Existing keyed preview capture
 preserves open/closed state and summary focus during palette/theme updates,
 without storing the disclosure in project JSON or adding exported scripts.
-In Basic, unlinked entries and children of omitted parents are not promoted. Planning data remains unchanged;
-empty filtered maps explain that no linked sections are available. Copyright and
+Unselected entries and children of omitted parents are not promoted. Planning data remains unchanged;
+empty filtered maps explain how to review inclusion and destinations. Copyright and
 Back to top form the bottom row, and both headers expose `#top`.
-The Basic Architecture plan artifact has its own view filter: Forms (including
-legacy Sign up/Signup labels) and Footer parent groups are hidden, while all
-other parents retain their children. The `.process-map--basic` list lays out
-parent groups left to right with children below, wrapping to available width.
-Filtering is render-only: the planning editor, saved JSON, page sections and
-footer links retain their full inventory. Advanced keeps its original tree.
-If filtering removes every group, the artifact explains the empty view.
+Both samples' Architecture artifacts show the complete IA, including Forms/Footer
+and information excluded from the sitemap. The `.process-map--basic` list retains
+wrapping horizontal groups; Advanced retains its tree. A separate visitor sitemap
+preview uses the same generator as the footer. Shared guidance distinguishes Brief
+scope, IA organization and visitor navigation, with a Contact/Opening hours example
+and a link to NN/g's Information Architecture vs. Sitemaps. This shared artifact also
+appears in Advanced standalone exports. Neither inclusion nor type removes authored
+website content or creates arbitrary pages.
 
 The shared, fixed inventories in `design-process.js` map all major sections and
 content groups, including each Basic card/list and Advanced lesson/workshop.
@@ -743,28 +915,35 @@ Matching ignores case, spacing and hyphens. Basic accepts its former section
 and lesson labels as aliases for stable IDs. Its inventory names Home, Components, Layouts, Forms and Footer. The exact previous complete Basic plan
 resolves to the new inventory without rewriting stored data; custom plans keep
 their authored labels and legacy destinations.
-In the full map, unknown labels remain escaped text marked Planned page; Basic
-filters them from its footer. Empty maps remain explicit.
+The IA retains unknown labels as escaped text. The sitemap includes them as labelled
+planned destinations only when selected and showPlanned is enabled. Empty maps remain explicit.
 
-`samplePages(mode)` generates the complete two-level plan. `currentPlan()` resolves
-an untouched canonical Basic/Advanced inventory or the exact legacy six-entry
+`samplePages(mode)` generates the three-level destination starter.
+It does not represent the full actual-content inventory. `currentPlan()` resolves
+an untouched canonical Basic/Advanced inventory, the previous complete two-level
+inventories, or the exact legacy six-entry
 starter to the selected sample's inventory. It leaves custom plans unchanged,
 including empty plans. Resolution is pure: stored planning data is preserved;
 preview, editor, centre artifacts and HTML exports all use the resolved plan.
-The restore button explicitly replaces custom entries with the selected inventory.
+The restore button replaces custom entries with the selected inventory and resets
+that sample's destination/type/inclusion metadata, preserving the other sample's metadata.
 It reports applied/already-complete status with section/topic counts and expands
 the centre Architecture map without moving keyboard focus. Feedback clears on
 planning edits, sample changes or imports with a different plan. Restoring the plan does not generate new pages or change either footer
 presentation.
-The parser allows 64 entries, two levels and 64 characters per label; the text
-field/normalizer cap input at 8,400 characters. Footer links use only fixed IDs.
+The parser allows 64 nonempty lines, three levels and 64 characters per label; the text
+field/normalizer cap input at 8,400 characters. Fourth-level raw lines are retained
+in saved text, flagged with native field validation and an editing status, and
+excluded from rendered trees; imported metadata deeper than three is rejected.
+Footer links use only fixed IDs.
 JSON/local project flows retain custom edits. Main navigation remains a shorter
 selection of destinations rather than duplicating the entire content inventory.
 
 Basic footer sitemap is one block with Components, Layouts
-and Forms and their known children. The helper's parentIds allowlist is
-['features','lists','signup']; Home/Footer and all other parent targets are
-omitted without promoting their children or rewriting planning data.
+and Forms and their selected children by default. Home/Footer start excluded
+and can be selected explicitly. The shared sitemap renderer supports all three
+levels; excluded or ineligible ancestors suppress their branch. No parent-ID
+allowlist overrides saved choices.
 The identity row also has a labelled Footer navigation with the same Home,
 Components, Layouts and Forms links as the header. It sits to the right on wide
 screens and beneath the brand at the saved stacking cutoff; links wrap as needed.
@@ -781,8 +960,15 @@ checkbox controls, with native validation and live demo feedback. Semantic
 landmarks, one H1, skip link and source reading order remain intact. Layouts
 stack at the saved cutoff; no tab/modal/carousel scripts are added.
 
-The current inventory has sixteen entries, with fourteen links in Basic's
-three-group footer. The previous thirteen-entry mock inventory is recognised
+The Basic destination starter has 28 saved-outline entries: sixteen linked
+sections/groups plus twelve descriptive entries retained for compatibility. Its default three-group footer retains fourteen links. Advanced has
+49 destination-outline entries: 38 linked entries plus eleven descriptive entries. These third-level
+examples plan actual information within existing components; no extra pages,
+anchors or body content are generated. Both samples start the new content details
+excluded from sitemap navigation. The secondary destination editor retains its three-level bound; the primary
+actual-content outline supports deeper structures. The lesson encourages fewer
+levels where sufficient and cites NN/g's flat/deep hierarchy guidance without
+presenting a universal depth rule. The previous thirteen-entry mock inventory is recognised
 alongside older complete inventories, and resolves without changing stored
 planning text. Its previous section/topic names remain fixed-ID aliases. Radio
 choices, FAQ state and other form values participate in preview capture/restore.
@@ -995,8 +1181,9 @@ The centre pane uses native `details` wrappers with the original section IDs.
 `dssRevealSection()` opens destinations for shortcuts; fragment navigation opens
 closed ancestors. The sticky section menu and expand/collapse controls precede
 the responsive preview, which remains the first centre learning section,
-configured in Fluid mode and initially expanded. All other centre sections and
-wizard disclosures start collapsed. Section IDs stay stable
+configured in Fluid mode and initially expanded. The active step's centre lesson
+also starts expanded; other centre lessons and optional wizard disclosures start
+collapsed. Section IDs stay stable
 while displayed numbers follow the new order. A direct fragment link opens its
 destination. Opening/resizing the responsive section refreshes its width readout.
 Section scroll margins follow measured header/navigation heights rather than a

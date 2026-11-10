@@ -39,9 +39,9 @@
     $('dockDownload').textContent = 'Download ' + (language === 'css' ? 'tokens.css' : language === 'json' ? 'design-system-studio.json' : 'index.html');
     $('dockCopy').textContent = copyLabel();
     $('dockNote').textContent = language === 'json' ? 'Project JSON preserves editable settings and planning data. Load it into the studio to resume your work.' : state.sampleMode === 'basic' ?
-      `Basic ${language.toUpperCase()}: ${section() === 'all' ? 'complete file' : 'study excerpt; shared foundations remain in the complete CSS'}. Download saves the complete file. Save index.html beside tokens.css.` : language === 'css' ?
-      'Brand → semantic → component rules for light and dark themes. Save tokens.css beside index.html.' :
-      `The ${state.theme} home page, also shown in the responsive preview. Save index.html beside tokens.css; images are embedded.`;
+      `Basic ${language.toUpperCase()}: ${section() === 'all' ? 'complete file' : 'study excerpt; shared foundations remain in the complete CSS'}. Local HTML and reusable component CSS; no framework needed. Download saves the complete file. Save index.html beside tokens.css.` : language === 'css' ?
+      'Local CSS: shared tokens → reusable component rules for light and dark themes. No framework needed. Save tokens.css beside index.html.' :
+      `Local HTML for the ${state.theme} home page, also shown in the responsive preview. Save index.html beside tokens.css; images are embedded.`;
     DSStudio.emit('inspector:change', { language, section: section(), completeCss: language === 'css' && section() === 'all' ? code : null });
     tabs.forEach((id, index) => {
       const selected = language === languages[index];

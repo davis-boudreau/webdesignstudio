@@ -15,9 +15,11 @@
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/design-process.css?v=20261104-region-padding">
+    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261110-content-outline">
+    <link rel="stylesheet" href="src/css/design-process.css?v=20261109-three-level-ia">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
+    <link rel="stylesheet" href="src/css/utility-lesson.css?v=20261106-local-css-first">
     <link rel="stylesheet" href="src/css/tailwind-bridge.css?v=20261105-tailwind-mapping">
     <link rel="stylesheet" href="src/css/spacing-lesson.css?v=20261103-spacing-lesson">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
@@ -72,7 +74,7 @@
             </div>
             <div class="journey-pane" data-journey-pane="0">
               <h3 class="journey-stage-title">1. Write the project brief</h3>
-              <p class="help">Agree the website's purpose, audience, first-release pages and features, content, requirements and delivery plan. Keep the brief short; use it to guide your sitemap and design choices.</p>
+              <p class="help">Agree the website's purpose, audience, first-release pages and features, content, requirements and delivery plan. Keep the brief short; use it to guide information architecture and design choices.</p>
               <details class="learning-note build-guide">
                 <summary>What should I decide before changing styles?</summary>
                 <div class="learning-content">
@@ -107,10 +109,10 @@
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden>
               <h3 class="journey-stage-title">2. Map the information architecture</h3>
-              <p class="help">Use the brief to identify essential pages, content and user tasks. Group them into a clear sitemap and check the labels with your audience. The centre lesson guides this planning step.</p>
+              <p class="help">Use the brief to identify essential information, content and user tasks. Organize the full information architecture, then select useful sitemap destinations. Check labels and relationships with your audience; the centre lesson guides this planning step.</p>
               <div id="sitemap-editor"></div>
-              <details class="learning-note"><summary>Edit sitemap as text</summary>
-              <div class="field process-editor"><label for="plan-pages">Pages and content groups (sitemap)</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">The complete map follows the Basic or Advanced sample selected in the inspector. Edit it to plan your own content; custom edits are kept when switching samples. Use one entry per line, up to 64 entries, with Parent &gt; Child for two levels and labels up to 64 characters. Labels are plain text, not URLs. The centre lesson and footer share this plan; only existing content becomes a link.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample sitemap</button><p class="help" id="plan-sample-status" role="status"></p><a href="#process-ia">Review the sitemap in the centre lesson</a></div>
+              <details class="learning-note"><summary>Edit information architecture as text</summary>
+              <div class="field process-editor"><label for="plan-pages">Sitemap destination outline</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">Use this text to plan sitemap destinations. Use the content outline above for the full website inventory and deeper nesting. Custom destination outlines are kept when switching samples. Use one entry per line, up to 64 lines, with Parent &gt; Child &gt; Detail for up to three levels and labels up to 64 characters. Labels are plain text, not URLs. Architecture can show this separate destination outline. Choose sitemap inclusion separately below; excluding an entry does not remove website content. Only existing destinations become links.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample destination outline</button><p class="help" id="plan-sample-status" role="status"></p><a href="#process-ia">Review the full information architecture and sitemap preview</a></div>
               </details>
               <p class="journey-tip"><strong>Before moving on:</strong> Can someone predict where to find the information needed for the main task?</p>
             </div>
@@ -1281,6 +1283,7 @@
                     <li><strong>Semantic:</strong> <code>--primary</code> for an action background and <code>--on-primary</code> for its text.</li>
                     <li><strong>Component:</strong> <code>--button-primary-bg</code> for one button variant. Inspect component tokens too when customizing buttons.</li>
                   </ul>
+                  <p>Tokens are CSS custom properties, not class names. A local component class such as <code>.ds-button--primary</code> uses those values to style an HTML element. The same decisions can later support a small local utility or an optional Tailwind theme mapping.</p>
                   <p><strong>Try it:</strong> choose Supporting colour, then click a swatch. Check the Current Main Palette summary and the secondary actions in the responsive preview. Switch themes and compare foreground/background contrast. Fixed Button Wizard overrides keep their own colours until edited.</p>
                   <p class="learning-reference">Read more: <a href="https://designsystem.digital.gov/design-tokens/">USWDS design tokens</a>.</p>
                 </div>
@@ -1988,6 +1991,7 @@
                   <li><strong>Test:</strong> inspect contrast, keyboard interaction, text resizing, real content and component states.</li>
                   <li><strong>Deliver:</strong> export CSS and a JSON backup, document usage, and retest after integration.</li>
                 </ol>
+                <p><strong>Learn the CSS before changing how you author it:</strong> use a token in a local component rule, try one locally authored utility, then compare a Tailwind-generated utility using the mapped theme. <a href="#studio-section-3">Follow the three-step spacing example</a>, then use <a href="#studio-section-6">Deliver's optional Tailwind exercise</a>. You can complete the whole website with local CSS.</p>
 
               <details class="learning-note">
                 <summary>Why document decisions as well as values?</summary>
@@ -2041,6 +2045,7 @@
                 <summary>Why name tokens by purpose?</summary>
                 <div class="learning-content">
                   <p>A token is a named design decision. Purpose-based names help you change a theme without rewriting every component.</p>
+                  <p>For example, <code>--space-6</code> is a spacing token; <code>.card</code> is a component class that can use it. A local utility <code>.p-6</code> can apply that same value to one element. Tailwind can later generate <code>p-6</code> from the mapped spacing theme. <a href="#studio-section-3">Compare all three in the spacing lesson</a>; the live inspector continues to show the local component implementation.</p>
                   <ul>
                     <li>Follow the layers: <code>--primary-500</code> is a foundation shade, <code>--primary</code> is an interface role, and <code>--button-primary-bg</code> is a component value.</li>
                     <li>The catalogue reads generated CSS declarations. Some values are resolved colours rather than alias references; matching values do not imply a live dependency.</li>
@@ -2090,21 +2095,23 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261104-architecture-overview" defer></script>
+      <script src="src/js/studio-registry.js?v=20261109-ia-sitemap-polished" defer></script>
       <script src="src/js/studio-appearance.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/brand-palette.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261104-architecture-overview" defer></script>
+      <script src="src/js/design-process.js?v=20261110-content-outline" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
-      <script src="src/js/core-state.js?v=20261105-studio-appearance" defer></script>
-      <script src="src/js/css-dock.js?v=20261103-spacing-lesson" defer></script>
+      <script src="src/js/content-architecture.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/core-state.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/css-dock.js?v=20261109-local-inspector" defer></script>
       <script src="src/js/advanced-params.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/journey-library.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-design.js?v=20261104-state-colour-dropdowns" defer></script>
-      <script src="src/js/sample-system.js?v=20261104-region-padding" defer></script>
-      <script src="src/js/sample-homepage.js?v=20261104-region-padding" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261104-background-opacity" defer></script>
+      <script src="src/js/sample-system.js?v=20261109-ia-sitemap-polished" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/page-utilities.js?v=20261109-local-inspector" defer></script>
       <script src="src/js/responsive-preview.js?v=20261104-cache-recovery" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
@@ -2114,15 +2121,17 @@
       <script src="src/js/colour-repair.js?v=20261104-body-background" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
-      <script src="src/js/section-accordions.js?v=20261103-single-wizard" defer></script>
-      <script src="src/js/site-builder.js?v=20261104-regions" defer></script>
-      <script src="src/js/studio-learning.js?v=20261104-architecture-overview" defer></script>
+      <script src="src/js/section-accordions.js?v=20261109-active-lesson-startup" defer></script>
+      <script src="src/js/site-builder.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/content-outline.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/studio-learning.js?v=20261109-ia-sitemap-polished" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/palette-process.js?v=20261104-status-palettes" defer></script>
       <script src="src/js/state-palettes.js?v=20261104-state-colour-dropdowns" defer></script>
       <script src="src/js/webpage-backgrounds.js?v=20261104-background-order" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261103-spacing-lesson" defer></script>
-      <script src="src/js/tailwind-bridge.js?v=20261105-tailwind-mapping" defer></script>
+      <script src="src/js/utility-lesson.js?v=20261109-learning-transition" defer></script>
+      <script src="src/js/tailwind-bridge.js?v=20261109-learning-transition" defer></script>
       <script src="src/js/section-navigation.js?v=20261104-home-links" defer></script>
     </body>
   </html>

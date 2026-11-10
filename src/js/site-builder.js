@@ -2,123 +2,158 @@
 /* Edit the existing bounded plan; previews and exports keep
    using their shared generators. Imported labels are always rendered as text. */
 DSStudio.register({
-  id: 'site-builder', title: 'Sitemap editor',
+  id: 'site-builder', title: 'Information architecture and sitemap choices',
   init() {
     const get = id => document.getElementById(id);
     const root = get('sitemap-editor');
     root.className = 'sitemap-editor';
-    root.innerHTML = `<label for="sitemap-items">Sitemap entries</label>
+    root.innerHTML = `<label for="sitemap-items">Sitemap destination entries</label>
       <select id="sitemap-items" size="8" aria-describedby="sitemap-help"></select>
-      <p class="help" id="sitemap-help">Select an entry to edit its label, parent or destination. Changes appear in the responsive preview, footer sitemap and live HTML inspector.</p>
+      <p class="help" id="sitemap-help">Manage visitor navigation independently from the content outline above. This destination hierarchy also preserves previous outlines. Its compact editor supports three navigation levels; the content outline supports deeper containment.</p>
+      <details open><summary>Sitemap inclusion by entry</summary><p class="help">Each entry has its own choice. Excluding a parent hides its branch from the sitemap; child choices are retained. These settings apply to the selected sample.</p><div id="sitemap-choices" class="sitemap-choices" role="region" tabindex="0" aria-label="Sitemap inclusion choices"></div></details>
       <div class="button-row"><button id="sitemap-new" type="button" class="ghost">New entry</button><button id="sitemap-up" type="button" class="ghost">Move up</button><button id="sitemap-down" type="button" class="ghost">Move down</button></div>
       <form id="sitemap-form">
         <label for="sitemap-label">Entry label</label><input id="sitemap-label" maxlength="64" required autocomplete="off">
         <label for="sitemap-parent">Parent section</label><select id="sitemap-parent"></select>
+        <label for="sitemap-type">Information type</label><select id="sitemap-type"><option value="section">Page section</option><option value="page">Page</option><option value="group">Group (heading only)</option><option value="content">Content item</option></select>
         <label for="sitemap-target">Link destination</label><select id="sitemap-target"></select>
-        <p class="help">Choose an existing section, or keep a planned page without a link. Two levels are supported.</p>
+        <p class="help">Choose an existing section, or keep a planned page without a link. Groups are headings rather than links. Information types describe the plan; they do not create or remove website content.</p>
         <div class="button-row"><button type="submit" class="ghost">Save entry</button><button id="sitemap-delete" type="button" class="ghost">Delete entry</button></div>
       </form>
-      <label class="sitemap-planned-toggle"><input id="sitemap-planned" type="checkbox"> Show planned entries in the footer</label>
-      <button id="sitemap-undo" type="button" class="ghost" disabled>Undo last sitemap change</button>
+      <label class="sitemap-planned-toggle"><input id="sitemap-planned" type="checkbox"> Also show selected planned entries without links</label>
+      <button id="sitemap-undo" type="button" class="ghost" disabled>Undo last architecture or sitemap change</button>
       <p id="sitemap-status" class="help" role="status"></p>`;
-    let selected = null, previous = null, signature = '', undoMode = null, ownChange = false;
-    const mode = () => state.sampleMode === 'basic' ? 'basic' : 'advanced';
-    const plan = () => DSStudio.process.currentPlan();
-    const groups = () => DSStudio.process.hierarchy(plan().pages);
-    const decode = () => selected === null ? null : selected.split(':').map(Number);
-    const entries = () => groups().flatMap(([label,children],p) => [[`${p}:-1`,label],...children.map((child,c)=>[`${p}:${c}`,`  — ${child}`])]);
-    const options = (control, items) => control.replaceChildren(...items.map(([value,label])=>new Option(label,value)));
+    let selected=null,previous=null,signature='',undoMode=null,ownChange=false;
+    const mode=()=>state.sampleMode==='basic'?'basic':'advanced';
+    const plan=()=>DSStudio.process.currentPlan();
+    const records=()=>DSStudio.process.entries(plan());
+    const key=node=>node.position.length===1?`${node.position[0]}:-1`:node.position.join(':');
+    const parentKey=node=>node.position.join(':');
+    const samePath=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+    const within=(path,parent)=>path.length>=parent.length && parent.every((part,i)=>path[i]===part);
+    const options=(control,items)=>control.replaceChildren(...items.map(([value,label])=>new Option(label,value)));
+    const strip=({id,path,type,includeInSitemap})=>({id,path:[...path],type,includeInSitemap});
+    const rows=new Map();
+    function syncChoices(nodes) {
+      const box=get('sitemap-choices'),keep=new Set(),effective=new Map();
+      nodes.forEach((node,index)=>{
+        const inherited=!node.parentId || effective.get(node.parentId);
+        effective.set(node.id,inherited && node.includeInSitemap);
+        const rowKey=mode()+':'+node.id;keep.add(rowKey);
+        let row=rows.get(rowKey);
+        if(!row){
+          const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');
+          input.type='checkbox';input.dataset.iaId=node.id;label.append(input,text);row={label,input,text};rows.set(rowKey,row);
+        }
+        row.input.checked=node.includeInSitemap;row.input.disabled=!inherited;
+        row.input.setAttribute('aria-label','Include '+node.label+' in sitemap'+(!inherited?', ancestor excluded':''));
+        row.label.classList.toggle('is-child',node.depth===2);
+        row.label.classList.toggle('is-grandchild',node.depth===3);
+        const description=node.label+(!inherited?' (ancestor excluded)':'');
+        if(row.text.textContent!==description)row.text.textContent=description;
+        if(box.children[index]!==row.label)box.insertBefore(row.label,box.children[index]||null);
+      });
+      for(const [rowKey,row] of rows)if(!keep.has(rowKey)){row.label.remove();rows.delete(rowKey);}
+    }
     function edit() {
-      const map = groups(), choice = decode();
-      const [p,c] = choice || [-1,-1], group = map[p];
-      const label = group ? c<0 ? group[0] : group[1][c] : '';
-      get('sitemap-label').value = label || '';
-      options(get('sitemap-parent'), [['','Top level'],...map.flatMap(([name],i)=>i===p && c<0 ? [] : [[String(i),name]])]);
-      get('sitemap-parent').value = group && c>=0 ? String(p) : '';
-      options(get('sitemap-target'), [['planned','Planned page (no link)'],['auto','Match the label automatically'],...DSStudio.process.inventory(mode()).map(([name,id])=>[id,name])]);
-      const links = plan().pageLinks[mode()];
-      get('sitemap-target').value = Object.hasOwn(links,label) ? links[label] || 'planned' : label ? DSStudio.process.inventory(mode()).find(([name])=>name===label)?.[1] || 'auto' : 'planned';
-      get('sitemap-delete').disabled = !group;
-      get('sitemap-delete').textContent = group && c<0 && group[1].length ? `Delete group (${group[1].length+1} entries)` : 'Delete entry';
-      const index = choice ? c<0 ? p : c : -1, count = choice ? c<0 ? map.length : group?.[1].length || 0 : 0;
-      get('sitemap-up').disabled = index<=0;
-      get('sitemap-down').disabled = index<0 || index>=count-1;
+      const nodes=records(),node=nodes.find(node=>node.id===selected);
+      const descendants=node?nodes.filter(item=>within(item.path,node.path)):[];
+      const height=node?Math.max(...descendants.map(item=>item.depth-node.depth+1)):1;
+      get('sitemap-label').value=node?.label || '';
+      get('sitemap-type').value=node?.type || 'page';
+      const parents=nodes.filter(item=>item.depth<3 && item.depth+height<=3 && (!node || !within(item.path,node.path)));
+      options(get('sitemap-parent'),[['','Top level'],...parents.map(item=>[parentKey(item),item.path.join(' / ')])]);
+      const parent=nodes.find(item=>item.id===node?.parentId);
+      get('sitemap-parent').value=parent?parentKey(parent):'';
+      options(get('sitemap-target'),[['planned','Planned page (no link)'],['auto','Match the label automatically'],...DSStudio.process.inventory(mode()).map(([name,id])=>[id,name])]);
+      const links=plan().pageLinks[mode()],label=node?.label;
+      get('sitemap-target').value=Object.hasOwn(links,label)?links[label] || 'planned':label?DSStudio.process.inventory(mode()).find(([name])=>name===label)?.[1] || 'auto':'planned';
+      get('sitemap-target').disabled=get('sitemap-type').value==='group';
+      get('sitemap-delete').disabled=!node;
+      get('sitemap-delete').textContent=descendants.length>1?`Delete group (${descendants.length} entries)`:'Delete entry';
+      const siblings=nodes.filter(item=>item.parentId===node?.parentId),index=siblings.findIndex(item=>item.id===selected);
+      get('sitemap-up').disabled=!node || index<=0;
+      get('sitemap-down').disabled=!node || index<0 || index>=siblings.length-1;
     }
     function sync() {
-      const current = plan(), next = JSON.stringify([mode(),current.pages,current.pageLinks,current.showPlanned]);
-      if (signature !== next) {
-        if (!ownChange || undoMode !== mode()) { previous = null; get('sitemap-undo').disabled = true; }
-        signature = next;
-        const list = entries();
-        if (!list.some(([key])=>key===selected)) selected = list[0]?.[0] ?? null;
-        options(get('sitemap-items'), list);
-        get('sitemap-items').value = selected ?? '';
-        get('sitemap-planned').checked = current.showPlanned;
-        edit();
-      }
+      const current=plan(),next=JSON.stringify([mode(),current.pages,current.pageLinks,current.iaEntries,current.showPlanned]);
+      if(signature===next)return;
+      if(!ownChange || undoMode!==mode()){previous=null;get('sitemap-undo').disabled=true;}
+      signature=next;
+      const nodes=records();
+      if(!nodes.some(node=>node.id===selected))selected=nodes[0]?.id ?? null;
+      options(get('sitemap-items'),nodes.map(node=>[key(node),'\u00a0\u00a0'.repeat(node.depth-1)+(node.depth>1?'— ':'')+node.label]));
+      get('sitemap-items').value=nodes.find(node=>node.id===selected)?key(nodes.find(node=>node.id===selected)):'';
+      get('sitemap-planned').checked=current.showPlanned;
+      syncChoices(nodes);edit();
     }
-    function commit(map, links, message, showPlanned = plan().showPlanned) {
-      const pages = map.flatMap(([label,children])=>[label,...children.map(child=>`${label} > ${child}`)]).join('\n');
-      if (map.reduce((n,[,children])=>n+1+children.length,0)>64 || pages.length>8400) {
-        selected = null;
-        get('sitemap-status').textContent = 'Keep the sitemap within 64 entries and 8,400 characters.'; return false;
-      }
-      previous = normalizePlan(); undoMode = mode();
-      state.designProcess = DSStudio.process.normalize({...plan(),pages,pageLinks:{...plan().pageLinks,[mode()]:links},showPlanned});
-      signature = ''; ownChange = true;
-      try { apply(); } finally { ownChange = false; }
-      get('sitemap-undo').disabled = false;
-      get('sitemap-status').textContent = message;
-      return true;
+    function commit(nodes,links,message,{showPlanned=plan().showPlanned,oldPath=null,newPath=null}={}) {
+      const current=plan(),sameStructure=samePath(nodes.map(node=>node.path),records().map(node=>node.path));
+      const pages=sameStructure?current.pages:nodes.map(node=>node.path.join(' > ')).join('\n');
+      if((!sameStructure && nodes.length>64) || pages.length>8400){get('sitemap-status').textContent='Keep the information architecture within 64 entries and 8,400 characters.';return false;}
+      if(nodes.some(node=>node.path.length>3)){get('sitemap-status').textContent='Use at most three information levels.';return false;}
+      const data={basic:current.iaEntries.basic.map(strip),advanced:current.iaEntries.advanced.map(strip)};
+      const used=new Set([...data[mode()].map(node=>node.id),...nodes.map(node=>node.id).filter(Boolean)]);let nextId=1;
+      for(const node of nodes)if(!node.id){while(used.has('ia-'+nextId))nextId++;node.id='ia-'+nextId++;used.add(node.id);}
+      data[mode()]=nodes.map(strip);
+      if(oldPath)for(const sample of ['basic','advanced'])if(sample!==mode())data[sample]=data[sample].flatMap(node=>!within(node.path,oldPath)?[node]:newPath?[{...node,path:[...newPath,...node.path.slice(oldPath.length)]}]:[]);
+      previous=DSStudio.process.normalize(current);undoMode=mode();
+      state.designProcess=DSStudio.process.normalize({...current,pages,pageLinks:{...current.pageLinks,[mode()]:links},iaEntries:data,showPlanned});
+      signature='';ownChange=true;try{apply();}finally{ownChange=false;}
+      get('sitemap-undo').disabled=false;get('sitemap-status').textContent=message;return true;
     }
-    const normalizePlan = () => DSStudio.process.normalize(plan());
-    get('sitemap-items').addEventListener('change', event=>{selected=event.target.value; edit();});
-    get('sitemap-new').addEventListener('click',()=>{selected=null; get('sitemap-items').selectedIndex=-1; edit(); get('sitemap-label').focus();});
+    get('sitemap-items').addEventListener('change',event=>{selected=records().find(node=>key(node)===event.target.value)?.id ?? null;edit();});
+    get('sitemap-type').addEventListener('change',()=>{get('sitemap-target').disabled=get('sitemap-type').value==='group';});
+    get('sitemap-parent').addEventListener('change',()=>{if(selected===null){const parent=records().find(node=>parentKey(node)===get('sitemap-parent').value);get('sitemap-type').value=parent?.depth===2?'content':'page';}});
+    get('sitemap-choices').addEventListener('change',event=>{
+      const input=event.target.closest('input[data-ia-id]');if(!input || input.disabled)return;
+      const nodes=records(),node=nodes.find(node=>node.id===input.dataset.iaId);if(!node)return;
+      node.includeInSitemap=input.checked;
+      commit(nodes,{...plan().pageLinks[mode()]},'Sitemap inclusion updated. Information architecture and website content are retained.');
+    });
+    get('sitemap-new').addEventListener('click',()=>{selected=null;get('sitemap-items').selectedIndex=-1;edit();get('sitemap-label').focus();});
     get('sitemap-form').addEventListener('submit',event=>{
       event.preventDefault();
-      const label = get('sitemap-label').value.trim(), map = groups(), choice = decode(), parent = get('sitemap-parent').value;
-      const invalid = !label || /[>\r\n]/.test(label) || map.some(([name,children],p)=>name===label && !(choice?.[0]===p && choice[1]<0) || children.some((name,c)=>name===label && !(choice?.[0]===p && choice[1]===c)));
-      if (invalid || label.length>64) { get('sitemap-status').textContent = 'Use a unique label of 1–64 characters without > or line breaks.'; return; }
-      const [p,c] = choice || [-1,-1], old = choice ? c<0 ? map[p][0] : map[p][1][c] : null;
-      if (choice && c<0 && map[p][1].length && parent!=='') { get('sitemap-status').textContent='Move this group’s children first; only two sitemap levels are supported.'; return; }
-      const links = {...plan().pageLinks[mode()]}, target = get('sitemap-target').value;
-      if (old) delete links[old];
-      if (target!=='auto') links[label] = target==='planned' ? '' : target;
-      // Remember the destination parent's identity before removing/reordering a group.
-      const parentGroup = parent==='' ? null : map[Number(parent)];
-      if (choice && c<0 && !parentGroup) { map[p][0]=label; selected=`${p}:-1`; }
-      else if (choice && c>=0 && parentGroup===map[p]) { map[p][1][c]=label; }
-      else {
-        if (choice) { if(c<0) map.splice(p,1); else map[p][1].splice(c,1); }
-        if (parentGroup) { parentGroup[1].push(label); selected=`${map.indexOf(parentGroup)}:${parentGroup[1].length-1}`; }
-        else { map.push([label,[]]); selected=`${map.length-1}:-1`; }
+      const label=get('sitemap-label').value.trim(),nodes=records(),node=nodes.find(node=>node.id===selected),parentValue=get('sitemap-parent').value;
+      if(!label || label.length>64 || /[>\r\n]/.test(label) || nodes.some(item=>item.id!==selected && item.label===label)){get('sitemap-status').textContent='Use a unique label of 1–64 characters without > or line breaks.';return;}
+      const parent=parentValue===''?null:nodes.find(item=>parentKey(item)===parentValue);
+      const branch=node?nodes.filter(item=>within(item.path,node.path)):[];
+      const height=node?Math.max(...branch.map(item=>item.depth-node.depth+1)):1;
+      if((parentValue!=='' && !parent) || (parent && (parent.depth+height>3 || (node && within(parent.path,node.path))))){get('sitemap-status').textContent='Choose a parent outside this branch; at most three information levels are supported.';return;}
+      const oldPath=node?[...node.path]:null,newPath=[...(parent?.path || []),label],type=get('sitemap-type').value;
+      const links={...plan().pageLinks[mode()]},target=get('sitemap-target').value;
+      if(node)delete links[node.label];
+      if(target!=='auto')links[label]=target==='planned'?'':target;
+      const sameParent=node && samePath(node.path.slice(0,-1),parent?.path || []);
+      let next;
+      if(sameParent){next=nodes.map(item=>within(item.path,oldPath)?{...item,path:[...newPath,...item.path.slice(oldPath.length)],...(item.id===node.id?{type}: {})}:item);}
+      else{
+        next=nodes.filter(item=>!node || !within(item.path,oldPath));
+        const moved=node?branch.map(item=>({...item,path:[...newPath,...item.path.slice(oldPath.length)],...(item.id===node.id?{type}: {})})):[{id:null,path:newPath,type,includeInSitemap:type!=='content'}];
+        const last=parent?next.findLastIndex(item=>within(item.path,parent.path)):next.length-1;
+        next.splice(last+1,0,...moved);
+        if(!node)selected=null;
       }
-      if (commit(map,links,`Saved ${label}. Preview and HTML inspector updated.`)) get('sitemap-items').focus();
+      if(commit(next,links,`Saved ${label}. Information architecture and sitemap updated.`,{oldPath,newPath})){
+        selected=records().find(item=>samePath(item.path,newPath))?.id ?? null;edit();get('sitemap-items').value=key(records().find(item=>item.id===selected));get('sitemap-items').focus();
+      }
     });
     get('sitemap-delete').addEventListener('click',()=>{
-      const choice=decode(); if(!choice)return;
-      const [p,c]=choice,map=groups(),links={...plan().pageLinks[mode()]};
-      const removed=c<0?[map[p][0],...map[p][1]]:[map[p][1][c]];
-      removed.forEach(label=>delete links[label]);
-      if(c<0)map.splice(p,1);else map[p][1].splice(c,1);
-      selected=null; commit(map,links,`Deleted ${removed.length} ${removed.length===1?'entry':'entries'}. Undo is available.`); get('sitemap-items').focus();
+      const nodes=records(),node=nodes.find(node=>node.id===selected);if(!node)return;
+      const removed=nodes.filter(item=>within(item.path,node.path)),links={...plan().pageLinks[mode()]};
+      removed.forEach(item=>delete links[item.label]);
+      if(commit(nodes.filter(item=>!within(item.path,node.path)),links,`Deleted ${removed.length} ${removed.length===1?'entry':'entries'}. Undo is available.`,{oldPath:node.path})){get('sitemap-items').focus();}
     });
     for(const [id,delta] of [['sitemap-up',-1],['sitemap-down',1]])get(id).addEventListener('click',()=>{
-      const choice=decode();if(!choice)return;
-      const [p,c]=choice,map=groups(),list=c<0?map:map[p][1],index=c<0?p:c,next=index+delta;
-      if(next<0||next>=list.length)return;
-      [list[index],list[next]]=[list[next],list[index]];
-      selected=c<0?`${next}:-1`:`${p}:${next}`;
-      commit(map,{...plan().pageLinks[mode()]},'Sitemap order updated.',plan().showPlanned);
+      const nodes=records(),node=nodes.find(node=>node.id===selected);if(!node)return;
+      const siblings=nodes.filter(item=>item.parentId===node.parentId),index=siblings.findIndex(item=>item.id===selected),other=siblings[index+delta];if(!other)return;
+      const moved=nodes.filter(item=>within(item.path,node.path)),rest=nodes.filter(item=>!within(item.path,node.path));
+      const insert=delta<0?rest.findIndex(item=>item.id===other.id):rest.findLastIndex(item=>within(item.path,other.path))+1;
+      rest.splice(insert,0,...moved);commit(rest,{...plan().pageLinks[mode()]},'Sitemap order updated.');
     });
-    get('sitemap-planned').addEventListener('change',()=>commit(groups(),{...plan().pageLinks[mode()]},'Footer visibility updated.',get('sitemap-planned').checked));
-    get('sitemap-undo').addEventListener('click',()=>{
-      if(!previous)return;
-      state.designProcess=previous;previous=null;signature='';apply();get('sitemap-undo').disabled=true;get('sitemap-status').textContent='Last sitemap change undone.';
-    });
-    for (const event of ['dss:reset','dss:imported']) document.addEventListener(event,()=>{previous=null;get('sitemap-undo').disabled=true;get('sitemap-status').textContent='';signature='';sync();});
-    const previousRender=renderCode;
-    renderCode=function(){previousRender();sync();};
-    sync();
+    get('sitemap-planned').addEventListener('change',()=>commit(records(),{...plan().pageLinks[mode()]},'Footer visibility updated.',{showPlanned:get('sitemap-planned').checked}));
+    get('sitemap-undo').addEventListener('click',()=>{if(!previous)return;state.designProcess=previous;previous=null;signature='';apply();get('sitemap-undo').disabled=true;get('sitemap-status').textContent='Last architecture or sitemap change undone.';});
+    for(const event of ['dss:reset','dss:imported'])document.addEventListener(event,()=>{previous=null;get('sitemap-undo').disabled=true;get('sitemap-status').textContent='';signature='';sync();});
+    const previousRender=renderCode;renderCode=function(){previousRender();sync();};sync();
   }
 });

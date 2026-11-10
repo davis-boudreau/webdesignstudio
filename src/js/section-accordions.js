@@ -35,5 +35,7 @@
     }
   }
   window.addEventListener('hashchange', revealHash);
-  if (location.hash) requestAnimationFrame(revealHash);
+  // A frame can paint before deferred modules initialize. Restore the fragment
+  // after lesson routing is ready so startup cannot collapse its destination.
+  DSStudio.on('ready', () => { if (location.hash) revealHash(); });
 })();
