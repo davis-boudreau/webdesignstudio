@@ -97,7 +97,7 @@ DSStudio.register({
       lesson.replaceChildren(lesson.querySelector('h3'), lesson.querySelector('p'), task);
       if(stage.id==='architecture') {
         const overview=document.createElement('div');overview.className='architecture-overview';
-        overview.innerHTML='<ol><li><strong>Identify tasks.</strong> Prioritise the main audience’s goals and the information or functions needed to complete them.</li><li><strong>Define scope.</strong> List essential pages and content. Confirm content owners, accessibility needs and dependencies in the brief; note open questions.</li><li><strong>Group and label.</strong> Organise the full agreed content into a clear hierarchy using language the audience understands, including information within pages.</li><li><strong>Select sitemap destinations.</strong> Choose which IA entries belong in visitor navigation without removing their content. Ask someone where they would start a key task. Revise unclear labels before wireframing.</li></ol><p><strong>Outcome:</strong> An agreed information architecture with a selected visitor sitemap, ready to guide the wireframe.</p>';
+        overview.innerHTML='<ol><li><strong>Identify tasks.</strong> Prioritise the main audience’s goals and the information or functions needed to complete them.</li><li><strong>Define scope.</strong> List essential pages and content. Confirm content owners, accessibility needs and dependencies in the brief; note open questions.</li><li><strong>Group and label.</strong> Organise the full agreed content into a clear hierarchy using language the audience understands, including information within pages.</li><li><strong>Develop the content plan.</strong> Select an item, understand its properties and current content, then propose what the audience needs. Record who will supply it and the next action. Save and review the plan before selecting another item.</li><li><strong>Select sitemap destinations.</strong> Choose which IA entries belong in visitor navigation without removing their content. Ask someone where they would start a key task. Revise unclear labels before wireframing.</li></ol><p><strong>Outcome:</strong> An agreed information architecture with a selected visitor sitemap, ready to guide the wireframe.</p>';
         lesson.insertBefore(overview,task);
       }
       const actions = document.createElement('div'); actions.className = 'button-row step-output';
@@ -153,6 +153,7 @@ DSStudio.register({
     // preserving nodes/listeners rather than creating a second set of editors.
     const narrow = matchMedia('(max-width: 900px)');
     const stepList = document.createElement('details'); stepList.className = 'journey-step-list';
+    stepList.open = true;
     const stepSummary = document.createElement('summary'); stepSummary.textContent = 'Choose a step';
     const stepButtons = document.querySelector('.journey-steps');
     stepButtons.before(stepList); stepList.append(stepSummary, stepButtons);
@@ -184,7 +185,6 @@ DSStudio.register({
       // A step can be selected before a queued media-query change is delivered.
       // Place the existing controls using the current viewport on every route.
       placeControls();
-      stepList.open = false;
       for (const section of sections) {
         const active = section.id === stage.lesson;
         section.hidden = false;

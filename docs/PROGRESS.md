@@ -2,6 +2,193 @@
 
 Updated: 10 November 2026 (America/Halifax).
 
+## Collapsible selected content properties (10 November 2026)
+
+- Renamed Selected content to **Selected content properties** and made it a native
+  disclosure. **2. Develop the content plan** is an independent disclosure. Both
+  start collapsed; selected name/path/origin and Save/review remain visible.
+- Disclosure toggles preserve unsaved form values and do not modify project data.
+  Selection and ordinary rendering retain open states. Selection focuses the
+  properties summary when closed; adding an item opens properties and focuses its
+  name. Invalid required controls reveal their containing disclosure before focus.
+  Reset/import return both disclosures to closed. No project-schema change.
+- Added responsive summary styling and focus indication, refreshed the two affected
+  runtime asset versions, and updated README, architecture and the unrun learner
+  trial. Preserved all previous working-tree changes.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`:
+  passes with the existing CSS LF/CRLF notice.
+- `python .content-disclosure-focused.py`: **178/178 passed**, no captured errors
+  (`.content-disclosure-focused.log`). Covers existing content/Sitemap/student
+  behavior plus independent toggles, saved/unsaved content, focus, validation and
+  collapsed summaries at 320/390/1440px in both samples. Existing input/geometry
+  fixtures now explicitly open the disclosure whose fields they exercise.
+- `python scripts/button_states_review.py`: **7/7 reduced-motion**, **9/9
+  forced-colour** checks passed, no captured errors (`.content-disclosure-states.log`).
+- Inspected screenshots of the actual collapsed editor in light desktop and dark
+  320px layouts. The phone capture needed a second scroll after responsive preview
+  layout settled; final capture shows both summaries and Save beneath the header.
+  No manual keyboard-only, screen-reader, zoom or Firefox/Safari review; automated
+  checks do not establish full accessibility.
+- `python scripts/browser_review.py`: **2143/2143 passed**, no captured JavaScript
+  errors (`.content-disclosure-browser.log`). Runtime files were held unchanged
+  during this run. Temporary focused/visual helpers and screenshots were removed.
+- Next: observe students using the collapsed sections and complete manual
+  accessibility/cross-browser review. No commit, push or deployment.
+
+## Student content-planning interface (10 November 2026)
+
+- User requested clearer Selected content properties and a content-planning flow
+  that makes sense to students. Added three guided parts within Architecture:
+  Understand this item, Develop the content plan, and Save and review. The twelve
+  main journey steps and the detailed content inventory remain intact.
+- Selected name/path/origin give context. Current sample content appears read-only
+  before editable properties. Field help explains outline name versus displayed
+  wording, content kind, containing item and optional section reference. Add inside,
+  beside and top-level actions explain the hierarchy. Existing IDs/data values,
+  validation, source references, branch controls and undo behavior are retained.
+- Type-specific prompts/examples guide text, images, links, fields and containers.
+  Readiness and purpose/owner/next-action notes use existing data fields. Shared
+  human-readable kind/readiness labels align the form, outline and centre/export
+  content artifact without changing normalized project values. No schema expansion.
+- Proposal inclusion explicitly distinguishes no replacement from an intentionally
+  blank proposal. Unsaved feedback and Discard act on form values; Save uses the
+  existing plan commit. Save/Discard keep focus near the feedback. Guidance tells
+  students to save before choosing another item. This does not auto-apply proposed
+  wording or images to the sample website. Shared lesson overview, README,
+  architecture and the unrun learner trial now include the planning exercise.
+- Grouped fieldsets/legends, described controls, read-only styling and scroll offset
+  support scanning and narrow layouts. Refreshed all affected asset query versions.
+  Preserved earlier working-tree changes; no commit, push or deployment.
+- Current structure check: **58 assets verified**. Diff check passes with a
+  content-architecture.css LF/CRLF notice. Initial focused content/Sitemap/student
+  suite: **152/152 passed**, no captured errors (`.student-plan-focused.log`).
+  After moving sample content first and improving Save/Discard focus, focused
+  rerun again passed **152/152** (`.student-plan-focused-final.log`). Final shared
+  kind/readiness labels also passed **152/152**, no captured errors
+  (`.student-plan-focused-verified.log`). Sample-linked and planning-only items
+  now use distinct read-only content labels; the final full run covers these.
+- Inspected real Studio screenshots of light desktop properties and dark planning
+  at an actual 320px iframe width. Final captures verify that the target group is
+  visible below the sticky header, fits the viewport and has no captured errors.
+  `python scripts/button_states_review.py`: **7/7 reduced-motion**, then **8/9
+  forced-colour** checks; the latter captured a failed request for the unchanged
+  local brand-palette stylesheet. Clean rerun passed **7/7** and **9/9**, with no
+  captured errors (`.student-plan-states-final.log`). No manual keyboard-only,
+  screen-reader, zoom or Firefox/Safari review; automated checks do not establish
+  full accessibility.
+- Initial full browser run: **2115/2117 passed**, no captured JS errors
+  (`.student-plan-browser.log`). Two Advanced export comparisons failed while
+  the run overlapped final label changes: the initial app and later fresh comparison
+  iframe could load different source revisions. Fresh unchanged-source comparisons
+  passed **5/5**, including both samples/themes (`.student-plan-bridge.log`).
+- Next full run: **2116/2117 passed**, no captured JS errors
+  (`.student-plan-browser-final.log`). Advanced Header-deletion check exposed a
+  race in the test's same-data file import: equality could pass before the async
+  file read finished, and a late import could restore the deleted branch. Replaced
+  the fixed 200ms delay with a bounded wait for the actual dss:imported event.
+  All assertions are retained, with explicit completion now required. Focused
+  content/Sitemap/student checks passed **152/152**, no captured errors
+  (`.student-plan-import-complete.log`). No application deletion change required.
+- Final `python scripts/browser_review.py`: **2117/2117 passed**, with no captured
+  JavaScript errors (`.student-plan-browser-verified.log`). Runtime files were held
+  unchanged during this run. Temporary helpers/screenshots are removed; structure
+  check verifies **58 assets** and diff check passes (LF/CRLF notice only).
+- Next: observe learners using the content-plan exercise and complete manual
+  accessibility/cross-browser review. No commit, push or deployment performed.
+
+## Page-label Sitemap implementation (10 November 2026)
+
+- User clarified and approved retaining the detailed Website content structure
+  while making Sitemap configuration follow visible eyebrows, with existing
+  headings as fallbacks. Added a shared section-sitemap model and inclusion UI.
+  Basic includes Hero plus Components, Layouts and Forms. Slashes stay in labels;
+  children follow the nearest labelled containing destination. Group legends can
+  act as headings. Unlabelled wrappers and the generated map add no entries.
+- Both samples use fixed authored anchors, escaped labels and the same footer,
+  lesson preview, inspector and export renderer. The collector inspects local
+  sample HTML only, caches by project/Advanced state and guards recursion. The
+  detailed content inventory/editor is retained. Canonical sections can focus
+  their inclusion control; navigation references have no separate membership.
+- Added validated per-sample sitemapSource and sitemapExcluded project data.
+  Defaults follow the page; existing custom outlines/metadata/link bindings retain
+  custom mode until explicitly switched. Custom controls remain available in that
+  mode. Source switches preserve both plans. Include all, per-branch choices,
+  source selection and Undo use existing project persistence. Undo restores only
+  sitemap settings so a later brief/content edit is not overwritten.
+- Updated lesson/configuration guidance, README, architecture and the unrun learner
+  trial task to match the new navigation model; refreshed changed
+  asset queries. Basic's generated map permits four desktop columns. Existing
+  uncommitted step-chooser changes were preserved; no commit/push/deployment.
+- Current checks: structure **58 assets verified**; diff check passed. First browser
+  attempt failed on temporary-profile permissions; reran with approved access.
+  Initial full suite: **2003/2037 passed**, no captured JS errors
+  (`.eyebrow-browser.log`). Failures covered old default labels/counts, hidden
+  custom controls and a navigation-reference control issue. Fixed that issue and
+  updated defaults/explicit custom-mode fixtures; final verification is recorded below.
+- Initial focused run **41/42**, no errors: its hostile-label fixture had retained
+  custom mode when switching samples. Corrected it. Focused rerun **42/42 passed**
+  (`.eyebrow-focused-final.log`); subsequently added Undo-scope/autosave/mode/empty
+  selection checks, covered by the later passing runs below.
+- Combined custom-navigation/content-tree/new-Sitemap checks passed **207/207**,
+  then **213/213** after additional persistence cases (`.eyebrow-compat-final.log`).
+  Final targeted Sitemap checks passed **52/52**, no captured errors
+  (`.eyebrow-focused-verified.log`), including parent focus for a disabled child.
+  `python scripts/button_states_review.py`: **7/7 reduced-motion** and **9/9
+  forced-colour** checks passed, no errors (`.eyebrow-states.log`).
+- Second full run **2064/2080 passed**, no captured errors
+  (`.eyebrow-browser-updated.log`). Its remaining sixteen failures were old
+  custom-navigation fixtures that had not selected the custom source and awaited
+  preview refresh before focus/geometry assertions. Those setup corrections
+  passed in the combined focused suite. Final complete rerun passed **2088/2088**,
+  with no captured JavaScript errors (`.eyebrow-browser-verified.log`).
+  Temporary helpers and screenshots have been removed. Final structure check
+  still verifies **58 assets**, and `git diff --check` passes.
+- Visual captures inspected Basic light desktop and actual 320px, dark actual
+  390px footer, plus Advanced dark desktop. Actual-viewport layout/link checks
+  passed with no captured errors. Early capture helpers had quoting/report parsing
+  and viewport problems; corrected them before successful actual-viewport checks.
+  No manual keyboard-only, screen-reader, zoom or Firefox/Safari review yet.
+  Automated checks do not establish full accessibility. Next: try the updated
+  learner task and complete manual accessibility/cross-browser review.
+
+## Eyebrow-based sitemap review (10 November 2026)
+
+- User proposed simplifying the Sitemap to reflect the hierarchy of visible
+  eyebrow labels and link directly to each content container. Inspected shared
+  sitemap generation, Basic/Advanced HTML generators and the content collector.
+- Current sitemap uses a separate destination outline. Eyebrows already identify
+  the main sections and some cards, but not every container: Basic list cards,
+  form groups and several Advanced examples use headings/legends/badges instead.
+- Proposed deriving labels from visible eyebrows, hierarchy from containing
+  sections/groups and links from stable destination IDs. Missing eyebrows need
+  either authored labels or an explicit heading fallback; repeated label text
+  must not merge distinct destinations. Preview and export must share the map.
+- Asked whether this should also replace the detailed Architecture editor and
+  whether missing eyebrows should be added or use existing headings. No runtime
+  changes made while those design choices remain open. Existing working-tree
+  edits, including the step-chooser work above, were preserved.
+- Read-only source inspection; no structure/browser/manual checks run for this
+  review. Historical passing results below do not verify a new sitemap design.
+- Next: resolve the intended editor scope and missing-label treatment, implement
+  the shared hierarchy and add preview/export/navigation regression coverage.
+
+## Keep the builder step chooser expanded (10 November 2026)
+
+- User requested that the control beneath Step 1 of 12 in Build your design system
+  remain expanded until manually collapsed. Identified this as Choose a step.
+  Set the native disclosure open on initialization and removed automatic closure
+  from step activation. User collapse/reopen choices now survive navigation and
+  rendering; fresh page loads start expanded. No new persistence preference added.
+- Added four browser regressions for startup expansion, preservation through
+  navigation/rendering, manual collapse and manual reopen. Refreshed the
+  studio-learning query version and updated README/architecture guidance.
+- `python scripts/check_structure.py`: **57 assets verified**. `git diff --check`
+  passed. `python scripts/browser_review.py`: **2037/2037 passed**, no captured JS
+  errors (`.step-list-browser.log`), including all four new disclosure regressions.
+  Removed the temporary edit helper. Final diff check passed. No manual keyboard,
+  screen-reader or cross-browser checks performed this turn; those review gaps
+  remain. No commit, push or deployment. Earlier results below predate this change.
+
 ## Actual content inventory and expandable IA editor (10 November 2026)
 
 - User approved all recommendations from the IA reassessment. Implemented the

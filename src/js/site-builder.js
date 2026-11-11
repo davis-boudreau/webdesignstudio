@@ -9,7 +9,7 @@ DSStudio.register({
     root.className = 'sitemap-editor';
     root.innerHTML = `<label for="sitemap-items">Sitemap destination entries</label>
       <select id="sitemap-items" size="8" aria-describedby="sitemap-help"></select>
-      <p class="help" id="sitemap-help">Manage visitor navigation independently from the content outline above. This destination hierarchy also preserves previous outlines. Its compact editor supports three navigation levels; the content outline supports deeper containment.</p>
+      <p class="help" id="sitemap-help">Custom navigation uses your own labels and grouping instead of the page eyebrow hierarchy. This destination hierarchy also preserves previous outlines. Its compact editor supports three navigation levels; the content outline supports deeper containment.</p>
       <details open><summary>Sitemap inclusion by entry</summary><p class="help">Each entry has its own choice. Excluding a parent hides its branch from the sitemap; child choices are retained. These settings apply to the selected sample.</p><div id="sitemap-choices" class="sitemap-choices" role="region" tabindex="0" aria-label="Sitemap inclusion choices"></div></details>
       <div class="button-row"><button id="sitemap-new" type="button" class="ghost">New entry</button><button id="sitemap-up" type="button" class="ghost">Move up</button><button id="sitemap-down" type="button" class="ghost">Move down</button></div>
       <form id="sitemap-form">
@@ -76,7 +76,7 @@ DSStudio.register({
       get('sitemap-down').disabled=!node || index<0 || index>=siblings.length-1;
     }
     function sync() {
-      const current=plan(),next=JSON.stringify([mode(),current.pages,current.pageLinks,current.iaEntries,current.showPlanned]);
+      const current=plan(),next=JSON.stringify([mode(),current.pages,current.pageLinks,current.iaEntries,current.showPlanned,current.sitemapSource,current.sitemapExcluded]);
       if(signature===next)return;
       if(!ownChange || undoMode!==mode()){previous=null;get('sitemap-undo').disabled=true;}
       signature=next;
@@ -98,7 +98,7 @@ DSStudio.register({
       data[mode()]=nodes.map(strip);
       if(oldPath)for(const sample of ['basic','advanced'])if(sample!==mode())data[sample]=data[sample].flatMap(node=>!within(node.path,oldPath)?[node]:newPath?[{...node,path:[...newPath,...node.path.slice(oldPath.length)]}]:[]);
       previous=DSStudio.process.normalize(current);undoMode=mode();
-      state.designProcess=DSStudio.process.normalize({...current,pages,pageLinks:{...current.pageLinks,[mode()]:links},iaEntries:data,showPlanned});
+      state.designProcess=DSStudio.process.normalize({...current,pages,pageLinks:{...current.pageLinks,[mode()]:links},iaEntries:data,showPlanned,sitemapSource:{...current.sitemapSource,[mode()]:'custom'}});
       signature='';ownChange=true;try{apply();}finally{ownChange=false;}
       get('sitemap-undo').disabled=false;get('sitemap-status').textContent=message;return true;
     }

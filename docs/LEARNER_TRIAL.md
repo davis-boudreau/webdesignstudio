@@ -29,8 +29,13 @@ acknowledgements are not proof that a task was understood or completed.
 | Make the page spacing more generous. Explain why several gaps change. | Do they use the live Spacing lesson's prediction, before/now comparison, page observation and code connections? Can they distinguish the independent grid gap and Basic's responsive padding multiples? | The preview and active rule agree; the learner explains the foundation/multiple relationship and why viewport width can change the applied multiple. |
 | Check the hero at a phone width. Explain what changes the column layout. | Can they reach the preview and code without losing context? Do they confuse presets with saved breakpoints? | They compare 390 px/Fluid and locate the hero rule and responsive override. |
 | Study a component of your choice and find its rule and controlling tokens. | Do the example selector, optional preview selection and Configure actions make sense? | They connect a real element to an exact rule, token value and source control. |
-| Rename a sitemap entry and explain the result. | Do they expect a new page or a renamed body heading? Can they locate its footer link or planned status? | They correctly explain that Architecture changes the plan/navigation and does not generate a body section. |
+| Select the Hero heading and develop a content plan for your audience. Save it and explain what changed. | Can they find and open Selected content properties and Develop the content plan, then collapse either without losing edits? Can they distinguish an item's outline name from its wording, current content from a proposal, and saved from unsaved edits? Do the example and purpose/owner/next-action prompts help? | Their saved proposal, readiness and notes appear in the outline; the sample heading stays unchanged. They can discard a later unsaved edit and find the saved plan again. |
+| Use the Sitemap to find the profile-row example. Exclude its link, then restore it. Explain what changed. | Do they match the visible eyebrow to its Sitemap label and understand the nesting? Can they distinguish Sitemap inclusion from the detailed Website content structure? | The link reaches Flexbox / Profile row; exclusion removes only its navigation link, and restoration brings it back. The example and detailed content remain available throughout. |
 | Export the website and reopen it outside the studio. Save a project backup too. | Do they distinguish complete files from excerpts and website files from project JSON? | index.html and tokens.css work together locally; JSON restores the design in an isolated studio profile. |
+
+For someone continuing an older project, optionally ask them to switch between
+Page eyebrows and headings and Custom destination plan. Check that they understand
+which labels each source uses and can recover their saved custom plan.
 
 Ask the learner to use keyboard navigation for part of the session. Separately
 record focus/scroll problems, inaccessible controls, crowded layouts and unclear
@@ -48,6 +53,7 @@ Viewport/device: ______  Browser: ______  Input method: ______
 | Spacing | | | | |
 | Responsive hero | | | | |
 | Component connection | | | | |
+| Content plan | | | | |
 | Sitemap | | | | |
 | Export/reopen/restore | | | | |
 

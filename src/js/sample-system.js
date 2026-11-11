@@ -67,6 +67,7 @@
 .website-footer .sitemap { padding-block: 0 var(--space-6); }
 .website-footer .footer-sitemap:not([open]) > .sitemap { display: none; }
 .website-footer .sitemap-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--space-6); list-style: none; padding: 0; max-width: 48rem; margin: 0 auto; justify-items: center; }
+.site-footer .sitemap-list--sections { max-width: 64rem; }
 .website-footer .sitemap-list > li { min-width: 0; max-width: 100%; margin: 0; overflow-wrap: anywhere; text-align: center; }
 .website-footer .sitemap-list > li > a, .website-footer .sitemap-list > li > span { font-weight: var(--heading-weight); }
 .website-footer .sitemap-list ul { display: flex; flex-direction: column; align-items: center; margin: var(--space-2) 0 0; padding: 0; list-style: none; }

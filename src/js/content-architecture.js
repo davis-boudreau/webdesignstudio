@@ -5,6 +5,8 @@
   const MAX_NODES=1000, MAX_DEPTH=12, MAX_PLAN_CHARS=500000;
   const types=['region','page','section','group','text','image','link','field'];
   const statuses=['present','planned','needs-content'];
+  const typeNames={region:'Shared website area',page:'Page',section:'Section',group:'Content group',text:'Text',image:'Image',link:'Link / call to action',field:'Form field / control'};
+  const statusNames={present:'Available in the sample',planned:'Still to create','needs-content':'Needs content or revision'};
   const clean=(value,limit)=>typeof value==='string'?value.slice(0,limit):'';
   function normalizeNodes(value,sample) {
     if(!Array.isArray(value))return null;
@@ -133,8 +135,8 @@
     if(collecting)return '<p>Generated content structure.</p>';
     const list=nodes(),esc=escapeHtml,byParent=new Map(),names=new Map(DSStudio.process.inventory(mode()).map(([label,id])=>[id,label]));
     for(const node of list){if(!byParent.has(node.parentId))byParent.set(node.parentId,[]);byParent.get(node.parentId).push(node);}
-    const branch=(parentId=null)=>`<ul>${(byParent.get(parentId)||[]).map(node=>{const children=byParent.has(node.id),value=node.value;const label=`<strong>${esc(node.label)}</strong> <small>${esc(node.type)}${node.status!=='present'?' · '+esc(node.status):''}</small>`;return `<li>${children?`<details data-content-branch="${esc(node.id)}"><summary>${label}</summary>`:label}${value?`<p>${esc(value)}</p>`:''}${node.target?`<p class="help">${node.type==='link'?'References':'Destination'}: ${esc(names.get(node.target)||node.target)}</p>`:''}${node.reference?`<p class="help">Reference: ${esc(node.reference)}</p>`:''}${node.draft!==null?`<p><strong>Planned content:</strong> ${esc(node.draft)||'(deliberately empty)'}</p><p class="help">Sample content is unchanged.</p>`:''}${node.notes?`<p class="help">${esc(node.notes)}</p>`:''}${children?branch(node.id)+'</details>':''}</li>`;}).join('')}</ul>`;
+    const branch=(parentId=null)=>`<ul>${(byParent.get(parentId)||[]).map(node=>{const children=byParent.has(node.id),value=node.value;const label=`<strong>${esc(node.label)}</strong> <small>${esc(typeNames[node.type])}${node.status!=='present'?' · '+esc(statusNames[node.status]):''}</small>`;return `<li>${children?`<details data-content-branch="${esc(node.id)}"><summary>${label}</summary>`:label}${value?`<p>${esc(value)}</p>`:''}${node.target?`<p class="help">${node.type==='link'?'References':'Destination'}: ${esc(names.get(node.target)||node.target)}</p>`:''}${node.reference?`<p class="help">Reference: ${esc(node.reference)}</p>`:''}${node.draft!==null?`<p><strong>Planned content:</strong> ${esc(node.draft)||'(deliberately empty)'}</p><p class="help">Sample content is unchanged.</p>`:''}${node.notes?`<p class="help">${esc(node.notes)}</p>`:''}${children?branch(node.id)+'</details>':''}</li>`;}).join('')}</ul>`;
     return `<section class="ia-content-map" aria-label="Complete website content structure"><h4>Website content structure</h4><p>Regions, sections, groups and actual content. Expand a branch to inspect its text, images, controls and destination references. ${list.length} entries.</p>${list.length?branch():'<p>No content entries. Add an entry or restore the sample content inventory.</p>'}</section>`;
   }
-  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,normalizeNodes,prepare,nodes,descendants,path,markup,inventory};
+  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory};
 })();

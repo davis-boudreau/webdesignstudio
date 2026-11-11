@@ -24,7 +24,8 @@ note explains this relationship alongside the live inspector.
 Start in **Build your design system**. One twelve-step wizard selects both the
 controls and their matching centre lesson. Each step explains a decision, offers
 one task and connects its result to actual output. Use **Previous step** and the
-named **Next** action, or open **Choose a step** to jump directly. Planning,
+named **Next** action, or use **Choose a step** to jump directly. The step list starts expanded and
+keeps your open/collapsed choice while switching steps. Planning,
 foundations, application and review are phases of this same journey.
 The app opens directly into the workspace; its introduction lives beneath
 Build your design system, with the project name retained in the app header.
@@ -158,9 +159,9 @@ select/textarea, a fieldset/legend radio group, checkbox, native validation and
 announced demo feedback. Short labels explain each example without long code
 recipes. The inspector provides the full, commented HTML/CSS.
 The footer places horizontal main navigation beside the brand. Its sitemap
-arranges Components, Layouts and Forms in columns with related links stacked
-vertically below each parent; Home/Footer sitemap groups are omitted. Both areas
-reflow on narrow screens. Previous complete Basic inventories resolve to the showcase inventory
+uses the four visible section eyebrows, including the Hero, as linked column
+headings with related card/section links below them. Existing headings provide
+fallback labels. Both areas reflow on narrow screens. Previous complete Basic inventories resolve to the showcase inventory
 without overwriting saved planning data, and legacy labels remain safe aliases.
 Advanced uses the same classic footer layout with its own main navigation and
 complete sitemap. Both have a left-aligned Sitemap title and centred link groups.
@@ -202,6 +203,27 @@ delete a branch, and undo the last content change. The content editor supports u
 to twelve levels and 1,000 entries as safety bounds, not recommended IA depths.
 Repeated role labels, such as Paragraph, have distinct identities and are editable.
 
+The content form guides students through three parts: **Understand
+this item**, **Develop the content plan**, then **Save and review**. The selected
+name, location and sample/planning origin provide context. Read the sample content
+first, then inspect the item's name, kind, containing item and optional related
+section. Plain-language help explains what each property means.
+
+**Selected content properties** and **2. Develop the content plan** are separate
+collapsible sections, both closed by default. Open whichever you need; the selected
+item and Save controls remain visible. Collapsing a section keeps unsaved edits.
+Adding an item opens its properties so you can enter its name.
+
+Planning prompts and examples adapt to text, images, links, form controls and
+containers. Propose wording or describe the required asset, record content
+readiness, and note the purpose, owner and next action. **Include this proposal in
+the saved plan** distinguishes no replacement from an intentionally blank proposal.
+The form marks unsaved edits; **Discard unsaved edits** restores the saved item.
+Choose **Save content plan** before selecting another item, then review the
+proposal in the outline or centre lesson. Save and Discard retain focus near the
+feedback. These are guided parts of Architecture, within the existing twelve-step
+journey; they introduce no extra project-data fields.
+
 **Current sample content and planned content are separate.** Current content is
 read from local authored sample HTML and refreshed when the project changes.
 Planned wording (including an explicitly empty draft) and notes are saved in project
@@ -209,23 +231,32 @@ JSON/local storage; they do not rewrite the teaching website or create pages.
 Restore current sample content discards that sample's content planning edits and
 is undoable. The other sample's plan and sitemap choices are retained.
 
-**Manage sitemap destinations** is a separate, initially collapsed panel. Its
-destination hierarchy and inclusion checkboxes preserve existing custom outlines,
-stable identities, link bindings and per-sample choices. Excluding a destination
-parent suppresses its sitemap branch while retaining descendant choices. Removing
-Header from the content plan does not suppress Home: containment and navigation
-are different relationships. Select a canonical section and use **Edit this
-sitemap destination** to reach its existing destination controls. Navigation
-references have no separate sitemap membership.
+**Sitemap configuration** defaults to **Page eyebrows and headings**. Each link
+uses the section's visible eyebrow text (including slashes), or its existing
+heading when there is no eyebrow. Nested links follow the actual page containers.
+Basic starts with HTML & CSS essentials, Components / Flexbox, Layouts / CSS Grid
+and Forms / Labels & controls. The Hero is included. Labelled cards and content
+groups appear beneath their sections; a group legend can supply a heading.
+Unlabelled wrappers and the generated Sitemap itself do not add entries.
 
-Groups are unlinked sitemap headings; the planned-entry toggle allows selected
-unlinked destinations as labelled text. Basic defaults Home/Footer to excluded,
-but explicit choices can include them. The selected sitemap updates in the
-preview, HTML inspector and downloaded HTML. The secondary text/destination editor
-retains its previous three-level bounds; these do not constrain the full content
-outline. Existing custom outlines migrate into the content plan, attaching actual
-section content where a known destination matches and retaining unknown planned
-entries. Saved content plans retain their identities across rename/move/import.
+Choose which sections appear using the inclusion checkboxes. Excluding a parent
+suppresses its branch while retaining child choices. **Include all sections**
+restores this sample's choices; **Undo sitemap configuration** reverses the last
+change. Labels and nesting follow the page automatically. These choices survive
+project JSON, local autosave and mode switches. The lesson preview, footer,
+HTML inspector and downloaded HTML share the same map and real section anchors.
+Selecting a matching section in the content tree offers **Configure this sitemap
+section** to focus its inclusion control. Content planning edits never remove
+sections from the actual website or this map.
+
+**Custom destination plan** preserves the previous destination editor, text
+outline, label bindings, planned entries and three-level navigation bounds.
+Older custom outlines retain their navigation until explicitly switched to page
+labels; switching sources does not discard either plan's settings. Custom plans
+can include unlinked group headings and selected planned entries; their previous
+Home/Footer defaults remain compatible. Existing custom outlines still attach
+known section content and retain unknown planned entries in the detailed content
+plan. Saved content identities survive rename, move and import.
 
 **Palette → Webpage backgrounds** follows the Brand and Main Palettes. Choose
 Body, Header, Main and Footer backgrounds from every Brand Palette colour, a generated
@@ -250,13 +281,12 @@ Basic's main sections remain transparent so the Main background shows through;
 cards and controls retain their surface colours. The centre Palette lesson shows
 the current region colours, text/link contrast and direct CSS/HTML inspector actions.
 
-The destination starter maps the selected sample's existing section anchors.
-Both footers use its selected entries; the footer Sitemap accordion starts
-collapsed while identity, key links and Back to top remain readily available.
+Both Sitemap sources link to the selected sample's existing section anchors.
+The footer Sitemap accordion starts collapsed while identity, key links and Back to top remain readily available.
 Older complete outlines upgrade automatically. Complete destination maps follow
 mode changes; custom edits are preserved. **Use complete Basic/Advanced destination
 outline** restores that sample's destination plan, leaving the full content plan
-unchanged. The optional sitemap text editor uses `Parent > Child > Detail` for
+unchanged. The optional custom sitemap text editor uses `Parent > Child > Detail` for
 three navigation levels, up to 64 nonempty lines and 64 characters per label.
 
 The full content structure above it can describe several levels within one page,

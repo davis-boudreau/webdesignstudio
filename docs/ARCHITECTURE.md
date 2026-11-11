@@ -213,8 +213,10 @@ a step's section fragment activates and opens that lesson after the registry's
 `ready` event, so early fragment scrolling cannot be undone by lesson initialization.
 The same activation
 path opens matching lessons for all twelve steps; navigation never marks
-completion. The step list is a collapsed Choose a step
-disclosure. Numeric indices and existing control/lesson IDs remain compatible.
+completion. The Choose a step disclosure starts expanded. Step selection and
+rerendering preserve its native open/collapsed state until the user changes it;
+a fresh page load starts expanded again. Numeric indices and existing
+control/lesson IDs remain compatible.
 `stageOrder` and `orderedStages` define display order independently of the stable
 internal indices. `position` supplies visible numbers. Previous/Next, progress,
 step buttons, phase groups and centre section order follow that sequence. Prototype
@@ -414,11 +416,31 @@ without rewriting sample HTML. Per-mode snapshots persist via existing JSON/loca
 flows. Restoration affects only the current mode and can be undone. Mode changes,
 reset/import and external planning changes clear incompatible Undo history.
 
-The old destination editor and raw text outline are secondary collapsed panels.
-Canonical sections can open their corresponding destination controls; navigation
-references cannot set independent membership. Deleting or moving Header in the
-content plan never suppresses Home. Sitemap ancestor suppression applies only
-inside the separate destination hierarchy, not inside content containment.
+The selected-item form groups existing properties into three student-facing parts:
+Understand this item, Develop the content plan, and Save and review. It identifies
+the selected name, path and origin, presents actual content read-only before
+editable properties, and explains each kind of content. Type-specific prompts and
+examples guide proposed wording, image briefs, link text, control instructions or
+container requirements. Purpose/owner/next action remain notes; no schema change
+or automatic sample editing is introduced. The proposal checkbox still preserves
+the null/empty-string distinction. Unsaved feedback and Discard operate on form
+values only; Save uses the existing validated commit and Undo flow. Saving or
+discarding keeps focus on Save. Students are instructed to save before selection.
+Native fieldsets with legends or aria-labelledby and aria-describedby connect
+the controls and help. Selected content properties and Develop the content plan
+are independent native details disclosures, initially closed and reset to closed
+after reset/import. Selection and ordinary rendering preserve their open states;
+toggling them leaves form values and project data intact. Selection focuses the
+properties summary when closed. Adding an item opens properties, and invalid
+controls reveal their containing disclosure before browser validation focuses them. The
+Architecture overview adds content planning within the existing twelve steps.
+
+The old destination editor and raw text outline are secondary collapsed panels,
+shown only for the custom Sitemap source. Canonical sections focus their matching
+page-section inclusion checkbox, or open the custom destination controls when that
+source is selected; navigation references cannot set independent membership. Deleting or moving Header in the
+content plan never suppresses Home. Sitemap ancestor suppression applies inside the selected navigation source,
+independently from saved content-plan containment.
 
 The centre lesson and Advanced HTML share an escaped, collapsible full-content
 artifact. Open centre branches survive rerender by stable content IDs. The legacy
@@ -873,12 +895,39 @@ must not shift the saved open state of a FAQ or mobile menu.
 
 ## Architecture-linked sitemap and Basic lists
 
+`section-sitemap.js` derives the default navigation from local sample HTML and
+fixed, authored destination IDs. It takes an owned eyebrow before an owned
+heading (or group legend), never borrowing a nested container's label. Unlabelled
+wrappers are omitted, children attach to the nearest labelled ancestor and slash
+text remains intact. Basic includes Hero and its three main content sections.
+Generated IA/sitemap contents and Footer are not recursively inventoried here.
+The detailed `content-architecture.js` inventory and planning tree stay intact.
+
+`designProcess.sitemapSource.basic/advanced` accepts auto, sections or custom.
+Auto uses page labels for the complete sample and preserves older custom outlines,
+metadata and link bindings. Explicit source changes preserve those saved plans.
+`sitemapExcluded.basic/advanced` holds deduplicated fixed destination IDs, bounded
+to 192 input values and validated against the sample inventory. Excluding a
+parent suppresses its subtree without changing child choices or authored content.
+The section configuration provides per-sample restore and Undo. Source/exclusions
+persist through the existing project JSON and autosave pipeline.
+
+The collector's per-mode signature includes project state and Advanced settings,
+excluding content planning data that does not change the actual page. A recursion
+guard omits the generated map during collection. Labels are escaped for markup;
+control labels use textContent. Imported strings never become selectors or URLs.
+Both Sitemap sources use the shared footer/lesson renderer and existing Studio
+preview proxies; exported links are ordinary fixed-ID fragments with no script.
+The source selector shows the old custom editor only when that source is active.
+
+The following legacy destination rules apply to the **custom** source:
+
 Basic includes titled unordered/ordered/description list examples. Its equal-width auto-fit card grid uses the saved minimum
 and gap rules, adding columns as space permits without manual row spans. Both samples
 have a footer Sitemap navigation generated by `DSStudio.process.sitemapHtml()`.
 Both samples share one classic footer template and its CSS in `sample-system.js`.
 Both call `sitemapHtml({linksOnly:true})`; no fixed Basic parent allowlist remains.
-Per-entry inclusion, branch suppression, type and valid destinations determine
+For custom plans, per-entry inclusion, branch suppression, type and valid destinations determine
 what appears. Basic defaults to omitting Home/Footer but explicit choices override
 that default. Selected unlinked entries require showPlanned in either sample.
 Parent groups occupy responsive Grid
@@ -939,11 +988,11 @@ Footer links use only fixed IDs.
 JSON/local project flows retain custom edits. Main navigation remains a shorter
 selection of destinations rather than duplicating the entire content inventory.
 
-Basic footer sitemap is one block with Components, Layouts
-and Forms and their selected children by default. Home/Footer start excluded
-and can be selected explicitly. The shared sitemap renderer supports all three
-levels; excluded or ineligible ancestors suppress their branch. No parent-ID
-allowlist overrides saved choices.
+The default Basic footer Sitemap has four section groups labelled by the Hero,
+Components, Layouts and Forms eyebrows. It contains twelve links, including
+heading/legend fallbacks for labelled children. The custom source preserves the
+previous Components/Layouts/Forms groups and optional Home/Footer choices.
+Excluded parents suppress their branches in either source; child choices remain.
 The identity row also has a labelled Footer navigation with the same Home,
 Components, Layouts and Forms links as the header. It sits to the right on wide
 screens and beneath the brand at the saved stacking cutoff; links wrap as needed.
@@ -961,7 +1010,9 @@ landmarks, one H1, skip link and source reading order remain intact. Layouts
 stack at the saved cutoff; no tab/modal/carousel scripts are added.
 
 The Basic destination starter has 28 saved-outline entries: sixteen linked
-sections/groups plus twelve descriptive entries retained for compatibility. Its default three-group footer retains fourteen links. Advanced has
+sections/groups plus twelve descriptive entries retained for custom-plan
+compatibility. That custom starter retains fourteen footer links; the default
+page-label Sitemap uses twelve links in four groups. Advanced has
 49 destination-outline entries: 38 linked entries plus eleven descriptive entries. These third-level
 examples plan actual information within existing components; no extra pages,
 anchors or body content are generated. Both samples start the new content details

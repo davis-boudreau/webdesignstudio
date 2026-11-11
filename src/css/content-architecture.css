@@ -2,6 +2,29 @@
 .ia-content-editor { display: grid; gap: .75rem; min-width: 0; margin-block: 1.5rem; }
 .ia-content-editor h3, .ia-content-editor h4 { margin-block: .5rem; }
 .ia-content-editor form { display: grid; gap: .65rem; min-width: 0; }
+.ia-content-editor :is(form,.ia-property-group,.ia-save-area) { scroll-margin-top: var(--studio-section-scroll-offset, 125px); }
+.ia-selection-heading { display: grid; gap: .35rem; padding-block: .75rem; border-bottom: 1px solid var(--border); min-width: 0; }
+.ia-selection-heading > strong { font-size: 1.125rem; overflow-wrap: anywhere; }
+.ia-selection-heading p { margin: 0; }
+.ia-editor-disclosure { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-base); padding: .5rem; }
+.ia-editor-disclosure > summary { cursor: pointer; }
+.ia-editor-disclosure > summary > h4 { display: inline; font-size: 1rem; }
+.ia-editor-disclosure > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ia-origin { font-size: .85rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.ia-content-editor .ia-property-group { display: grid; gap: 1rem; min-inline-size: 0; margin: .5rem 0; padding: .85rem; border: 1px solid var(--border); border-radius: var(--radius-base); }
+.ia-property-group legend { max-width: 100%; padding-inline: .25rem; font-weight: 700; overflow-wrap: anywhere; }
+.ia-field, .ia-current-content { display: grid; gap: .4rem; min-width: 0; }
+.ia-content-editor .ia-field > label, .ia-current-content > label { font-weight: 600; }
+.ia-content-editor .ia-field .help, .ia-property-group > .help, .ia-current-content .help { margin: 0; }
+.ia-current-content { border-top: 1px solid var(--border); padding-top: .85rem; }
+.ia-content-editor .ia-current-content textarea { background: var(--surface-muted); }
+.ia-content-editor .ia-save-area { padding: .85rem; border: 1px solid var(--control-border); border-radius: var(--radius-base); background: var(--surface-muted); min-width: 0; }
+.ia-save-area h5 { font-size: 1rem; margin: 0 0 .5rem; }
+.ia-save-area .help { margin-block: .5rem; }
+.ia-learning-guide, .ia-plan-example { min-width: 0; overflow-wrap: anywhere; }
+.ia-learning-guide ol { padding-inline-start: 1.25rem; }
+.ia-learning-guide li + li { margin-top: .5rem; }
+.ia-branch-tools { border-top: 1px solid var(--border); padding-top: .75rem; min-width: 0; }
 .ia-content-editor :is(input:not([type="checkbox"]),textarea,select) { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: .5rem; border: 1px solid var(--control-border); border-radius: var(--radius-base); background: var(--surface); color: var(--text); font: inherit; }
 .ia-content-editor textarea { resize: vertical; }
 .ia-content-editor :is(button,summary), #sitemap-destination-editor > summary, #sitemap-outline-editor > summary { min-height: 44px; align-content: center; white-space: normal; overflow-wrap: anywhere; }

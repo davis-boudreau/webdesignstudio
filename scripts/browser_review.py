@@ -33,10 +33,12 @@ app.onload = async () => {
     document.title='Browser review: '+results.length+' checks; last: '+name;
   };
   // Destination-editor fixtures explicitly reveal its secondary controls.
-  const revealDestinationPlan=()=>{d.querySelectorAll('#sitemap-destination-editor, #sitemap-outline-editor, #process-ia .ia-destination-map').forEach(el=>el.open=true);};
+  const revealDestinationPlan=()=>{const source=d.getElementById('sitemap-source');if(source && source.value!=='custom'){source.value='custom';source.dispatchEvent(new w.Event('change',{bubbles:true}));}d.querySelectorAll('#sitemap-destination-editor, #sitemap-outline-editor, #process-ia .ia-destination-map').forEach(el=>el.open=true);};
   const input = (id, value, type='input') => {
     if(id.startsWith('sitemap-') || id==='plan-pages')revealDestinationPlan();
-    const el=d.getElementById(id); el.value=value;
+    const el=d.getElementById(id);
+    if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
+    el.value=value;
     el.dispatchEvent(new w.Event(type,{bubbles:true}));
   };
   const revealAll = () => d.querySelectorAll('#main > .studio-section, .step-more').forEach(section => {section.hidden=false;section.open=true;});
@@ -49,6 +51,14 @@ app.onload = async () => {
   const wait = (ms=100) => new Promise(resolve => setTimeout(resolve,ms));
   test('No startup JavaScript errors', () => !w.__reviewErrors.length);
   test('Fresh startup opens the Brief centre accordion that matches the active builder step',()=>w.DSStudio.activeStage===0 && d.querySelector('[data-journey-step="0"]').getAttribute('aria-current')==='step' && d.getElementById('process-brief').open && !d.getElementById('process-brief').hidden && !d.getElementById('process-ia').open);
+  const stepDisclosure=d.querySelector('.journey-step-list');
+  test('Choose a step starts expanded with all twelve steps available',()=>stepDisclosure.open && stepDisclosure.querySelectorAll('[data-journey-step]').length===12);
+  w.dssShowWizardStep(1,false);w.dssShowWizardStep(0,false);evaluate('apply()');
+  test('Step navigation and rendering keep the step chooser expanded',()=>stepDisclosure.open && w.DSStudio.activeStage===0);
+  stepDisclosure.open=false;w.dssShowWizardStep(1,false);w.dssShowWizardStep(0,false);evaluate('apply()');
+  test('A user-collapsed step chooser stays collapsed across navigation and rendering',()=>!stepDisclosure.open);
+  stepDisclosure.open=true;w.dssShowWizardStep(1,false);w.dssShowWizardStep(0,false);
+  test('A reopened step chooser stays expanded across navigation',()=>stepDisclosure.open);
   test('Startup defaults to OKLCH across state, both method controls and lesson output',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && d.getElementById('method').value==='oklch' && d.getElementById('rampMethodLabel').textContent==='OKLCH' && d.getElementById('palette-method-status').textContent.includes('OKLCH'));
   test('New projects start with Basic on the left and Advanced on the right',()=>evaluate('state.sampleMode')==='basic' && [...d.querySelectorAll('[aria-label="Website sample complexity"] [role="tab"]')].map(el=>el.id).join(',')==='dockModeBasic,dockModeAdvanced' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockModeBasic').tabIndex===0 && d.getElementById('dockModeAdvanced').tabIndex===-1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic');
   d.getElementById('dockModeAdvanced').click();await wait();
@@ -1914,7 +1924,7 @@ app.onload = async () => {
   test('Basic names header destinations and hero actions after the components they reach', () => [...basicDoc.querySelectorAll('.desktop-navigation a')].map(a=>a.textContent).join(',')==='Home,Components,Layouts,Forms' && [...basicDoc.querySelectorAll('#home .section-actions a')].map(a=>a.hash).join(',')==='#features,#lists');
   test('Basic form groups native radio choices with a legend and one initial choice', () => basicDoc.querySelector('#form-options > legend').textContent==='Learning preference' && basicDoc.querySelectorAll('#form-options input[type="radio"][name="learning"]').length===2 && basicDoc.querySelectorAll('#form-options input:checked').length===1 && [...basicDoc.querySelectorAll('#form-options input')].every(input=>input.closest('label')) && basicDoc.querySelector('#basic-signup-note[role="status"]'));
   test('Basic optional select and textarea start empty with matching labels', () => ['signup-topic','signup-question'].every(id=>basicDoc.getElementById(id).value==='' && !basicDoc.getElementById(id).required && basicDoc.querySelector('label[for="'+id+'"]')) && basicDoc.getElementById('signup-question').defaultValue==='');
-  test('Basic footer has main navigation and a three-group sitemap', () => basicDoc.querySelectorAll('footer nav').length===2 && basicDoc.querySelector('footer .footer-links') && basicDoc.getElementById('footer-sitemap').tagName==='DETAILS' && !basicDoc.getElementById('footer-sitemap').open && [...basicDoc.querySelectorAll('footer .footer-links a')].map(a=>a.hash).join(',')==='#home,#features,#lists,#signup' && [...basicDoc.querySelectorAll('#sitemap .sitemap-list > li > a')].map(a=>a.textContent).join(',')==='Components,Layouts,Forms' && basicDoc.querySelectorAll('#sitemap a').length===14 && !basicDoc.querySelector('#sitemap a[href="#home"], #sitemap a[href="#footer"]'));
+  test('Basic footer has main navigation and a four-section eyebrow sitemap', () => basicDoc.querySelectorAll('footer nav').length===2 && basicDoc.querySelector('footer .footer-links') && basicDoc.getElementById('footer-sitemap').tagName==='DETAILS' && !basicDoc.getElementById('footer-sitemap').open && [...basicDoc.querySelectorAll('footer .footer-links a')].map(a=>a.hash).join(',')==='#home,#features,#lists,#signup' && [...basicDoc.querySelectorAll('#sitemap .sitemap-list > li > a')].map(a=>a.textContent).join(',')==='HTML & CSS essentials,Components / Flexbox,Layouts / CSS Grid,Forms / Labels & controls' && basicDoc.querySelectorAll('#sitemap a').length===12 && basicDoc.querySelector('#sitemap a[href="#home"]') && !basicDoc.querySelector('#sitemap a[href="#footer"]'));
   test('Basic gives every main section one primary CTA and one secondary route', () => [...basicDoc.querySelectorAll('main > section')].every(section => {
     const pair=section.querySelector('.section-actions');
     return pair && pair.children.length===2 && pair.children[0].classList.contains('ds-button--primary') && pair.children[1].classList.contains('ds-button--secondary') && !pair.querySelector('[disabled], [aria-busy], [data-preview-state]');
@@ -2086,9 +2096,9 @@ app.onload = async () => {
         const groups=[...pd.querySelectorAll('#sitemap .sitemap-list > li')], children=[...pd.querySelectorAll('#sitemap .sitemap-list > li > ul')];
         const map=pd.querySelector('#sitemap'), grid=map.querySelector('.sitemap-list'), mapBox=map.getBoundingClientRect(), gridBox=grid.getBoundingClientRect();
         if (pw.getComputedStyle(pd.getElementById('sitemap-title')).textAlign!=='left' || pw.getComputedStyle(grid).justifyItems!=='center' || Math.abs((gridBox.left+gridBox.right)/2-(mapBox.left+mapBox.right)/2)>1) return false;
-        return groups.length===3 && children.length===3 && children.every((list,index)=>{
+        return groups.length===4 && children.length===3 && children.every((list,index)=>{
           const style=pw.getComputedStyle(list), bounds=list.getBoundingClientRect(), links=[...list.querySelectorAll('a')], boxes=links.map(link=>link.getBoundingClientRect());
-          return style.display==='flex' && style.flexDirection==='column' && pw.getComputedStyle(groups[index]).textAlign==='center' && links.length===[3,5,3][index] && boxes.every((box,i)=>box.left>=bounds.left-1 && box.right<=bounds.right+1 && box.height>=44 && Math.abs((box.left+box.right)/2-(bounds.left+bounds.right)/2)<1 && (!i||box.top>=boxes[i-1].bottom-1));
+          return style.display==='flex' && style.flexDirection==='column' && pw.getComputedStyle(list.parentElement).textAlign==='center' && links.length===[3,4,1][index] && boxes.every((box,i)=>box.left>=bounds.left-1 && box.right<=bounds.right+1 && box.height>=44 && Math.abs((box.left+box.right)/2-(bounds.left+bounds.right)/2)<1 && (!i||box.top>=boxes[i-1].bottom-1));
         }) && (width!==1440||groups.every(group=>Math.abs(group.getBoundingClientRect().top-groups[0].getBoundingClientRect().top)<1)) && pd.documentElement.scrollWidth<=width+1;
       });
       test(theme+' Basic content/sidebar layout and UI components fit at '+width+'px', () => {
@@ -2226,7 +2236,7 @@ app.onload = async () => {
       const page=previewDoc(), links=[...page.querySelectorAll('#sitemap a')], ids=new Set(links.map(a=>a.hash.slice(1)));
       const expected=w.DSStudio.process.samplePages(mode);
       const fullCount=expected.split('\n').length, topCount=w.DSStudio.process.hierarchy(expected).length;
-      return d.getElementById('plan-pages').value===expected && links.length===w.DSStudio.process.inventory(mode).length-(mode==='basic'?2:0) && !page.querySelector('#sitemap .sitemap-planned') && links.every(a=>page.querySelectorAll('[id="'+a.hash.slice(1)+'"]').length===1) && [...page.querySelectorAll(mode==='basic'?'main > section:not(#home)':'main > section, main article, footer[id]')].every(el=>el.id && ids.has(el.id)) && d.querySelectorAll('#process-ia .process-map li').length===fullCount && (mode!=='basic'||page.querySelectorAll('#sitemap ul ul a').length===11) && evaluate('htmlExport()').includes('id="sitemap"');
+      return d.getElementById('plan-pages').value===expected && links.length===w.DSStudio.sectionSitemap.nodes().length && !page.querySelector('#sitemap .sitemap-planned') && links.every(a=>page.querySelectorAll('[id="'+a.hash.slice(1)+'"]').length===1) && [...page.querySelectorAll('main > section')].every(el=>el.id && ids.has(el.id)) && d.querySelectorAll('#process-ia .process-map li').length===fullCount && (mode!=='basic'||page.querySelectorAll('#sitemap ul ul a').length===8) && evaluate('htmlExport()').includes('id="sitemap"');
     });
   }
   d.getElementById('process-ia').open=true;
@@ -2264,13 +2274,13 @@ app.onload = async () => {
   test('Home and Footer groups and their children are omitted from custom footer navigation', () => [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].every(group=>group.querySelector('a').hash==='#features' && group.querySelector('ul')) && previewDoc().querySelectorAll('#sitemap a').length===2 && evaluate('state.designProcess.pages').includes('Footer > Common questions'));
   const previousMockPlan="Home\nServices\nServices > Website design\nServices > Content planning\nServices > Responsive websites\nResources\nResources > Project checklist\nResources > How we work\nResources > Useful terms\nContact\nContact > Enquiry form\nContact > Common questions\nFooter";
   evaluate('importConfig('+JSON.stringify({sampleMode:'basic',designProcess:{pages:previousMockPlan}})+')'); await wait();
-  test('Previous mock-site inventory resolves to the component scope without mutating saved data', () => evaluate('state.designProcess.pages')===previousMockPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===14 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
+  test('Previous mock-site inventory resolves to the component scope without mutating saved data', () => evaluate('state.designProcess.pages')===previousMockPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===12 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
   const previousTutorialPlan='Hero\nFlexbox\nFlexbox > Semantic HTML\nFlexbox > Flexbox layout\nFlexbox > Responsive navigation\nGrid & lists\nGrid & lists > Unordered lists\nGrid & lists > Ordered lists\nGrid & lists > Description lists\nForms\nFooter';
   evaluate('importConfig('+JSON.stringify({sampleMode:'basic',designProcess:{pages:previousTutorialPlan}})+')'); await wait();
-  test('The previous complete tutorial plan resolves to the mock inventory without overwriting saved data', () => evaluate('state.designProcess.pages')===previousTutorialPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===14 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
+  test('The previous complete tutorial plan resolves to the mock inventory without overwriting saved data', () => evaluate('state.designProcess.pages')===previousTutorialPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===12 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
   const previousBasicPlan='Home\nWhat you can learn\nWhat you can learn > Give content meaning\nWhat you can learn > Let the layout adapt\nWhat you can learn > Make the basics easy\nLists\nLists > What to include\nLists > A simple workflow\nLists > Useful terms\nSign up\nFooter';
   evaluate('importConfig('+JSON.stringify({sampleMode:'basic',designProcess:{pages:previousBasicPlan}})+')'); await wait();
-  test('Old complete Basic inventories resolve to tutorial labels without changing stored planning data', () => evaluate('state.designProcess.pages')===previousBasicPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap a[href="#features"]').textContent==='Components');
+  test('Old complete Basic inventories resolve to tutorial labels without changing stored planning data', () => evaluate('state.designProcess.pages')===previousBasicPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap a[href="#features"]').textContent==='Components / Flexbox');
   input('plan-pages','Home\nWhat you can learn > Give content meaning\nLists > What to include\nSign up'); await wait();
   test('Custom legacy Basic parent and child labels retain real destinations', () => previewDoc().querySelectorAll('#sitemap a').length===5 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
   input('plan-pages','Home\nFeatures\nLists\nSign up\nFuture > Account'); await wait();
@@ -3023,7 +3033,7 @@ app.onload = async () => {
   const iaSelect=label=>{const option=[...d.getElementById('sitemap-items').options].find(option=>option.textContent.replace(/^\s*—\s*/,'').trim()===label);input('sitemap-items',option.value,'change');};
   const iaFooterHas=label=>[...previewDoc().querySelectorAll('#sitemap a, #sitemap span')].some(el=>el.firstChild?.textContent===label);
   for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
     const parent=mode==='basic'?'Components':'Lessons',child=mode==='basic'?'Content card':'Brief lesson';
     const target=mode==='basic'?'basic-structure':'lesson-brief';
     test(mode+' IA shows every parent and child including sitemap exclusions',()=>d.querySelectorAll('#process-ia .process-map li').length===iaNodes().length && d.querySelector('#process-ia .process-map').textContent.includes('Footer') && d.querySelector('#process-ia .process-map').textContent.includes('Home') && d.querySelectorAll('#sitemap-choices input').length===iaNodes().length);
@@ -3056,7 +3066,7 @@ app.onload = async () => {
     const exportDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
     test(mode+' standalone HTML and inspector use the same selected sitemap',()=>exportDoc.querySelector('#sitemap').innerHTML===previewDoc().querySelector('#sitemap').innerHTML && ![...exportDoc.querySelectorAll('#sitemap a, #sitemap span')].some(el=>el.firstChild?.textContent===parent));
   }
-  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);await wait();
+  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
   iaChoice('Home').click();await wait();
   test('Explicit Home inclusion overrides the former Basic fixed omission',()=>iaFooterHas('Home') && iaNode('Home').includeInSitemap);
   iaChoice('Content card').click();await wait();d.getElementById('dockModeAdvanced').click();await wait();iaChoice('Brief lesson').click();await wait();d.getElementById('dockModeBasic').click();await wait();
@@ -3066,7 +3076,7 @@ app.onload = async () => {
   const groupId=iaNode('Teaching group').id;iaChoice('Teaching group').click();await wait();iaSelect('Teaching group');input('sitemap-label','Renamed group');d.getElementById('sitemap-form').requestSubmit();await wait();
   test('Parent rename preserves its own identity and descendant exclusions',()=>iaNode('Renamed group').id===groupId && !iaNode('Renamed group').includeInSitemap && !iaNode('Content card').includeInSitemap && iaNode('Content card').path[0]==='Renamed group' && !iaFooterHas('Profile row'));
   for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(1);await wait();
+    app.style.width=width+'px';w.dssShowWizardStep(1);revealDestinationPlan();await wait();
     test('IA inclusion controls and both lesson views fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#sitemap-editor select, #sitemap-editor input:not([type=checkbox]), #process-ia .process-sitemap-preview a')].every(el=>el.getBoundingClientRect().height>=44) && d.getElementById('sitemap-choices').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && [...d.querySelectorAll('#sitemap-choices label')].every(row=>row.getBoundingClientRect().height>=44) && ['.process-map','.process-sitemap-preview'].every(selector=>{const el=d.querySelector('#process-ia '+selector);return el.scrollWidth<=el.clientWidth+1;}));
   }
   app.style.width='1440px';reset();d.getElementById('dockModeBasic').click();
@@ -3076,14 +3086,14 @@ app.onload = async () => {
   app.style.width='1440px';reset();await wait();
   const invalidIa=w.DSStudio.process.normalize({iaEntries:{basic:[{id:'ia-1',path:['Safe'],type:'<script>',includeInSitemap:false},{id:'ia-1',path:['Duplicate']},{id:'<img>',path:['Bad']},{id:'ia-2',path:['Too','Many','Nested','Levels']},{id:'ia-3',path:[null]}]}});
   test('Imported IA metadata validates identities, paths, types and duplicate IDs',()=>invalidIa.iaEntries.basic.length===1 && invalidIa.iaEntries.basic[0].type==='section' && invalidIa.iaEntries.basic[0].includeInSitemap===false);
-  w.importConfig({sampleMode:'basic',designProcess:{pages:'Research <img src=x onerror=alert(1)',showPlanned:true,iaEntries:{basic:[{id:'ia-1',path:['Research <img src=x onerror=alert(1)'],type:'page',includeInSitemap:true}]}}});w.dssShowWizardStep(1);await wait();
+  w.importConfig({sampleMode:'basic',designProcess:{pages:'Research <img src=x onerror=alert(1)',showPlanned:true,iaEntries:{basic:[{id:'ia-1',path:['Research <img src=x onerror=alert(1)'],type:'page',includeInSitemap:true}]}}});w.dssShowWizardStep(1);revealDestinationPlan();await wait();
   test('Imported IA labels remain safe text in controls, full IA and sitemap',()=>!d.querySelector('#sitemap-choices img, #process-ia img, #process-ia script') && !previewDoc().querySelector('#sitemap img, #sitemap script') && d.getElementById('sitemap-choices').textContent.includes('<img') && previewDoc().querySelector('#sitemap').textContent.includes('<img'));
   evaluate('resetStudio()');await wait();
   test('Reset clears saved IA metadata and restores default sample inclusion',()=>!evaluate('state.designProcess.iaEntries.basic.length') && !evaluate('state.designProcess.iaEntries.advanced.length') && iaNodes().every(node=>node.includeInSitemap===(node.depth<3 && node.label!=='Home' && node.label!=='Footer')));
 
   // Three information levels retain a separate visitor sitemap in both samples.
   for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
     const parent=mode==='basic'?'Components':'Design process',branch=mode==='basic'?'Profile row':'Project brief';
     const detail=mode==='basic'?'Availability status':'Purpose and audience';
     const sibling=mode==='basic'?'Name and role':'Scope and delivery';
@@ -3131,7 +3141,7 @@ app.onload = async () => {
     d.getElementById('sitemap-new').click();input('sitemap-label','New planning detail');const newParent=iaNode(mode==='basic'?'Content card':'Information architecture');input('sitemap-parent',newParent.position.join(':'),'change');d.getElementById('sitemap-form').requestSubmit();await wait();
     test(mode+' adding a third-level item defaults to content excluded from the sitemap',()=>iaNode('New planning detail').depth===3 && iaNode('New planning detail').type==='content' && !iaNode('New planning detail').includeInSitemap);
   }
-  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);await wait();
+  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
   const oldTwoLevel=w.DSStudio.process.samplePages('basic').split('\n').filter(line=>line.split('>').length<=2).join('\n');
   w.importConfig({sampleMode:'basic',designProcess:{pages:oldTwoLevel,iaEntries:{basic:[{id:'ia-88',path:['Components','Profile row'],type:'section',includeInSitemap:false}]}}});await wait();
   test('Previous complete two-level samples gain planning details without losing saved IDs or exclusions',()=>iaNode('Profile row').id==='ia-88' && !iaNode('Profile row').includeInSitemap && iaNode('Availability status').depth===3 && iaChoice('Availability status').disabled && evaluate('state.designProcess.pages')===oldTwoLevel);
@@ -3148,7 +3158,7 @@ app.onload = async () => {
   const bounded=w.DSStudio.process.normalize({iaEntries:{basic:Array.from({length:200},(_,i)=>({id:'ia-'+(i+1),path:['Root '+i,'Branch','Detail'],type:'content',includeInSitemap:false}))}});
   test('Imported third-level metadata retains valid depth and a bounded 192-entry maximum',()=>bounded.iaEntries.basic.length===192 && bounded.iaEntries.basic.every(node=>node.path.length===3 && !node.includeInSitemap));
   for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);await wait();
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
     for(const width of [320,390,1440]) {
       app.style.width=width+'px';await wait();
       test(mode+' '+theme+' third-level IA fits '+width+'px with usable controls',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && d.getElementById('sitemap-choices').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && d.getElementById('sitemap-items').scrollWidth<=d.getElementById('sitemap-items').clientWidth+1 && [...d.querySelectorAll('#sitemap-choices .is-grandchild')].every(el=>el.getBoundingClientRect().height>=44) && ['.process-map','.process-sitemap-preview'].every(selector=>{const el=d.querySelector('#process-ia '+selector);return el.scrollWidth<=el.clientWidth+1;}));
@@ -3193,8 +3203,17 @@ app.onload = async () => {
     d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value;
     test(mode+' local save contains full content planning data',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectId].data.designProcess.contentPlan[mode].some(node=>node.id===heading.id && node.draft==='A proposed new heading'));
     const fileJson=evaluate('projectJson()'),fileTransfer=new w.DataTransfer(),fileAlerts=[],previousAlert=w.alert;
-    w.alert=message=>fileAlerts.push(message);fileTransfer.items.add(new w.File([fileJson],'content-plan.json',{type:'application/json'}));d.getElementById('loadFile').files=fileTransfer.files;d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));await wait(200);w.alert=previousAlert;
-    test(mode+' actual exported JSON file reimports through Load JSON with the complete content plan',()=>!fileAlerts.length && contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && evaluate('projectJson()')===fileJson);
+    w.alert=message=>fileAlerts.push(message);fileTransfer.items.add(new w.File([fileJson],'content-plan.json',{type:'application/json'}));d.getElementById('loadFile').files=fileTransfer.files;
+    // The file contains the current plan: equality alone cannot prove the file read
+    // finished. Await import completion before deleting any planning branches.
+    let fileImportCompleted=false;
+    await new Promise((resolve,reject)=>{
+      const imported=()=>{fileImportCompleted=true;w.clearTimeout(timeout);resolve();};
+      const timeout=w.setTimeout(()=>{d.removeEventListener('dss:imported',imported);reject(new Error('Content-plan file import did not complete: '+fileAlerts.join('; ')));},3000);
+      d.addEventListener('dss:imported',imported,{once:true});
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+    });await wait();w.alert=previousAlert;
+    test(mode+' actual exported JSON file reimports through Load JSON with the complete content plan',()=>fileImportCompleted && !fileAlerts.length && contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && evaluate('projectJson()')===fileJson);
     selectContent(header.id);d.getElementById('ia-delete').click();await wait();
     test(mode+' removing the header planning branch does not remove Home from sitemap or page',()=>!contentNode('Header') && previewDoc().querySelector('#sitemap').innerHTML===beforeFooter && previewDoc().getElementById('home'));
     d.getElementById('ia-undo').click();await wait();
@@ -3202,7 +3221,7 @@ app.onload = async () => {
     selectContent(homeRef.id);
     test(mode+' navigation references do not offer separate sitemap membership',()=>d.getElementById('ia-manage-sitemap').disabled && d.getElementById('ia-sitemap-summary').textContent.includes('do not have separate sitemap membership'));
     selectContent(home.id);d.getElementById('ia-manage-sitemap').click();await wait();
-    test(mode+' canonical section reaches its existing sitemap destination controls',()=>d.getElementById('sitemap-destination-editor').open && d.getElementById('sitemap-label').value==='Home');
+    test(mode+' canonical section reaches its matching eyebrow sitemap inclusion control',()=>d.activeElement.dataset.sectionId==='home' && d.getElementById('sitemap-destination-editor').hidden);
     selectContent(hero.id);d.getElementById('ia-add-child').click();input('ia-label','New content group');input('ia-type','group','change');await saveContent();
     const newGroup=contentNode('New content group');
     test(mode+' add child retains the selected container relationship',()=>newGroup.parentId===hero.id && newGroup.status==='planned');
@@ -3245,12 +3264,154 @@ app.onload = async () => {
   const textHeavy=model.normalizeNodes(Array.from({length:1000},(_,i)=>({id:'content-heavy-'+i,label:'Large '+i,value:'x'.repeat(2400),draft:'y'.repeat(2400),notes:'z'.repeat(1200)})),'basic');
   test('Content imports bound aggregate plan data as well as individual values',()=>textHeavy.length>0 && textHeavy.length<1000 && JSON.stringify(textHeavy).length<=model.MAX_PLAN_CHARS);
   for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);await wait();d.getElementById('ia-expand').click();
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);await wait();d.getElementById('ia-expand').click();d.querySelectorAll('.ia-editor-disclosure').forEach(el=>el.open=true);
     for(const width of [320,390,1440]) {app.style.width=width+'px';await wait();
       test(mode+' '+theme+' deep outline and content controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && d.getElementById('ia-outline').scrollWidth<=d.getElementById('ia-outline').clientWidth+1 && [...d.querySelectorAll('#ia-content-editor input:not([type=checkbox]), #ia-content-editor select, #ia-content-editor textarea, #ia-content-editor button')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.right<=d.getElementById('ia-content-editor').getBoundingClientRect().right+1;}) && !w.__reviewErrors.length);
     }
   }
   app.style.width='1440px';reset();await wait();
+  }
+
+  // Eyebrow sitemap: shared visible labels, real destinations and saved configuration.
+  {
+    const sectionModel=w.DSStudio.sectionSitemap;
+    const changeSource=value=>{const control=d.getElementById('sitemap-source');control.value=value;control.dispatchEvent(new w.Event('change',{bubbles:true}));};
+    const chooseSection=(id,checked)=>{const control=[...d.querySelectorAll('#section-sitemap-choices input')].find(el=>el.dataset.sectionId===id);control.checked=checked;control.dispatchEvent(new w.Event('change',{bubbles:true}));};
+    const mapLinks=()=>[...previewDoc().querySelectorAll('#sitemap a')];
+    for(const mode of ['basic','advanced']) {
+      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+      const rows=sectionModel.nodes(),body=previewDoc(),beforeContent=JSON.stringify(w.DSStudio.contentArchitecture.nodes());
+      test(mode+' defaults to page labels and keeps detailed content structure',()=>sectionModel.source()==='sections' && d.getElementById('sitemap-source').value==='sections' && d.getElementById('sitemap-destination-editor').hidden && d.getElementById('sitemap-outline-editor').hidden && w.DSStudio.contentArchitecture.nodes().length>100);
+      test(mode+' every sitemap label and destination matches a visible eyebrow or heading',()=>rows.length>10 && rows.every(node=>{const target=body.getElementById(node.id);return target && [...target.querySelectorAll('.eyebrow,.sample-eyebrow,h1,h2,h3,h4,h5,h6,legend'),target].some(el=>el.textContent.replace(/\s+/g,' ').trim()===node.label);}) && mapLinks().map(a=>a.hash.slice(1)).join(',')===rows.map(node=>node.id).join(',') && mapLinks().every((a,i)=>a.textContent===rows[i].label));
+      test(mode+' sitemap follows container ancestry and keeps slash labels whole',()=>rows.some(node=>node.id==='home' && !node.parentId) && rows.every(node=>!node.parentId || body.getElementById(node.parentId).contains(body.getElementById(node.id))) && !rows.some(node=>node.id==='footer'));
+      test(mode+' preview proxies and exported fragment links share the same labels',()=>{const exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html'),proxies=[...d.querySelectorAll('.process-sitemap-preview a[data-sitemap-target]')];return proxies.length===rows.length && proxies.every((a,i)=>a.hash==='#previewShell' && a.dataset.sitemapTarget===rows[i].id && a.textContent===rows[i].label) && [...exported.querySelectorAll('#sitemap a')].every((a,i)=>a.hash==='#'+rows[i].id && a.textContent===rows[i].label && exported.querySelectorAll('[id="'+rows[i].id+'"]').length===1);});
+      if(mode==='basic') {
+        test('Basic sitemap root labels match the four section eyebrows',()=>rows.filter(node=>!node.parentId).map(node=>node.label).join('|')==='HTML & CSS essentials|Components / Flexbox|Layouts / CSS Grid|Forms / Labels & controls');
+        test('Basic component eyebrows and list heading fallbacks remain correctly nested',()=>rows.find(node=>node.id==='basic-structure').label==='Article / Content card' && rows.find(node=>node.id==='basic-structure').parentId==='features' && rows.find(node=>node.id==='list-collection').label==='Unordered list' && rows.find(node=>node.id==='list-collection').parentId==='lists');
+      }
+      const parent=mode==='basic'?'features':'components',child=mode==='basic'?'basic-structure':'component-actions';
+      chooseSection(child,false);chooseSection(parent,false);await wait();
+      test(mode+' excluding a parent suppresses its branch without changing content',()=>!mapLinks().some(a=>a.hash==='#'+parent || a.hash==='#'+child) && [...d.querySelectorAll('#section-sitemap-choices input')].find(el=>el.dataset.sectionId===child).disabled && JSON.stringify(w.DSStudio.contentArchitecture.nodes())===beforeContent);
+      const canonical=w.DSStudio.contentArchitecture.nodes().find(node=>node.target===child && node.type!=='link'),select=d.querySelector('[data-content-id="'+canonical.id+'"]');
+      for(let ancestor=select.parentElement;ancestor;ancestor=ancestor.parentElement)if(ancestor.tagName==='DETAILS')ancestor.open=true;
+      select.click();d.getElementById('ia-manage-sitemap').click();
+      test(mode+' configuring an excluded child focuses the parent that must be enabled first',()=>d.activeElement.dataset.sectionId===parent);
+      chooseSection(parent,true);await wait();
+      test(mode+' re-including a parent retains independent child exclusions',()=>mapLinks().some(a=>a.hash==='#'+parent) && !mapLinks().some(a=>a.hash==='#'+child));
+      d.getElementById('jSaveLocal').click();const sectionProjectId=d.getElementById('jProjects').value;
+      chooseSection('home',false);await wait();
+      test(mode+' section inclusion autosaves to the active project',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[sectionProjectId].data.designProcess.sitemapExcluded[mode].includes('home'));
+      chooseSection('home',true);await wait();
+      const config=evaluate('projectJson()');evaluate('importConfig('+config+')');await wait();
+      test(mode+' section choices round trip through project JSON',()=>evaluate('state.designProcess.sitemapExcluded.'+mode).join(',')===child && !mapLinks().some(a=>a.hash==='#'+child));
+      d.getElementById('section-sitemap-restore').click();await wait();
+      test(mode+' Include all sections restores the current sample',()=>mapLinks().length===rows.length);
+      evaluate('state.designProcess.goal="Keep this unrelated brief edit";apply()');
+      d.getElementById('section-sitemap-undo').click();await wait();
+      test(mode+' sitemap undo retains later brief changes',()=>evaluate('state.designProcess.goal')==='Keep this unrelated brief edit');
+      test(mode+' section configuration undo restores exclusions',()=>!mapLinks().some(a=>a.hash==='#'+child));
+      changeSource('custom');await wait();
+      test(mode+' custom source reveals compatible destination controls',()=>!d.getElementById('sitemap-destination-editor').hidden && !d.getElementById('sitemap-outline-editor').hidden && d.getElementById('section-sitemap-settings').hidden);
+      changeSource('sections');d.getElementById('section-sitemap-restore').click();await wait();
+      const proxy=d.querySelector('.process-sitemap-preview [data-sitemap-target="'+parent+'"]');proxy.click();await wait();
+      test(mode+' eyebrow sitemap preview link focuses the actual page section',()=>previewDoc().activeElement.id===parent);
+      for(const theme of ['light','dark']) {
+        if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();
+        for(const width of [320,390,1440]) {
+          app.style.width=width+'px';w.dssShowWizardStep(1);await wait();
+          test(mode+' '+theme+' eyebrow sitemap controls fit '+width+'px',()=>{const editor=d.getElementById('section-sitemap-editor'),box=editor.getBoundingClientRect();return d.documentElement.scrollWidth<=w.innerWidth+1 && [...editor.querySelectorAll('select,button,#section-sitemap-choices label')].filter(el=>el.getBoundingClientRect().width>0).every(el=>{const b=el.getBoundingClientRect();return b.height>=44 && b.right<=box.right+1;});});
+        }
+      }
+    }
+    app.style.width='1440px';reset();await wait();
+    w.importConfig({sampleMode:'basic',designProcess:{sitemapSource:{basic:'sections',advanced:'sections'},sitemapExcluded:{basic:['home','features','lists','signup'],advanced:['about']}}});await wait();
+    test('An empty section sitemap explains its selection state and retains website content',()=>!mapLinks().length && previewDoc().querySelector('#sitemap').textContent.includes('No sections selected') && previewDoc().querySelectorAll('main > section').length===4);
+    d.getElementById('section-sitemap-restore').click();await wait();
+    test('Restoring Basic section choices retains Advanced choices',()=>evaluate('state.designProcess.sitemapExcluded.basic').length===0 && evaluate('state.designProcess.sitemapExcluded.advanced').join(',')==='about');
+    d.getElementById('dockModeAdvanced').click();await wait();
+    test('Mode switches apply the matching saved section choices',()=>!mapLinks().some(a=>a.hash==='#about') && mapLinks().some(a=>a.hash==='#home'));
+    d.getElementById('dockModeBasic').click();await wait();
+    test('Returning to Basic restores its complete section sitemap',()=>mapLinks().length===12);
+    const fixture='<main><section id="features"><p class="eyebrow">Components / Flexbox</p><article id="basic-structure"><p class="eyebrow">Repeated &amp; safe</p></article><article id="basic-layout"><h3>Repeated &amp; safe</h3></article></section><section id="lists"><article id="list-collection"><p class="eyebrow">Child only</p></article></section></main>';
+    const collected=sectionModel.collect(fixture,'basic');
+    test('Section collector preserves duplicate label identities and does not borrow child eyebrows',()=>collected.length===4 && collected[1].label===collected[2].label && collected[1].id!==collected[2].id && !collected.some(node=>node.id==='lists') && collected.find(node=>node.id==='list-collection').parentId===null);
+    w.importConfig({sampleMode:'basic',designProcess:{sitemapSource:{basic:'malicious'},sitemapExcluded:{basic:['features','features','javascript:alert(1)','missing']}}});await wait();
+    test('Imported sitemap source and exclusions use bounded fixed values',()=>evaluate('state.designProcess.sitemapSource.basic')==='auto' && evaluate('state.designProcess.sitemapExcluded.basic').join(',')==='features');
+    w.importConfig({sampleMode:'basic',designProcess:{pages:'Home\nCustom > Content card',pageLinks:{basic:{Custom:'features'}}}});await wait();
+    test('Older custom outlines retain their navigation until switched explicitly',()=>sectionModel.source()==='custom' && mapLinks().some(a=>a.textContent==='Custom'));
+    const customBefore=evaluate('JSON.stringify([state.designProcess.pages,state.designProcess.pageLinks,state.designProcess.contentPlan])');changeSource('sections');await wait();
+    test('Switching an old plan to page labels preserves its saved plan and content',()=>mapLinks().some(a=>a.textContent==='Components / Flexbox') && evaluate('JSON.stringify([state.designProcess.pages,state.designProcess.pageLinks,state.designProcess.contentPlan])')===customBefore);
+    evaluate('state.project="<img src=x onerror=alert(1)> & Safe";state.sampleMode="advanced";state.designProcess.sitemapSource.advanced="sections";apply()');await wait();
+    test('Dynamic eyebrow text stays escaped in sitemap controls, preview and exports',()=>mapLinks().some(a=>a.textContent.includes('<img')) && !previewDoc().querySelector('#sitemap img') && !d.querySelector('#section-sitemap-choices img') && !new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap img'));
+    reset();await wait();
+  }
+
+  // Student content planning: understand the item, propose content, save and review.
+  {
+    const model=w.DSStudio.contentArchitecture,rows=()=>model.nodes();
+    const select=id=>{const button=d.querySelector('[data-content-id="'+id+'"]');for(let parent=button.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;button.click();};
+    for(const mode of ['basic','advanced']) {
+      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+      const heading=rows().find(node=>node.label==='Heading'),home=rows().find(node=>node.label==='Home' && node.type!=='link');select(heading.id);
+      test(mode+' selected content identifies the item and teaches its properties',()=>d.getElementById('ia-selected-name').textContent===heading.label && d.getElementById('ia-current-path').textContent.startsWith('Location: ') && d.getElementById('ia-origin').textContent==='From the sample website' && d.getElementById('ia-actual-label').textContent==='In the sample (read only)' && d.getElementById('ia-type-help').textContent.includes('words') && d.getElementById('ia-actual').readOnly && d.getElementById('ia-actual').value===heading.value);
+      test(mode+' content planning uses three clearly named stages and an explicit sample boundary',()=>d.querySelector('#ia-form legend').textContent==='1. Understand this item' && d.getElementById('ia-plan-heading').textContent==='2. Develop the content plan' && d.getElementById('ia-save-heading').textContent==='3. Save and review' && d.getElementById('ia-plan-boundary').textContent.includes('does not replace') && d.getElementById('ia-draft-label').textContent==='Proposed wording');
+      const before=evaluate('projectJson()');input('ia-draft','A clear introduction for our learners');input('ia-notes','Purpose: introduce the course. Owner: course tutor. Next action: review with a beginner.');input('ia-status','needs-content','change');
+      test(mode+' content edits stay in the form until saved and are clearly marked',()=>evaluate('projectJson()')===before && d.getElementById('ia-has-draft').checked && d.getElementById('ia-edit-state').textContent.includes('Unsaved edits') && !d.getElementById('ia-discard').disabled);
+      d.getElementById('ia-form').requestSubmit();await wait();
+      test(mode+' save retains the proposed wording, readiness and next action separately from the sample',()=>{const node=rows().find(node=>node.id===heading.id);return node.draft==='A clear introduction for our learners' && node.notes.includes('Owner: course tutor') && node.status==='needs-content' && node.value===heading.value && d.getElementById('ia-actual').value===heading.value && d.getElementById('ia-edit-state').textContent.includes('saved plan') && d.getElementById('ia-discard').disabled && d.activeElement===d.getElementById('ia-save') && d.getElementById('ia-outline').textContent.includes(node.draft) && d.getElementById('ia-outline').textContent.includes('Needs content or revision') && d.querySelector('#process-ia .ia-content-map').textContent.includes('Needs content or revision');});
+      const savedPlan=evaluate('projectJson()');input('ia-label','Unsaved name');input('ia-type','image','change');input('ia-draft','Unsaved image brief');
+      test(mode+' changing content kind explains the matching planning task',()=>d.getElementById('ia-draft-label').textContent==='Image brief' && d.getElementById('ia-draft-help').textContent.includes('text alternative') && d.getElementById('ia-example').textContent.includes('photograph') && d.getElementById('ia-type-help').textContent.includes('visual asset'));
+      d.getElementById('ia-discard').click();
+      test(mode+' discarding form edits restores saved properties and proposal without changing the project',()=>evaluate('projectJson()')===savedPlan && d.getElementById('ia-label').value===heading.label && d.getElementById('ia-type').value===heading.type && d.getElementById('ia-draft').value==='A clear introduction for our learners' && d.getElementById('ia-draft-label').textContent==='Proposed wording' && d.getElementById('ia-discard').disabled && d.activeElement===d.getElementById('ia-save'));
+      input('ia-draft','');d.getElementById('ia-form').requestSubmit();await wait();
+      test(mode+' deliberately blank proposals are explained and saved distinctly',()=>rows().find(node=>node.id===heading.id).draft==='' && d.getElementById('ia-proposal-state').textContent.includes('intentionally blank'));
+      d.getElementById('ia-has-draft').click();d.getElementById('ia-form').requestSubmit();await wait();
+      test(mode+' no proposal retains notes and uses the original sample as the starting point',()=>rows().find(node=>node.id===heading.id).draft===null && rows().find(node=>node.id===heading.id).notes.includes('Owner: course tutor') && d.getElementById('ia-proposal-state').textContent.includes('No proposed replacement'));
+      for(const [kind,label]of [['image','Image brief'],['link','Proposed link wording'],['field','Proposed label or instructions'],['group','What this area needs']]) {
+        const node=rows().find(node=>node.type===kind);select(node.id);
+        test(mode+' '+kind+' items show a relevant planning prompt and example',()=>d.getElementById('ia-draft-label').textContent===label && d.getElementById('ia-example').textContent.length>40 && d.getElementById('ia-type-help').textContent.length>40);
+      }
+      select(home.id);d.getElementById('ia-add-child').click();
+      test(mode+' adding inside explains a new planning item and retains the chosen parent',()=>d.getElementById('ia-selected-name').textContent==='New planning item' && d.getElementById('ia-origin').textContent.includes('not added to the sample') && d.getElementById('ia-parent').value===home.id && d.getElementById('ia-edit-state').textContent.includes('New item'));
+      input('ia-label','Audience introduction');input('ia-draft','Explain who this course is for.');d.getElementById('ia-form').requestSubmit();await wait();
+      test(mode+' a new item saves within its chosen container and stays explicitly planned',()=>rows().some(node=>node.label==='Audience introduction' && node.parentId===home.id && node.status==='planned' && node.draft==='Explain who this course is for.') && d.getElementById('ia-origin').textContent.includes('not added to the sample') && d.getElementById('ia-actual-label').textContent==='Recorded content (read only)');
+    }
+    w.importConfig({sampleMode:'basic',designProcess:{contentPlan:{basic:[{id:'content-unsafe-name',label:'<img src=x onerror=alert(1)>',type:'text',draft:'<svg onload=alert(1)>',notes:'<script>unsafe<\/script>'}]}}});w.dssShowWizardStep(1);await wait();
+    test('Student item summaries render imported names and proposals as inert text',()=>d.getElementById('ia-selected-name').textContent.includes('<img') && d.getElementById('ia-draft').value.includes('<svg') && !d.querySelector('#ia-form img, #ia-form svg, #ia-form script'));
+    app.style.width='1440px';reset();await wait();
+  }
+
+  // Content properties and planning disclosures remain independently collapsible.
+  {
+    for(const mode of ['basic','advanced']) {
+      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
+      const properties=d.getElementById('ia-properties'),plan=d.getElementById('ia-content-plan'),summary=properties.querySelector('summary'),planSummary=plan.querySelector('summary');
+      test(mode+' content properties and content plan start collapsed with semantic labels',()=>!properties.open && !plan.open && summary.textContent==='Selected content properties' && planSummary.textContent==='2. Develop the content plan' && d.getElementById('ia-selected-name').getBoundingClientRect().height>0);
+      const before=evaluate('projectJson()');
+      d.querySelector('[data-content-id]').click();
+      test(mode+' selecting content keeps disclosures closed and focuses the properties summary',()=>!properties.open && !plan.open && d.activeElement===summary);
+      summary.click();
+      test(mode+' opening properties leaves the content plan collapsed',()=>properties.open && !plan.open);
+      planSummary.click();summary.click();
+      test(mode+' opening the plan and closing properties are independent and do not change project data',()=>!properties.open && plan.open && evaluate('projectJson()')===before);
+      input('ia-draft','A proposal retained while collapsed');planSummary.click();
+      test(mode+' collapsing the plan retains unsaved values and keeps save feedback visible',()=>!plan.open && d.getElementById('ia-draft').value==='A proposal retained while collapsed' && !d.getElementById('ia-discard').disabled && d.getElementById('ia-save').getBoundingClientRect().height>=44 && evaluate('projectJson()')===before);
+      d.getElementById('ia-form').requestSubmit();await wait();
+      test(mode+' saving from collapsed disclosures retains their state and saves the proposal',()=>!properties.open && !plan.open && w.DSStudio.contentArchitecture.nodes().some(node=>node.draft==='A proposal retained while collapsed'));
+      summary.click();d.querySelector('[data-content-id]').click();evaluate('apply()');
+      test(mode+' selection and ordinary rendering preserve chosen disclosure states',()=>properties.open && !plan.open);
+      summary.click();d.getElementById('ia-add-root').click();
+      test(mode+' adding an item opens properties and focuses its required name',()=>properties.open && !plan.open && d.activeElement===d.getElementById('ia-label'));
+      summary.click();d.getElementById('ia-form').requestSubmit();
+      test(mode+' validation reveals a required field inside collapsed properties',()=>properties.open && !plan.open && d.activeElement===d.getElementById('ia-label') && !d.getElementById('ia-label').validity.valid);
+      d.dispatchEvent(new w.Event('dss:imported'));await wait();
+      test(mode+' importing returns both content disclosures to collapsed',()=>!properties.open && !plan.open);
+      for(const width of [320,390,1440]) {
+        app.style.width=width+'px';await wait();
+        test(mode+' collapsed content summaries fit and retain touch targets at '+width+'px',()=>[summary,planSummary].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.left>=0 && box.right<=w.innerWidth+1;}) && d.documentElement.scrollWidth<=w.innerWidth+1);
+      }
+    }
+    app.style.width='1440px';reset();await wait();
   }
 
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
