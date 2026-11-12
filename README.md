@@ -432,7 +432,8 @@ The **Wireframe workspace** is a read-only, low-fidelity view of the Basic or
 Advanced website. It uses the same generated HTML and responsive CSS as the live
 preview, with neutral colours and grey image areas. Solid outlines show page
 regions, dashed outlines show content-width containers, dotted outlines show
-Grid/Flex groups and thin outlines show their child containers. These boundaries
+Grid/Flex groups and thin outlines show nested content groups, list items and
+child containers. Hover a boundary to inspect its HTML identity and layout type. These boundaries
 preserve actual spacing and dimensions, including in the HTML download. Saved website wording
 from Architecture appears automatically; proposals remain planning data until
 applied to website content. Layout and content are edited in their existing tools.
@@ -467,14 +468,45 @@ Saved/imported projects retain their explicitly chosen ratio.
 See [the teaching and token-configuration review](docs/TOKEN_CONFIGURATION_2026-10-20.md)
 for the complete coverage map and the reasoning behind this organization.
 
-In **Palette (step 4)**, keep named brand references separate
-from the interface roles. Start with the example colours, or edit names/HEX
-values, assign unique token suffixes and add/remove colours in **Edit Brand Palette**
-(up to 24). Each declaration shows the complete `--brand-*` token name and hex.
-Display-name edits preserve token names; token-name edits update CSS and the catalogue.
-Each Main
-Palette role—Primary UI colour, Supporting colour and Accent colour—has a dropdown
-containing the complete Brand Palette plus a custom colour picker.
+In **Palette (step 4)**, use the centre **Palette workspace**. The left column is
+now a short guide and stage navigator. Work through **Brand colours → UI anchors → Shades → Semantic roles → Page backgrounds
+→ Component colours → States and review**, with an
+explanation and Previous/Next actions at each stage. Stages can be reopened to
+revise a decision; the current-stage marker is navigation, not a completion grade.
+
+Inside each stage, browse and manage items on the left, then view the selected
+item's properties on the right. The columns stack on narrow screens. Brand
+colours have search, Add and Remove controls; fixed roles and generated families
+offer selection and appropriate reset actions. Generated token values use
+read-only form fields. Semantic properties offer a HEX field and colour picker
+for a proposal: Preview checks its effects, Apply saves it, and Discard restores
+the current value.
+
+Create up to 24 named brand references, choose one to view its properties, edit
+its name/HEX/token suffix, or remove it. Keep at least one reference. Selected
+properties stay visible; other rows remain available in the selector. Display
+names and token suffixes are separate. Main Palette roles offer the complete
+brand list, a custom picker and a reset to their starter assignments. Required
+roles and generated shade steps are edited through their sources, rather than
+deleted. Direct edits apply immediately through the existing generators;
+semantic proposals wait for Apply in the contrast preview.
+
+Choose the website theme at the top. UI anchors are shared; background and
+semantic overrides apply to the selected theme. Background editing
+shows one chosen region at a time; Use default removes its override. Semantic roles include text, surfaces, borders, actions, focus and feedback. Their
+existing contrast preview, Apply and reset controls now live in Palette. Review
+keeps feedback selection on the left and its colour properties on the right.
+Detailed control/button state customizations and token references are optional
+disclosures. Save JSON or your local project to keep the decisions.
+
+The component stage shows resolved exported tokens for cards/panels, inputs,
+links and buttons. Edit source opens the appropriate Palette role or component
+control. Select a button variant before its source, custom value or state colour
+overrides. Clear overrides affects that variant only; it retains its source and
+other variants. Shared button focus resets separately. Button colour settings
+apply to both themes; semantic overrides remain theme-specific. Base declarations
+also apply in dark theme when no dark override exists. The Buttons step keeps
+geometry, typography, timing and interaction previews, with a link to Palette.
 
 Choosing a brand swatch copies its HEX into the selected role. Editing or removing
 that reference later keeps the current UI colour; choose the updated swatch again
@@ -499,8 +531,8 @@ OKLCH is the default for new projects and Reset; saved method choices are preser
 **Generate state palette steps** extends this process to Success, Warning and
 Danger. Each has eleven theme-specific shade tokens, such as `--success-50`
 through `--success-950`; step 500 preserves the resolved semantic colour.
-Change its colour in Semantic colours or change the ramp method to regenerate
-the steps. The wizard and centre lesson show the current theme's exported values,
+Change its colour in States and review or Semantic colours, or change the ramp
+method to regenerate the steps. The workspace shows the current theme's exported values,
 with CSS inspection and configuration links. Both themes appear in exported CSS
 and the catalogue. Existing component state mappings retain their semantic
 colours; choose shade pairs deliberately and use text or icons alongside feedback.
@@ -508,7 +540,7 @@ colours; choose shade pairs deliberately and use text or icons alongside feedbac
 **Generate interaction state palette steps** covers every State Explorer state:
 Default, Hover, Focus-visible, Active/pressed, Selected, Disabled, Loading, Invalid,
 Valid/success and Read-only. Choose General controls or any of the five button
-variants to see its state ramps in the wizard and centre lesson. All ramps export
+variants to see its state ramps in the workspace. All ramps export
 eleven steps per theme, with step 500 preserving the resolved state colour.
 Their catalogue sources and inspector actions lead to the existing semantic or
 button colour controls. Transparent buttons use their foreground as the ramp
@@ -517,31 +549,29 @@ native behaviour remain part of the state design; shade generation does not
 automatically remap component styling. The component selector is a view preference
 and does not change project data.
 
-Webpage backgrounds comes before Generate interaction state palette steps in
-both the wizard and centre lesson.
+Page backgrounds precedes States and review in the guided workspace.
 
 Every interaction state ramp also has a colour dropdown, starting with its
 computed **Default** colour. Choose a Brand colour, Main Palette colour, Neutral
 step or shade from the state's current ramp; choices copy a hex value into its
-existing source. Default removes that source override. The wizard and centre
+existing source. Default removes that source override. The compact and reference
 dropdowns mirror each other, retain focus and update previews, inspection and
 saved projects. General colours apply to the current theme; button colours apply
 to both themes, and button focus is shared across variants. Help names the source
 and related states affected by a shared edit. Transparent variants edit their
 foreground source. Existing custom colours remain selectable after loading a project.
 
-The centre-pane **Palette** shows current Main Palette assignments.
-Choose **the UI role to change**, then click any swatch card to set Primary UI,
-Supporting or Accent colour. Each card names its action and lists the roles using
-that colour; a status message confirms the result. The preview, guided dropdowns,
-CSS and active local save update together. **Edit Brand Palette** opens the step-4
-editor and keeps project settings intact.
+The UI roles stage also offers an optional swatch-card view. Choose the role to
+change, then click a brand card to apply its value. Each card names the action
+and shows which roles use it. Its Edit Brand Palette shortcut opens the selected
+colour editor; token catalogue Configure actions open the appropriate stage,
+brand row or background region before focusing the source control.
 
-In wizard step **6**, **Semantic colour roles** shows all theme roles with readable
-names, CSS tokens, a colour swatch and current HEX/status. Choose the page theme
-and role, then **Preview / edit role colour** to review contrast effects before
-applying. **Use generated colour** removes that role's custom override. Changes
-update the preview, CSS and saved project; Light and Dark remain independent.
+**Assign semantic colours** is part of Palette, after generated shade families.
+Choose a role and website theme, preview contrast effects, then Apply or cancel.
+Use generated removes only that role's override for that theme. The separate
+**Colour lab (step 6)** remains for RGB/HSL/OKLCH exploration, with a shortcut to
+Palette. Catalogue source labels use the visible course step, not an internal index.
 
 Each main section pairs the button designer's Primary and Secondary variants,
 using contextual links between services, resources, contact and the component

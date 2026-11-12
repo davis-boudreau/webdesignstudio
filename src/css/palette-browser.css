@@ -1,0 +1,26 @@
+.palette-editor-columns { display: grid; grid-template-columns: minmax(15rem,.8fr) minmax(0,1.2fr); gap: 1rem; align-items: start; }
+.palette-browser, .palette-properties { min-width: 0; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-base); }
+.palette-browser > h4, .palette-properties > h4 { margin-top: 0; }
+.palette-browser > p { font-size: .88rem; }
+.palette-item-list { display: grid; gap: .5rem; max-height: 25rem; overflow: auto; margin-block: 1rem; }
+.palette-item-list button { display: flex; gap: .6rem; align-items: center; width: 100%; text-align: left; padding: .6rem; }
+.palette-item-list button > span:not(.brand-palette-chip) { min-width: 0; }
+.palette-item-list strong, .palette-item-list code { display: block; overflow-wrap: anywhere; }
+.palette-item-list button[aria-pressed="true"] { font-weight: 700; border-color: var(--control-border); box-shadow: inset 3px 0 var(--primary); }
+.palette-item-list button[aria-pressed="true"]::before { content: "\2713"; }
+.palette-browser > button { margin-block: .4rem; max-width: 100%; }
+.palette-properties .palette-role-editors, .palette-properties .palette-component-fields { display: block; }
+.palette-properties .brand-palette-row { display: block; }
+.palette-properties .brand-palette-row [data-remove-brand], .palette-properties .background-region > button { display: none; }
+.palette-properties .palette-component-values { display: block; }
+.palette-properties .palette-component-values > div { margin-block: .75rem; }
+.palette-value-field { width: 100%; min-width: 0; box-sizing: border-box; padding: .5rem; border: 1px solid var(--control-border); border-radius: var(--radius-base); font: inherit; color: var(--text); background: var(--surface-muted); }
+.palette-properties .palette-step-list { grid-template-columns: repeat(auto-fit,minmax(min(100%,10rem),1fr)); }
+.palette-properties .palette-step-list li { flex-wrap: wrap; }
+.palette-value-label { flex: 1; min-width: 0; overflow-wrap: anywhere; font-family: monospace; font-size: .85rem; }
+.palette-semantic-fields input { box-sizing: border-box; }
+.palette-browser select[size] { min-width: 0; max-width: 100%; }
+@media (max-width: 1100px) { .palette-editor-columns { grid-template-columns: minmax(0,1fr); } }
+
+.palette-stage-body { container-type: inline-size; }
+@container (max-width: 45rem) { .palette-editor-columns { grid-template-columns: minmax(0,1fr); } }

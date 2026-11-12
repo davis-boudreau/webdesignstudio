@@ -23,7 +23,7 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
       ['prototype', 'Prototype', 'process-prototype', 'Review and deliver', '', 'Review the finished live prototype using your brief and task. Test both samples, themes and viewport sizes, record observations, then export the HTML and CSS.'],
       ['palette', 'Palette', 'brandPalette', 'Foundations', '--primary:', 'Name a brand token, assign a Main Palette role and compare its generated shade steps. Follow the light and dark semantic values into the page and CSS.'],
       ['typography', 'Typography', 'studio-section-2', 'Foundations', '--font-size-base:', 'Change the base text size. Compare headings and body text, then inspect the generated type scale.'],
-      ['semantic', 'Semantic colours', 'studio-section-1', 'Foundations', '--surface:', 'Choose a purpose-based colour. Compare the affected text or surface in the current theme.'],
+      ['semantic', 'Colour lab', 'studio-section-1', 'Foundations', '--surface:', 'Explore colour models and gamut here; assign semantic roles and component colours in the Palette workspace.'],
       ['buttons', 'Buttons', 'buttonDesignLab', 'Apply', '--button-primary-bg:', 'Change the primary button background. Compare the page action, check its text contrast and follow the token into CSS.'],
       ['spacing', 'Spacing and surfaces', 'studio-section-3', 'Apply', '--space-unit:', 'Change the spacing unit. Compare section padding and related spacing tokens, then explain why they change together.'],
       ['responsive', 'Responsive layout', 'responsiveDesign', 'Apply', '--grid-card-min:', 'Compare 390 px and Fluid. Change the narrow cutoff and find the rule that stacks the layout. Preview widths test rules; they do not save breakpoints.'],

@@ -1,6 +1,164 @@
 # Project progress
 
-Updated: 11 November 2026 (America/Halifax).
+Updated: 12 November 2026 (America/Halifax).
+
+## Palette browse/manage and selected properties (12 November 2026)
+
+- User requested Architecture-style Palette UI: left browsing/CRUD and right
+  editable selected properties. Added palette-browser.js/css immediately after
+  palette-workspace, with versioned assets; seven responsive two-column stages.
+- Brand search, list, count, Add and guarded Remove are on the left. Existing
+  validated name/token/colour inputs remain in the right selected editor. Fixed
+  anchors, shade families, semantic roles, regions and component variants use
+  left selection and appropriate reset actions rather than arbitrary deletion.
+- Right panels show the selected original fields; generated shade/component
+  values are labelled read-only inputs. Button colour overrides are visible in
+  the selected variant's properties. Feedback selection/reset is on the left,
+  with feedback colour properties on the right. Guidance stays with browsing.
+- Semantic role/token names are read-only; HEX/picker proposals are local drafts.
+  Preview delegates to the existing contrast dialog, Apply persists, Cancel keeps
+  saved colours and Discard restores the current value. Invalid HEX blocks Preview.
+  Original shared state, JSON schema, autosave and export paths are preserved.
+- Native opening refreshes read-only values after original toggle listeners;
+  explicit source routing selects the appropriate properties. No global lesson
+  navigation is added to background updates. Responsive columns also follow the
+  available centre width through a container query.
+- Focused browser checks: **161/161 passed**, no captured JavaScript errors
+  (.palette-browser-verified.log). Existing semantic/palette/state/token subset:
+  **273/273 passed**, no JS errors (.palette-browser-legacy.log). Preliminary runs
+  caught outdated guidance selectors and native-toggle fixtures that did not let
+  the prior disclosure settle; updated the fixtures while retaining assertions.
+  One earlier isolated run also reported a null contrast-dialog session during
+  a rapid cancel/reopen sequence; subsequent focused runs did not reproduce it.
+- Current python scripts/check_structure.py passed (**66 assets**); git diff
+  --check passed. python scripts/button_states_review.py passed **7/7 reduced
+  motion and 9/9 forced colours**, no JS errors (.palette-columns-button-states.log).
+- Inspected desktop brand, semantic, component, shade and background captures,
+  plus narrow brand/semantic layouts in light/dark Studio. A phone capture with
+  a transient local stylesheet-load failure was recaptured successfully. Added
+  visible shade-token labels and coverage after visual review. Updated README,
+  architecture notes and unobserved learner-trial prompts. Temporary screenshots
+  and helper scripts were removed; ignored logs remain. Interrupted the first
+  full run to include the label improvement.
+- Final python scripts/browser_review.py passed **2,533/2,533**, with no captured
+  JavaScript errors (.palette-columns-final-browser.log). This final run includes
+  visible shade labels, the new browse/properties regressions and the full Studio
+  checks. The earlier isolated dialog-session error did not recur. Required
+  structure, browser, button-state and whitespace checks are complete.
+- Manual keyboard/screen-reader, zoom and Firefox/Safari checks remain unverified;
+  automated checks do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the Palette layout and an observed learner trial.
+
+## Complete colour-token flow and deeper wireframes (12 November 2026)
+
+- User requested semantic colours inside Palette and a complete brand-to-component
+  colour process, plus more wireframe container boundaries.
+- Extended Palette to seven stages: Brand, shared UI anchors, Shades, Semantic
+  roles, Page backgrounds, Component colours, States/review. Moved the existing
+  guided semantic editor with its contrast-preview/Apply/cancel/reset behavior.
+  Separate course step 6 is now Colour lab for model exploration, with a Palette
+  shortcut. All 12 course routes remain stable.
+- Component family readouts show actual exported values for cards/panels, inputs,
+  links and five button variants. Dark values inherit base tokens when no dark
+  declaration exists; a focused check caught/fixed shared button focus showing
+  unavailable. Context notes describe where each family uses its roles.
+- Moved actual button colour/source/custom/focus fields into Palette and retained
+  geometry, typography, timing and interaction previews in Buttons. Variant proxy
+  delegates to the original control. Scoped clear API deletes only that variant's
+  colour overrides; source/custom values, other variants, geometry and shared focus
+  remain. Focus resets separately. Existing JSON schema/generators are unchanged.
+- Metadata Configure links reach Palette for semantic/component colours and keep
+  non-colour button settings in Buttons. Component refresh is lazy while hidden.
+  Final copy distinguishes anchors from semantic roles; a source-label regression
+  fixes catalogue step numbers using visible position rather than internal index.
+- Wireframe now outlines nested sections, list/description items, disclosures and
+  normal-flow wrappers containing block content. Preserve region/content/layout
+  priority and omit decorative/aria-hidden SVG. Existing titles are retained;
+  otherwise hover titles identify HTML tag/ID/classes and authored layout type.
+  Source HTML, box geometry, responsive CSS and saved content remain unchanged.
+- Final focused colour/wireframe run: **151/151 passed**, no JS errors
+  (.colour-flow-final-check.log). Existing semantic/palette/state/token subset
+  passed **273/273**, no JS errors (.colour-legacy-check.log). Expanded geometry
+  checks compare all marked containers to live HTML at 320/390/768/1280px in
+  Basic and Advanced. Final button-state suite passed **7/7 reduced-motion and
+  9/9 forced-colour**, no JS errors (.colour-flow-final-buttons.log).
+- First full run: **2,457/2,467**, no JS errors (.colour-flow-full-browser.log).
+  Eight failures exposed a new visibility helper switching the global lesson
+  during background colour updates, disrupting review/prototype/example focus.
+  Removed that navigation side effect; explicit Reveal/Configure still navigates.
+  Readouts now refresh when the actual Palette/component disclosures are open,
+  including manual opening, rather than depending on the global builder step.
+  Two remaining failures expected the old semantic/button-colour source steps;
+  updated those to Palette. Added seven context/focus/routing regressions.
+- Inspected six semantic/component/wireframe screenshots in desktop/phone and
+  light/dark Studio. Updated component captures confirm variant selection precedes
+  outputs. Temporary screenshot/helper files removed; ignored logs retained.
+  Structure check passed (64 assets); diff --check passed.
+- Final python scripts/browser_review.py: **2,475/2,475 passed**, no captured
+  JavaScript errors (.colour-flow-complete-browser.log), after the context fix,
+  catalogue display/source updates and new preservation regressions. Required
+  checks are complete; earlier entries above distinguish preliminary failures.
+- Manual keyboard/screen reader, zoom and Firefox/Safari remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the complete colour-token flow and deeper wireframe
+  boundaries; learner trial remains unobserved.
+
+## Guided centre Palette workspace (11 November 2026)
+
+- User requested the Architecture approach for Palette: a simpler left wizard,
+  step-by-step centre editing, CRUD and appropriate student explanations.
+- Added palette-workspace.js/css after background/state services. Five stages:
+  Brand colours, Assign UI roles, Generate shades, Page backgrounds, States/review.
+  Native disclosures, Previous/Next controls and a short left navigator guide the
+  process. On mobile the navigator collapses and uses the existing stage-controls
+  placement anchor. Current-stage markers do not claim learning completion.
+- Reused existing editor nodes/listeners. Brand CRUD selects one visible row;
+  properties are visible without a nested disclosure. Add/count act on the
+  collection. Names/IDs remain separate and bounded to 1-24 references. Required
+  UI roles support copy/custom assignment and individual reset. Generated shades
+  are read-only outputs; source/method controls teach how to regenerate them.
+- Background editing selects one region with existing default/reset, opacity and
+  padding behavior. Website theme selector delegates to jTheme. Direct feedback
+  pickers create/update/remove only Success/Warning/Danger overrides for the
+  selected theme. Existing control/button state editors and token references are
+  optional disclosures. Palette data still uses existing JSON/local save fields.
+- Source routing reveals the stage, row or background fieldset before focus.
+  Add/rename retains the selected properties. State identity changes restart the
+  workflow for direct importConfig, local project loading and Reset. No imported
+  labels are inserted as HTML; original validators and generators remain shared.
+- Added workflow regressions for all stages, brand CRUD, scoped resets, theme
+  overrides, imports, source links and control fit in light/dark Studio at
+  320/390/1440px. Updated older fixtures to reveal centre stages before focus;
+  background containment checks now expect the centre workspace.
+- Current focused workflow **51/51 passed**, no JavaScript errors
+  (.palette-final-workflow.log), including live/Accessibility destination focus. Existing palette/token/state/background subset
+  **334/334 passed** (.palette-check.log) before the final role-card layout and
+  collection-action fix. Screenshot review caught detached Add/count lookups
+  rendering nullnull; fixed with scoped node references and a placement regression.
+  Also compacted desktop role editing into responsive cards. Reset/import initially
+  relied only on file events; state-identity synchronization fixes direct imports.
+- Initial full suites: 2,410/2,418 and 2,411/2,419. All eight failures were stale
+  assertions expecting Palette controls inside the wizard or all background regions
+  visible together. Updated source-location/lesson containment assertions and
+  reveal the chosen region before testing opacity/padding geometry. Focused rerun
+  **8/8 passed**, no JS errors (.palette-layout-check.log).
+- Final button-state suite: **7/7 reduced-motion and 9/9 forced-colour passed**
+  (.palette-final-buttons.log). Inspected six final screenshots across brand, UI
+  roles, background and review stages at desktop/320px in light/dark Studio.
+- Final code review added native destination focus when opening Accessibility from
+  Palette review; the 51-check workflow rerun verifies both review destinations.
+  python scripts/check_structure.py passed (64 assets); git diff --check passed.
+- Final python scripts/browser_review.py: **2,421/2,421 passed**, no captured
+  JavaScript errors (.palette-final-complete-browser.log). The preceding run after
+  fixture updates passed 2,419/2,419 before the final destination-focus regression.
+  Current full results include that fix and both new review-destination checks.
+- Temporary screenshot/helper files removed; ignored logs retained. Documentation
+  now describes the centre process, shared anchors, scoped overrides, immutable
+  generated outputs and learner trial tasks. All required checks are complete.
+- Manual keyboard, screen reader, zoom and Firefox/Safari remain unverified;
+  automated checks do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the five-stage Palette workspace; run the unobserved learner
+  trial before claiming the guidance has been validated with students.
 
 ## Significant wireframe containers (11 November 2026)
 

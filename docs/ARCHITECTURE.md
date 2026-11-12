@@ -600,6 +600,12 @@ class list. Imported strings never become selectors. The annotations are confine
 to the mirror/download; they do not alter source HTML or Architecture. Solid,
 dashed, dotted and thin inset outlines distinguish the levels without changing
 borders, padding, positioning or font metrics. A Studio legend explains them.
+Nested sections, disclosures, list items, description values and normal-flow div
+wrappers with block content also receive thin outlines, excluding decorative
+aria-hidden/SVG content. Existing region/content/layout priority remains. Native
+titles identify authored tag/ID/classes and layout type without adding nodes or
+changing containing blocks. Existing title attributes are preserved.
+
 
 Website content saved through Architecture flows through the existing generators;
 proposals and planned-only entries do not invent a different website layout.
@@ -802,7 +808,7 @@ stores `brandPalette` entries `{id, name, hex, group}`: unique safe token IDs,
 Normalization accepts 1–24 valid entries and supplies starter references for
 missing/empty/invalid older data. New projects keep the existing `--brand-*` IDs.
 
-The registered module adds step-4 editing and full-brand dropdowns for all three
+The registered module creates step-4 editing and full-brand dropdowns for all three
 Main Palette roles. Selections copy HEX values through the existing core inputs;
 they are independent assignments rather than persistent bindings to reference IDs.
 Picker/advanced/OKLCH changes synchronize the matching option or Custom choice.
@@ -817,6 +823,73 @@ and the existing safe-ID grammar before committing, and displays the full CSS
 declaration. Display-name edits do not rename tokens. Token renames reuse the
 editor node, update catalogue/contrast references and preserve copied UI colours.
 Replacing project state restores field values and clears stale input validity.
+
+### Guided Palette workspace
+
+`palette-browser.js` initializes immediately after palette-workspace. Each of
+the seven stages has a left browse/manage column and a right selected-properties
+form, stacking when the available width is narrow. It moves the original controls
+and delegates to their existing listeners; it adds no persisted model. Brand
+search and selection preserve the selected editor, and Add/Remove use the existing
+validated CRUD. Fixed anchors, semantic roles, regions and component families can
+be selected and reset where supported rather than created or deleted.
+Generated shade/component values appear in labelled read-only input fields.
+Semantic name/token fields are read-only; proposed HEX and picker fields keep a
+local draft until the existing contrast dialog previews and applies it. Cancel
+keeps the saved value, and Discard restores the current value. Other edits retain
+their existing immediate-update behavior. Native disclosure reopening refreshes
+generated fields after the original workspace's toggle handlers finish.
+
+`palette-workspace.js` registers after palette-process, state-palettes and
+webpage-backgrounds, before spacing/utility lessons. It moves their existing
+controls into seven native details stages inside the centre Palette panel:
+brand references, shared UI anchors, shade generation, semantic roles, page
+backgrounds, component colours and states/review. The existing guided semantic
+selector and its contrast dialog are reused. Colour lab remains a separate
+model-exploration step, with a link to Palette.
+Only one main stage opens at a time; each has its explanation and Previous/Next
+navigation. The wizard keeps a short guide/current-stage navigator. Its mobile
+navigation collapses by default, and the existing stage-controls anchor places
+it below the workspace header without cloning controls or losing listeners.
+
+Brand editing keeps one selected existing row visible, using existing safe-ID
+validation, add/remove bounds and project persistence. Selected properties are
+a visible section, not another disclosure. Collection actions/counts remain
+outside that section. Role pickers update through their original bindings;
+reset copies only the relevant DEFAULT anchor. Generated shade tokens remain
+read-only outputs of those anchors/method. Background selection shows one
+existing region fieldset; reset keeps its original override/inheritance behavior.
+The new theme selector delegates to jTheme. Feedback pickers write only one
+validated existing semantic override for the selected theme; reset removes it.
+Advanced state editors and token teaching views remain in optional disclosures.
+
+The component stage uses a family selector and actual dssReadTokens output for
+cards/panels, inputs/feedback, links and buttons. Dark values fall back to base
+when a token is shared (notably button focus). Context names roles used by family
+variants; it does not claim all selectors use every listed role. Component source
+links and token catalogue metadata route colour settings to Palette (index 4),
+while button geometry/behavior retain their existing step. Visible source labels
+use stage.position rather than the internal step index.
+
+Button variant selection proxies the original bdVariant control. Existing source,
+custom and eight colour fields move once into Palette; all bindings persist.
+button-design.js adds dssResetButtonColourOverrides, clearing only one validated
+variant's overrides before rendering/autosaving. Chosen source/custom values,
+other variants, geometry and shared focus remain. Focus has a separate reset.
+Component readouts refresh on renderCode, entry and manual disclosure opening
+only when Palette and its component stage are open, avoiding hidden CSS parsing.
+The local visibility helper never changes the global lesson during background
+updates; explicit Reveal/Configure handles navigation, preserving other lesson
+nodes and focus.
+
+The module wraps apply after the existing modules so visible selection, theme
+and source summaries stay synchronized. State identity replacement resets the
+local process to brand references for direct importConfig, local load and reset,
+not only file-import events. Stage/region/brand choices are transient; no schema
+or colour generator is added. Existing copy-by-value relationships remain.
+Source Configure/reveal routes open the stage, select the source row/region and
+open ancestor disclosures before focus. Existing editor nodes remain stable.
+Imported names use Option/textContent, never interpolated markup.
 
 `palette-process.js` initializes after studio learning and before backgrounds.
 It shows eleven shade declarations for each Main Palette role immediately after

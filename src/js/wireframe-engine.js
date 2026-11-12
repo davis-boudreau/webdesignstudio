@@ -40,7 +40,7 @@ svg { filter: grayscale(1) !important; }
     return '<p class="wireframe-source-note">The '+(mode()==='basic'?'Basic':'Advanced')+' wireframe is a read-only, low-fidelity view of this website\'s HTML and responsive CSS. View it in the Studio Wireframe workspace.</p>';
   }
   function markContainers(doc,css) {
-    const structural='header,main,footer,section,article,aside,figure,nav,form,fieldset,table,div,ul,ol,dl';
+    const structural='header,main,footer,section,article,aside,figure,nav,form,fieldset,table,div,ul,ol,dl,li,dd,details';
     const rank={item:1,layout:2,content:3,region:4};
     const mark=(node,kind)=>{if((rank[node.getAttribute('data-wf-container')]||0)<rank[kind])node.setAttribute('data-wf-container',kind);};
     doc.querySelectorAll('body > header,main,body > footer,main > section').forEach(node=>mark(node,'region'));
@@ -62,7 +62,18 @@ svg { filter: grayscale(1) !important; }
       }
     }
     visit(sheet.cssRules);
-    doc.querySelectorAll('article,aside,figure,nav,form,fieldset,table').forEach(node=>mark(node,'item'));
+    // Reveal nested normal-flow groups as well as Grid/Flex wrappers. Keep
+    // individual paragraphs, headings, inline text and decorative tracks clear.
+    const nested='section,article,aside,figure,nav,form,fieldset,table,details,li,dd';
+    doc.querySelectorAll(nested).forEach(node=>{if(!node.closest('[aria-hidden="true"],svg'))mark(node,'item');});
+    doc.querySelectorAll('div').forEach(node=>{
+      if(node.closest('[aria-hidden="true"],svg'))return;
+      if([...node.children].some(child=>child.matches('h1,h2,h3,h4,h5,h6,p,div,ul,ol,dl,section,article,aside,figure,form,fieldset,details,table')))mark(node,'item');
+    });
+    for(const node of doc.querySelectorAll('[data-wf-container]'))if(!node.hasAttribute('title')){
+      const identity=node.tagName.toLowerCase()+(node.id?'#'+node.id:'')+[...node.classList].map(name=>'.'+name).join('');
+      node.title=identity+' - '+(node.dataset.wfLayout?node.dataset.wfLayout+' layout':node.dataset.wfContainer+' container');
+    }
   }
   function createDocument({preview=false}={}) {
     const doc=new DOMParser().parseFromString(htmlExport(),'text/html');

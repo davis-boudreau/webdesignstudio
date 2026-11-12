@@ -79,6 +79,33 @@ Check native disclosures, local navigation and scrolling within a fixed viewport
 Can they distinguish the read-only wireframe HTML download from finished website
 files? These are unobserved trial prompts; record keyboard and navigation problems.
 
+For the guided Palette workspace, ask the learner to add a named brand colour,
+change its token suffix, assign it to an interface role and then remove the brand
+reference. Can they explain why the copied UI colour remains? Ask them to inspect
+the generated shades, choose a page region, create and clear a background override,
+and edit Warning in one website theme. Can they distinguish shared anchors from
+theme-specific overrides and explain why a shade number does not prove contrast?
+Try reopening a stage, a catalogue Configure link and project JSON. Record help
+needed, scrolling and keyboard/focus issues at phone and desktop widths. These
+prompts remain unobserved; stage navigation is not evidence of understanding.
+
+For the two-column Palette editor, find a brand colour in the left list, add one,
+edit its right-hand properties and remove it from the left. Try a search with no
+results. Select an anchor, shade family, semantic role, background region and
+component variant; can the learner locate the corresponding properties? Propose
+a semantic HEX value, preview it, cancel, discard and then apply a proposal.
+Observe whether generated read-only fields and fixed roles are understood.
+Repeat with keyboard-only input and a narrow viewport; record scrolling and
+focus problems. These learner observations have not yet been performed.
+
+For the complete colour-token flow, ask the learner to explain how a brand
+reference differs from a shared UI anchor and a theme-specific semantic role.
+Edit Surface through a component's source link, preview contrast and return to
+Cards. Choose a button variant, change its source and text override, then clear
+only that variant's overrides. Observe whether they understand shared focus and
+theme scope. In Wireframe, ask them to identify a nested content/list group and
+its Grid/Flex parent at desktop and phone widths. These tasks are unobserved.
+
 ## Observation sheet
 
 Participant code: ______  Date: ______  Experience: ______

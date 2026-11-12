@@ -398,6 +398,11 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     render();
     window.dssAutosave?.();
   };
+  window.dssResetButtonColourOverrides = variant => {
+    if (!Object.prototype.hasOwnProperty.call(names, variant)) return;
+    delete b.overrides[variant];
+    controls(); render(); window.dssAutosave?.();
+  };
   window.dssGetButtonDefaultContrastColour = (variant, property, theme = state.theme) => {
     if (!Object.prototype.hasOwnProperty.call(names, variant)) return null;
     if (property === 'focus') return defaults.focus;

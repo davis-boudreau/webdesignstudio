@@ -22,15 +22,15 @@ No separate hardcoded values: the table stays synchronized with the export. */
     const ramp = name.match(/^--(primary|secondary|accent)-\d+$/);
     if (ramp) return source(4, 'j'+ramp[1][0].toUpperCase()+ramp[1].slice(1), 'Derived from the Main Palette anchor and ramp method');
     const statusRamp = name.match(/^--(success|warning|danger)-\d+$/);
-    if (statusRamp) return source(6, 'jSemanticRole', 'Derived from the theme status colour and ramp method', { semantic: statusRamp[1] });
+    if (statusRamp) return source(4, 'jSemanticRole', 'Derived from the theme status colour and ramp method', { semantic: statusRamp[1] });
     const interactionRamp=name.match(/^(--(?:button-(primary|secondary|accent|outline|text)-)?state-(default|hover|focus|active|selected|disabled|loading|invalid|success|readonly))-\d+$/);
     if(interactionRamp) {
       const entry=DSStudio.statePalettes.sourceFor(interactionRamp[1],row.scope==='Dark'?'dark':'light');
-      if(entry)return source(entry.variant?7:6,entry.control,'Derived from the resolved state colour and ramp method',{...(entry.variant?{variant:entry.variant}:{semantic:entry.semantic})});
+      if(entry)return source(4,entry.control,'Derived from the resolved state colour and ramp method',{...(entry.variant?{variant:entry.variant}:{semantic:entry.semantic})});
     }
-    if (SEMANTIC_COLOUR_KEYS.includes(name.slice(2))) return source(6, 'jSemanticRole', 'Theme role / optional override', { semantic: name.slice(2) });
+    if (SEMANTIC_COLOUR_KEYS.includes(name.slice(2))) return source(4, 'jSemanticRole', 'Theme role / optional override', { semantic: name.slice(2) });
     const button = name.match(/^--button-(primary|secondary|accent|outline|text)-(source|bg|text|border|hover|active|hover-text|active-text)$/);
-    if (button) return source(7, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
+    if (button) return source(4, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
     const settings = {
       '--page-max-width':[9,'responsive-maxWidth'], '--page-gutter':[9,'responsive-gutter'], '--page-gutter-wide':[9,'responsive-wideGutter'],
       '--font-body':[5,'fontSource'], '--font-heading':[5,'fontSource'], '--font-ui':[5,'fontSource','Alias of the body font'],
@@ -42,7 +42,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
       '--surface-opacity':[8,'advOpacity'], '--elevation':[8,'advShadow'], '--motion-duration':[10,'advMotion'],
       '--button-pad-x':[7,'bdPaddingX'], '--button-pad-y':[7,'bdPaddingY'], '--button-min-height':[7,'bdMinHeight'],
       '--button-radius':[7,'bdRadius'], '--button-border-width':[7,'bdBorder'], '--button-font-weight':[7,'bdWeight'],
-      '--button-focus':[7,'bdFocus'], '--button-focus-width':[7,'bdFocusWidth'], '--button-motion':[7,'bdMotion'],
+      '--button-focus':[4,'bdFocus'], '--button-focus-width':[7,'bdFocusWidth'], '--button-motion':[7,'bdMotion'],
       '--button-progress-animation':[10,'advReduce','Derived from reduced-motion configuration']
     };
     if (settings[name]) return source(...settings[name]);
@@ -148,7 +148,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
       const html=`<tr><td>${escapeHtml(row.type)}</td><td><code>${escapeHtml(row.name)}</code></td>` +
         `<td><div class="token-value">${colour}<code>${escapeHtml(row.value)}</code></div></td>` +
         `<td>${escapeHtml(row.description)} <small class="muted">(${escapeHtml(row.scope)})</small>` +
-        (source ? `<p class="help">${escapeHtml(source.mode)} · wizard step ${source.step + 1}</p><button type="button" class="ghost" data-token-name="${escapeHtml(row.name)}" data-token-scope="${escapeHtml(row.scope)}" aria-label="Configure source for ${escapeHtml(row.name)} (${escapeHtml(row.scope)})">Configure source</button>` : '<p>Configuration source unavailable.</p>') + '</td></tr>';
+        (source ? `<p class="help">${escapeHtml(source.mode)} · wizard step ${DSStudio.stages[source.step].position + 1}</p><button type="button" class="ghost" data-token-name="${escapeHtml(row.name)}" data-token-scope="${escapeHtml(row.scope)}" aria-label="Configure source for ${escapeHtml(row.name)} (${escapeHtml(row.scope)})">Configure source</button>` : '<p>Configuration source unavailable.</p>') + '</td></tr>';
       const key=index+'\u0000'+row.scope+'\u0000'+row.name;
       let entry=renderedRows.get(key);
       if(!entry || entry.html!==html) {

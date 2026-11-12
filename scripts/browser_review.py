@@ -47,6 +47,7 @@ app.onload = async () => {
   const input = (id, value, type='input') => {
     if(id.startsWith('sitemap-') || id==='plan-pages')revealDestinationPlan();
     const el=d.getElementById(id);
+    w.DSStudio.paletteWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
     el.dispatchEvent(new w.Event(type,{bubbles:true}));
@@ -154,10 +155,10 @@ app.onload = async () => {
   test('Inspector has a native details/summary disclosure arrow in both states',()=>d.getElementById('studioInspector').tagName==='DETAILS' && d.getElementById('inspectorToggle').tagName==='SUMMARY' && d.getElementById('inspectorToggle').textContent==='Live CSS/HTML Inspector' && w.getComputedStyle(d.getElementById('inspectorToggle')).display==='list-item' && d.getElementById('inspectorToggle').tabIndex===0 && d.getElementById('inspectorToggle').getBoundingClientRect().height>=44);
   test('Competing beginner and centre navigation is removed', () => !d.getElementById('workspaceNav') && !d.getElementById('beginnerStart') && !d.getElementById('beginnerPath') && !d.querySelector('.studio-section-nav') && !d.querySelector('[data-configure-step]'));
   test('Preview initially fills the centre pane in Fluid mode', () => d.getElementById('previewFrame').dataset.width==='fluid' && d.querySelector('button[data-width="fluid"]').getAttribute('aria-pressed')==='true');
-  test('Twelve wizard steps connect project planning to fifteen centre lessons and the preview', () => d.querySelectorAll('[data-journey-step]').length===12 && d.querySelectorAll('[data-journey-pane]').length===12 && d.querySelectorAll('#main > .studio-section > .panel > .studio-lesson').length===15 && d.getElementById('jProgress').textContent.includes('of 12'));
-  test('Every exported token has a configuration source inside the wizard', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
+  test('Twelve wizard steps connect project planning to fifteen centre lessons and the preview', () => d.querySelectorAll('[data-journey-step]').length===12 && d.querySelectorAll('[data-journey-pane]').length===12 && d.querySelectorAll('#main > .studio-section > .panel .studio-lesson').length===15 && d.getElementById('jProgress').textContent.includes('of 12'));
+  test('Every exported token has a source in its wizard step or centre Palette workspace', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
     const source=w.dssTokenSource(row), control=source && d.getElementById(source.control);
-    return control && control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step);
+    return control && (control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step) || (source.step===4 && d.getElementById('palette-workspace').contains(control)));
   }));
   test('Derived token families identify their foundation instead of arbitrary overrides', () => ['--space-6','--primary-700','--text-step-4','--text-h1','--font-ui','--heading-tracking','--button-progress-animation'].every(name=>/Derived|Alias/.test(w.dssTokenSource({name}).mode)));
   test('Font, responsive, layout and interaction settings now live in their wizard steps', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]').dataset.journeyPane===String(step)));
@@ -460,9 +461,10 @@ app.onload = async () => {
   reset(); await wait();
   test('Reset removes semantic overrides', () => evaluate("!state.semanticOverrides && palette('light').roles['control-border']===palette('light').roles.border"));
   d.querySelector('[data-journey-step="6"]').click(); await wait();
-  test('Components wizard exposes every semantic role with a friendly label and token', () => {
+  w.dssRevealSection('jSemanticRole',false);
+  test('Palette exposes every semantic role with a friendly label and token', () => {
     const roles=evaluate('SEMANTIC_COLOUR_KEYS');
-    return !d.querySelector('[data-journey-pane="6"]').hidden && roles.length===d.getElementById('jSemanticRole').options.length && roles.every(key=>[...d.getElementById('jSemanticRole').options].some(option=>option.value===key && option.textContent.includes('--'+key)));
+    return d.getElementById('palette-stage-semantics').open && roles.length===d.getElementById('jSemanticRole').options.length && roles.every(key=>[...d.getElementById('jSemanticRole').options].some(option=>option.value===key && option.textContent.includes('--'+key)));
   });
   d.getElementById('jSaveLocal').click();
   for (const theme of ['light','dark']) {
@@ -487,7 +489,7 @@ app.onload = async () => {
   test('Guided reset restores just the selected theme and role', () => evaluate("!state.semanticOverrides.dark.text && state.semanticOverrides.light.text==='#14253A'") && d.getElementById('jSemanticReset').disabled && !d.getElementById('semanticCurrent').textContent.includes('custom override'));
   app.style.width='320px'; await wait();
   test('Guided semantic controls fit the narrow studio layout', () => {
-    const pane=d.querySelector('[data-journey-pane="6"]');
+    w.DSStudio.paletteWorkspace.revealControl(d.getElementById('jSemanticEdit'));const pane=d.getElementById('palette-stage-semantics');
     return pane.scrollWidth<=pane.clientWidth+1 && d.getElementById('jSemanticEdit').getBoundingClientRect().width>0 && d.documentElement.scrollWidth<=320;
   });
   app.style.width='1440px'; reset(); await wait();
@@ -615,7 +617,7 @@ app.onload = async () => {
   input('advState','selected','change'); await wait();
   test('State Explorer selection has a checkmark and nearby state guidance', () => w.getComputedStyle(d.getElementById('advDemoButton'),'::before').content==='""' && d.getElementById('advButtonHelp').textContent.includes('Keep the label'));
   input('bdState','default'); await wait();
-  const focusSpecimen=d.querySelector('#bdSingle .bd-button'); focusSpecimen.focus();
+  const focusSpecimen=d.querySelector('#bdSingle .bd-button'); w.dssRevealSection('bdSingle',false);focusSpecimen.focus();
   test('Actual keyboard-visible focus retains its outline independently of state simulations', () => !focusSpecimen.matches('[data-sim="focus"]') && focusSpecimen.matches(':focus-visible') && parseFloat(w.getComputedStyle(focusSpecimen).outlineWidth)===3);
   const statesDownload=[]; const priorStateDownload=w.download;
   w.download=(name,content)=>statesDownload.push({name,content}); d.getElementById('bdExport').click(); w.download=priorStateDownload;
@@ -1291,9 +1293,119 @@ app.onload = async () => {
   test('Secondary custom-colour exports use the matching variant for all section actions', () => [...secondaryExport.querySelectorAll('.sample-section-actions > :last-child')].every(action=>action.classList.contains('ds-button--secondary')) && evaluate('cssExport()').includes('--button-secondary-bg: #196b63'));
   reset(); await wait();
   d.querySelector('[data-journey-step="4"]').click(); await wait();
+  // Palette uses Architecture-style browsing and selected form properties.
+  {
+    reset();w.dssShowWizardStep(4,false);await wait();const ui=w.DSStudio.paletteWorkspace;
+    test('All Palette stages separate browsing from selected properties',()=>d.querySelectorAll('.palette-editor-columns').length===7 && [...d.querySelectorAll('.palette-editor-columns')].every(el=>el.children[0].classList.contains('palette-browser') && el.children[1].classList.contains('palette-properties')));
+    const before=evaluate('projectJson()');d.querySelector('[data-palette-colour="blue"]').click();await wait();
+    test('Selecting a brand shows its existing editable properties with focus',()=>d.getElementById('palette-brand-selection').value==='blue' && d.querySelector('[data-palette-colour="blue"]').getAttribute('aria-pressed')==='true' && d.activeElement===d.querySelector('[data-brand-id="blue"] [data-brand-field="name"]') && evaluate('projectJson()')===before);
+    input('palette-brand-query','not-present-anywhere');await wait();test('Brand search explains an empty result while keeping the selected properties',()=>d.getElementById('palette-brand-results').textContent.includes('No matching') && ![...d.querySelectorAll('#palette-brand-list button')].some(el=>!el.hidden) && d.getElementById('palette-brand-selection').value==='blue' && !d.querySelector('[data-brand-id="blue"]').hidden);input('palette-brand-query','');
+    d.getElementById('jBrandAdd').click();await wait();const newId=d.getElementById('palette-brand-selection').value;
+    test('Brand Add belongs to the browser and focuses the new right-hand properties',()=>d.getElementById('palette-browse-brand').contains(d.getElementById('jBrandAdd')) && d.getElementById('palette-properties-brand').contains(d.activeElement) && d.querySelector('[data-palette-colour="'+newId+'"]').getAttribute('aria-pressed')==='true');
+    d.getElementById('palette-brand-remove').click();await wait();test('Browser removal delegates to the existing guarded brand CRUD',()=>!evaluate('state.brandPalette').some(row=>row.id===newId) && d.activeElement===d.getElementById('jBrandAdd'));
+    ui.show('roles',false);d.querySelector('[data-palette-anchor="secondary"]').click();await wait();test('Anchor browsing exposes just the selected form and its reset action',()=>!d.getElementById('jSecondary').closest('.field').hidden && d.getElementById('jPrimary').closest('.field').hidden && !d.getElementById('palette-reset-secondary').hidden && d.getElementById('palette-properties-roles').contains(d.getElementById('jSecondary')));
+    ui.show('shades',false);d.querySelector('[data-palette-family="neutral"]').click();await wait();test('Shade browsing shows one family as read-only form fields',()=>d.querySelectorAll('#main-palette-steps > [data-palette-role]:not([hidden])').length===1 && d.querySelector('#main-palette-steps [data-palette-role="neutral"] .palette-value-field').readOnly && d.querySelector('#main-palette-steps [data-palette-role="neutral"] .palette-value-label').textContent==='--neutral-50' && !d.getElementById('neutralPaletteAnchor').closest('section').hidden);
+    ui.show('semantics',false);input('jSemanticRole','text','change');const original=evaluate('palette().roles.text'),proposal=original.toUpperCase()==='#246A68'?'#345678':'#246A68';input('palette-semantic-hex',proposal);await wait();
+    test('Semantic properties stage an editable proposal without changing the website',()=>d.getElementById('palette-browse-semantics').contains(d.getElementById('jSemanticRole')) && d.getElementById('palette-properties-semantics').contains(d.getElementById('palette-semantic-hex')) && d.getElementById('palette-semantic-token').readOnly && evaluate('palette().roles.text')===original && d.getElementById('palette-semantic-proposal-status').textContent.includes('not applied'));
+    d.getElementById('jSemanticEdit').focus();d.getElementById('jSemanticEdit').click();await wait();test('Semantic Preview uses the proposed property value in the existing contrast dialog',()=>d.getElementById('colourRepair').open && d.getElementById('repairHex').value.toUpperCase()===proposal && evaluate('palette().roles.text')===original);d.getElementById('repairCancel').click();await wait();test('Cancelling preview returns to right-hand properties and keeps saved colours',()=>d.activeElement===d.getElementById('jSemanticEdit') && evaluate('palette().roles.text')===original);
+    d.getElementById('palette-semantic-discard').click();await wait();test('Discard restores the current value and clears proposal validity',()=>d.getElementById('palette-semantic-hex').value.toUpperCase()===original.toUpperCase() && d.getElementById('palette-semantic-hex').validity.valid && d.getElementById('palette-semantic-discard').disabled);
+    input('palette-semantic-hex',proposal);d.getElementById('jSemanticEdit').click();await wait();d.getElementById('repairApply').click();await wait();test('Applying the semantic proposal updates existing project and property fields',()=>evaluate('palette().roles.text').toUpperCase()===proposal && d.getElementById('palette-semantic-hex').value.toUpperCase()===proposal && d.getElementById('palette-semantic-discard').disabled);
+    input('palette-semantic-hex','bad');d.getElementById('jSemanticEdit').click();await wait();test('Invalid property proposals remain in the inspector without opening a dialog',()=>!d.getElementById('colourRepair').open && !d.getElementById('palette-semantic-hex').validity.valid);d.getElementById('palette-semantic-discard').click();
+    w.dssConfigureToken({name:'--primary-500',scope:'Light / base'});await wait();test('Source routing selects and reveals the correct anchor properties',()=>!d.getElementById('jPrimary').closest('.field').hidden && d.querySelector('[data-palette-anchor="primary"]').getAttribute('aria-pressed')==='true' && d.activeElement===d.getElementById('jPrimary'));
+    ui.show('components',false);input('palette-component-family','cards','change');ui.show('roles',false);evaluate('state.semanticOverrides={...state.semanticOverrides,light:{...state.semanticOverrides?.light,surface:"#EEECDD"}};apply()');await wait();d.querySelector('#palette-stage-components > summary').click();await wait();
+    test('Native stage opening refreshes generated property fields after hidden changes',()=>{const code=d.querySelector('[data-component-token="--surface"]');return code.hidden && code.nextElementSibling.readOnly && code.nextElementSibling.value==='#EEECDD';});
+    d.getElementById('brandPalette').open=false;evaluate('state.semanticOverrides.light.surface="#CCDDEE";apply()');d.getElementById('brandPalette').open=true;await wait();test('Manual Palette reopening refreshes read-only properties after hidden changes',()=>d.querySelector('[data-component-token="--surface"]').nextElementSibling.value==='#CCDDEE');
+    for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(4,false);await wait();for(const stage of ['brand','roles','shades','semantics','backgrounds','components','review']){ui.show(stage,false);await wait();test(theme+' '+stage+' Palette browser/properties fit '+width+'px',()=>{const grid=d.querySelector('#palette-stage-'+stage+' .palette-editor-columns'),left=grid.children[0].getBoundingClientRect(),right=grid.children[1].getBoundingClientRect();return d.documentElement.scrollWidth<=w.innerWidth+1 && (grid.clientWidth>720?Math.abs(left.top-right.top)<=1:right.top>=left.bottom-1) && [...grid.querySelectorAll('input,select,button')].filter(el=>el.getBoundingClientRect().height>0).every(el=>el.getBoundingClientRect().right<=w.innerWidth+1);});}}
+    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();await wait();
+  }
+  // End Palette browser checks.
+  // Guided Palette: a compact wizard and editable centre process.
+  {
+    const ui=w.DSStudio.paletteWorkspace;
+    reset();w.dssShowWizardStep(4,false);await wait();
+    test('Palette wizard is a short guide and all colour editors live in the centre',()=>!d.querySelector('[data-journey-pane="4"] input,[data-journey-pane="4"] select') && d.querySelectorAll('#palette-workspace [data-palette-stage]').length===7 && d.getElementById('palette-workspace').contains(d.getElementById('jPrimary')) && d.getElementById('palette-workspace').contains(d.getElementById('jBrandEditor')));
+    test('Brand creation and count are visible collection actions without placeholder text',()=>d.getElementById('jBrandAdd').parentElement===d.getElementById('palette-browse-brand') && d.getElementById('jBrandCount').parentElement===d.getElementById('jBrandAdd').parentElement && !d.getElementById('palette-stage-brand').textContent.includes('nullnull'));
+    const snapshot=evaluate('projectJson()');
+    for(const key of ['brand','roles','shades','semantics','backgrounds','components','review']){ui.show(key);await wait();test('Palette '+key+' stage is explained, visible and selected without editing data',()=>d.querySelectorAll('#palette-workspace > details.palette-stage[open]').length===1 && d.getElementById('palette-stage-'+key).open && d.querySelector('[data-palette-go="'+key+'"]').getAttribute('aria-current')==='step' && d.activeElement===d.querySelector('#palette-stage-'+key+' > summary') && d.querySelector('#palette-stage-'+key+' .palette-browser > p').textContent.length>80 && evaluate('projectJson()')===snapshot);}
+    ui.show('brand',false);d.getElementById('jBrandEditor').closest('details').open=true;
+    d.getElementById('jBrandAdd').click();await wait();
+    const added=evaluate('state.brandPalette.at(-1).id'),selectedRow=()=>d.querySelector('#jBrandEditor [data-brand-id]:not([hidden])');
+    test('Adding a brand colour selects its single visible editable row',()=>d.getElementById('palette-brand-selection').value===added && d.querySelectorAll('#jBrandEditor [data-brand-id]:not([hidden])').length===1 && selectedRow().contains(d.activeElement));
+    const name=selectedRow().querySelector('[data-brand-field="name"]');name.value='Harbour <safe> teal';name.dispatchEvent(new w.Event('change',{bubbles:true}));
+    const colour=selectedRow().querySelector('[data-brand-field="hex"]');colour.value='#246a68';colour.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
+    test('Selected brand edits update names and tokens safely without duplicating controls',()=>d.getElementById('palette-brand-selection').selectedOptions[0].textContent.includes('Harbour <safe> teal') && !d.querySelector('#palette-workspace safe') && evaluate('cssExport()').includes('--brand-'+added+': #246A68') && d.querySelectorAll('#jBrandEditor').length===1);
+    input('jPrimaryBrand','#246A68','change');const secondary=evaluate('state.secondary');
+    ui.show('brand',false);ui.selectBrand(added);selectedRow().querySelector('[data-remove-brand]').click();await wait();
+    test('Removing a selected reference preserves its copied UI colour and selects an available row',()=>evaluate('state.primary')==='#246a68' && !evaluate('state.brandPalette').some(row=>row.id===added) && selectedRow() && d.activeElement===d.getElementById('jBrandAdd'));
+    ui.show('roles',false);d.getElementById('palette-reset-primary').click();await wait();
+    test('Reset UI assignment changes only that required role',()=>evaluate('state.primary===DEFAULT.primary') && evaluate('state.secondary')===secondary);
+    input('palette-theme','light','change');ui.show('review',false);input('palette-status-role','warning','change');input('palette-status-colour','#654321');await wait();
+    input('palette-theme','dark','change');input('palette-status-colour','#aabbcc');await wait();
+    test('Feedback colour creates independent overrides in both themes',()=>evaluate('state.semanticOverrides.light.warning')==='#654321' && evaluate('state.semanticOverrides.dark.warning').toUpperCase()==='#AABBCC' && d.getElementById('palette-status-source').textContent.includes('custom override'));
+    d.getElementById('palette-status-reset').click();await wait();
+    test('Clearing feedback colour removes only the current theme override',()=>!evaluate('state.semanticOverrides.dark.warning') && evaluate('state.semanticOverrides.light.warning')==='#654321');
+    for(const region of ['body','header','main','footer']){ui.show('backgrounds',false);input('palette-region-selection',region,'change');test('Background '+region+' exposes just the selected region',()=>[...d.querySelectorAll('.page-background-editor fieldset')].filter(el=>!el.hidden).length===1 && !d.getElementById(region==='body'?'body-background-controls':region+'-background-hex').closest('fieldset').hidden);}
+    w.dssConfigureToken({name:'--header-background',scope:'Dark'});await wait();
+    test('Configure background selects the correct stage, region and theme before focus',()=>d.getElementById('palette-stage-backgrounds').open && d.getElementById('palette-region-selection').value==='header' && evaluate('state.theme')==='dark' && d.activeElement===d.getElementById('header-background-colour'));
+    const preserved=JSON.parse(evaluate('projectJson()'));w.importConfig(preserved);await wait();
+    test('Import retains palette data and starts at brand references without modifying settings',()=>d.getElementById('palette-stage-brand').open && evaluate('state.semanticOverrides.light.warning')==='#654321' && !evaluate('state.semanticOverrides.dark.warning'));
+    ui.show('review',false);[...d.querySelectorAll('#palette-stage-review button')].find(button=>button.textContent==='Review live website').click();await wait();
+    test('Palette review opens the live website and leaves focus at the result',()=>d.getElementById('studio-section-4').open && d.activeElement===d.getElementById('previewShell'));
+    [...d.querySelectorAll('#palette-stage-review button')].find(button=>button.textContent==='Check contrast and accessibility').click();await wait();
+    test('Palette accessibility review reaches its destination with visible native focus',()=>w.DSStudio.activeStage===10 && d.activeElement===d.querySelector('#studio-section-5 > summary'));
+    for(const theme of ['light','dark'])for(const width of [320,390,1440]){
+      app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(4,false);await wait();
+      for(const key of ['brand','roles','shades','semantics','backgrounds','components','review']){ui.show(key,false);await wait();test(theme+' Palette '+key+' controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#palette-stage-'+key+' input,#palette-stage-'+key+' select,#palette-stage-'+key+' button')].filter(el=>el.getBoundingClientRect().height>0).every(el=>{const box=el.getBoundingClientRect();return box.right<=w.innerWidth+1 && box.left>=0 && (el.type==='range'||box.height>=44);}));}
+    }
+    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();w.dssShowWizardStep(4,false);await wait();
+  }
+  // Complete colour-token flow: semantic sources and component outputs.
+  {
+    reset();w.dssShowWizardStep(4,false);await wait();const ui=w.DSStudio.paletteWorkspace;
+    test('Semantic and component colours follow shade generation in Palette',()=>[...d.querySelectorAll('#palette-workspace > [data-palette-stage]')].map(el=>el.dataset.paletteStage).join(',')==='brand,roles,shades,semantics,backgrounds,components,review' && d.querySelector('[data-journey-step="6"]').textContent.includes('Colour lab'));
+    input('tokenSearch','--surface');await wait();
+    test('Semantic token catalogue identifies the visible Palette step rather than its internal index',()=>[...d.querySelectorAll('#tokenTableBody tr')].find(row=>row.querySelector('td:nth-child(2) code')?.textContent==='--surface').textContent.includes('wizard step 4'));
+    input('tokenSearch','');
+    for(const theme of ['light','dark']){
+      input('palette-theme',theme,'change');ui.show('components',false);
+      for(const family of ['cards','inputs','links','buttons']){input('palette-component-family',family,'change');await wait();test(theme+' '+family+' component colours read the actual exported token values',()=>[...d.querySelectorAll('[data-component-token]')].length>=2 && [...d.querySelectorAll('[data-component-token]')].every(el=>el.textContent===((theme==='dark'?w.dssReadTokens().find(row=>row.name===el.dataset.componentToken && row.scope==='Dark'):null)||w.dssReadTokens().find(row=>row.name===el.dataset.componentToken && row.scope!=='Dark')).value));}
+    }
+    input('palette-button-variant','secondary','change');input('bdSource','primary');input('bdText','#102030');await wait();
+    test('Palette button source and overrides update the existing button settings',()=>evaluate('state.buttonDesign.variant')==='secondary' && evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.secondary.text').toUpperCase()==='#102030' && ['light','dark'].every(theme=>w.dssGetButtonContrastData().themes[theme].secondary.fg.toUpperCase()==='#102030'));
+    input('palette-button-variant','primary','change');input('bdText','#aabbcc');input('bdFocus','#445566');input('palette-button-variant','secondary','change');await wait();
+    d.getElementById('palette-button-clear').click();await wait();
+    test('Clearing component overrides preserves its source, other variants and shared focus',()=>!evaluate('state.buttonDesign.overrides.secondary') && evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC' && evaluate('state.buttonDesign.focus').toUpperCase()==='#445566');
+    d.getElementById('palette-button-focus-reset').click();await wait();
+    test('Shared button focus resets separately from variant overrides',()=>evaluate('state.buttonDesign.focus').toUpperCase()===w.dssGetButtonDefaultContrastColour('secondary','focus').toUpperCase() && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC');
+    input('palette-component-family','cards','change');d.querySelector('#palette-component-values button').click();await wait();
+    test('Component semantic source opens Palette role editing with focus',()=>w.DSStudio.activeStage===4 && d.getElementById('palette-stage-semantics').open && d.getElementById('jSemanticRole').value==='surface' && d.activeElement===d.getElementById('jSemanticRole'));
+    w.dssConfigureToken({name:'--button-outline-hover',scope:'Dark'});await wait();
+    test('Button token source opens the component family and correct variant before focus',()=>w.DSStudio.activeStage===4 && d.getElementById('palette-stage-components').open && d.getElementById('palette-component-family').value==='buttons' && d.getElementById('palette-button-variant').value==='outline' && d.activeElement===d.getElementById('bdHover'));
+    const savedColours=JSON.parse(evaluate('projectJson()'));w.importConfig(savedColours);await wait();
+    test('Colour-flow editing round trips through the existing project schema',()=>evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC' && !Object.hasOwn(JSON.parse(evaluate('projectJson()')),'paletteWorkspace'));
+    for(const width of [320,390,1440]){app.style.width=width+'px';await wait();for(const variant of ['primary','secondary','accent','outline','text']){w.dssConfigureToken({name:'--button-'+variant+'-bg',scope:'Light / base'});await wait();test(variant+' expanded component colour controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#palette-button-colours input,#palette-button-colours select,#palette-button-colours button')].filter(el=>el.getBoundingClientRect().height>0).every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.right<=w.innerWidth+1;}));}}
+    app.style.width='1440px';reset();await wait();
+  }
+  // Palette visibility helpers must preserve unrelated lessons and focus.
+  {
+    reset();w.dssShowWizardStep(3,false);await wait();const prototype=d.getElementById('studio-plan-choose'),link=prototype.querySelector('a');for(let node=link.parentElement;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;link.focus();input('jPrimary','#225577');await wait();
+    test('Background palette updates preserve the prototype lesson, nodes and focus',()=>w.DSStudio.activeStage===3 && d.getElementById('studio-plan-choose')===prototype && d.activeElement===link);
+    w.dssShowWizardStep(7,false);d.getElementById('bdReview').open=true;const review=d.querySelector('[data-review-variant="secondary"][data-review-state="hover"]');review.closest('details').open=true;review.focus();review.click();await wait();input('bdHover','#ffffff');input('bdHoverText','#ffffff');await wait();
+    test('Background button-colour updates keep the existing contrast review focused',()=>w.DSStudio.activeStage===7 && d.activeElement===review && review.closest('details').open);
+    const edit=d.querySelector('#bdReviewPairs [aria-label="Light theme contrast"] [data-kind="text"] button');edit.focus();edit.click();input('repairHex','#101820');d.getElementById('repairCancel').click();await wait();
+    test('Contrast dialog cancel still returns to its visible review action',()=>d.activeElement===edit && !d.getElementById('colourRepair').open);
+    w.dssConfigureToken({name:'--text',scope:'Dark'});await wait();test('Explicit semantic source navigation still activates Palette',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('jSemanticRole'));
+    w.dssConfigureToken({name:'--button-secondary-hover-text',scope:'Dark'});await wait();test('Explicit component source navigation still reveals and focuses its colour field',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('bdHoverText') && !d.getElementById('palette-button-colours').hidden);
+    w.dssShowWizardStep(7,false);d.getElementById('brandPalette').open=true;w.DSStudio.paletteWorkspace.show('components',false);input('palette-component-family','buttons','change');await wait();test('Manually expanded Palette refreshes component values without forcing the builder step',()=>w.DSStudio.activeStage===7 && d.querySelectorAll('[data-component-token]').length===8 && !d.getElementById('palette-component-values').textContent.includes('Not available'));
+    d.getElementById('dockModeBasic').click();input('bdVariant','primary');input('bdDefaultBg','#602d54');await wait();test('Unrelated button-colour changes retain the connected action example',()=>w.DSStudio.activeStage===7 && d.getElementById('studyExample').value==='action' && d.getElementById('studyTokens').textContent.toLowerCase().includes('#602d54'));
+    reset();await wait();
+  }
+  // End Palette visibility preservation checks.
+  // End complete colour-token flow checks.
+  // End guided Palette checks.
   const brandSelect=role=>d.getElementById('j'+role[0].toUpperCase()+role.slice(1)+'Brand');
   const brandField=(id,field)=>d.querySelector(`[data-brand-id="${id}"] [data-brand-field="${field}"]`);
-  const editBrand=(id,field,value)=>{const el=brandField(id,field);el.value=value;el.dispatchEvent(new w.Event(field==='name'?'change':'input',{bubbles:true}));};
+  const editBrand=(id,field,value)=>{const el=brandField(id,field);w.DSStudio.paletteWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(field==='name'?'change':'input',{bubbles:true}));};
   test('Guided Brand Palette lists all starter colours and all three role dropdowns', () => d.querySelectorAll('#jBrandSwatches li').length===11 && ['primary','secondary','accent'].every(role=>brandSelect(role).options.length===12 && [...brandSelect(role).options].slice(1).every(option=>/^#[0-9A-F]{6}$/.test(option.value) && option.textContent.includes(option.value))));
   for (const [role,hex] of [['primary','#00BADC'],['secondary','#F37327'],['accent','#004780']]) {
     input(brandSelect(role).id,hex,'change'); await wait();
@@ -1341,7 +1453,7 @@ app.onload = async () => {
   }
   reset(); app.style.width='1440px'; await wait();
   test('Reset restores starter Brand Palette and Main Palette choices', () => evaluate('state.brandPalette.length===11') && brandSelect('primary').value==='#004780' && brandSelect('secondary').value==='#495965' && brandSelect('accent').value==='#CBDB2A');
-  d.getElementById('brandPalette').open=true;
+  d.getElementById('brandPalette').open=true;w.DSStudio.paletteWorkspace.revealControl(d.getElementById('brandApplyRole'));
   const swatch=id=>d.querySelector(`[data-brand-swatch="${id}"]`);
   test('Brand Colour Palette names its purpose and replaces the whole-project reset with editing', () => d.querySelector('#brandPalette > summary h2').textContent==='Step 4 of 12: Palette' && !d.getElementById('restoreDefaults') && d.getElementById('brandEditPalette').textContent==='Edit Brand Palette');
   test('Every brand swatch has one complete clickable card with an explicit role action', () => d.querySelectorAll('#brandSwatches .brand-swatch').length===11 && [...d.querySelectorAll('#brandSwatches .brand-swatch')].every(card=>card.querySelectorAll('button').length===1 && !!card.querySelector('button .brand-swatch-color') && card.querySelector('button').getAttribute('aria-label').startsWith('Set Primary UI colour to') && d.getElementById(card.querySelector('button').getAttribute('aria-describedby'))===card.querySelector('[data-brand-usage]')));
@@ -1375,7 +1487,7 @@ app.onload = async () => {
   test('Guided dropdowns and swatch cards reflect the same current colour', () => swatch('blue').dataset.current==='true' && swatch('blue').querySelector('[data-brand-usage]').textContent.includes('Primary UI colour') && swatch('blue').querySelector('[data-brand-usage]').textContent.includes('Accent colour'));
   for (const theme of ['light','dark']) {
     app.style.width='320px'; input('jTheme',theme); await wait();
-    test('Swatch actions and current role summaries fit '+theme+' 320px layouts', () => [d.getElementById('brandRoleAssignments'),d.getElementById('brandApplyRole'),...d.querySelectorAll('#brandSwatches .brand-swatch')].every(el=>el.getBoundingClientRect().width>0 && el.getBoundingClientRect().width<=w.innerWidth && el.scrollWidth<=el.clientWidth+1));
+    test('Swatch actions and current role summaries fit '+theme+' 320px layouts', () => [...d.querySelectorAll('#palette-browse-roles [data-palette-anchor]'),d.getElementById('brandApplyRole'),...d.querySelectorAll('#brandSwatches .brand-swatch')].every(el=>el.getBoundingClientRect().width>0 && el.getBoundingClientRect().width<=w.innerWidth && el.scrollWidth<=el.clientWidth+1));
   }
   reset(); app.style.width='1440px'; await wait();
   test('Reset restores the swatch target and current-role feedback', () => d.getElementById('brandApplyRole').value==='primary' && d.getElementById('brandCurrentPrimary').textContent.includes('#004780') && swatch('blue').dataset.current==='true');
@@ -1384,7 +1496,7 @@ app.onload = async () => {
   const stateColour=(view,key)=>d.querySelector('#interaction-palette-'+view+' [data-state-colour="'+key+'"]');
   input('interaction-palette-controls-component','general','change');
   d.getElementById('jSaveLocal').click();const inlineSavedId=d.getElementById('jProjects').value;
-  const hoverColour=stateColour('lesson','hover'),hoverCard=hoverColour.closest('details');hoverCard.open=true;hoverColour.focus();
+  const hoverColour=stateColour('lesson','hover'),hoverCard=hoverColour.closest('details');w.DSStudio.paletteWorkspace.revealControl(hoverColour);hoverCard.open=true;hoverColour.focus();
   const originalDarkHover=evaluate('palette("dark").roles["primary-hover"]');
   hoverColour.value='#00BADC';hoverColour.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
   test('Inline semantic state colour keeps focus/disclosure, mirrors controls, autosaves and edits only its theme',()=>d.activeElement===hoverColour && hoverCard.open && stateColour('controls','hover').value==='#00BADC' && evaluate('state.semanticOverrides.light["primary-hover"]')==='#00BADC' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[inlineSavedId].data.semanticOverrides.light['primary-hover']==='#00BADC' && evaluate('palette("dark").roles["primary-hover"]')===originalDarkHover && d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] [data-shade="500"]').textContent.includes('#00BADC'));
@@ -1449,13 +1561,13 @@ app.onload = async () => {
   d.querySelector('#interaction-palette-lesson [data-interaction-state="default"] button').click();await wait();
   test('Interaction shade inspector contains the complete current stylesheet and preview uses it',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
   d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] button:last-child').click();await wait();
-  test('Button state shade configure reaches the correct variant and property',()=>w.DSStudio.activeStage===7 && d.getElementById('bdVariant').value==='outline' && d.activeElement===d.getElementById('bdHover'));
+  test('Button state shade configure reaches the correct variant and property',()=>w.DSStudio.activeStage===4 && d.getElementById('bdVariant').value==='outline' && d.activeElement===d.getElementById('bdHover'));
   w.dssShowWizardStep(4);input('interaction-palette-controls-component','general','change');await wait();
   const generalDisclosure=d.querySelector('#interaction-palette-controls [data-interaction-state="readonly"]');generalDisclosure.open=true;
   input('jTheme','light');await wait();
   test('General state theme changes preserve disclosure nodes and include all State Explorer states',()=>generalDisclosure===d.querySelector('#interaction-palette-controls [data-interaction-state="readonly"]') && generalDisclosure.open && [...d.getElementById('advState').options].every(option=>interactionStates.includes(option.value)));
   d.querySelector('#interaction-palette-lesson [data-interaction-state="invalid"] button:last-child').click();await wait();
-  test('Invalid state shade configure reaches the current theme Danger semantic colour',()=>w.DSStudio.activeStage===6 && d.getElementById('jSemanticRole').value==='danger' && evaluate('state.theme')==='light');
+  test('Invalid state shade configure reaches the current theme Danger semantic colour',()=>w.DSStudio.activeStage===4 && d.getElementById('jSemanticRole').value==='danger' && evaluate('state.theme')==='light');
   for(const width of [320,390,1440]) {
     app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
     d.querySelectorAll('#interaction-palette-controls details, #interaction-palette-lesson details').forEach(el=>el.open=true);
@@ -1484,13 +1596,13 @@ app.onload = async () => {
   test('Status overrides regenerate each theme independently and catalogue routes to the semantic source',()=>['light','dark'].every(theme=>['success','warning','danger'].every(role=>{
     const token=w.dssReadTokens().find(row=>row.name==='--'+role+'-500' && (row.scope==='Dark')===(theme==='dark'));
     const source=w.dssTokenSource(token);
-    return token.value===evaluate('state.semanticOverrides.'+theme+'.'+role) && token.type==='Colour ramp' && source.step===6 && source.semantic===role && source.control==='jSemanticRole';
+    return token.value===evaluate('state.semanticOverrides.'+theme+'.'+role) && token.type==='Colour ramp' && source.step===4 && source.semantic===role && source.control==='jSemanticRole';
   })));
   d.querySelector('#status-palette-steps [data-palette-role="danger"] button').click();await wait();
   test('Status shade inspection opens complete synchronized CSS',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true');
   const statusBeforeConfigure=evaluate('projectJson()');
   d.querySelector('#status-palette-steps [data-palette-role="warning"] .button-row button:last-child').click();await wait();
-  test('Status configuration reaches the correct theme role without changing project data',()=>w.DSStudio.activeStage===6 && d.getElementById('jSemanticRole').value==='warning' && evaluate('state.theme')==='dark' && evaluate('projectJson()')===statusBeforeConfigure);
+  test('Status configuration reaches the correct theme role without changing project data',()=>w.DSStudio.activeStage===4 && d.getElementById('jSemanticRole').value==='warning' && evaluate('state.theme')==='dark' && evaluate('projectJson()')===statusBeforeConfigure);
   for(const width of [320,390,1440]) {
     app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
     d.querySelectorAll('#status-palette-steps details, #status-palette-ramp-lessons details').forEach(el=>el.open=true);
@@ -1504,7 +1616,7 @@ app.onload = async () => {
   const displayName=d.querySelector('[data-brand-id="blue"] [data-brand-field="name"]');
   displayName.value='Ocean blue';displayName.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
   test('Colour display names remain independent of brand token names',()=>tokenField().value==='blue' && evaluate('cssExport()').includes('--brand-blue: #004780'));
-  const stableTokenInput=tokenField();stableTokenInput.focus();stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  const stableTokenInput=tokenField();w.DSStudio.paletteWorkspace.revealControl(stableTokenInput);stableTokenInput.focus();stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
   test('Token rename updates exports, teaching surfaces and catalogue while retaining focus and copied roles',()=>d.activeElement===stableTokenInput && d.querySelector('[data-brand-id="ocean-blue"] [data-brand-field="id"]')===stableTokenInput && evaluate('cssExport()').includes('--brand-ocean-blue: #004780') && !evaluate('cssExport()').includes('--brand-blue:') && d.getElementById('palette-brand-token-list').textContent.includes('--brand-ocean-blue: #004780;') && w.dssReadTokens().some(row=>row.name==='--brand-ocean-blue') && evaluate('JSON.stringify([state.primary,state.secondary,state.accent])')===beforeTokenRoles);
   for(const invalid of ['white','Bad name','x;--evil','']) {
     stableTokenInput.value=invalid;stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
@@ -1538,7 +1650,7 @@ app.onload = async () => {
     test('Palette token teaching and expanded ramps fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['palette-steps-controls','palette-token-lesson','jBrandEditor'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
   }
   app.style.width='1440px';reset();w.dssShowWizardStep(4);await wait();
-  const resetTokenInput=d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');resetTokenInput.focus();resetTokenInput.value='white';resetTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));reset();await wait();
+  const resetTokenInput=d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');w.DSStudio.paletteWorkspace.revealControl(resetTokenInput);resetTokenInput.focus();resetTokenInput.value='white';resetTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));reset();await wait();
   test('Reset restores token suffix values and clears stale validation while retaining editor focus',()=>resetTokenInput.value==='blue' && resetTokenInput.validity.valid && d.activeElement===resetTokenInput);
   w.dssShowWizardStep(0,false);await wait();
   const beforeOrderedWalk=evaluate('projectJson()');
@@ -1662,7 +1774,7 @@ app.onload = async () => {
   test('Non-finite opacity imports remain fully opaque',()=>opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1));
   for(const width of [320,390,1440]) {
     app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    test('Opacity controls and centre model fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && opacityRegions.every(region=>{const el=d.getElementById(opacityId(region)+'-opacity');return el.getBoundingClientRect().height>=44 && el.getBoundingClientRect().width>0 && el.getAttribute('aria-describedby')==='background-opacity-help';}) && d.getElementById('webpage-background-lesson').scrollWidth<=d.getElementById('webpage-background-lesson').clientWidth+1);
+    test('Opacity controls and centre model fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && opacityRegions.every(region=>{const el=d.getElementById(opacityId(region)+'-opacity');w.DSStudio.paletteWorkspace.revealControl(el);return el.getBoundingClientRect().height>=44 && el.getBoundingClientRect().width>0 && el.getAttribute('aria-describedby')==='background-opacity-help';}) && d.getElementById('webpage-background-lesson').scrollWidth<=d.getElementById('webpage-background-lesson').clientWidth+1);
   }
   app.style.width='1440px';input('page-background-opacity',0);evaluate('resetStudio()');await wait();
   test('Reset removes custom opacity data and restores opaque defaults',()=>!evaluate('state.backgroundOpacity') && opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1 && d.getElementById(opacityId(region)+'-opacity').value==='100'));
@@ -1710,6 +1822,7 @@ app.onload = async () => {
     paddingRegions.forEach(region=>d.getElementById(region+'-padding-controls').open=true);await wait();
     test('Expanded padding controls and demos fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && paddingRegions.every(region=>{
       const details=d.getElementById(region+'-padding-controls'),demo=d.getElementById(region+'-padding-demo');
+      w.DSStudio.paletteWorkspace.revealControl(d.getElementById(region+'-padding-top'));w.DSStudio.paletteWorkspace.revealControl(demo);
       return details.scrollWidth<=details.clientWidth+1 && demo.scrollWidth<=demo.clientWidth+1 && paddingSides.every(side=>d.getElementById(region+'-padding-'+side).getBoundingClientRect().height>=44);
     }));
   }
@@ -1723,7 +1836,7 @@ app.onload = async () => {
   test('Back from Prototype reaches Deliver',()=>!d.querySelector('[data-journey-pane="11"]').hidden && !d.getElementById('jNext').hidden);
   d.getElementById('jBack').click();
   test('Back navigation reaches accessibility and restores Next', () => !d.querySelector('[data-journey-pane="10"]').hidden && !d.getElementById('jNext').hidden);
-  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',6],['--button-secondary-hover-text','Dark','bdHoverText',7],['--brand-blue','Light / base',null,4]]) {
+  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',4],['--button-secondary-hover-text','Dark','bdHoverText',4],['--brand-blue','Light / base',null,4]]) {
     d.getElementById('studio-section-8').open=true;
     const button=d.querySelector(`[data-token-name="${name}"][data-token-scope="${scope}"]`);
     button.click(); await wait();
@@ -2533,14 +2646,14 @@ app.onload = async () => {
   test('Page background reset restores the default canvas',()=>evaluate('palette().roles.background')===defaultCanvas);
   reset();await wait();
   w.dssShowWizardStep(4);
-  const regions=['header','main','footer'];
+  const regions=['header','main','footer'];w.DSStudio.paletteWorkspace.revealControl(d.getElementById('page-background-colour'));
   test('Background controls follow Brand and Main Palettes, in page order',()=>{
     const pane=d.querySelector('[data-journey-pane="4"]'),editor=d.querySelector('.page-background-editor');
     return Boolean(d.getElementById('jRamp').compareDocumentPosition(editor)&w.Node.DOCUMENT_POSITION_FOLLOWING) &&
       [...editor.querySelectorAll('legend')].map(el=>el.textContent).join('|')==='Body background|Header background|Main background|Footer background' &&
-      pane.contains(editor) && d.querySelector('#brandPalette .studio-lesson #webpage-background-lesson');
+      d.getElementById('palette-stage-backgrounds').contains(editor) && !pane.contains(editor) && d.querySelector('#palette-workspace #webpage-background-lesson');
   });
-  test('Body is a visible first-class control and contains the centre page regions',()=>!d.getElementById('body-background-controls').closest('details') && d.getElementById('page-background-colour').getBoundingClientRect().height>=44 && ['header','main','footer'].every(region=>d.getElementById('body-background-value').closest('section').querySelector('.background-contained-regions').contains(d.getElementById(region+'-background-value'))));
+  test('Body is a visible first-class control and contains the centre page regions',()=>d.getElementById('body-background-controls').closest('[data-palette-stage]').dataset.paletteStage==='backgrounds' && d.getElementById('page-background-colour').getBoundingClientRect().height>=44 && ['header','main','footer'].every(region=>d.getElementById('body-background-value').closest('section').querySelector('.background-contained-regions').contains(d.getElementById(region+'-background-value'))));
   test('Every background selector offers the complete Brand Palette in its saved order',()=>regions.concat('page').every(region=>{
     const values=[...d.getElementById(region+'-background-brand').children].filter(el=>el.tagName==='OPTION').slice(1);
     return values.length===evaluate('state.brandPalette.length') && values.every((option,i)=>option.value===evaluate('state.brandPalette')[i].hex && option.textContent.includes(evaluate('state.brandPalette')[i].name));
@@ -2596,7 +2709,7 @@ app.onload = async () => {
   test('Imported region overrides validate hex types and lengths',()=>evaluate("!state.semanticOverrides.light['header-background'] && !state.semanticOverrides.light['main-background'] && !state.semanticOverrides.light['footer-background'] && state.semanticOverrides.dark['header-background']==='#ABCDEF'"));
   for (const width of [320,390,1440]) {
     app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    test('Background controls and centre lesson fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['body-background-controls','webpage-region-controls','webpage-background-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}) && ['page',...regions].every(region=>['brand','colour','hex'].every(kind=>{const el=d.getElementById(region+'-background-'+kind);el.focus();return d.activeElement===el && el.getBoundingClientRect().height>=44;})));
+    test('Background controls and centre lesson fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['body-background-controls','webpage-region-controls','webpage-background-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}) && ['page',...regions].every(region=>['brand','colour','hex'].every(kind=>{const el=d.getElementById(region+'-background-'+kind);w.DSStudio.paletteWorkspace.revealControl(el);el.focus();return d.activeElement===el && el.getBoundingClientRect().height>=44;})));
   }
   app.style.width='1440px';reset();await wait();
   test('Reset clears all region overrides and restores selectors',()=>!evaluate('state.semanticOverrides') && regions.every(region=>d.getElementById(region+'-background-reset').disabled));
@@ -3281,6 +3394,7 @@ app.onload = async () => {
       test(mode+' wireframe retains actual website structure and wording',()=>doc.body.textContent===source.body.textContent && JSON.stringify([...doc.querySelectorAll('body [id]')].map(el=>el.id))===JSON.stringify([...source.querySelectorAll('body [id]')].map(el=>el.id)));
       test(mode+' wireframe exposes page, content-width, layout and child containers',()=>['region','content','layout','item'].every(kind=>doc.querySelector('[data-wf-container="'+kind+'"]')) && doc.querySelector(mode==='basic'?'.hero-layout[data-wf-layout="grid"]':'.sample-hero[data-wf-layout="grid"]') && d.querySelector('.wf-container-key').textContent.includes('Grid/Flex'));
       test(mode+' wireframe distinguishes container boundaries without adding layout borders',()=>['region','content','layout','item'].every(kind=>{const el=[...doc.querySelectorAll('[data-wf-container="'+kind+'"]')].find(node=>node.getBoundingClientRect().height>0);return el && frame.contentWindow.getComputedStyle(el).outlineStyle===({region:'solid',content:'dashed',layout:'dotted',item:'solid'})[kind];}));
+      test(mode+' wireframe reveals nested list, disclosure and normal-flow groups',()=>doc.querySelector('main li[data-wf-container="item"]') && doc.querySelector('main details[data-wf-container="item"]') && [...doc.querySelectorAll('main div[data-wf-container="item"]')].some(el=>!el.dataset.wfLayout) && [...doc.querySelectorAll('[data-wf-container]')].every(el=>el.title.length>0));
       test(mode+' wireframe identifies its selected sample without colour alone',()=>d.getElementById('wf-'+mode).getAttribute('aria-pressed')==='true' && w.getComputedStyle(d.getElementById('wf-'+mode),'::before').content.includes(String.fromCharCode(0x2713)));
       test(mode+' wireframe has no layout or content authoring controls',()=>!d.querySelector('#wf-scope,#wf-layout,#wf-content,#wf-emphasis,#plan-layout,#plan-wireframeNotes') && frame.sandbox.value==='allow-same-origin');
       test(mode+' wireframe disables website forms and removes executable or nested embeds',()=>[...doc.querySelectorAll('input,select,textarea,button')].every(el=>el.disabled) && !doc.querySelector('script,iframe,object,embed,base,a[href]:not([href^="#"])'));
