@@ -7,7 +7,7 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
   const listeners = new Map();
   // Stable control indices keep existing routes compatible; positions set the
   // learner's sequence independently of those internal identifiers.
-  const stageOrder = Object.freeze([0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 3]);
+  const stageOrder = Object.freeze([0, 1, 5, 2, 4, 6, 7, 8, 9, 10, 11, 3]);
 
   const DSStudio = {
     version: '4.1.0',
@@ -18,11 +18,11 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
     // fixed IDs are UI metadata; imported projects cannot supply routes or code.
     stages: [
       ['brief', 'Brief', 'process-brief', 'Plan', '', 'Record the purpose and audience. Check that the brief describes one useful visitor task.'],
-      ['architecture', 'Architecture', 'process-ia', 'Plan', '', 'Use the brief to organize the full information structure. Choose which entries appear in the sitemap, then test labels and compare the visitor sitemap with the preview footer.'],
-      ['wireframe', 'Wireframe', 'process-wireframe', 'Plan', '', 'Inspect a read-only, low-fidelity version of the live website at different viewport widths.'],
+      ['architecture', 'Architecture', 'process-ia', 'Plan', '', 'Use the brief to organize the full information structure. Choose which entries appear in the sitemap, then test labels and compare the visitor sitemap with the preview footer. Continue to Typography to establish a working type baseline before wireframing.'],
+      ['wireframe', 'Wireframe', 'process-wireframe', 'Plan', '', 'Use your content and typography choices to check reading order, wrapping and content fit in Low Fidelity. Revisit High Fidelity as palette and component decisions develop.'],
       ['prototype', 'Prototype', 'process-prototype', 'Review and deliver', '', 'Review the finished live prototype using your brief and task. Test both samples, themes and viewport sizes, record observations, then export the HTML and CSS.'],
       ['palette', 'Palette', 'brandPalette', 'Foundations', '--primary:', 'Name a brand token, assign a Main Palette role and compare its generated shade steps. Follow the light and dark semantic values into the page and CSS.'],
-      ['typography', 'Typography', 'studio-section-2', 'Foundations', '--font-size-base:', 'Change the base text size. Compare headings and body text, then inspect the generated type scale.'],
+      ['typography', 'Typography', 'studio-section-2', 'Plan', '--font-size-base:', 'After Architecture, choose body and heading fonts, a type scale, line heights and reading measure using the site content. Check narrow widths, then continue to Wireframe to judge section and card sizing. Refine this baseline as the layout develops.'],
       ['semantic', 'Colour lab', 'studio-section-1', 'Foundations', '--surface:', 'Explore colour models and gamut here; assign semantic roles and component colours in the Palette workspace.'],
       ['buttons', 'Buttons', 'buttonDesignLab', 'Apply', '--button-primary-bg:', 'Change the primary button background. Compare the page action, check its text contrast and follow the token into CSS.'],
       ['spacing', 'Spacing and surfaces', 'studio-section-3', 'Apply', '--space-unit:', 'Change the spacing unit. Compare section padding and related spacing tokens, then explain why they change together.'],

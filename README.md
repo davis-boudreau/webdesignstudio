@@ -414,7 +414,7 @@ are demonstrations with no message delivery.
 
 
 The wizard configures the system through twelve steps: Brief, Architecture,
-Wireframe, Palette, Typography, Semantic colours, Buttons,
+Typography, Wireframe, Palette, Colour lab, Buttons,
 Spacing and surfaces, Responsive layout, Accessibility, Deliver and Prototype.
 Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
@@ -423,26 +423,40 @@ opens its matching lesson automatically, with contextual inspection actions.
 Architecture also provides the content and sitemap editing workspace in this pane.
 Interactive labs remain available for experiments and contrast review.
 
-Brief, Architecture and Wireframe come before palette design. Record the audience,
+Brief, Architecture, Typography and Wireframe come before palette design. Record the audience,
 main task, scope, success signal and constraints in the brief.
 Use Architecture's short UX planning overview to identify tasks, define scope,
 group and label content, and check a route with the intended audience. Its outcome
-is an agreed information architecture and selected visitor sitemap for the wireframe.
-The **Wireframe workspace** is a read-only, low-fidelity view of the Basic or
-Advanced website. It uses the same generated HTML and responsive CSS as the live
-preview, with neutral colours and grey image areas. Solid outlines show page
+is an agreed information architecture and selected visitor sitemap. In **Typography
+(step 3)**, set a working baseline for body/heading fonts, hierarchy, line heights,
+reading measure and fluid heading sizes using the site content. In **Wireframe
+(step 4)**, check wrapping, reading order and the space needed by sections/cards.
+Refine typography as the layout develops; revisit High Fidelity after palette and
+component choices. Both wireframe views share the website's type settings.
+The **Wireframe workspace** has **Low Fidelity** and **High Fidelity** tabs for
+the Basic or Advanced website. High Fidelity is the initial view and retains
+configured backgrounds, button colours and imagery for the selected website
+theme. Low Fidelity uses a white canvas with unfilled objects and logos, grey
+button fills and greyscale imagery to focus on structure and content. Both read-only views use the same
+generated HTML, typography and responsive layout as the live website.
+Solid outlines show page
 regions, dashed outlines show content-width containers, dotted outlines show
-Grid/Flex groups and thin outlines show nested content groups, list items and
-child containers. Hover a boundary to inspect its HTML identity and layout type. These boundaries
+Grid/Flex groups and thin outlines show every individual page object and nested
+group: headings, paragraphs, inline text, links, buttons, controls, images, icons
+and table cells. Each SVG drawing gets one outer boundary. Hidden content follows
+the website's responsive and disclosure rules. Hover a boundary to inspect its
+HTML identity and layout type. These boundaries
 preserve actual spacing and dimensions, including in the HTML download. Saved website wording
 from Architecture appears automatically; proposals remain planning data until
 applied to website content. Layout and content are edited in their existing tools.
 
 Choose Match live preview, 320, 390, 768 or 1280 pixels, or Available width.
 Fixed-width views scroll inside the workspace. Sample and viewport controls choose
-what to inspect; they do not save a separate wireframe layout. Forms are disabled;
+what to inspect; they do not save a separate wireframe layout. Form controls are read-only;
 local navigation and native disclosures remain inspectable. **Download wireframe
-HTML** exports the same read-only view with embedded website CSS and neutral paint.
+HTML** exports the selected fidelity with embedded styles and container outlines.
+Switch tabs with Left/Right arrows or Home/End. Fidelity and viewport choices do
+not change saved website settings; tab changes retain scroll and open disclosures.
 
 The optional sitemap text outline still accepts up to 64 three-level entries
 (`Lessons > Layout` creates a child). Prototype is the final review step:
@@ -468,7 +482,7 @@ Saved/imported projects retain their explicitly chosen ratio.
 See [the teaching and token-configuration review](docs/TOKEN_CONFIGURATION_2026-10-20.md)
 for the complete coverage map and the reasoning behind this organization.
 
-In **Palette (step 4)**, use the centre **Palette workspace**. The left column is
+In **Palette (step 5)**, use the centre **Palette workspace**. The left column is
 now a short guide and stage navigator. Work through **Brand colours → UI anchors → Shades → Semantic roles → Page backgrounds
 → Component colours → States and review**, with an
 explanation and Previous/Next actions at each stage. Stages can be reopened to
@@ -481,6 +495,11 @@ offer selection and appropriate reset actions. Generated token values use
 read-only form fields. Semantic properties offer a HEX field and colour picker
 for a proposal: Preview checks its effects, Apply saves it, and Discard restores
 the current value.
+
+In **2. Choose UI anchors**, the left list explicitly offers **Primary, Secondary
+and Accent**. Each has its own brand selector, custom colour picker and reset
+action. Switching anchors keeps the other two colours; all three travel with
+saved projects and JSON and generate their respective shade families.
 
 Create up to 24 named brand references, choose one to view its properties, edit
 its name/HEX/token suffix, or remove it. Keep at least one reference. Selected

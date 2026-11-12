@@ -15,3 +15,8 @@
 
 .wf-view-controls button[aria-pressed="true"] { font-weight: 700; border-color: var(--control-border); }
 .wf-view-controls button[aria-pressed="true"]::before { content: "\2713  "; }
+
+.wf-fidelity-tabs { display: flex; gap: .5rem; margin-block: 1rem; border-bottom: 1px solid var(--border); }
+.wf-fidelity-tabs [role="tab"] { flex: 1 1 0; min-width: 0; padding: .65rem; border: 1px solid var(--control-border); border-bottom-width: 3px; border-radius: var(--radius-base) var(--radius-base) 0 0; color: var(--text); background: var(--surface-muted); }
+.wf-fidelity-tabs [aria-selected="true"] { font-weight: 700; border-bottom-color: var(--primary); background: var(--surface); text-decoration: underline; text-underline-offset: .25em; }
+#wf-fidelity-panel { min-width: 0; }

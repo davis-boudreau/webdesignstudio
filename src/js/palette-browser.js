@@ -27,10 +27,13 @@ DSStudio.register({
     append(brand.browse,searchField,get('jBrandCount'),get('jBrandAdd'),remove,results,brandList,get('jBrandStatus'));
     get('palette-brand-properties-title').hidden=true;brand.title.textContent='Selected colour properties';const allBrands=get('jBrandSwatches').closest('details');if(allBrands)brand.browse.append(allBrands);
     // Shared UI anchors are fixed roles; only their assignments can be reset.
-    const roles=layouts.get('roles'),roleList=element('div','palette-item-list'),roleButtons=new Map();roles.browse.append(roleList);get('brandRoleAssignments').hidden=true;
-    for(const [key,label]of [['primary','Primary'],['secondary','Supporting'],['accent','Accent']]){
-      const item=button(label,()=>{anchor=key;sync();get('j'+key[0].toUpperCase()+key.slice(1)+'Brand').focus();});item.dataset.paletteAnchor=key;roleList.append(item);roleButtons.set(key,item);roles.browse.append(get('palette-reset-'+key));
-    }
+    const roles=layouts.get('roles'),anchorField=element('div','field'),anchorLabel=element('label',null,'UI anchor to edit'),anchorSelect=element('select');
+    anchorSelect.id='palette-anchor-selection';anchorSelect.size=3;anchorLabel.htmlFor=anchorSelect.id;
+    for(const key of ['primary','secondary','accent']){anchorSelect.add(new Option(key[0].toUpperCase()+key.slice(1),key));roles.browse.append(get('palette-reset-'+key));}
+    anchorField.append(anchorLabel,anchorSelect);roles.browse.insertBefore(anchorField,get('palette-reset-primary'));get('brandRoleAssignments').hidden=true;
+    anchorSelect.addEventListener('change',()=>{anchor=anchorSelect.value;sync();});
+    const anchorHelp=element('p','help');anchorHelp.id='palette-anchor-help';roles.title.after(anchorHelp);
+    anchorSelect.setAttribute('aria-describedby',anchorHelp.id);
     const shades=layouts.get('shades'),shadeList=element('div','palette-item-list'),shadeButtons=new Map();shades.browse.append(shadeList);
     for(const [key,label]of [['primary','Primary'],['secondary','Supporting'],['accent','Accent'],['neutral','Neutral']]){const item=button(label+' family',()=>{shade=key;sync();get('jRamp').focus();});item.dataset.paletteFamily=key;shadeList.append(item);shadeButtons.set(key,item);}
     shades.title.textContent='Selected family properties';
@@ -83,8 +86,10 @@ DSStudio.register({
     function sync(){
       if(identity!==state){identity=state;anchor='primary';shade='primary';draftKey='';search.value='';}
       syncBrand();
-      for(const [key,item]of roleButtons){const title=key[0].toUpperCase()+key.slice(1);get('j'+title).closest('.field').hidden=key!==anchor;get('palette-reset-'+key).hidden=key!==anchor;item.textContent=(key==='secondary'?'Supporting':title)+' '+state[key].toUpperCase();item.setAttribute('aria-pressed',String(key===anchor));}
-      roles.title.textContent=(anchor==='secondary'?'Supporting':anchor[0].toUpperCase()+anchor.slice(1))+' anchor properties';
+      anchorSelect.value=anchor;
+      for(const key of ['primary','secondary','accent']){const title=key[0].toUpperCase()+key.slice(1);get('j'+title).closest('.field').hidden=key!==anchor;get('palette-reset-'+key).hidden=key!==anchor;}
+      roles.title.textContent=anchor[0].toUpperCase()+anchor.slice(1)+' anchor properties';
+      anchorHelp.textContent={primary:'Primary supplies the main action and link colour family.',secondary:'Secondary supplies the supporting action colour family.',accent:'Accent supplies contrasting highlights and the accent action colour family.'}[anchor]+' Choose a brand colour or set a custom colour below. This anchor is shared by both website themes; fixed semantic or component overrides keep their own values.';
       for(const [key,item]of shadeButtons){const details=get('main-palette-steps').querySelector('[data-palette-role="'+key+'"]');details.hidden=key!==shade;if(key===shade)details.open=true;item.setAttribute('aria-pressed',String(key===shade));}
       get('neutralPaletteAnchor').closest('section').hidden=shade!=='neutral';
       syncSemantic();

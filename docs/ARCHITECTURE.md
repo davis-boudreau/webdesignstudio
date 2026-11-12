@@ -220,7 +220,13 @@ control/lesson IDs remain compatible.
 `stageOrder` and `orderedStages` define display order independently of the stable
 internal indices. `position` supplies visible numbers. Previous/Next, progress,
 step buttons, phase groups and centre section order follow that sequence. Prototype
-is last, after Deliver; Plan contains Brief, Architecture and Wireframe. Its final
+is last, after Deliver; Plan contains Brief, Architecture, Typography and Wireframe.
+The opening display order is `[0,1,5,2,4]`: Brief, Architecture, Typography (Step 3),
+Wireframe (Step 4), Palette (Step 5). Stable typography/wireframe/palette indices
+remain 5/2/4, so saved view routes and Configure links retain their targets. Script
+load order is unchanged. Typography establishes a working baseline from actual
+content; the wireframe validates its wrapping and spatial effects before palette
+refinement. The final Prototype
 review actions open the existing preview and inspector or route to Deliver without
 replacing the iframe or project. Earlier task sketches remain in a disclosure.
 
@@ -590,8 +596,18 @@ generation remain shared and dependency-free.
 
 `wireframe-engine.js` loads after content/text services and before core state.
 It parses the locally generated `htmlExport()` and embeds `cssExport()` plus local
-font CSS. A final neutral paint stylesheet changes colour, decoration and image
-treatment without changing layout rules, font metrics, spacing or breakpoints.
+font CSS. High Fidelity retains configured backgrounds, background
+images, text, borders and opacity, including button variants and website themes.
+It removes motion and shadows without changing layout rules, font metrics,
+spacing or breakpoints. Annotation colours use the website's text/control-border
+tokens; layout groups receive no extra background fill.
+Low Fidelity adds a neutral paint layer before the shared outlines: a white
+canvas, transparent non-button objects and logos, grey button fills,
+neutral text/borders/native control accents and
+greyscale images/SVGs. It uses a light native colour scheme even for a dark
+website theme. Box dimensions, type metrics, content and source visibility stay
+the same. `createDocument({preview,fidelity})` and `documentHtml({fidelity})` accept
+low/high; absent or unknown fidelity values fall back to high.
 Basic and Advanced therefore retain the live website's structure and actual copy.
 Container annotations mark page regions and content-width wrappers. A constructed
 CSSStyleSheet parses only locally generated CSS; walking style/media rules finds
@@ -601,32 +617,51 @@ to the mirror/download; they do not alter source HTML or Architecture. Solid,
 dashed, dotted and thin inset outlines distinguish the levels without changing
 borders, padding, positioning or font metrics. A Studio legend explains them.
 Nested sections, disclosures, list items, description values and normal-flow div
-wrappers with block content also receive thin outlines, excluding decorative
-aria-hidden/SVG content. Existing region/content/layout priority remains. Native
-titles identify authored tag/ID/classes and layout type without adding nodes or
-changing containing blocks. Existing title attributes are preserved.
+wrappers with block content receive thin outlines. Every other HTML body object
+is marked with the lower-priority object kind, including text elements, inline
+spans, controls, table parts, images and decorative tracks. Non-rendering metadata
+and line-break nodes are excluded; SVGs get one outer boundary, without outlining
+their internal drawing shapes. Generated ::before/::after objects also get thin
+outlines. Native hidden, responsive and disclosure behavior remains unchanged.
+Leaf-object outlines yield to the website's :focus-visible rule, retaining the
+distinct keyboard ring while a link is focused.
+Existing region/content/layout/item priority remains above object annotations.
+Native title attributes identify authored tag/ID/classes and layout type without
+adding nodes or changing containing blocks. Titles use setAttribute for both HTML
+and SVG reflection; existing title attributes are preserved.
 
 
 Website content saved through Architecture flows through the existing generators;
 proposals and planned-only entries do not invent a different website layout.
 
-The mirror removes executable/nested embeds, disables website form controls and
+The mirror removes executable/nested embeds, makes website form controls inert and
 removes non-fragment navigation. The workspace iframe has only allow-same-origin,
 without scripts or forms. Its parent handles local fragments with getElementById,
 opens ancestor disclosures, and prevents form submission. Imported text is escaped
 by the existing website generators; it is never interpreted as a template or CSS.
+Inert controls cannot receive user focus or activation; their original disabled
+attributes remain unchanged, preserving the configured enabled/disabled appearance
+instead of artificially dimming every button. Local links and details remain
+inspectable. The downloaded HTML uses the same inert controls and outline layer.
 The Advanced website's Wireframing lesson contains a short explanatory note rather
 than embedding the mirror inside itself. It remains one generated inventory entry.
 
 `wireframe-workspace.js` registers after studio-learning. It replaces the Studio
 wireframe artifact with the read-only iframe and Basic/Advanced, viewport, compare
-and download controls. The wizard opens this view. Render changes refresh the
+and download controls. Low Fidelity / High Fidelity use a labelled tablist and a
+shared labelled tabpanel/iframe, with selected state, roving tabindex and automatic
+activation on Left/Right/Home/End. High Fidelity starts selected to retain the
+existing view. Fidelity is local view state, shared across Basic/Advanced and
+theme changes; it is not a second saved website model. The download uses the
+selected fidelity, and frame titles, guidance and summary identify it. The wizard
+opens this view. Render changes refresh the
 mirror only while Wireframe is active, or explicitly requested; unchanged HTML
 preserves nodes. Same-mode updates retain scroll and disclosure state. The
 workspace uses the existing sample mode controls and font synchronization.
 Match live preview, 320/390/768/1280px and available-width choices are transient.
 Fixed widths scroll within the labelled region instead of shrinking breakpoints.
-Standalone wireframe.html embeds the same source styles and neutral paint layer.
+Standalone wireframe.html embeds the same source styles and outline layer,
+plus neutral paint when Low Fidelity is selected.
 
 Legacy `designProcess.wireframes` and earlier layout/review-note fields remain
 bounded, validated project data for compatibility, but no longer control the
@@ -740,8 +775,8 @@ reset keeps padding. Catalogue/inspection routes use the same controls and compl
 CSS export. Layout values use existing JSON/autosave/import/reset without a new
 schema, independent generator or imported CSS execution.
 
-The twelve wizard stages are Brief, Architecture, Wireframe, Palette,
-Typography, Semantic colours, Buttons, Spacing and surfaces, Responsive layout,
+The twelve wizard stages are Brief, Architecture, Typography, Wireframe, Palette,
+Colour lab, Buttons, Spacing and surfaces, Responsive layout,
 Accessibility, Deliver and Prototype. Existing control and centre IDs remain stable; the
 shared stage registry keeps their routes aligned. Planning artifacts appear in
 the selected lesson; other stage sections are hidden until selected.
@@ -839,6 +874,13 @@ local draft until the existing contrast dialog previews and applies it. Cancel
 keeps the saved value, and Discard restores the current value. Other edits retain
 their existing immediate-update behavior. Native disclosure reopening refreshes
 generated fields after the original workspace's toggle handlers finish.
+
+The anchor stage uses one labelled native three-option list, Primary / Secondary /
+Accent, rather than the previous role buttons that called Secondary "Supporting".
+Changing selection retains focus in the list for keyboard navigation and exposes
+only that anchor's original brand/custom fields and scoped reset. Configure routes
+also synchronize the list. Selection remains transient; anchor values continue
+through the existing shared model, generated ramps, autosave and JSON import/export.
 
 `palette-workspace.js` registers after palette-process, state-palettes and
 webpage-backgrounds, before spacing/utility lessons. It moves their existing

@@ -72,7 +72,7 @@
       }
       if(anchor==='sitemap'){add('Visitor sitemap','group','Generated from selected sitemap destinations',parent,key);return;}
       if(anchor==='ia-lab'){const group=add('Information architecture','section','Content structure and visitor sitemap',parent,key,anchor);add('Planning views','group','Generated from the content plan and selected sitemap destinations',group,key+'/views');return;}
-      if(anchor==='wireframe-lab'){add('Wireframing','section','Read-only low-fidelity view of the website HTML and responsive CSS',parent,key,anchor);return;}
+      if(anchor==='wireframe-lab'){add('Wireframing','section','Read-only Low Fidelity and High Fidelity views of the same responsive website',parent,key,anchor);return;}
       if(tag==='header' || tag==='footer')node=add(tag==='header'?'Header':'Footer','region','Shared website region',parent,key,tag==='footer'?'footer':'');
       else if(tag==='section' || tag==='article' || tag==='aside')node=add(names.get(anchor)||element.getAttribute('aria-label')||compact(element.querySelector('h2,h3,h4')?.textContent)||({section:'Section',article:'Article',aside:'Related information'}[tag]),'section','',parent,key,names.has(anchor)?anchor:'');
       else if(tag==='nav')node=add(element.getAttribute('aria-label')||'Navigation','group','Links reference destinations elsewhere in this outline',parent,key);

@@ -2,6 +2,249 @@
 
 Updated: 12 November 2026 (America/Halifax).
 
+## Typography moved after Architecture (12 November 2026)
+
+- User approved the process recommendation. Display order now begins Brief (1),
+  Architecture (2), Typography (3), Wireframe (4), Palette (5), then Colour lab (6)
+  and the existing remaining stages. Typography joins the contiguous Plan group
+  with Brief, Architecture and Wireframe; Foundations now contains Palette/Colour
+  lab. Stable internal typography/wireframe/palette indices remain 5/2/4.
+- Updated registry stageOrder, planning/type/wireframe guidance, typography lesson
+  explanation, sidebar fallback labels and Design workflow notes. Typography
+  establishes a working baseline using actual content; Low Fidelity checks fit
+  and reading order, while High Fidelity is revisited as appearance develops.
+  Existing Previous/Next, progress, section ordering and token Configure labels
+  derive their new visible positions from the shared registry.
+- Script load order, control IDs, project schema, import/export and font/token
+  generators are unchanged. Refreshed all four changed JavaScript asset versions.
+  Updated README, architecture notes and unobserved learner-trial prompts.
+- Focused browser run passed **42/42**, no captured JS errors
+  (.early-typography-focused.log). Covers literal order/phase grouping, forward
+  and reverse transitions, stable Configure routes and control identity, JSON
+  round trip, visible token source numbering, 12-stage navigation at 320/1440px
+  and actual Georgia/18px/1.6 leading/58ch settings in both samples/themes and
+  both wireframe fidelities.
+- python scripts/check_structure.py passed (**66 assets**); git diff --check
+  passed. python scripts/button_states_review.py passed **7/7 reduced-motion and
+  9/9 forced-colour**, no JS errors (.early-typography-button-states.log).
+- Inspected Typography Step 3 with the reordered Plan group and Wireframe Step 4
+  with the chosen type settings at 390px. Temporary helpers/captures removed;
+  ignored logs retained.
+- Final python scripts/browser_review.py passed **2,688/2,688**, with no captured
+  JavaScript errors (.early-typography-full-browser.log). This includes the new
+  sequence/compatibility/type-propagation tests and updated visible Palette step
+  assertions. Required structure, browser, button-state and whitespace checks
+  are complete.
+- Manual keyboard/screen-reader, zoom and Firefox/Safari remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the content-to-type-to-layout flow and learner trial.
+
+## Process review: typography after Architecture (12 November 2026)
+
+- User requested an opinion/review on putting Typography after information
+  architecture because text influences section/card sizing. Reviewed registry
+  stageOrder, related architecture notes and the wireframe's shared CSS/font path.
+- Current opening sequence is Brief, Architecture, Wireframe, Palette, Typography.
+  Recommend Brief, Architecture, Typography, Wireframe, Palette, with an early
+  working baseline for body/heading fonts, hierarchy, sizes, leading, measure and
+  fluid scaling. Low Fidelity validates content fit; High Fidelity is revisited
+  as palette/component/responsive decisions develop. Both already share exported
+  CSS/font settings, so there is no separate wireframe typography model to build.
+- Reviewed official web.dev typography and content-driven responsive guidance:
+  https://web.dev/learn/design/typography and
+  https://web.dev/articles/responsive-web-design-basics .
+- This entry records analysis and a recommendation, not an implemented reorder.
+  No runtime assets changed; no browser/structure tests were run for this review.
+- Next if implemented: change display order through stageOrder while retaining
+  stable control indices/routes; reconcile phase grouping, numbering, guidance,
+  previous/next navigation, documentation and sequence regression expectations.
+
+## Low Fidelity backgrounds cleared except buttons (12 November 2026)
+
+- User requested no Low Fidelity background fills except buttons. Removed grey
+  fills from layout groups, Header/Footer, form fields and logos. The canvas stays
+  white; non-button object backgrounds are transparent. Button/action fills stay
+  grey with white labels. Logo text now follows the normal dark neutral text.
+- High Fidelity, object outlines, responsive geometry, view controls and selected
+  fidelity exports retain their existing behavior. Updated Low Fidelity guidance,
+  README and architecture notes and refreshed both changed JavaScript asset
+  query versions.
+- Strengthened the existing Low Fidelity paint assertion to require transparent
+  backgrounds on every non-button body object and grey fills on buttons, across
+  Basic/Advanced, both website themes and 320/1280px viewports.
+- Focused run passed **50/50**, no JS errors (.wireframe-low-unfilled-focused.log).
+  python scripts/check_structure.py passed (**66 assets**); git diff --check
+  passed. python scripts/button_states_review.py passed **7/7 reduced-motion and
+  9/9 forced-colour**, no JS errors (.wireframe-low-unfilled-buttons.log).
+- Final python scripts/browser_review.py passed **2,646/2,646**, with no captured
+  JavaScript errors (.wireframe-low-unfilled-browser.log). Required structure,
+  browser, button-state and whitespace checks are complete. Temporary focused
+  helper removed; ignored logs retained. Manual keyboard/screen-reader, zoom and
+  Firefox/Safari remain unverified; automated passes do not establish full
+  accessibility. No commit/push/deployment.
+- Next: user review of the unfilled Low Fidelity view and learner trial.
+
+## Low Fidelity and High Fidelity wireframe tabs (12 November 2026)
+
+- User identified the existing coloured view as High Fidelity and requested
+  Low Fidelity / High Fidelity tabs plus corrected wording throughout Wireframe.
+- Added a labelled native-button tablist and shared tabpanel/iframe. Selected
+  state, roving tabindex and Left/Right/Home/End activation are supported. High
+  Fidelity starts selected to retain the current view. Both tabs share sample,
+  viewport, scrolling, native disclosure state and object/container outlines.
+- Low Fidelity adds white/grey surfaces, grey buttons/logos, neutral text/borders
+  and greyscale images/SVGs over the same HTML and responsive boxes. Native
+  checkbox/radio/range/progress accents are grey; native controls use a light
+  colour scheme even when the website theme is dark. High Fidelity retains the
+  existing website colours, imagery and component configuration.
+- Fidelity is transient local view state, not a second saved website model.
+  Engine createDocument/documentHtml accept a low/high fidelity option; absent or
+  unknown values fall back to high. Download uses the selected tab. Frame title,
+  summary, tab guidance and downloaded document title identify the fidelity.
+- Cleaned up the workspace, sidebar, stage-registry guidance, generated website
+  note and content-inventory description. Updated README, architecture notes and
+  unobserved learner-trial prompts. Versioned all changed runtime assets.
+- Initial and final focused runs each passed **140/140**, no captured JS errors
+  (.wireframe-fidelity-focused.log / .wireframe-fidelity-final-focused.log).
+  Final checks include native neutral accents/light control scheme, tab keyboard
+  behavior, all-object geometry at 320/1280px, both samples/themes, white/grey
+  paint, restored high styles, preserved disclosures, selected-tab download,
+  unchanged project JSON and narrow Studio layouts in both Studio themes.
+- python scripts/check_structure.py passed (**66 assets**); git diff --check
+  passed. python scripts/button_states_review.py passed **7/7 reduced-motion and
+  9/9 forced-colour**, no JS errors (.wireframe-fidelity-button-states.log).
+- Inspected Basic/light Low Fidelity at 320px, Advanced/dark Low Fidelity at
+  1280px and its High Fidelity counterpart. Temporary review helpers/captures
+  removed; ignored logs retained.
+- First full browser run did not complete: Chrome exhausted the existing
+  185,000ms virtual-time budget after reaching check 2,540 (no final assertion
+  report). Increased the harness budget to 225,000ms and wall timeout to 660s for
+  the expanded coverage.
+- Final python scripts/browser_review.py passed **2,646/2,646**, with no captured
+  JavaScript errors (.wireframe-fidelity-final-browser.log). Required structure,
+  browser, button-state and whitespace checks are complete. The incomplete first
+  run above is retained separately from this final result.
+- Manual keyboard/screen-reader, zoom and Firefox/Safari remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of both fidelity tabs and an observed learner trial.
+
+## Complete wireframe object boundaries (12 November 2026)
+
+- User requested appropriate borders for all objects on the page. Extended the
+  wireframe annotations from structural containers to every HTML body object:
+  headings, paragraphs, inline spans, images, icons, links, buttons, form controls,
+  table parts and decorative tracks. Generated ::before/::after objects also
+  receive thin outlines. Metadata and line-break nodes are excluded; an SVG is
+  outlined once around the drawing rather than around each internal shape.
+- Added a lower-priority object kind; region/content/layout/item distinctions
+  retain their stronger boundaries. Annotation titles identify page objects;
+  setAttribute reflects these titles on SVG as well as HTML. Source visibility,
+  responsive behavior and disclosures remain unchanged, so newly opened content
+  already has annotations without revealing hidden controls or layouts.
+- Borders remain paint-only outlines; website colours, backgrounds, button
+  values, box dimensions and read-only behavior are preserved. Leaf objects yield
+  to :focus-visible to keep the original distinct keyboard-focus ring.
+- Updated the workspace legend, README and architecture notes; refreshed both
+  changed wireframe JavaScript query versions. No project/schema changes.
+- Preliminary focused run: **84/88**, no uncaught JS errors. It caught SVG title
+  attributes needing reflection and a disclosure fixture selecting an invisible
+  element. Corrected title assignment and fixture visibility; repeat passed
+  **88/88**, no JS errors (.wireframe-objects-final-focused.log). Added explicit
+  focus-ring regressions after reviewing CSS precedence; final focused run passed
+  **90/90**, no JS errors (.wireframe-objects-complete-focused.log).
+- python scripts/check_structure.py passed (**66 assets**); git diff --check
+  passed. Preliminary button-state suite passed **7/7 reduced-motion and 9/9
+  forced-colour**, no JS errors (.wireframe-objects-button-states.log).
+  Final repeat after the focus fix also passed **7/7 and 9/9**, no JS errors
+  (.wireframe-objects-final-button-states.log).
+- Inspected Basic/light at 320px and Advanced/dark at 1280px: individual text,
+  inline labels/icons, images and buttons have thin boundaries; parent containers
+  remain distinct. Interrupted the first full run to include the focus-ring fix.
+  Temporary captures/helpers removed; ignored logs retained.
+- Final python scripts/browser_review.py passed **2,596/2,596**, with no captured
+  JavaScript errors (.wireframe-objects-final-browser.log). This includes object
+  coverage at four widths, reflected SVG titles, disclosed content, preserved
+  geometry/backgrounds and distinct keyboard focus. Required structure, browser,
+  button-state and whitespace checks are complete.
+- Manual keyboard/screen-reader, zoom and Firefox/Safari remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of all-object wireframe outlines and learner trial.
+
+## Wireframe uses configured component backgrounds (12 November 2026)
+
+- User requested that every Wireframe component background, including buttons,
+  match the selected Basic/Advanced website configuration.
+- Replaced the neutral paint layer with an outline-only layer. Body/region,
+  card, input, component and button backgrounds, background images, text, border
+  colours and opacity now come directly from the existing exported website CSS.
+  Container outlines retain solid/dashed/dotted/thin distinctions and use website
+  text/control-border tokens. Motion and shadows remain suppressed for the view.
+- Form controls are inert rather than forcibly disabled. Original disabled
+  attributes remain as authored, so enabled buttons retain their real opacity
+  and configured backgrounds. Inert controls cannot receive user focus/activation;
+  iframe restrictions, removed embeds/scripts and local navigation rules remain.
+  Preview and standalone download use the same original CSS and outline layer.
+- Updated workspace guidance, README and architecture notes; refreshed both
+  changed wireframe JavaScript asset query versions. Project schema and website
+  token/content generators are unchanged; no separate background configuration
+  or duplicate state was added.
+- Focused preliminary browser run passed **76/76**, no JS errors
+  (.wireframe-background-focused.log). New comparisons inspect backgrounds,
+  background images, foregrounds, border colours and opacity across source body
+  elements, both samples/themes, all button variants and downloaded HTML. Before
+  the full run, adjusted custom opacity fixtures to the model's 0–100 units.
+- python scripts/check_structure.py passed (**66 assets**); git diff --check
+  passed. python scripts/button_states_review.py passed **7/7 reduced-motion and
+  9/9 forced-colour**, no JS errors (.wireframe-background-button-states.log).
+- Inspected Basic/light at 390px and Advanced/dark at 1280px, with custom Primary
+  and Secondary button fills visible and container outlines intact. Temporary
+  helpers/captures were removed; ignored logs remain.
+- Final python scripts/browser_review.py passed **2,582/2,582**, with no captured
+  JavaScript errors (.wireframe-background-full-browser.log). This includes the
+  corrected opacity fixtures and new background/appearance/download regressions.
+  Required structure, browser, button-state and whitespace checks are complete.
+  Earlier Palette/anchor results below are historical.
+- Manual keyboard/screen-reader, zoom and Firefox/Safari remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the configured-colour wireframe and learner trial.
+
+## Explicit Primary, Secondary and Accent selection (12 November 2026)
+
+- User reported that Choose UI anchors appeared limited to Primary and requested
+  Primary / Secondary / Accent. The model already contained all three, but the
+  previous buttons called Secondary "Supporting" and exposed only one editor.
+- Replaced those buttons with one labelled native three-option list on the left.
+  Each selection exposes its own original brand selector/custom colour picker
+  on the right and its own reset on the left. Selection keeps focus in the list
+  for keyboard navigation. Configure source routes synchronize the selection.
+- Used Secondary consistently in the anchor properties, reset and related static
+  labels. Added selected-anchor guidance and explicit stage instructions. Existing
+  state keys, shade generation, copied brand assignments and JSON schema remain.
+  Refreshed the two changed JavaScript asset query versions in index.html.
+- Checked official Material 3 colour-role guidance: it distinguishes primary,
+  secondary and tertiary (contrasting accents). Retained this app's Accent name;
+  no claim that Primary/Secondary/Accent is a universal naming standard.
+  Source: https://m3.material.io/styles/color/the-color-system/
+- Focused browser run passed **182/182**, no captured JS errors
+  (.ui-anchor-focused.log). Added coverage for all three anchors in both themes:
+  visible selection labels, selected fields/focus, independent brand assignments,
+  custom values reaching project JSON/generated ramps, import and scoped reset.
+- python scripts/check_structure.py passed (**66 assets**); git diff --check
+  passed. The first button-state run passed **9/9 forced-colour**, but its reduced
+  motion run failed to load studio-registry.js, causing startup errors
+  (.ui-anchor-button-states.log). Clean repeat passed **7/7 reduced-motion and
+  9/9 forced-colour**, with no JS errors (.ui-anchor-final-button-states.log).
+- Updated README and architecture notes. Inspected Secondary properties at
+  desktop/light and Accent at 320px/dark after explicitly opening the workspace
+  and settling initial disclosure events. Temporary helpers/captures removed.
+  Final python scripts/browser_review.py passed **2,554/2,554**, with no captured
+  JavaScript errors (.ui-anchor-full-browser.log). Required structure, browser,
+  button-state and whitespace checks are complete. Earlier results below are
+  historical.
+- Manual keyboard/screen-reader, zoom and cross-browser checks remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the explicit three-anchor selector and learner trial.
+
 ## Palette browse/manage and selected properties (12 November 2026)
 
 - User requested Architecture-style Palette UI: left browsing/CRUD and right

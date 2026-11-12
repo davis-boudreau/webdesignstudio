@@ -72,12 +72,22 @@ record focus/scroll problems, inaccessible controls, crowded layouts and unclear
 labels. This trial does not replace a dedicated accessibility review.
 
 For the read-only Wireframe workspace, compare Basic and Advanced at phone and
-desktop widths, then use Compare with live website. Can the learner recognise the
-same content and responsive layout beneath the neutral treatment? Save website
+desktop widths. Switch between Low Fidelity and High Fidelity with mouse and
+Left/Right/Home/End keys, then use Compare with live website. Can the learner
+recognise the same content and layout beneath neutral greys versus configured
+colours? Does the selected-tab label and download make the active view clear?
+Save website
 wording in Architecture and return to Wireframe: does the matching text update?
 Check native disclosures, local navigation and scrolling within a fixed viewport.
 Can they distinguish the read-only wireframe HTML download from finished website
 files? These are unobserved trial prompts; record keyboard and navigation problems.
+
+For the content-to-type sequence, use Next from Architecture to Typography
+(Step 3). Set fonts, body size, line heights and reading measure using the site
+content, then continue to Wireframe (Step 4). Can the learner explain changes in
+line wrapping and card/section height? Compare both fidelities and return with
+Previous to refine the type. Continue to Palette (Step 5), then reload a saved
+project and check the same choices. These learner observations are unperformed.
 
 For the guided Palette workspace, ask the learner to add a named brand colour,
 change its token suffix, assign it to an interface role and then remove the brand

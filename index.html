@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="src/css/content-architecture.css?v=20261111-architecture-tool-context">
     <link rel="stylesheet" href="src/css/palette-workspace.css?v=20261112-colour-token-flow">
     <link rel="stylesheet" href="src/css/palette-browser.css?v=20261112-palette-browser">
-    <link rel="stylesheet" href="src/css/wireframe-workspace.css?v=20261111-readonly-wireframe">
+    <link rel="stylesheet" href="src/css/wireframe-workspace.css?v=20261112-fidelity-tabs">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261109-three-level-ia">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
@@ -64,10 +64,10 @@
             <div aria-label="Builder steps" class="journey-steps" role="group">
               <button data-journey-step="0" type="button">1 &middot; Brief</button>
               <button data-journey-step="1" type="button">2 &middot; Architecture</button>
-              <button data-journey-step="2" type="button">3 &middot; Wireframe</button>
-              <button data-journey-step="4" type="button">4 &middot; Palette</button>
-              <button data-journey-step="5" type="button">5 &middot; Typography</button>
-              <button data-journey-step="6" type="button">6 &middot; Semantic colours</button>
+              <button data-journey-step="5" type="button">3 &middot; Typography</button>
+              <button data-journey-step="2" type="button">4 &middot; Wireframe</button>
+              <button data-journey-step="4" type="button">5 &middot; Palette</button>
+              <button data-journey-step="6" type="button">6 &middot; Colour lab</button>
               <button data-journey-step="7" type="button">7 &middot; Buttons</button>
               <button data-journey-step="8" type="button">8 &middot; Spacing and surfaces</button>
               <button data-journey-step="9" type="button">9 &middot; Responsive layout</button>
@@ -121,7 +121,7 @@
             </div>
             <div class="journey-pane" data-journey-pane="2" hidden>
               <h3 class="journey-stage-title">3. Review the wireframe</h3>
-              <p class="help">Review a read-only, low-fidelity version of the Basic or Advanced website. Its layout follows the same responsive HTML and CSS as the live preview.</p>
+              <p class="help">After Typography, check content fit in Low Fidelity. Revisit High Fidelity as palette and component choices develop. Both follow the live website layout.</p>
               <p class="journey-tip"><strong>Before moving on:</strong> Compare the narrow and wide wireframe. Does the reading order support the main task?</p>
             </div>
             <div class="journey-pane" data-journey-pane="3" hidden>
@@ -139,7 +139,7 @@
                 <div class="learning-content">
                   <dl>
                     <dt>Primary UI colour</dt><dd>Sets the anchor for your main action colour family. Choose a distinguishable emphasis colour; it does not need to fill every surface.</dd>
-                    <dt>Supporting colour</dt><dd>Provides a quieter, related family for secondary emphasis. It is not automatically the page background or body-text colour.</dd>
+                    <dt>Secondary UI colour</dt><dd>Provides a quieter, related family for secondary emphasis. It is not automatically the page background or body-text colour.</dd>
                     <dt>Accent colour</dt><dd>Highlights selected content or actions. An accent does not automatically mean success, warning or error; those feedback roles have their own controls.</dd>
                     <dt>Ramp method</dt><dd>RGB mix moves toward white or black. OKLCH varies perceptual lightness and chroma. Both preserve your anchor at step 500; neither guarantees readable combinations.</dd>
                     <dt>Themes and contrast</dt><dd>Light and dark modes derive different semantic shades from the same anchors. Inspect text against its actual background, including hover and active states; add words or icons when colour communicates meaning.</dd>
@@ -173,9 +173,9 @@
                 </div>
               </div>
               <div class="field">
-                <label for="jSecondaryBrand">Supporting colour · Brand Palette</label>
+                <label for="jSecondaryBrand">Secondary UI colour · Brand Palette</label>
                 <select id="jSecondaryBrand"></select>
-                <label for="jSecondary">Supporting colour</label>
+                <label for="jSecondary">Secondary UI colour</label>
                 <div class="fieldline">
                   <input id="jSecondary" type="color" value="#495965" />
                   <output id="jSecondaryOut">
@@ -243,8 +243,8 @@
               <p class="journey-tip"><strong>Before moving on:</strong> You can explain each colour role and identify the foreground/background pairs you have checked.</p>
             </div>
             <div class="journey-pane" data-journey-pane="5" hidden="">
-              <h3 class="journey-stage-title">6. Build a readable type scale</h3>
-              <p class="help">Establish comfortable body text first, then create a clear heading hierarchy.</p>
+              <h3 class="journey-stage-title">3. Build a readable type scale</h3>
+              <p class="help">Use the content organized in Architecture to choose body and heading fonts, a type scale, line heights and reading measure. Then check wrapping and content fit in Wireframe; refine the baseline as the layout develops.</p>
               <details class="learning-note build-guide">
                 <summary>What do the typography controls change?</summary>
                 <div class="learning-content">
@@ -810,7 +810,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="secondary">Supporting colour (default: dark grey)</label>
+                <label for="secondary">Secondary UI colour (default: dark grey)</label>
                 <div class="fieldline">
                   <input id="secondary" type="color" value="#495965" />
                   <output id="secondaryOut">
@@ -1259,14 +1259,14 @@
               <h3>Current Main Palette</h3>
               <dl id="brandRoleAssignments" class="brand-role-assignments">
                 <div><dt>Primary UI colour</dt><dd><span class="brand-palette-chip" data-role-chip="primary" aria-hidden="true"></span><span id="brandCurrentPrimary"></span></dd></div>
-                <div><dt>Supporting colour</dt><dd><span class="brand-palette-chip" data-role-chip="secondary" aria-hidden="true"></span><span id="brandCurrentSecondary"></span></dd></div>
+                <div><dt>Secondary UI colour</dt><dd><span class="brand-palette-chip" data-role-chip="secondary" aria-hidden="true"></span><span id="brandCurrentSecondary"></span></dd></div>
                 <div><dt>Accent colour</dt><dd><span class="brand-palette-chip" data-role-chip="accent" aria-hidden="true"></span><span id="brandCurrentAccent"></span></dd></div>
               </dl>
               <div class="field brand-role-picker">
                 <label for="brandApplyRole">Choose the UI role to change</label>
                 <select id="brandApplyRole" aria-describedby="brandApplyHelp">
                   <option value="primary">Primary UI colour</option>
-                  <option value="secondary">Supporting colour</option>
+                  <option value="secondary">Secondary UI colour</option>
                   <option value="accent">Accent colour</option>
                 </select>
               </div>
@@ -1285,7 +1285,7 @@
                     <li><strong>Component:</strong> <code>--button-primary-bg</code> for one button variant. Inspect component tokens too when customizing buttons.</li>
                   </ul>
                   <p>Tokens are CSS custom properties, not class names. A local component class such as <code>.ds-button--primary</code> uses those values to style an HTML element. The same decisions can later support a small local utility or an optional Tailwind theme mapping.</p>
-                  <p><strong>Try it:</strong> choose Supporting colour, then click a swatch. Check the Current Main Palette summary and the secondary actions in the responsive preview. Switch themes and compare foreground/background contrast. Fixed Button Wizard overrides keep their own colours until edited.</p>
+                  <p><strong>Try it:</strong> choose Secondary UI colour, then click a swatch. Check the Current Main Palette summary and the secondary actions in the responsive preview. Switch themes and compare foreground/background contrast. Fixed Button Wizard overrides keep their own colours until edited.</p>
                   <p class="learning-reference">Read more: <a href="https://designsystem.digital.gov/design-tokens/">USWDS design tokens</a>.</p>
                 </div>
               </details>
@@ -1985,12 +1985,13 @@
                 <ol>
                   <li><strong>Brief:</strong> record audience, task, scope, success signal and constraints.</li>
                   <li><strong>Architecture:</strong> inventory and group content with useful page labels.</li>
-                  <li><strong>Wireframe:</strong> sketch hierarchy and compare narrow and wide layouts.</li>
-                  <li><strong>Prototype:</strong> review the finished live page and generated HTML/CSS after configuring and checking the design system.</li>
-                  <li><strong>Choose:</strong> establish colour roles, typography and spacing. Record why each choice helps the audience.</li>
+                  <li><strong>Typography:</strong> establish fonts, hierarchy, line heights and reading width using the organized content.</li>
+                  <li><strong>Wireframe:</strong> check reading order, wrapping and content fit at narrow and wide widths.</li>
+                  <li><strong>Choose:</strong> establish colour roles and spacing. Record why each choice helps the audience.</li>
                   <li><strong>Apply:</strong> use those tokens in buttons, cards and forms; compare themes and responsive widths.</li>
                   <li><strong>Test:</strong> inspect contrast, keyboard interaction, text resizing, real content and component states.</li>
                   <li><strong>Deliver:</strong> export CSS and a JSON backup, document usage, and retest after integration.</li>
+                  <li><strong>Prototype:</strong> review the finished live page and generated HTML/CSS after configuring and checking the design system.</li>
                 </ol>
                 <p><strong>Learn the CSS before changing how you author it:</strong> use a token in a local component rule, try one locally authored utility, then compare a Tailwind-generated utility using the mapped theme. <a href="#studio-section-3">Follow the three-step spacing example</a>, then use <a href="#studio-section-6">Deliver's optional Tailwind exercise</a>. You can complete the whole website with local CSS.</p>
 
@@ -2096,17 +2097,17 @@
 
 
 
-      <script src="src/js/studio-registry.js?v=20261112-colour-token-flow" defer></script>
+      <script src="src/js/studio-registry.js?v=20261112-type-before-wireframe" defer></script>
       <script src="src/js/studio-appearance.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/brand-palette.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261111-readonly-wireframe" defer></script>
+      <script src="src/js/design-process.js?v=20261112-type-before-wireframe" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/section-sitemap.js?v=20261111-wireframe-ready" defer></script>
-      <script src="src/js/content-architecture.js?v=20261111-readonly-wireframe" defer></script>
+      <script src="src/js/content-architecture.js?v=20261112-fidelity-tabs" defer></script>
       <script src="src/js/website-content.js?v=20261111-wireframe-ready" defer></script>
-      <script src="src/js/wireframe-engine.js?v=20261112-colour-token-flow" defer></script>
+      <script src="src/js/wireframe-engine.js?v=20261112-low-unfilled" defer></script>
       <script src="src/js/core-state.js?v=20261111-wireframe-ready" defer></script>
       <script src="src/js/css-dock.js?v=20261109-local-inspector" defer></script>
       <script src="src/js/advanced-params.js?v=20261105-studio-appearance" defer></script>
@@ -2128,14 +2129,14 @@
       <script src="src/js/section-accordions.js?v=20261109-active-lesson-startup" defer></script>
       <script src="src/js/site-builder.js?v=20261111-sitemap-workspace" defer></script>
       <script src="src/js/content-outline.js?v=20261111-wireframe-ready" defer></script>
-      <script src="src/js/studio-learning.js?v=20261111-architecture-tool-context" defer></script>
-      <script src="src/js/wireframe-workspace.js?v=20261112-colour-token-flow" defer></script>
+      <script src="src/js/studio-learning.js?v=20261112-type-before-wireframe" defer></script>
+      <script src="src/js/wireframe-workspace.js?v=20261112-type-before-wireframe" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/palette-process.js?v=20261104-status-palettes" defer></script>
       <script src="src/js/state-palettes.js?v=20261104-state-colour-dropdowns" defer></script>
       <script src="src/js/webpage-backgrounds.js?v=20261104-background-order" defer></script>
-      <script src="src/js/palette-workspace.js?v=20261112-colour-token-flow" defer></script>
-      <script src="src/js/palette-browser.js?v=20261112-palette-browser" defer></script>
+      <script src="src/js/palette-workspace.js?v=20261112-three-ui-anchors" defer></script>
+      <script src="src/js/palette-browser.js?v=20261112-three-ui-anchors" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261103-spacing-lesson" defer></script>
       <script src="src/js/utility-lesson.js?v=20261109-learning-transition" defer></script>
       <script src="src/js/tailwind-bridge.js?v=20261109-learning-transition" defer></script>
