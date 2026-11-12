@@ -19,7 +19,7 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
     stages: [
       ['brief', 'Brief', 'process-brief', 'Plan', '', 'Record the purpose and audience. Check that the brief describes one useful visitor task.'],
       ['architecture', 'Architecture', 'process-ia', 'Plan', '', 'Use the brief to organize the full information structure. Choose which entries appear in the sitemap, then test labels and compare the visitor sitemap with the preview footer.'],
-      ['wireframe', 'Wireframe', 'process-wireframe', 'Plan', '', 'Choose a layout and compare the wireframe below. This plans hierarchy; it does not rebuild the sample page.'],
+      ['wireframe', 'Wireframe', 'process-wireframe', 'Plan', '', 'Inspect a read-only, low-fidelity version of the live website at different viewport widths.'],
       ['prototype', 'Prototype', 'process-prototype', 'Review and deliver', '', 'Review the finished live prototype using your brief and task. Test both samples, themes and viewport sizes, record observations, then export the HTML and CSS.'],
       ['palette', 'Palette', 'brandPalette', 'Foundations', '--primary:', 'Name a brand token, assign a Main Palette role and compare its generated shade steps. Follow the light and dark semantic values into the page and CSS.'],
       ['typography', 'Typography', 'studio-section-2', 'Foundations', '--font-size-base:', 'Change the base text size. Compare headings and body text, then inspect the generated type scale.'],

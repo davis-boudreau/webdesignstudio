@@ -10,8 +10,8 @@
     // Existing custom outlines keep their behavior until the user switches source.
     return plan.pages!==DSStudio.process.samplePages(mode) || plan.iaEntries[mode].length || Object.keys(plan.pageLinks[mode]).length?'custom':'sections';
   }
-  function collect(html,mode) {
-    const doc=new DOMParser().parseFromString(html,'text/html');
+  function collect(html,mode,documentSource=null) {
+    const doc=documentSource||new DOMParser().parseFromString(html,'text/html');
     const candidates=new Map();
     for(const [,id] of DSStudio.process.inventory(mode)) {
       const element=doc.getElementById(id);
@@ -40,7 +40,7 @@
   function nodes() {
     if(collecting)return [];
     const mode=sample(),factory=DSStudio.samples?.[mode+'Html'];if(!factory)return [];
-    const {contentPlan,...planning}=state.designProcess||{};
+    const {contentPlan,wireframes,...planning}=state.designProcess||{};
     const signature=JSON.stringify({...state,designProcess:planning,advanced:typeof adv==='object'?adv:null});
     if(cache.get(mode)?.signature===signature)return cache.get(mode).nodes;
     collecting=true;
@@ -165,5 +165,5 @@
     for(const name of ['dss:reset','dss:imported'])document.addEventListener(name,()=>{previous=null;last='';selected=null;outline.reset();get('section-sitemap-undo').disabled=true;get('section-sitemap-status').textContent='';sync();});
     return sync;
   }
-  DSStudio.sectionSitemap={source,collect,nodes,markup,initControls,createOutline};
+  DSStudio.sectionSitemap={source,collect,nodes,markup,initControls,createOutline,isCollecting:()=>collecting};
 })();

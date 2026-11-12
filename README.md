@@ -213,7 +213,7 @@ searchable **Content structure**. It shows meaningful containers and the
 actual sample content: Header logo/wordmark/navigation, Home's Hero heading,
 paragraphs, image/alternative text/caption and CTAs, component content, lists,
 tables, form fields/options and Footer. Basic currently has 139 entries and
-Advanced 409; both samples contain five levels of content. CSS-only wrappers are
+Advanced 395; both samples contain five levels of content. CSS-only wrappers are
 omitted. Navigation links reference their destinations instead of duplicating
 the destination's content. Header and Footer are shared regions.
 
@@ -428,9 +428,23 @@ main task, scope, success signal and constraints in the brief.
 Use Architecture's short UX planning overview to identify tasks, define scope,
 group and label content, and check a route with the intended audience. Its outcome
 is an agreed information architecture and selected visitor sitemap for the wireframe.
-Write a content map with up to 64
-entries (`Lessons > Layout` creates a child), compare split/stacked wireframes,
-and compare the hierarchy before styling. Prototype is the final review step:
+The **Wireframe workspace** is a read-only, low-fidelity view of the Basic or
+Advanced website. It uses the same generated HTML and responsive CSS as the live
+preview, with neutral colours and grey image areas. Solid outlines show page
+regions, dashed outlines show content-width containers, dotted outlines show
+Grid/Flex groups and thin outlines show their child containers. These boundaries
+preserve actual spacing and dimensions, including in the HTML download. Saved website wording
+from Architecture appears automatically; proposals remain planning data until
+applied to website content. Layout and content are edited in their existing tools.
+
+Choose Match live preview, 320, 390, 768 or 1280 pixels, or Available width.
+Fixed-width views scroll inside the workspace. Sample and viewport controls choose
+what to inspect; they do not save a separate wireframe layout. Forms are disabled;
+local navigation and native disclosures remain inspectable. **Download wireframe
+HTML** exports the same read-only view with embedded website CSS and neutral paint.
+
+The optional sitemap text outline still accepts up to 64 three-level entries
+(`Lessons > Layout` creates a child). Prototype is the final review step:
 use the finished live page and exported HTML/CSS to test your task, themes and
 responsive layout. Earlier Discover, Choose and Review rehearsal screens remain
 available in its supporting disclosure. Task notes remain saved project data.

@@ -75,6 +75,7 @@
     iaEntries: { basic: [], advanced: [] },
     contentPlan: { basic: null, advanced: null },
     websiteContent: { basic: [], advanced: [] },
+    wireframes: { basic: DSStudio.wireframeEngine?.defaults() ?? null, advanced: DSStudio.wireframeEngine?.defaults() ?? null },
     sitemapSource: { basic: 'auto', advanced: 'auto' },
     sitemapExcluded: { basic: [], advanced: [] },
     showPlanned: false,
@@ -94,6 +95,7 @@
     for (const mode of ['basic', 'advanced']) {
       result.contentPlan[mode] = DSStudio.contentArchitecture?.normalizeNodes(value.contentPlan?.[mode],mode) ?? null;
       result.websiteContent[mode] = DSStudio.websiteContent?.normalize(value.websiteContent?.[mode]) ?? [];
+      result.wireframes[mode] = DSStudio.wireframeEngine?.normalize(value.wireframes?.[mode]) ?? null;
       const allowed = new Set(inventories[mode].flatMap(([,id,children=[]]) => [id,...children.map(([,childId])=>childId)]));
       result.sitemapSource[mode] = ['auto','sections','custom'].includes(value.sitemapSource?.[mode]) ? value.sitemapSource[mode] : 'auto';
       result.sitemapExcluded[mode] = [...new Set((Array.isArray(value.sitemapExcluded?.[mode]) ? value.sitemapExcluded[mode] : []).slice(0,192).filter(id=>allowed.has(id)))];
@@ -168,7 +170,7 @@
   const stages = [
     ['brief', 'Project brief', 'Write a brief for a website project.', 'A website project brief is a short agreement about what you are building, who it serves, what is included and how it will be delivered. Start with a few clear sentences before organizing information or choosing a visual style.', 'Choose a small website, such as a café, portfolio or community group. Answer the seven prompts below in one sentence each. Use the seven matching fields in the first wizard step to save your answers in this order.'],
     ['ia', 'Information architecture', 'Organize the information, then choose sitemap destinations.', 'The Brief sets the agreed release scope. Information architecture organizes the content, labels and relationships needed to fulfil it. A sitemap is one view of that architecture, not the whole IA.', 'Keep the full information structure visible. Choose which entries belong in the visitor sitemap, then test whether someone can find one important item.'],
-    ['wireframe', 'Wireframing', 'Test hierarchy before decoration.', 'A wireframe is a low-detail plan for content and priority. Begin with the main task, then add navigation, supporting content and a clear next action.', 'Compare the split and stacked arrangements. Explain what a person sees first and how the reading order works on a phone.'],
+    ['wireframe', 'Wireframing', 'Test hierarchy before decoration.', 'This read-only wireframe shows the same content and responsive layout as the live website with a neutral visual treatment. Change website wording in Architecture.', 'Compare Basic and Advanced at phone and desktop widths. Explain what a person sees first and how the reading order changes.'],
     ['prototype', 'Prototyping', 'Review your finished website prototype.', 'The live page and exported HTML/CSS are this studio’s prototype output. Use the brief and your task to review the assembled colours, typography, components and responsive layout. Earlier paper-style task screens remain supporting rehearsal material.', 'Ask someone to try the live prototype without coaching. Record hesitation, check keyboard use and narrow layouts, then revise and export the files.']
   ];
   const text = value => escapeHtml(value || 'Not recorded yet.');
@@ -208,7 +210,7 @@
       <details class="ia-destination-map"><summary>Custom destination outline (optional)</summary><p>This separate navigation plan includes selected and unselected entries. Content containment, such as a link inside Header, does not determine sitemap ancestry. Manage destinations in the sitemap controls.</p><div class="process-map${basic ? ' process-map--basic' : ''}"><p><strong>${text(state.project)}</strong> / sitemap destination outline</p>${tree(plan.pages).length ? renderTree(tree(plan.pages)) : '<p>Add destination labels in Architecture to begin the sitemap plan.</p>'}<p>This is the destination outline, including entries excluded from the sitemap. Sitemap choices do not remove website content or create new pages.</p></div></details>
       <section class="process-sitemap-preview" aria-label="Visitor sitemap preview"><h4>Visitor sitemap preview</h4>${sitemapHtml({linksOnly:true,previewLinks:prefix==='studio-plan'})}<p>This preview and the footer use the same Sitemap configuration. Section labels come from eyebrows or existing headings. Excluding a parent hides its branch while retaining child choices and all website content.</p></section>`;
     }
-    if (stage === 'wireframe') return `<figure class="process-wireframe process-wireframe--${plan.layout}"><div class="process-wire-header"><strong>Header / project identity</strong><p>${text(state.project)}</p></div><div class="process-wire-nav"><strong>Navigation</strong><p>${map.map(([label])=>text(label)).join(' / ') || 'Add navigation labels in the architecture step.'}</p></div><div class="process-wire-main"><strong>Main content / first priority</strong><p>${text(plan.goal)}</p><span class="process-wire-action">Main action / choose a lesson</span></div><div class="process-wire-aside"><strong>Supporting content</strong><p>${text(plan.scope)}</p></div><div class="process-wire-footer"><strong>Footer / next steps</strong></div><figcaption>${text(plan.wireframeNotes)} This is a structural sketch; neutral surfaces keep attention on hierarchy.</figcaption></figure>`;
+    if (stage === 'wireframe') return DSStudio.wireframeEngine.render({studio:prefix==='studio-plan',prefix});
     return `<div class="process-prototype"><p><strong>Task:</strong> ${text(plan.prototypeTask)}</p><p>Follow these fragment links between three paper-style screens. They demonstrate navigation, not a working registration or submission.</p><ol class="process-screens">
       <li id="${prefix}-discover" tabindex="-1"><h4>1. Discover</h4><p>${text(plan.goal)}</p><a href="#${prefix}-choose">Browse the lesson choices →</a></li>
       <li id="${prefix}-choose" tabindex="-1"><h4>2. Choose</h4><p>Choose what to explore: ${map.map(([label])=>text(label)).join(', ') || 'Add topics in the architecture step.'}</p><a href="#${prefix}-review">Choose a lesson and review →</a><a href="#${prefix}-discover">← Back to discover</a></li>
@@ -255,7 +257,7 @@
 .process-note { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 48rem) { .process-wireframe { grid-template-columns: minmax(0, 1fr); } }
 `;
-  const processCss = () => artifactCss.replace('@media (max-width: 48rem)', `@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)})`);
+  const processCss = () => artifactCss.replace('@media (max-width: 48rem)', `@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)})`) + (DSStudio.wireframeEngine?.css()||'');
   DSStudio.process = { defaults, normalize, hierarchy, tree, entries, stages, briefFields, artifactHtml, sitemapHtml, samplePages, currentPlan, destinationId:(label,plan=currentPlan(),mode=state.sampleMode)=>linkTargets(plan,mode).get(labelKey(label))||'', inventory: mode => inventories[mode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,id,children=[]])=>[[label,id],...children.map(([name,target])=>[name,target])]), css: processCss };
   DSStudio.register({
     id: 'design-process',

@@ -51,7 +51,8 @@
     const add=(label,type,value,parent,key,target='')=>{
       if(nodes.length>=MAX_NODES)return null;
       while(keys.has(key))key+='-copy';keys.add(key);
-      const node={id:'content-'+hash(key),parentId:parent?.id||null,label:label.slice(0,120),type,value:compact(value),reference:'',notes:'',status:'present',sourceKey:key,target,draft:null};
+      const node={id:'content-'+hash(key),parentId:parent?.id||null,label:label.slice(0,120),type,value:compact(value),reference:'',notes:'',status:'present',sourceKey:key,target,draft:null,
+        generated:!!currentElement?.closest('#footer-sitemap,.sample-process-stage'),navigation:!!currentElement?.closest('nav'),headingLevel:/^h[1-6]$/.test(currentElement?.localName)?Number(currentElement.localName.slice(1)):0};
       // Hash collisions are resolved deterministically, never used to merge entries.
       while(nodes.some(old=>old.id===node.id))node.id+='-copy';
       const location=[...(locations.get(parent?.id)||[]),node.label];locations.set(node.id,location);
@@ -71,6 +72,7 @@
       }
       if(anchor==='sitemap'){add('Visitor sitemap','group','Generated from selected sitemap destinations',parent,key);return;}
       if(anchor==='ia-lab'){const group=add('Information architecture','section','Content structure and visitor sitemap',parent,key,anchor);add('Planning views','group','Generated from the content plan and selected sitemap destinations',group,key+'/views');return;}
+      if(anchor==='wireframe-lab'){add('Wireframing','section','Read-only low-fidelity view of the website HTML and responsive CSS',parent,key,anchor);return;}
       if(tag==='header' || tag==='footer')node=add(tag==='header'?'Header':'Footer','region','Shared website region',parent,key,tag==='footer'?'footer':'');
       else if(tag==='section' || tag==='article' || tag==='aside')node=add(names.get(anchor)||element.getAttribute('aria-label')||compact(element.querySelector('h2,h3,h4')?.textContent)||({section:'Section',article:'Article',aside:'Related information'}[tag]),'section','',parent,key,names.has(anchor)?anchor:'');
       else if(tag==='nav')node=add(element.getAttribute('aria-label')||'Navigation','group','Links reference destinations elsewhere in this outline',parent,key);
@@ -104,11 +106,13 @@
       [...element.children].forEach((child,index)=>walk(child,node||parent,key+'/'+child.localName+':'+index,depth+(node?1:0)));
     }
     for(const element of doc.querySelectorAll('body > header, body > main > section, body > footer'))walk(element,null,'root/'+element.localName);
+    const sitemap=new Map(DSStudio.sectionSitemap.collect(html,sample,doc).map(node=>[node.id,node]));
+    for(const node of nodes)if(node.type!=='link' && sitemap.has(node.target)){const destination=sitemap.get(node.target);node.sitemapLabel=destination.label;node.sitemapParentTarget=destination.parentId;node.sitemapDepth=destination.depth;}
     return nodes;
   }
   function prepare() {
     const sample=mode(),factory=DSStudio.samples?.[sample+'Html'];if(collecting || !factory)return;
-    const {contentPlan,...planning}=state.designProcess||{};
+    const {contentPlan,wireframes,...planning}=state.designProcess||{};
     const signature=JSON.stringify({...state,designProcess:planning,advanced:typeof adv==='object'?adv:null});
     if(signatures[sample]===signature)return;
     collecting=true;
@@ -119,7 +123,7 @@
     const saved=state.designProcess?.contentPlan?.[sample];
     if(Array.isArray(saved)){
       const actual=new Map(source.map(node=>[node.sourceKey,node]));
-      return normalizeNodes(saved,sample).map(node=>({...node,value:node.sourceKey?actual.get(node.sourceKey)?.value||'':node.value,reference:node.sourceKey?actual.get(node.sourceKey)?.reference||'':node.reference,sourceMissing:!!node.sourceKey && !actual.has(node.sourceKey)}));
+      return normalizeNodes(saved,sample).map(node=>({...node,value:node.sourceKey?actual.get(node.sourceKey)?.value||'':node.value,reference:node.sourceKey?actual.get(node.sourceKey)?.reference||'':node.reference,sourceMissing:!!node.sourceKey && !actual.has(node.sourceKey),generated:actual.get(node.sourceKey)?.generated||false,navigation:actual.get(node.sourceKey)?.navigation||false,headingLevel:actual.get(node.sourceKey)?.headingLevel||0}));
     }
     const result=source.map(node=>({...node}));
     const plan=DSStudio.process.currentPlan(),legacy=DSStudio.process.entries(plan),standard=plan.pages===DSStudio.process.samplePages();
@@ -148,5 +152,6 @@
     const branch=(parentId=null)=>`<ul>${(byParent.get(parentId)||[]).map(node=>{const children=byParent.has(node.id),value=node.value;const label=`<strong>${esc(node.label)}</strong> <small>${esc(typeNames[node.type])}${node.status!=='present'?' · '+esc(statusNames[node.status]):''}</small>`;return `<li>${children?`<details data-content-branch="${esc(node.id)}"><summary>${label}</summary>`:label}${value?`<p>${esc(value)}</p>`:''}${node.target?`<p class="help">${node.type==='link'?'References':'Destination'}: ${esc(names.get(node.target)||node.target)}</p>`:''}${node.reference?`<p class="help">Reference: ${esc(node.reference)}</p>`:''}${node.draft!==null?`<p><strong>Planned content:</strong> ${esc(node.draft)||'(deliberately empty)'}</p><p class="help">Sample content is unchanged.</p>`:''}${node.notes?`<p class="help">${esc(node.notes)}</p>`:''}${children?branch(node.id)+'</details>':''}</li>`;}).join('')}</ul>`;
     return `<section class="ia-content-map" aria-label="Complete website content structure"><h4>Website content structure</h4><p>Regions, sections, groups and actual content. Expand a branch to inspect its text, images, controls and destination references. ${list.length} entries.</p>${list.length?branch():'<p>No content entries. Add an entry or restore the sample content inventory.</p>'}</section>`;
   }
-  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory,planningNotes};
+  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory,planningNotes,
+    isCollecting:()=>collecting,sourceNodes:()=>{prepare();return cache[mode()]||[];}};
 })();

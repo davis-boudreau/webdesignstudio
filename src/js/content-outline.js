@@ -86,9 +86,9 @@ DSStudio.register({
       const review=get('architecture-saved-review');if(review)review.open=true;
       get('ia-save').focus();
     }
-    function canLeaveItem() {
+    function canLeaveItem(message='Save or discard your unsaved edits before choosing another item or changing the branch.') {
       if(!dirty)return true;
-      tell('Save or discard your unsaved edits before choosing another item or changing the branch.');
+      tell(message);
       focusSave();return false;
     }
     for(const id of ['ia-delete','ia-up','ia-down','ia-undo','ia-restore'])get(id).addEventListener('click',event=>{
@@ -246,6 +246,13 @@ DSStudio.register({
     // cannot execute imported content or overwrite a form while it is being typed.
     const before=renderCode;renderCode=function(){model.prepare();before();syncSitemap();sync();};
     DSStudio.on('stage:change',({stage})=>{if(stage.index===1)sync(true);});
+    DSStudio.contentEditor={canLeave:canLeaveItem,isDirty:()=>dirty,select(id){
+      if(!canLeaveItem())return false;
+      const rows=list(),node=rows.find(item=>item.id===id);if(!node)return false;
+      selected=id;creating=false;get('ia-search').value='';
+      let parent=node.parentId;while(parent){expanded.add(parent);parent=rows.find(item=>item.id===parent)?.parentId;}
+      renderOutline();edit();get('ia-label').focus();return true;
+    }};
     syncSitemap();sync(true);renderCode();
   }
 });

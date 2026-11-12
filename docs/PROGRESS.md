@@ -2,6 +2,228 @@
 
 Updated: 11 November 2026 (America/Halifax).
 
+## Significant wireframe containers (11 November 2026)
+
+- User requested that Website wireframe reveal significant containers and their
+  layout. Existing neutral styling outlined semantic elements but omitted several
+  Grid/Flex wrappers and unlabelled child columns.
+- Added mirror-only container annotations. Page regions use solid outlines,
+  content-width wrappers dashed outlines, Grid/Flex groups dotted outlines and
+  child containers thin outlines. Layout groups have a subtle neutral fill.
+  A short Studio legend explains the boundaries without adding editing controls.
+- Derive layout wrappers from the generated CSS using native CSSStyleSheet parsing,
+  including nested responsive rules; restrict marking to structural HTML elements,
+  excluding decorative/hidden SVG content. No imported content becomes a selector.
+  Outline priority retains regions/content wrappers over nested layout annotations.
+- Preview and standalone HTML share the same annotated document and paint layer.
+  Source website HTML, saved Architecture and responsive layout remain unchanged.
+  Updated affected JS asset versions, README and architecture documentation.
+- Current checks: focused Chrome regressions **46/46 passed**, no captured JavaScript
+  errors (.containers-focused.log). Added boundary coverage and computed outline
+  style checks for both samples; all marked wrappers/children, including those
+  without IDs, match live geometry at 320/390/768/1280px. Existing copy, download,
+  save compatibility, read-only and control-fit checks also pass.
+- python scripts/check_structure.py passed (62 assets); git diff --check passed
+  with the existing website-content.js line-ending advisory. Inspected five isolated
+  Chrome captures: both samples at 320px Studio width, both on desktop, and Basic
+  Flexbox/cards further down the page. Nested outlines remain visible as columns
+  stack, and scrolling stays inside the preview. Temporary capture/helper files
+  removed; ignored logs retained.
+- python scripts/browser_review.py passed **2,370/2,370**, no captured JavaScript
+  errors (.containers-full-browser.log). These are the current full-suite results;
+  prior entries below describe earlier runs.
+- Manual keyboard/screen-reader, zoom and Firefox/Safari remain unverified; these
+  automated checks do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the container boundaries in Website wireframe.
+
+## Read-only website wireframe correction (11 November 2026)
+
+- User clarified Wireframe is a read-only low-fidelity version of Responsive Live,
+  for both Basic and Advanced. This supersedes the authoring workspace described
+  in the historical implementation entry below.
+- Replaced the typed-block renderer with the existing generated website HTML and
+  responsive CSS plus a neutral paint layer. It preserves actual layout, font
+  metrics, spacing, breakpoints and wording. Saved website content from Architecture
+  flows through the same generators; proposals and planned-only content do not
+  become invented website layouts. The public Wireframing lesson contains a brief
+  explanatory note, preventing recursive embedded previews.
+- Removed layout, block priority, scope, proposal and review-note authoring controls
+  from Wireframe. Kept transient Basic/Advanced and viewport choices, compare-live
+  and HTML download. Fixed widths scroll inside the preview; Match live follows
+  the existing live viewport. The active sample has a checkmark/pressed indicator.
+- Mirror iframe omits scripts/nested embeds, disables forms and strips external
+  navigation. Local fragment navigation and native disclosures remain inspectable.
+  Updates preserve same-mode disclosure/scroll state; inactive Wireframe refreshes
+  on return. Standalone download embeds the same source CSS and neutral paint.
+- Retained bounded legacy layout data for project round-trip compatibility; it has
+  no effect on the read-only mirror. Updated README, architecture notes, learner
+  trial prompts, lesson guidance and affected asset versions.
+- Replaced authoring regression fixtures with mirror checks: both source structures,
+  complete wording, all visible ID-bearing element geometry at 320/390/768/1280px,
+  saved wording safety/synchronization, legacy settings, downloads, form isolation,
+  local fragments, disclosures, live-width selection and control fit at 320/390/1440px.
+- Current verification: python scripts/browser_review.py **2,364/2,364 passed**,
+  no captured JavaScript errors (.readonly-full-browser.log). The full run began
+  before the final selected-sample styling/wizard wording. The final focused mirror
+  run **42/42 passed** (.readonly-final-check.log) after those changes and a more
+  robust outer-hash navigation assertion. An earlier checkmark assertion had been
+  converted to a question mark by shell encoding; an encoding-independent fixture
+  fixed that check. No runtime change was required for it.
+- python scripts/button_states_review.py passed **7/7 reduced-motion and 9/9
+  forced-colour** after the final selected-state styling (.readonly-final-buttons.log).
+  python scripts/check_structure.py passed (62 assets); git diff --check passed
+  with only the existing website-content.js line-ending advisory. Four isolated
+  visual captures reviewed Basic/light and Advanced/dark at 320px and desktop Studio
+  widths, first with fixed 390px views and again with 320px/available-width views.
+  Temporary screenshot/helper files removed; ignored logs retained.
+- Manual keyboard/screen-reader, zoom, Firefox and Safari remain unverified;
+  automated passes do not establish full accessibility. No commit/push/deployment.
+- Next: user review of the read-only Wireframe view against Responsive Live; keep
+  content/layout authoring in Architecture and the existing design tools.
+
+## Architecture-driven wireframe engine implementation (11 November 2026)
+
+- Implemented the agreed first engine/workspace. wireframe-engine.js projects
+  Architecture IDs, hierarchy, types, actual wording/proposals, references and
+  readiness into neutral containers, text, image areas, actions and inert form
+  controls. Whole website is a virtual scope; explicit pages and existing sections
+  are selectable, with shared Header/Footer. No section becomes an invented page.
+- Generated planning content and duplicate authored nav subtrees are excluded;
+  authored CTA references remain content. The same pure sitemap collector supplies
+  source label/parent metadata. Navigation respects current source, ancestor
+  inclusion and custom labels/planned destinations. Main navigation is visible;
+  nested destinations use a native disclosure. Sitemap exclusion retains content.
+- Added transient source metadata/reconciliation and read-only source snapshots.
+  Wireframing itself is one generated inventory entry. Architecture, Sitemap and
+  text-inspection flags plus a projection guard suppress recursive generation.
+  Source signatures exclude wireframe-only settings. Current source counts are
+  Basic 139 / Advanced 395; Advanced's previous generated sketch descendants are
+  collapsed to one source entry, preventing the engine from containing itself.
+- Normalized per-mode designProcess.wireframes stores scope, current/proposed
+  content view, inherited/stack/split/grid canvas arrangement and ID-keyed block
+  layout/priority. Max 1,000 overrides / 80,000 serialized characters per mode;
+  imported values are enum/map data, never CSS/selectors/code. Missing scope falls
+  back visibly and orphan overrides are retained/reported, never reassigned.
+  Existing project layout and notes remain the fallback. Project file cap raised
+  to 6 MB for bounded content, text and layout backups; oversize fixture updated.
+- wireframe-workspace.js registers after studio-learning. It moves the existing
+  fallback layout and review notes without cloning controls. The short wizard
+  opens the centre workspace. Canvas selection shows source/type/readiness and
+  container layout/priority. Edit in Architecture selects the same guarded ID,
+  revealing unsaved source work instead of overwriting it. Changes save through
+  apply, with mode/block reset and one-change Undo. External planning edits clear
+  incompatible Undo history, including Brief/review notes. Source wording/status/
+  rename changes retain layouts. No source content is rewritten by layout edits.
+- Added Phone 320px, Wide 960px and available-width previews. Fixed previews scroll
+  inside the labelled canvas rather than shrinking the virtual viewport. Container
+  queries stack groups at the shared responsive cutoff. Current/proposal views
+  respect intentionally blank drafts. Shared escaped markup/CSS supplies studio,
+  Advanced sample planning artifact and offline standalone wireframe.html with no
+  scripts, remote assets or live form controls. Added the actual download action.
+- Added 84 focused regressions for source projection, real copy, stable IDs,
+  nav sources, scope/planned pages, placeholders, source edit/dirty guard, blank
+  proposals, malicious wording, group responsiveness, imports/local save/download,
+  missing IDs, mode isolation, reset/Undo and control fit at 320/390/1440px.
+  Latest focused run: **84/84 passed**, no captured JavaScript errors. Preliminary failures
+  were an overly broad generated-target assertion (authored CTA references should
+  remain), comparisons against unrelated existing import-added root fields, and
+  Basic's unselected custom Home default; fixtures were corrected. Added Undo
+  invalidation for external review-note edits during this work.
+- Confirmed and fixed a legacy identity bug: reordering a raw sitemap could reuse
+  a positional content-legacy ID for a different target. The first legacy wireframe
+  change now stores the unchanged normalized typed Architecture before binding
+  layouts; later sitemap edits cannot transfer the override. The isolated
+  regression changed from before=home/after=features to home/home; complete source
+  snapshot equality passes. Added unsaved-source guards for authoring and Undo.
+- A focused contrast check found the dark Studio focus colour had 1.67:1 contrast
+  on neutral white canvas. Included native navigation summaries in the neutral
+  focus rule; actual computed contrast is now **15.91:1** in light and dark (2/2
+  checks, .wireframe-focus.log), with committed regression coverage.
+- First full python scripts/browser_review.py: **2401/2401 passed**, no JavaScript
+  errors (.wireframe-full-browser.log), before the legacy/focus refinements. The
+  next run stopped at 2001/2002 on the existing synthetic file-import fixture's
+  virtual timeout (.wireframe-final-browser.log). Replaced artificial import
+  timers with actual dss:imported/alert observation and bounded local network
+  ticks that pause Chrome virtual time while real File.text I/O completes. This
+  is test-server-only synchronization; application file loading is unchanged.
+  Focused content/file checks: **58/58 passed**, no captured errors
+  (.wireframe-io.log). Complete required python scripts/browser_review.py:
+  **2406/2406 passed**, no captured JavaScript errors
+  (.wireframe-complete-browser.log), including the final engine/data/interaction
+  code, legacy migration, source guards and real-file synchronization. Runtime
+  files stayed unchanged during that run; preliminary results are distinct.
+- A final styling-only correction after the full pass isolated --text/--text-muted
+  inside the neutral canvas: the dark project's caption colour previously had
+  1.70:1 contrast on white. Actual exported light/dark captions now both measure
+  **15.91:1** (2/2, .wireframe-paper.log). All **84/84** wireframe cases passed
+  after this colour-only refinement (.wireframe-final-check.log), including the
+  two new real-preview theme contrast assertions. Preview theme changes update
+  DOM in place; corrected an initial test that incorrectly awaited iframe load.
+  The full suite was not repeated after this isolated colour-variable change;
+  no engine, data or interaction code changed after its full passing run.
+- Current python scripts/check_structure.py: **62 assets verified**. git diff
+  --check passes with a website-content.js LF/CRLF notice.
+  python scripts/button_states_review.py: reduced motion **7/7**, forced colours
+  **9/9**, no captured errors; repeated after the focus refinement with the same
+  results (.wireframe-final-buttons.log).
+- Initial visual helper: **8/8** assertions passed for Basic/light and Advanced/
+  dark at desktop and actual 320px iframes. Initial phone captures showed the
+  wrong scroll position; repeated with the lesson explicitly active, focused
+  element blurred and anchoring disabled, then inspected both phone views and
+  desktop views. Phone was subsequently made an actual fixed 320px canvas rather
+  than clamped-to-editor width. Final visual helper checks passed **8/8** with no
+  captured errors (.wireframe-final-visual.log); capture scroll is held on the
+  requested workspace after the iframe/media-query layout settles. Inspected all
+  four final images: actual grid/stack blocks, source/readiness properties, width
+  controls and contained canvas scrolling are visible. Removed temporary helper
+  scripts and screenshots after inspection. README/architecture/learner prompts
+  and changed asset URLs updated.
+- Final python scripts/check_structure.py: **62 assets verified**; git diff
+  --check passes (website-content.js LF/CRLF notice). Temporary focused/debug/visual
+  helpers and images removed; ignored result logs retained. Next: learner review
+  of source-linked layout authoring and canvas navigation. Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review remain outstanding; tests do not
+  establish full accessibility.
+  Prior work and the unrelated test.html deletion preserved. No commit/deployment.
+
+## Architecture-driven wireframe engine assessment (11 November 2026)
+
+- User proposed the next Wireframe phase: build the wireframe from related Content
+  Architecture data. Reviewed the current artifact generator, legacy hierarchy
+  projection, wireframe controls and planning architecture notes. The current
+  wireframe is a fixed header/navigation/main/aside/footer sketch: it reads legacy
+  pages labels plus Brief goal/scope and has only split/stack and notes settings.
+  It does not render the saved typed contentPlan or website text bindings.
+- Recommended a derived, deterministic wireframe model keyed by stable content
+  IDs, with separate per-sample presentation overrides. Architecture owns content,
+  hierarchy, references and readiness; wireframes own grouping presentation,
+  emphasis and responsive arrangement. Default wording uses current website text;
+  saved proposals can be an explicit alternate view, preserving blank drafts.
+- Map regions/pages/sections/groups to containers, text to semantic text blocks,
+  images to neutral frames with their alternatives, links to action/navigation
+  blocks and fields to labelled form blocks. Planned/missing content remains a
+  visible placeholder with readiness, rather than silently disappearing. Sitemap
+  inclusion affects navigation only; repeated destination references do not
+  duplicate destination content. Current one-page samples need a virtual page
+  shell, not an invented separate page for every section.
+- Source projection must exclude generated planning artifacts, including the
+  wireframe itself, and avoid calling recursive sample generators while rendering
+  those artifacts. Preserve the existing preview/export source-collection guards.
+  Content refresh should retain layout overrides for matching IDs, explicitly
+  report deleted/unavailable references and never attach them to another item.
+- Suggested first delivery: selected page/section, neutral responsive canvas,
+  linked block selection/properties, limited stack/split/grid choices, source
+  readiness and persistence/Undo/reset. Use the shared renderer for studio,
+  preview and standalone artifacts; retain older projects and existing layout/
+  wireframeNotes defaults. Follow with layout authoring refinements after the
+  source-to-block mapping is verified on Basic and Advanced.
+- Assessment only: no wireframe runtime changes implemented or tested. Commands:
+  bounded Get-Content/rg inspection and git diff --check. Earlier implementation
+  suite results below remain historical; no new browser/visual validation claim.
+- Next: implement the typed source projection and shared neutral renderer, then
+  connect the workspace and validated persisted layout overrides. Preserve prior
+  working-tree edits and the unrelated test.html deletion. No commit/deployment.
+
 ## Architecture as a working content tool (11 November 2026)
 
 - Renamed the saved-plan disclosure to Review the Content Plan, reflecting that

@@ -59,6 +59,18 @@ app.onload = async () => {
   const previewWindow = () => d.getElementById('previewPage').contentWindow;
   const saved = () => Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects')))[0].data;
   const wait = (ms=100) => new Promise(resolve => setTimeout(resolve,ms));
+  // Blob/File reads use real I/O. A pending local request prevents Chrome's
+  // virtual clock from expiring an artificial timer before that I/O completes.
+  const loadSelectedProjectFile = async () => {
+    let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
+    d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
+    try {
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
+      if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
+      return true;
+    } finally {d.removeEventListener('dss:imported',done);w.alert=oldAlert;}
+  };
   test('No startup JavaScript errors', () => !w.__reviewErrors.length);
   test('Architecture starts with one primary editor and optional navigation, saved review and advanced tools closed',()=>d.querySelector('#ia-content-editor .ia-browser-heading > h3').textContent==='Content structure' && ['architecture-sitemap','architecture-saved-review','architecture-advanced','architecture-sitemap-advanced'].every(id=>!d.getElementById(id).open) && d.getElementById('architecture-saved-review').contains(d.querySelector('#process-ia .ia-content-map')) && d.querySelectorAll('#process-ia .process-sitemap-preview').length===1 && d.getElementById('architecture-sitemap').contains(d.querySelector('#process-ia .process-sitemap-preview')));
   test('Fresh startup opens the Brief centre accordion that matches the active builder step',()=>w.DSStudio.activeStage===0 && d.querySelector('[data-journey-step="0"]').getAttribute('aria-current')==='step' && d.getElementById('process-brief').open && !d.getElementById('process-brief').hidden && !d.getElementById('process-ia').open);
@@ -776,7 +788,7 @@ app.onload = async () => {
   const beforeBadFile=evaluate('projectJson()');
   await importFile('{broken json');
   test('Invalid JSON reports an error without changing the project', () => alerts.length===1 && evaluate('projectJson()')===beforeBadFile);
-  await importFile(' '.repeat(4000001));
+  await importFile(' '.repeat(6000001));
   test('Oversized JSON files are rejected without changing the project', () => alerts.at(-1).includes('too large') && evaluate('projectJson()')===beforeBadFile);
   w.alert=originalAlert;
   const originalClipboard=w.navigator.clipboard;
@@ -1811,14 +1823,14 @@ app.onload = async () => {
   d.getElementById('dockModeAdvanced').click();await wait();
   input('jProject','Community learning hub'); d.getElementById('jSaveLocal').click();
   const planProjectId=d.getElementById('jProjects').value;
-  for (const [key,value] of Object.entries({audience:'New community members',goal:'Find a workshop and prepare a question.',scope:'Workshop listings and resources',content:'Organiser supplies workshop copy and photographs.',delivery:'Release in two weeks; organiser approves and maintains content.',success:'Find the right workshop without help.',constraints:'Keyboard and phone access',pages:'Home\nWorkshops > Layout\nWorkshops > Colour\nResources\nContact',layout:'stack',wireframeNotes:'Put workshop choices before supporting resources.',prototypeTask:'Find the layout workshop.',prototypeNotes:'The participant hesitated at the first label.'})) input('plan-'+key,value);
+  for (const [key,value] of Object.entries({audience:'New community members',goal:'Find a workshop and prepare a question.',scope:'Workshop listings and resources',content:'Organiser supplies workshop copy and photographs.',delivery:'Release in two weeks; organiser approves and maintains content.',success:'Find the right workshop without help.',constraints:'Keyboard and phone access',pages:'Home\nWorkshops > Layout\nWorkshops > Colour\nResources\nContact',prototypeTask:'Find the layout workshop.',prototypeNotes:'The participant hesitated at the first label.'})) input('plan-'+key,value);
   await wait();
   const processData=evaluate('JSON.stringify(state.designProcess)');
   test('Planning fields autosave with the active local project', () => JSON.stringify(JSON.parse(w.localStorage.getItem('dss-v27-projects'))[planProjectId].data.designProcess)===processData);
-  test('Brief, architecture, wireframe and prototype artifacts use the edited plan', () => d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent==='New community members' && d.querySelector('#process-ia .process-map').textContent.includes('Workshops') && d.querySelectorAll('#process-ia .process-map > ul > li').length===4 && d.querySelectorAll('#process-ia .process-map ul ul > li').length===2 && d.querySelector('#process-wireframe .process-wireframe--stack') && d.querySelector('#process-prototype').textContent.includes('Find the layout workshop.'));
+  test('Brief, architecture, wireframe and prototype artifacts use the edited plan', () => d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent==='New community members' && d.querySelector('#process-ia .process-map').textContent.includes('Workshops') && d.querySelectorAll('#process-ia .process-map > ul > li').length===4 && d.querySelectorAll('#process-ia .process-map ul ul > li').length===2 && d.querySelector('#process-wireframe #wf-page') && d.querySelector('#process-prototype').textContent.includes('Find the layout workshop.'));
   test('Planning edits reach the HTML inspector, JSON export and responsive sample', () => {
     d.getElementById('dockTabHtml').click();
-    return d.getElementById('dockCss').textContent===evaluate('htmlExport()') && evaluate('htmlExport()').includes('New community members') && JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess)===processData && previewDoc().querySelector('#brief-lab').textContent.includes('New community members') && previewDoc().querySelector('#wireframe-lab .process-wireframe--stack');
+    return d.getElementById('dockCss').textContent===evaluate('htmlExport()') && evaluate('htmlExport()').includes('New community members') && JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess)===processData && previewDoc().querySelector('#brief-lab').textContent.includes('New community members') && previewDoc().querySelector('#wireframe-lab .wireframe-source-note');
   });
   const planExport=evaluate('projectJson()');
   reset(); evaluate('importConfig('+planExport+')'); await wait();
@@ -1870,14 +1882,14 @@ app.onload = async () => {
     await new Promise(resolve=>{processPage.onload=resolve;if(!processPage.isConnected)d.body.append(processPage);});
   };
   for (const theme of ['light','dark']) {
-    input('jTheme',theme); input('plan-layout','split'); await loadProcessPage();
+    input('jTheme',theme); await loadProcessPage();
     for (const width of [320,390,768,1440]) {
       processPage.style.width=width+'px'; app.style.width=width+'px'; await wait();
       const pd=processPage.contentDocument, pw=processPage.contentWindow;
       test(theme+' planning artifacts and controls fit at '+width+'px', () => {
         revealAll();
-        const wire=pd.querySelector('.process-wireframe'), style=pw.getComputedStyle(wire);
-        return pd.documentElement.scrollWidth<=width+1 && d.documentElement.scrollWidth<=width+1 && style.gridTemplateColumns.split(' ').length===(width<=768?1:2) && [...pd.querySelectorAll('#design-process .process-wireframe > div, #design-process .process-screens > li')].every(el=>{const box=el.getBoundingClientRect();return box.left>=0 && box.right<=width+1 && el.scrollWidth<=el.clientWidth+1;});
+        const wire=pd.querySelector('.wireframe-source-note');
+        return pd.documentElement.scrollWidth<=width+1 && d.documentElement.scrollWidth<=width+1 && wire && wire.textContent.includes('read-only') && [...pd.querySelectorAll('#design-process .process-wireframe > div, #design-process .process-screens > li')].every(el=>{const box=el.getBoundingClientRect();return box.left>=0 && box.right<=width+1 && el.scrollWidth<=el.clientWidth+1;});
       });
     }
     processPage.style.width='320px'; app.style.width='320px'; await wait();
@@ -3205,7 +3217,7 @@ app.onload = async () => {
       const project=JSON.parse(evaluate('projectJson()'));w.importConfig(project);await wait();
       test(mode+' project JSON round trip retains website overrides and separate proposals',()=>previewDoc().getElementById('hero-title').textContent===wording && rows().find(node=>node.id===heading.id).draft==='A separate planning proposal' && evaluate('state.designProcess.websiteContent.'+mode+'.length')===1);
       const fileTransfer=new w.DataTransfer();fileTransfer.items.add(new w.File([JSON.stringify(project)],'website-text.json',{type:'application/json'}));d.getElementById('loadFile').files=fileTransfer.files;
-      await new Promise((resolve,reject)=>{const timeout=w.setTimeout(()=>reject(new Error('Website text file import timed out')),12000);d.addEventListener('dss:imported',()=>{w.clearTimeout(timeout);resolve();},{once:true});d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));});await wait();
+      await loadSelectedProjectFile();await wait();
       test(mode+' website text round trips through the real Load JSON file control',()=>previewDoc().getElementById('hero-title').textContent===wording && JSON.parse(evaluate('projectJson()')).designProcess.websiteContent[mode][0].value===wording);
       d.getElementById('jSaveLocal').click();const savedId=d.getElementById('jProjects').value;
       test(mode+' local project save includes validated website edits',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[savedId].data.designProcess.websiteContent[mode][0].value===wording);
@@ -3258,6 +3270,60 @@ app.onload = async () => {
     test('Website editing produces no captured JavaScript errors',()=>!w.__reviewErrors.length);
     reset();await wait();
   }
+  // Read-only wireframes use the actual website HTML and responsive CSS.
+  {
+    const engine=w.DSStudio.wireframeEngine;
+    for(const mode of ['basic','advanced']) {
+      reset();await wait();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
+      w.dssShowWizardStep(2,false);w.dssRevealSection('process-wireframe',false);await wait();w.DSStudio.wireframeView.refresh();await wait();
+      const frame=d.getElementById('wf-page'),doc=frame.contentDocument;
+      const source=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+      test(mode+' wireframe retains actual website structure and wording',()=>doc.body.textContent===source.body.textContent && JSON.stringify([...doc.querySelectorAll('body [id]')].map(el=>el.id))===JSON.stringify([...source.querySelectorAll('body [id]')].map(el=>el.id)));
+      test(mode+' wireframe exposes page, content-width, layout and child containers',()=>['region','content','layout','item'].every(kind=>doc.querySelector('[data-wf-container="'+kind+'"]')) && doc.querySelector(mode==='basic'?'.hero-layout[data-wf-layout="grid"]':'.sample-hero[data-wf-layout="grid"]') && d.querySelector('.wf-container-key').textContent.includes('Grid/Flex'));
+      test(mode+' wireframe distinguishes container boundaries without adding layout borders',()=>['region','content','layout','item'].every(kind=>{const el=[...doc.querySelectorAll('[data-wf-container="'+kind+'"]')].find(node=>node.getBoundingClientRect().height>0);return el && frame.contentWindow.getComputedStyle(el).outlineStyle===({region:'solid',content:'dashed',layout:'dotted',item:'solid'})[kind];}));
+      test(mode+' wireframe identifies its selected sample without colour alone',()=>d.getElementById('wf-'+mode).getAttribute('aria-pressed')==='true' && w.getComputedStyle(d.getElementById('wf-'+mode),'::before').content.includes(String.fromCharCode(0x2713)));
+      test(mode+' wireframe has no layout or content authoring controls',()=>!d.querySelector('#wf-scope,#wf-layout,#wf-content,#wf-emphasis,#plan-layout,#plan-wireframeNotes') && frame.sandbox.value==='allow-same-origin');
+      test(mode+' wireframe disables website forms and removes executable or nested embeds',()=>[...doc.querySelectorAll('input,select,textarea,button')].every(el=>el.disabled) && !doc.querySelector('script,iframe,object,embed,base,a[href]:not([href^="#"])'));
+      const before=JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess);
+      const reference=d.createElement('iframe');reference.style.cssText='height:768px;border:0';
+      reference.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+w.DSStudio.fonts.previewCss()+'</style>');
+      await new Promise(resolve=>{reference.onload=resolve;d.body.append(reference);});
+      for(const width of [320,390,768,1280]) {
+        input('wf-width',String(width),'change');reference.style.width=width+'px';await wait();
+        test(mode+' wireframe matches live responsive geometry at '+width+'px',()=>{
+          const rd=reference.contentDocument,differences=[];
+          const ids=[...rd.querySelectorAll('body [id]')].filter(el=>el.getBoundingClientRect().height>0).map(el=>el.id);
+          for(const id of ids){const a=rd.getElementById(id).getBoundingClientRect(),b=doc.getElementById(id).getBoundingClientRect();if(['x','y','width','height'].some(key=>Math.abs(a[key]-b[key])>1))differences.push({id,a:[a.x,a.y,a.width,a.height],b:[b.x,b.y,b.width,b.height]});}
+          // Include un-ID'd wrappers and their children, not just semantic IDs.
+          const original=[...rd.body.querySelectorAll('*')],mirrored=[...doc.body.querySelectorAll('*')];
+          for(const el of doc.querySelectorAll('[data-wf-container]')){const source=original[mirrored.indexOf(el)],a=source.getBoundingClientRect(),b=el.getBoundingClientRect();if(['x','y','width','height'].some(key=>Math.abs(a[key]-b[key])>1))differences.push({container:el.className,kind:el.dataset.wfContainer});}
+          if(differences.length)throw Error(JSON.stringify(differences.slice(0,4)));
+          return frame.contentWindow.innerWidth===width;
+        });
+      }
+      reference.remove();
+      test(mode+' viewing widths does not alter saved Architecture or planning data',()=>JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess)===before);
+      const exported=engine.documentHtml(),parsed=new w.DOMParser().parseFromString(exported,'text/html');
+      test(mode+' wireframe download contains original CSS plus neutral paint and disabled forms',()=>parsed.getElementById('wf-source-styles').textContent.includes(evaluate('cssExport()')) && parsed.getElementById('wf-neutral-styles') && parsed.querySelector('[data-wf-container="layout"]') && parsed.body.textContent===source.body.textContent && !parsed.querySelector('script,iframe') && [...parsed.querySelectorAll('input,select,textarea,button')].every(el=>el.disabled));
+      const files=[],original=w.download;w.download=(name,content,mime)=>files.push({name,content,mime});d.getElementById('wf-download').click();w.download=original;
+      test(mode+' wireframe button downloads the read-only mirror',()=>files.length===1 && files[0].name==='wireframe.html' && files[0].content===exported);
+      const legacy=JSON.parse(evaluate('projectJson()'));legacy.designProcess.wireframes[mode]={scope:'content-absent',content:'proposed',layout:'grid',blocks:[{id:'content-absent',layout:'split',emphasis:'primary'}]};w.importConfig(legacy);await wait();w.DSStudio.wireframeView.refresh();await wait();
+      test(mode+' old authoring settings round-trip without changing the mirrored website',()=>engine.documentHtml()===exported && JSON.parse(evaluate('projectJson()')).designProcess.wireframes[mode].layout==='grid');
+      const content=w.DSStudio.websiteContent,heading=w.DSStudio.contentArchitecture.nodes().find(node=>node.sourceKey==='id:hero-title');
+      const fields=content.describe(heading.sourceKey,mode).fields;
+      const edited=content.merge(mode,fields.map(field=>({...field,value:'Updated <safe> website heading'})));
+      evaluate('state.designProcess.websiteContent['+JSON.stringify(mode)+']='+JSON.stringify(edited)+';apply()');await wait();
+      test(mode+' saved Architecture website wording refreshes the active read-only view safely',()=>doc.getElementById('hero-title').textContent==='Updated <safe> website heading' && !doc.getElementById('hero-title').querySelector('safe') && engine.documentHtml().includes('Updated &lt;safe&gt; website heading'));
+      const disclosure=doc.querySelector('details');if(disclosure){disclosure.open=true;evaluate('apply()');await wait();test(mode+' unchanged refresh retains native disclosure state',()=>disclosure.isConnected && disclosure.open);}
+      const anchor=[...doc.querySelectorAll('a[href^="#"]')].find(el=>doc.getElementById(el.getAttribute('href').slice(1)));
+      if(anchor){const outerHash=w.location.hash;anchor.click();await wait();test(mode+' wireframe local navigation stays within its iframe',()=>w.location.hash===outerHash && doc.getElementById(anchor.getAttribute('href').slice(1)).getBoundingClientRect().top<frame.contentWindow.innerHeight);}
+      for(const width of ['mobile','tablet','desktop']){evaluate('updateResponsivePreview('+JSON.stringify(width)+')');input('wf-width','live','change');await wait();test(mode+' match live width follows '+width,()=>frame.contentWindow.innerWidth===({mobile:390,tablet:768,desktop:1280})[width]);}
+      for(const width of [320,390,1440]){app.style.width=width+'px';await wait();test(mode+' wireframe controls fit '+width+'px studio',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#wireframe-workspace select,#wireframe-workspace button')].every(el=>{const r=el.getBoundingClientRect();return r.height>=44 && r.right<=w.innerWidth+1;}));}
+      app.style.width='1440px';
+    }
+    reset();await wait();
+  }
+
   // Complete content inventory, independent destination references and deep editing.
   {
   await w.DSStudio.ready;
@@ -3298,13 +3364,7 @@ app.onload = async () => {
     w.alert=message=>fileAlerts.push(message);fileTransfer.items.add(new w.File([fileJson],'content-plan.json',{type:'application/json'}));d.getElementById('loadFile').files=fileTransfer.files;
     // The file contains the current plan: equality alone cannot prove the file read
     // finished. Await import completion before deleting any planning branches.
-    let fileImportCompleted=false;
-    await new Promise((resolve,reject)=>{
-      const imported=()=>{fileImportCompleted=true;w.clearTimeout(timeout);resolve();};
-      const timeout=w.setTimeout(()=>{d.removeEventListener('dss:imported',imported);reject(new Error('Content-plan file import did not complete: '+fileAlerts.join('; ')));},12000);
-      d.addEventListener('dss:imported',imported,{once:true});
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
-    });await wait();w.alert=previousAlert;
+    const fileImportCompleted=await loadSelectedProjectFile();await wait();w.alert=previousAlert;
     test(mode+' actual exported JSON file reimports through Load JSON with the complete content plan',()=>fileImportCompleted && !fileAlerts.length && contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && evaluate('projectJson()')===fileJson);
     selectContent(header.id);d.getElementById('ia-delete').click();await wait();
     test(mode+' removing the header planning branch does not remove Home from sitemap or page',()=>!contentNode('Header') && previewDoc().querySelector('#sitemap').innerHTML===beforeFooter && previewDoc().getElementById('home'));
@@ -3626,6 +3686,13 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?', 1)[0]
+        if path == '/__review_tick__':
+            # Test-only real-time synchronization for browser File.text().
+            threading.Event().wait(0.02)
+            self.send_response(204)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            return
         if path == '/__font_fixture__':
             query = parse_qs(urlsplit(self.path).query)
             if query.get('mode') == ['error']:

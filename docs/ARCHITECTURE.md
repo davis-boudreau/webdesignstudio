@@ -459,7 +459,7 @@ wrappers, scripts, styles and decorative SVG internals. It captures headings,
 paragraphs, CTAs and fragment references, figures/alternative text/captions,
 lists/terms/tables, form controls/options and shared Header/Footer content. Header
 logo/wordmark and Home/Hero are explicit. Numeric progress values become strings.
-Default Basic has 139 entries and Advanced 409, with five levels in each.
+Default Basic has 139 entries and Advanced 395, with five levels in each.
 
 The IA lesson within the Advanced sample is represented as a generated planning
 view, and the footer sitemap as generated destinations. Their recursive contents
@@ -484,7 +484,7 @@ parent/sibling relationships. Label/value/reference/notes lengths are bounded to
 distinct from no draft. Content is always escaped or set with textContent/value.
 Each mode's normalized plan is also bounded to 500,000 serialized characters;
 structural edits that exceed the budget are rejected rather than partially saved.
-Project JSON uploads accept up to 4 MB so both bounded plans can round-trip through
+Project JSON uploads accept up to 6 MB so bounded content plans, text and layout edits can round-trip through
 the real file picker; this replaces the token-only application's 100 KB limit.
 Imported source keys are map lookups, never selectors or executable code. Imported
 references are displayed as text, never assigned to href or fetched. No imported
@@ -585,6 +585,48 @@ destination outline is a separate optional disclosure beside the visitor sitemap
 preview. Exported artifact CSS is supplied by design-process; Studio control CSS is
 `content-architecture.css`. Existing token, CSS inspector, live page and export
 generation remain shared and dependency-free.
+
+### Read-only responsive wireframes
+
+`wireframe-engine.js` loads after content/text services and before core state.
+It parses the locally generated `htmlExport()` and embeds `cssExport()` plus local
+font CSS. A final neutral paint stylesheet changes colour, decoration and image
+treatment without changing layout rules, font metrics, spacing or breakpoints.
+Basic and Advanced therefore retain the live website's structure and actual copy.
+Container annotations mark page regions and content-width wrappers. A constructed
+CSSStyleSheet parses only locally generated CSS; walking style/media rules finds
+structural Grid/Flex wrappers and their child containers without a per-sample
+class list. Imported strings never become selectors. The annotations are confined
+to the mirror/download; they do not alter source HTML or Architecture. Solid,
+dashed, dotted and thin inset outlines distinguish the levels without changing
+borders, padding, positioning or font metrics. A Studio legend explains them.
+
+Website content saved through Architecture flows through the existing generators;
+proposals and planned-only entries do not invent a different website layout.
+
+The mirror removes executable/nested embeds, disables website form controls and
+removes non-fragment navigation. The workspace iframe has only allow-same-origin,
+without scripts or forms. Its parent handles local fragments with getElementById,
+opens ancestor disclosures, and prevents form submission. Imported text is escaped
+by the existing website generators; it is never interpreted as a template or CSS.
+The Advanced website's Wireframing lesson contains a short explanatory note rather
+than embedding the mirror inside itself. It remains one generated inventory entry.
+
+`wireframe-workspace.js` registers after studio-learning. It replaces the Studio
+wireframe artifact with the read-only iframe and Basic/Advanced, viewport, compare
+and download controls. The wizard opens this view. Render changes refresh the
+mirror only while Wireframe is active, or explicitly requested; unchanged HTML
+preserves nodes. Same-mode updates retain scroll and disclosure state. The
+workspace uses the existing sample mode controls and font synchronization.
+Match live preview, 320/390/768/1280px and available-width choices are transient.
+Fixed widths scroll within the labelled region instead of shrinking breakpoints.
+Standalone wireframe.html embeds the same source styles and neutral paint layer.
+
+Legacy `designProcess.wireframes` and earlier layout/review-note fields remain
+bounded, validated project data for compatibility, but no longer control the
+read-only view. No separate wireframe content/layout model is authored. The JSON
+upload cap remains 6,000,000 bytes. Legacy per-mode overrides are capped at 1,000
+rows and 80,000 serialized characters; IDs/enums never become selectors or code.
 
 ### Destination planning and compatibility
 
@@ -716,7 +758,7 @@ schema version stays 2 because earlier loaders can ignore the new field.
 
 The static sample adds a planning section, Process navigation and four lesson
 cards before the design-system lessons. Studio and sample call the same artifact
-helpers with distinct ID prefixes. Wireframes inherit brief/map content; prototype
+helpers with distinct ID prefixes. Wireframes mirror the generated website through wireframe-engine.js; prototype
 screens link Discover, Choose and Review with native fragments, with no application
 backend or script requirement. The sandboxed live preview uses its existing
 fragment handler. Planning data describes a project; it does not rewrite the

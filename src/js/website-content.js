@@ -94,5 +94,5 @@
     // A parsed document is mutable; never reuse it after applying overrides.
     caches[mode]=null;return result;
   }
-  DSStudio.websiteContent={normalize,describe,merge,apply:applyText,MAX_FIELDS,MAX_CHARS,MAX_TOTAL};
+  DSStudio.websiteContent={normalize,describe,merge,apply:applyText,MAX_FIELDS,MAX_CHARS,MAX_TOTAL,isInspecting:()=>inspecting};
 })();

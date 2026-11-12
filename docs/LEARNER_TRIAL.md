@@ -71,6 +71,14 @@ Ask the learner to use keyboard navigation for part of the session. Separately
 record focus/scroll problems, inaccessible controls, crowded layouts and unclear
 labels. This trial does not replace a dedicated accessibility review.
 
+For the read-only Wireframe workspace, compare Basic and Advanced at phone and
+desktop widths, then use Compare with live website. Can the learner recognise the
+same content and responsive layout beneath the neutral treatment? Save website
+wording in Architecture and return to Wireframe: does the matching text update?
+Check native disclosures, local navigation and scrolling within a fixed viewport.
+Can they distinguish the read-only wireframe HTML download from finished website
+files? These are unobserved trial prompts; record keyboard and navigation problems.
+
 ## Observation sheet
 
 Participant code: ______  Date: ______  Experience: ______
