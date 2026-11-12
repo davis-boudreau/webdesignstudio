@@ -85,6 +85,7 @@ the inspector stacks after the centre. At 900 px and below, the actual controls
 join the selected lesson beneath its explanation. Previous/Next follows the output. The
 preview iframe is retained across stage changes, preserving its document and
 browsing state. Ordinary edits update results without moving keyboard focus.
+Architecture keeps its editing workspace in the centre at every screen size.
 
 In Basic, **Example, rule and tokens** connects examples to exported rules and
 live token declarations. Configure selects the token's source step and control.
@@ -186,16 +187,37 @@ relationships, including information inside pages. The visitor sitemap is a
 selected navigation view. The lesson includes a Contact/Opening hours example and
 [NN/g's IA/sitemap guidance](https://www.nngroup.com/articles/information-architecture-sitemaps/).
 
-In **Build your design system → Architecture**, the main control is an expandable,
-searchable **Website content structure**. It shows meaningful containers and the
+In **Build your design system → Architecture**, choose **Open Architecture
+workspace** to work in the centre pane. The left step keeps the objective and
+review checklist. The workspace places the content outline beside the selected
+item on wide screens and stacks them on smaller screens. Add item uses one action
+with an inside, beside or top-level placement choice. Organise content groups
+move/delete and Expand all / Collapse all; Undo stays with these tree
+controls. **Develop the content plan** leads the Architecture workspace, before
+Content structure, and identifies the selected item it applies to. **Save and
+review** sits beneath the left content browser, grouping Save, Discard, Restore
+and their status feedback. **Review the Content Plan** retains the guidance
+and saved-plan review separately. It opens on the first unsaved
+edit; saving, discarding or an unsaved-edit warning reveals it before focusing
+Save. The main content editor keeps Find content and visible properties together.
+Review visitor sitemap opens the inclusion choices and their live map together.
+Restore retains its scope and Undo guidance. Advanced tools
+retains project-data inspection. Sitemap labels and hierarchy is the first control
+in Visitor sitemap. Advanced sitemap options holds text editing in custom mode;
+the custom destination editor is available in the main Sitemap
+view when that source is active.
+Longer explanations share About content structure and navigation.
+
+The main control is an expandable,
+searchable **Content structure**. It shows meaningful containers and the
 actual sample content: Header logo/wordmark/navigation, Home's Hero heading,
 paragraphs, image/alternative text/caption and CTAs, component content, lists,
-tables, form fields/options and Footer. Basic currently has 132 entries and
-Advanced 395; both samples contain five levels of content. CSS-only wrappers are
+tables, form fields/options and Footer. Basic currently has 139 entries and
+Advanced 409; both samples contain five levels of content. CSS-only wrappers are
 omitted. Navigation links reference their destinations instead of duplicating
 the destination's content. Header and Footer are shared regions.
 
-Expand individual branches, search content or use Expand all / Collapse all.
+Expand individual branches, search content or use the Organise content utilities.
 Select an entry to inspect its current content and destination reference, change
 its planning label/type/parent, write planned content and notes, and set a planning
 status. Add child/sibling/top-level entries, move sibling branches, reparent or
@@ -203,33 +225,64 @@ delete a branch, and undo the last content change. The content editor supports u
 to twelve levels and 1,000 entries as safety bounds, not recommended IA depths.
 Repeated role labels, such as Paragraph, have distinct identities and are editable.
 
-The content form guides students through three parts: **Understand
-this item**, **Develop the content plan**, then **Save and review**. The selected
+The workspace starts with **Develop the content plan**. In Content structure,
+**Website content** and **Understand this item** sit beside the content browser;
+**Save and review** sits below that browser. The selected
 name, location and sample/planning origin provide context. Read the sample content
 first, then inspect the item's name, kind, containing item and optional related
 section. Plain-language help explains what each property means.
 
-**Selected content properties** and **2. Develop the content plan** are separate
-collapsible sections, both closed by default. Open whichever you need; the selected
-item and Save controls remain visible. Collapsing a section keeps unsaved edits.
-Adding an item opens its properties so you can enter its name.
+**Selected content properties** stays visible, including the current sample
+content, outline name, kind and containing item. **Develop the content plan** is
+an optional disclosure, initially closed. Collapsing it keeps unsaved edits.
+These headings have no local step numbers; the main wizard tracks the journey.
+Selection and adding an item focus the visible name field. The optional Related
+website section disclosure opens for links; its section reference and sitemap
+shortcut remain available for other content when needed.
 
-Planning prompts and examples adapt to text, images, links, form controls and
+Content structure's title and introduction sit inside its left browser. The
+properties pane begins alongside that browser, with **Content readiness** always
+visible near the top for every item/type. New content starts as Still to create;
+existing demo content starts as Available in the sample.
+
+**Proposed wording** starts from the selected demo item's current website copy,
+unless you have already saved a proposal. This starting text stays outside the
+saved proposal until you edit it or select Include this proposal. Explicitly blank
+saved proposals remain blank. Fresh demo notes describe the item's purpose and
+next review action in this site, with Owner: Unassigned. Saved notes, including
+intentional blanks, are retained; blank notes get a site-specific placeholder.
+The planning panel contains working fields without a separate example panel.
+
+Planning prompts adapt to text, images, links, form controls and
 containers. Propose wording or describe the required asset, record content
 readiness, and note the purpose, owner and next action. **Include this proposal in
 the saved plan** distinguishes no replacement from an intentionally blank proposal.
 The form marks unsaved edits; **Discard unsaved edits** restores the saved item.
+Selection, creation and branch actions keep unsaved edits in place until you save
+or discard them. Navigating away and returning to Architecture also retains that
+form while the sample content is unchanged. Reset, import and changing samples
+load their corresponding plan; save before those project-level actions.
 Choose **Save content plan** before selecting another item, then review the
 proposal in the outline or centre lesson. Save and Discard retain focus near the
 feedback. These are guided parts of Architecture, within the existing twelve-step
-journey; they introduce no extra project-data fields.
+journey.
 
-**Current sample content and planned content are separate.** Current content is
-read from local authored sample HTML and refreshed when the project changes.
-Planned wording (including an explicitly empty draft) and notes are saved in project
-JSON/local storage; they do not rewrite the teaching website or create pages.
-Restore current sample content discards that sample's content planning edits and
-is undoable. The other sample's plan and sitemap choices are retained.
+**Website content and planned content are separate.** Website content edits the
+actual headings, paragraphs, link/button wording, image alternatives, list/table
+text, captions and form labels, help, placeholders, initial text and options.
+Save applies these words to the preview, HTML inspector and website downloads.
+Inline formatting, link destinations and submitted option values are preserved.
+Containers guide you to their children; generated plans/sitemaps and project
+identity explain their existing source controls. No HTML editing is required.
+
+Planned wording (including an explicitly empty draft) and notes remain separate
+proposals. They do not replace website text or create pages. Both types of edits
+persist per sample in project JSON and saved projects. **Use original text for
+this item** prepares a restoration for Save; Discard cancels it. **Restore current
+sample content** resets that sample's website text and content plan together.
+Undo recovers the previous text and plan. The other sample and sitemap choices
+are retained. Unavailable or changed text bindings are reported and retained in
+the project without applying them to another item.
 
 **Sitemap configuration** defaults to **Page eyebrows and headings**. Each link
 uses the section's visible eyebrow text (including slashes), or its existing
@@ -251,6 +304,24 @@ sections from the actual website or this map.
 
 **Custom destination plan** preserves the previous destination editor, text
 outline, label bindings, planned entries and three-level navigation bounds.
+Both sources now use a searchable, expandable destination outline beside selected
+properties. With enough available pane width, Find destination, Selected
+destination and Visitor sitemap preview form three columns. Medium panes put
+the preview below the two editing columns; narrow panes stack all three in that
+reading order. The preview is keyboard-focusable and scrolls within its panel.
+Search shows matching destinations with
+their containing branches. Outline Include checkboxes and the selected item's
+Include control update the same navigation choices. Page-derived labels and
+nesting remain read-only; Preview this destination reaches the actual sample
+section even when its navigation link is excluded.
+
+Custom mode exposes label, parent, type and destination fields in its selected
+properties panel. Add destination and Organise destinations keep creation and
+keyboard-operable move/delete actions with the outline. Save destination and
+Discard unsaved edits protect changes before selection, branch actions or source
+switching. Native inclusion controls preserve inherited exclusions, and Undo
+retains the existing per-source behavior. The raw text editor remains advanced.
+
 Older custom outlines retain their navigation until explicitly switched to page
 labels; switching sources does not discard either plan's settings. Custom plans
 can include unlinked group headings and selected planned entries; their previous
@@ -349,6 +420,7 @@ Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
 component examples, token relationships and practice tasks. Selecting a step
 opens its matching lesson automatically, with contextual inspection actions.
+Architecture also provides the content and sitemap editing workspace in this pane.
 Interactive labs remain available for experiments and contrast review.
 
 Brief, Architecture and Wireframe come before palette design. Record the audience,

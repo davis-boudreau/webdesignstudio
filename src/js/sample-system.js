@@ -42,7 +42,7 @@
         </nav>
       </details>
       <div class="footer-bottom">
-        <small>&copy; ${project}. ${basic ? 'HTML &amp; CSS essentials.' : 'A website practice space.'}</small>
+        <small>&copy; <span data-website-setting="project">${project}</span>. ${basic ? 'HTML &amp; CSS essentials.' : 'A website practice space.'}</small>
         <a class="back-to-top" href="#top">Back to top <span aria-hidden="true">&uarr;</span></a>
       </div>
     </div>

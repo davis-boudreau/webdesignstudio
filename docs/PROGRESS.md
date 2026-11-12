@@ -1,6 +1,623 @@
 # Project progress
 
-Updated: 10 November 2026 (America/Halifax).
+Updated: 11 November 2026 (America/Halifax).
+
+## Architecture as a working content tool (11 November 2026)
+
+- Renamed the saved-plan disclosure to Review the Content Plan, reflecting that
+  its Save actions now live under the left content browser. Moved the Content
+  structure title/introduction inside that browser's header, so the properties
+  form starts at the same grid row without an introduction above both columns.
+- Moved Content readiness out of the planning disclosure and into the always-
+  visible properties, before Website content. It retains the existing validated
+  status for every item/type, native form owner and save/import/Undo path. New
+  planned items still start as planned; authored sample entries remain present.
+- Removed See an example and replaced generic planning help with working prompts.
+  When there is no saved proposal, proposed wording starts from the selected
+  item's current text/label/alternative bindings. The proposal checkbox remains
+  off until explicitly included or edited: passive property saves do not create
+  a proposal. Saved proposals, including deliberate empty strings, take priority.
+- Fresh sample inventories seed notes with the actual project, item path/purpose,
+  prototype-specific next action and Owner: Unassigned. Existing saved notes,
+  including explicit blanks, stay intact; blank notes get contextual placeholders.
+  Used cached ancestor labels while inventorying so these defaults do not add
+  repeated whole-outline path searches. No new schema, owner assumptions or HTML
+  interpretation. Updated current README/architecture/learner wording and asset
+  versions; historical progress entries retain their original names/results.
+- Added 32 regressions for site-derived wording, absence of passive draft writes,
+  contextual notes, explicit empty import preservation, readiness across all
+  content kinds and column/header alignment at 320, 390 and 1440px. Preliminary
+  Architecture subset: 354/357 passed with no JavaScript errors; three previous
+  assertions expected blank defaults or the old prompt wording and were updated.
+  Required final python scripts/browser_review.py: **2324/2324 passed**, no
+  captured JavaScript errors (.architecture-tool-final-browser.log). Runtime files
+  stayed unchanged during this final run; preliminary results above remain
+  distinct from the final passing verification.
+- python .architecture-tool-visual.py captured Basic/light and Advanced/dark at
+  desktop 1440px and actual 320px iframe widths: 8/8 checks passed, no captured
+  errors. Inspected all four: current demo wording and site notes are populated,
+  example panel absent, readiness visible and right properties align with the
+  left header. Removed temporary helpers/captures after inspection. Current
+  python scripts/check_structure.py verifies 59 assets; git diff --check passes.
+- Final python scripts/check_structure.py: **59 assets verified**; git diff
+  --check passes. Next: observe the site-based planning and visible readiness with
+  learners. Manual keyboard-only, screen-reader, zoom and Firefox/Safari review
+  remain outstanding. Previous results below are historical. A test.html deletion
+  appeared in working-tree status during verification; this task did not modify
+  it. No commit, push or deployment; prior working-tree work preserved.
+
+## Architecture planning and Save placement (11 November 2026)
+
+- User requested Develop the content plan at the top of Architecture workspace,
+  before the content architecture/editor, and Save and review beneath Content
+  structure's left column. Moved the existing planning disclosure directly after
+  the workspace header and before Content structure. Added the selected item's
+  path so its proposals and notes retain clear context at their new location.
+- Moved the existing Save/Discard/Restore/status/sitemap-shortcut area below the
+  left browser's branch tools. Review and Save Content Plan retains the guidance
+  and saved-plan artifact. No duplicate controls or new project data. Desktop
+  keeps the property editor on the right; phone layouts keep the actions with
+  their content browser before the stacked property editor.
+- Explicitly associated each relocated planning control with ia-form and attached
+  dirty/invalid handling to both editing surfaces. Native validation and the same
+  save/discard/Undo transaction remain authoritative. Extended local control
+  styling to the top planning disclosure and refreshed the affected CSS/JS query
+  versions. Updated README and architecture notes for the new placements.
+- Updated regression expectations for the new review/left-action hierarchy and
+  added form-owner/selected-context checks. Responsive assertions cover the
+  expanded top planning fields and left save area at 320, 390 and 1440px.
+- Current-session checks: python scripts/check_structure.py verifies 59 assets;
+  git diff --check passes. python .workspace-placement.py (Architecture subset)
+  passed 325/325 with no captured JavaScript errors. python .workspace-visual.py
+  captured Basic/light and Advanced/dark at 1440px and actual 320px iframe widths:
+  8/8 placement/width/error checks passed. Inspected the planning controls, selected
+  path and left action area in all four captures. The first capture attempt did
+  not reveal containing native disclosures consistently; repeated with them
+  explicitly open before scrolling. Removed temporary helpers/screenshots after
+  review. Required python scripts/browser_review.py: **2292/2292 passed**, no
+  captured JavaScript errors (.workspace-final-browser.log). Runtime files stayed
+  unchanged during this final run, including the expanded-field responsive checks.
+  Final python scripts/check_structure.py: **59 assets verified**; git diff --check
+  passes. Previous results below are historical.
+- Next: observe the revised planning/left-action layout with learners.
+  Manual keyboard-only, screen-reader, zoom and Firefox/Safari review remain
+  outstanding. No commit, push or deployment; prior working-tree work preserved.
+
+## Writable website content implementation (11 November 2026)
+
+- Implemented the agreed Architecture Website content editor for both samples.
+  Students can save authored headings/paragraphs, links/buttons, image alternatives,
+  captions, list/table text and form labels/help/placeholders/initial text/options.
+  Proposals and ownership/next-action notes remain separate. Containers point to
+  their children; generated planning artifacts and setting-owned identity explain
+  their existing source. Default sample inventories now contain Basic 139 and
+  Advanced 409 entries, including field labels and bare container text.
+- Added dependency-free website-content.js before core state. Per-mode overrides
+  are normalized into sourceKey/allowlisted field/fingerprint/value records, capped
+  at 2,000 fields, 2,400 characters each and 120,000 serialized characters per mode.
+  Local authored DOM bindings set text nodes/fixed safe attributes only. Inline
+  markup, stable anchors and submitted option values survive wording changes.
+  Missing/changed sources are reported and retained without applying elsewhere.
+- Wrapped both sample factories so preview, inspector, website downloads, actual
+  content inventory and page-label sitemap use the same edits. Added raw factories
+  for default bindings and preserved source-collection recursion guards. Project
+  identity spans continue to follow Brief while surrounding text remains writable.
+- Existing form commits text and plan together. Discard restores saved fields;
+  Undo restores both. Item restoration is pending until Save and is shown only for
+  saved custom text. Sample restoration clears only that mode's text and plan,
+  retaining the other sample and sitemap choices. Refreshed affected asset URLs;
+  updated README, architecture notes and unobserved learner-trial prompts.
+- Added functional browser regressions for both samples: inert HTML-like wording,
+  preview/inspector/download parity, live sitemap labels, JSON/file/local saves,
+  empty values, label/placeholder/textarea/option editing, inline identity,
+  length-limit atomicity, unavailable/changed bindings and scoped restore/Undo.
+- Focused writable-content checks passed 58/58; the complete Architecture subset
+  passed 323/323, both without captured JavaScript errors. Structure verifies 59
+  assets; git diff --check passes with the pre-existing CSS LF/CRLF notice.
+  An initial full run returned 2274/2288 with no JavaScript errors: 14 previous
+  assertions required the old first legend or visibility of every button. Updated
+  them for Website content and a conditional restore button; layout checks now
+  explicitly select an editable heading. A later full run stopped at 2001/2002
+  on a synthetic JSON-file import timeout, despite the isolated flow passing.
+  Increased file waits to 12s, total virtual budget to 185s and wall timeout to
+  540s. Final required `python scripts/browser_review.py`: **2290/2290 passed**,
+  no captured JavaScript errors (`.writable-final-browser.log`). Runtime files
+  remained unchanged during this final run. `python scripts/check_structure.py`:
+  **59 assets verified**; `git diff --check` passes (existing CSS line-ending notice).
+  Preliminary failures above are distinct from this final passing verification.
+- A visual pass found and fixed an incorrect source-unavailable help message;
+  regression coverage now checks that valid text fields have no such message.
+  Isolated attempts also failed loading unchanged learning-path.js and
+  studio-registry.js. Increased the local test server's pending-connection queue
+  to 128 for bursts of deferred asset requests; the subsequent Architecture run
+  was clean. Final `python .writable-visual.py` sequentially captured Basic/light
+  and Advanced/dark at 1440px and actual 320px iframe widths: **8/8 checks passed**,
+  no captured errors (`.writable-final-visual.log`). Inspected all four screenshots:
+  labelled editable text fits, default restore controls stay hidden, the incorrect
+  source warning is absent and fields retain visible borders/focus. Removed the
+  temporary focused/Architecture/visual helpers and screenshots after review.
+  No full accessibility claim: manual keyboard-only, screen-reader, zoom and
+  Firefox/Safari checks remain outstanding. Earlier results below are historical.
+- Next: observe direct website editing versus planning proposals with learners
+  and complete manual accessibility/cross-browser review. No commit, push or
+  deployment. Prior working-tree changes are preserved.
+
+## Writable website content assessment (11 November 2026)
+
+- User asked whether students should be able to edit the actual text of all
+  Content structure entries. Reviewed the inventory/normalizer, source-key
+  reconciliation and Basic/Advanced generator/export registration. Actual values
+  currently refresh from authored sample HTML; saved drafts/notes remain separate
+  plans. Removing readonly from the form alone cannot apply reliable page edits.
+- Recommended direct editing of authored text with type-specific fields: headings,
+  paragraphs, link/button labels, captions, image alternatives, list/table text,
+  form labels/help/placeholders and option labels. Containers should expose their
+  structure/labels rather than flattening nested HTML into one text replacement.
+  Generated sitemap/planning artifacts stay derived, with page-label sitemap text
+  following edited eyebrows/headings while stable anchors remain unchanged.
+- Proposed clear displayed-content versus planning-note fields, one shared
+  validated content application path for preview/inspector/export, per-sample
+  project persistence, Undo and item/sample restoration. Existing setting-owned
+  values should use their existing source rather than introduce conflicting
+  editors. Missing bindings must be reported instead of applying to another item.
+- This is an assessment, not implemented writable content. Existing proposals
+  still do not replace sample content. Commands run: bounded Get-Content/rg source
+  inspection and git diff --check. No structure/browser/manual review run for
+  this analysis; passing implementation results below remain historical.
+- Next: implement the agreed direct-editing scope with stable content bindings,
+  import validation and preview/export/persistence regression coverage. No runtime
+  edits, commit, push or deployment in this assessment.
+
+## Save and review at the bottom of the review section (11 November 2026)
+
+- User clarified that Save and review belongs at the bottom of Review and Save
+  Content Plan, after all guidance and saved-plan content. Reordered the existing
+  static children so the save/action area is last, following the complete saved
+  artifact. Kept the guidance host, action nodes/handlers, form association,
+  disclosure/focus behavior and public exports unchanged.
+- Refreshed the studio-learning.js asset version and updated README/architecture
+  wording. Updated the existing review-placement assertion to require the save
+  area as the review disclosure's last element, immediately after the saved
+  artifact, with guidance preceding that artifact after model renders/imports.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes (existing CSS LF/CRLF notice). Required
+  `python scripts/browser_review.py`: **2232/2232 passed**, no captured JavaScript
+  errors (`.review-save-bottom-browser.log`). Runtime files were held unchanged
+  during the run; last-element placement is verified after model updates.
+- `python .review-save-bottom-visual.py` captured actual light Basic desktop and
+  dark Advanced 320px layouts after repeated renders. Inspected both: the action
+  panel is below all saved content, at the bottom border of the review disclosure,
+  with Advanced tools outside and after it. Removed temporary helper/captures.
+  Manual keyboard-only, screen-reader,
+  zoom and Firefox/Safari review remain outstanding; automated checks do not
+  establish full accessibility. Previous passing results below are historical.
+- Next: observe the review-first/save-last flow with learners and complete manual
+  accessibility/cross-browser review.
+  No commit, push or deployment; previous working-tree changes are preserved.
+
+## Guidance before Save and review (11 November 2026)
+
+- User requested Save and review directly after Information architecture and
+  sitemap: different jobs within Review and Save Content Plan. Moved the existing
+  IA/sitemap guidance into a stable host before the existing save area, followed
+  by the remaining saved-plan artifact. The original guidance renderer populates
+  this host; later model renders remove its copy from the remaining artifact so
+  the introduction stays singular and the action nodes/listeners are preserved.
+- No changes to saved data, form ownership, disclosure/focus behavior, restoration
+  or public exports. Refreshed both changed JS asset versions and updated README
+  and architecture notes. Extended the existing responsive review-placement
+  assertion to require the guidance host immediately before the controls, the
+  expected heading and exactly one guidance copy after save/import/render flows.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes (existing CSS LF/CRLF notice). Required
+  `python scripts/browser_review.py`: **2232/2232 passed**, no captured JavaScript
+  errors (`.review-save-order-browser.log`). Runtime files were held unchanged
+  during the run; ordering and singular guidance are verified after model updates.
+- `python .review-save-order-visual.py` captured actual light Basic desktop and
+  dark Advanced 320px layouts after two ordinary renders. Inspected both:
+  explanation, Save/review and remaining content appear in that order, and
+  controls still fit the phone pane. Removed temporary helper and captures.
+  Manual keyboard-only, screen-reader, zoom
+  and Firefox/Safari review remain outstanding; automated checks do not establish
+  full accessibility. Earlier passing results below are historical.
+- Next: observe the guidance-first review flow with learners and complete
+  manual accessibility/cross-browser review.
+  No commit, push or deployment; previous working-tree changes are preserved.
+
+## Review and Save Content Plan consolidation (11 November 2026)
+
+- User requested moving Save and review into Review saved content plan and
+  renaming that disclosure Review and Save Content Plan. Moved the existing
+  action/status panel ahead of the saved artifact within the renamed disclosure.
+  Save, Discard, Restore, scope help and the visitor-map shortcut retain their
+  original nodes and handlers. The content grid now holds only Find and properties.
+- The first unsaved edit opens the review section without moving field focus.
+  Save/Discard and dirty guards reveal it before focusing Save. Non-empty content
+  action messages also open it, so Undo/reorder/delete feedback cannot become
+  hidden after the move. Manual collapse retains unsaved values. The external
+  submit button keeps form="ia-form", native validation and existing persistence.
+- Made save-area spacing, responsive button wrapping and touch-target styles
+  independent of the content-editor ancestor. Refreshed all three changed asset
+  versions. Updated README, architecture notes and the unrun learner trial.
+  Replaced obsolete below-Find placement assertions with renamed-section
+  containment/geometry coverage and added collapsed-review Undo feedback checks.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes (existing CSS LF/CRLF notice). Initial `python .review-save-focused.py`:
+  **264/264 passed**, no errors (`.review-save-content-focused.log`). After adding
+  non-empty action-message reveal behavior, focused rerun: **266/266 passed**,
+  no captured errors (`.review-save-content-focused-final.log`). Initial full
+  development run passed **2230/2230**, no captured JavaScript errors
+  (`.review-save-content-browser.log`); it was superseded by the message-visibility
+  refinement and its new Undo regression. Final full `python scripts/browser_review.py`:
+  **2232/2232 passed**, no captured JavaScript errors
+  (`.review-save-content-browser-final.log`). Completed runtime files were held
+  unchanged throughout that final run.
+- `python scripts/button_states_review.py` initially passed **4/5 reduced-motion**
+  before a null return-link check, with a failed request for unchanged
+  section-navigation.js; forced-colour checks passed **9/9**, no errors. A clean
+  rerun passed **7/7 reduced-motion** and **9/9 forced-colour**, no captured
+  errors (`.review-save-content-states-final.log`).
+- `python .review-save-visual.py` captured actual light Basic desktop and dark
+  Advanced 320px views of the renamed section. Inspected both: action controls
+  and restore help fit above the saved-plan review. Removed temporary review
+  helpers and screenshots. Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review remain outstanding; automated
+  checks do not establish accessibility. Earlier results below are historical.
+- Next: observe learners using the consolidated review/save section and complete
+  manual accessibility/cross-browser review.
+  No commit, push or deployment; prior working-tree changes are preserved.
+
+## Three-column Visitor sitemap layout (11 November 2026)
+
+- User requested Find destination, Selected destination and Visitor sitemap
+  preview horizontally. The active source's workspace now contains the single
+  existing preview host. At 58rem of available Architecture width, all three
+  form a row; at 46–58rem the preview spans below two editing columns; below that
+  the three stack in DOM reading order. Both page-derived and custom modes use
+  the same layout, including when the inspector reduces available pane width.
+- Preserve the preview node when it is already in the correct source workspace;
+  source changes move that node without duplication. Added studio-only tabindex
+  to the labelled preview region and bounded its vertical scrolling. Aligned
+  card headings and removed the custom form's extra top margin. No project data,
+  sitemap logic, public artifact generator or export changes.
+- Refreshed all three affected runtime asset versions and updated README and
+  architecture notes. Extended the Sitemap matrix with responsive column-order,
+  active-host placement and focusable-preview checks for both samples/sources.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes with the existing CSS LF/CRLF notice. Required full
+  `python scripts/browser_review.py`: **2230/2230 passed**, no captured JavaScript
+  errors (`.sitemap-three-column-browser.log`). Runtime files were held unchanged
+  during this run; both sources and responsive column placement are covered.
+  `python scripts/button_states_review.py`: **7/7 reduced-motion** and **9/9
+  forced-colour** checks passed, no captured errors (`.sitemap-three-column-states.log`).
+- `python .sitemap-columns-visual.py` captured actual light Basic/automatic and
+  dark Advanced/custom desktop layouts, dark 320px stacked custom controls,
+  1180px two-column-plus-preview layout and the dark 320px preview. Inspected all
+  five, confirming the requested desktop row, readable narrow fallback and
+  bounded scrolling. Removed temporary helper and screenshots. Manual
+  keyboard-only, screen-reader, zoom and Firefox/Safari
+  review remain outstanding; automated checks do not establish accessibility.
+- Next: observe learners comparing the three Sitemap columns and complete
+  manual accessibility/cross-browser review.
+  No commit, push or deployment; previous passing results below are historical.
+
+## Sitemap source selection at the top of Visitor sitemap (11 November 2026)
+
+- User requested Sitemap labels and hierarchy at the top of Visitor sitemap.
+  Moved the existing labelled source selector into the first field of the main
+  Sitemap section, ahead of guidance, search and destination properties. Updated
+  the page-derived properties help to refer to that selector above.
+- Advanced sitemap options now contains only the custom text editor. Hide the
+  group in page-derived mode, where it would otherwise be empty. Custom source
+  opens its destination editor without automatically opening Advanced options.
+  Retained source choices, saved settings, Undo and custom dirty-form guards.
+- Refreshed the changed section-sitemap.js asset version. Updated README and
+  architecture guidance; extended the existing source-default assertion to
+  verify first-field placement and hidden inapplicable advanced tools.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes (existing CSS LF/CRLF notice). Required
+  `python scripts/browser_review.py`: **2218/2218 passed**, no captured JavaScript
+  errors (`.sitemap-source-top-browser.log`). Runtime files were held unchanged
+  during the run; source switching and custom unsaved-edit checks remain passing.
+- `python .sitemap-source-visual.py` captured actual light desktop and dark 320px
+  Visitor sitemap views; inspected both and confirmed source selection appears
+  first and fits the pane. Removed temporary helper/screenshots. Manual
+  keyboard-only, screen-reader, zoom and Firefox/
+  Safari review remain outstanding; automated checks do not establish full
+  accessibility. Previous passing suite results below are historical.
+- Next: observe the source-first Sitemap workflow with learners and complete
+  manual accessibility/cross-browser review.
+  No commit, push or deployment; prior working-tree changes are preserved.
+
+## Sitemap outline and selected destination properties (11 November 2026)
+
+- User requested the Content structure approach for Sitemap and simpler Advanced
+  controls. Both page-derived and custom destinations now use a shared searchable
+  native details/list outline beside selected properties, stacking at narrow
+  available widths. Inclusion checkboxes remain native; a selected-item inclusion
+  control updates those same existing choices. Page labels/path are read-only,
+  with a preview link using the existing authored-target navigation handler.
+- Custom destination CRUD is now outside Advanced options, visible in custom
+  mode. Add and Organise destinations group creation/reorder/delete with the
+  outline; selected properties retain label/parent/type/target editing. Advanced
+  retains source selection and the raw text editor. Existing saved data, source
+  semantics, bounded normalization and export generation are unchanged.
+- Added Save/Discard guards for unsaved custom properties on selection, creation,
+  branch actions, inclusion/Undo and source switching. The hidden legacy path
+  select retains existing internal selection integrations; all visible selection
+  uses the outline. Outline rows reconcile by stable ID/order so checkbox focus
+  and branch expansion survive inclusion changes. Search reveals matching
+  destinations with ancestor context and restores expansion when cleared.
+- Reused safe textContent/value updates and existing normalized models. Refreshed
+  five affected asset versions; updated README, architecture and unrun learner
+  prompts. Historical geometry fixtures explicitly reveal the native branches
+  they measure, exclude the hidden compatibility select and discard an invalid
+  rejected form before continuing. Unrelated assertions are retained.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes with the existing CSS LF/CRLF notice. Initial existing focused checks:
+  **204/204 passed**, no errors (`.sitemap-workspace-focused.log`). Expanded run:
+  **238/240**, no errors (`.sitemap-workspace-focused-new.log`); two assertions
+  incorrectly searched for a workspace inside the workspace node itself. Fixed
+  that fixture. Screenshot review also caught narrow labels squeezed by inline
+  inclusion controls. Removed nested card padding and put Include on a separate
+  line at narrow widths; added readable-label-width regressions.
+- Final `python .sitemap-focused.py`: **252/252 passed**, no captured errors
+  (`.sitemap-workspace-focused-final.log`). `python scripts/button_states_review.py`
+  initially passed **7/7 reduced-motion**, **8/9 forced-colour**; the latter
+  captured a failed request for unchanged state-palettes.js. Clean rerun passed
+  **7/7** and **9/9**, no errors (`.sitemap-workspace-states-final.log`). Required
+  full `python scripts/browser_review.py` reached **2199 checks** before the
+  existing 150,000ms virtual-time budget expired (`.sitemap-workspace-browser.log`).
+  This is incomplete, not a passing full run. A second run uses corrected legacy
+  geometry selectors for the visible outline instead of the hidden compatibility
+  select also expired near the end at **2201 checks**
+  (`.sitemap-workspace-browser-final.log`), likewise incomplete rather than passing.
+  Based on measured expiry, increased the bounded virtual budget to 165,000ms and
+  process timeout from 360s to 420s, retaining all assertions. Completed full run
+  with that allowance: **2203/2218 passed**, no captured JavaScript errors
+  (`.sitemap-workspace-browser-verified.log`). Fifteen older nested-layout checks
+  exposed real horizontal outline overflow, rather than an application error.
+- Isolated the legacy IA matrix with `python .sitemap-legacy-focused.py` and
+  measured old checkbox margins: a 250px outline scrolled to 282px, with 32px
+  inherited margins on third-level inclusion labels. The new reset selector was
+  less specific than the old indentation rule. Corrected its specificity so the
+  native tree supplies indentation once, and added no-horizontal-scroll assertions
+  to the new readable-label matrix. Refreshed the final CSS cache version.
+  Isolated corrected legacy run: **95/95 passed**, no errors
+  (`.sitemap-legacy-corrected.log`); measured pre-fix failures are retained in
+  `.sitemap-legacy-measured.log`. Final `python .sitemap-focused-final.py`:
+  **252/252 passed**, no errors (`.sitemap-workspace-focused-verified.log`).
+  Required final `python scripts/browser_review.py`: **2218/2218 passed**, no
+  captured JavaScript errors (`.sitemap-workspace-browser-complete.log`), with
+  runtime files held unchanged after the spacing correction. Final-source motion/
+  colour rerun passed **7/7 reduced-motion** and **9/9 forced-colour**, no captured
+  errors (`.sitemap-workspace-states-verified.log`).
+- `python .sitemap-visual.py` captured light Basic automatic destinations, dark
+  Advanced custom destinations at desktop and dark Basic custom mode at actual
+  320px. Inspected the initial and final captures, including corrected phone label
+  wrapping. `python .sitemap-nested-visual.py` additionally captured fully expanded
+  third-level rows at actual dark 320px after the specificity fix; inspected the
+  readable labels and inclusion controls. Removed temporary review helpers and
+  captures. Manual
+  keyboard-only, screen-reader, zoom and Firefox/Safari review remain outstanding;
+  automated checks do not establish full accessibility.
+- Next: observe learners using the shared Sitemap outline/properties pattern and
+  complete manual accessibility/cross-browser review.
+  No commit, push or deployment; results below are historical.
+
+## Restore beside Save and removal of footer inspection shortcut (11 November 2026)
+
+- User requested removal of Inspect footer HTML from Architecture and relocation
+  of Restore current sample content from Advanced tools into Save and review.
+  Removed that inspection shortcut; retained Inspect project data as requested
+  by the narrower final scope. The main inspector remains available.
+- Restore now shares the Save/Discard action row. Removed its former disclosure
+  and moved the existing per-sample scope/Undo explanation into Save/review,
+  linked to Restore with aria-describedby. Kept the same dirty-form guard,
+  restoration handler, per-sample data boundaries and Undo behavior. No schema
+  or generator changes. Refreshed both changed JS asset versions and updated
+  README/architecture guidance, preserving prior working-tree changes.
+- Extended the existing content-editor startup assertion to verify Restore's
+  action-row placement, described help and absence from Advanced tools, plus
+  absence of the Architecture HTML-inspection shortcut. Existing restore/Undo,
+  unsaved-edit and responsive-control regressions remain intact.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes with the existing CSS LF/CRLF notice. Required full
+  `python scripts/browser_review.py`: **2170/2170 passed**, no captured JavaScript
+  errors (`.architecture-restore-browser.log`). Runtime files were held unchanged
+  during this run, including existing restore/Undo and dirty-form regressions.
+- `python .restore-visual.py` captured the actual light desktop and dark 320px
+  Save/review panels; inspected both and confirmed that Restore wraps within the
+  panel. Removed temporary helper and screenshots. Manual keyboard-only,
+  screen-reader, zoom and Firefox/Safari review
+  remain outstanding; automated checks do not establish full accessibility.
+- Next: observe the revised controls with learners and complete manual
+  accessibility/cross-browser review. No commit, push or deployment. Earlier
+  passing results below are historical.
+
+## Simplified Architecture editor and visitor sitemap (11 November 2026)
+
+- User approved the whole-section simplification analysis. Renamed the primary
+  editor Content structure, kept the selected properties visible and preserved
+  Save below Find content on desktop/after properties on phones. Combined the
+  introduction and learning guide into one optional learning disclosure.
+- Replaced three add buttons with one Add item action and an inside/beside/top
+  placement selector. Organise content groups keyboard-operable move/delete and
+  Expand all/Collapse all. Undo remains scoped to content. Related section and
+  destination references are optional, opening for selected/newly typed links.
+- Visitor sitemap is an independent disclosure opened from Save/review or the
+  related-section shortcut. Inclusion controls and the sole live map appear in
+  that view. Custom source selection, destination CRUD and text editing live in
+  Advanced sitemap options; saved custom mode opens that option group on entry.
+  Sample restoration and lesson code inspection are under Advanced tools.
+- The duplicated full saved tree is now on demand under Review saved content
+  plan. The studio renderer extracts the visitor preview from the shared escaped
+  artifact into the sitemap view without changing export generation. Both data
+  models, sample independence, existing saved plans, null/blank proposals and
+  unsaved-form protections remain intact. Refreshed all five changed asset query
+  versions; updated README, architecture notes and the unrun learner trial.
+- `python scripts/check_structure.py`: **58 assets verified**; `git diff --check`
+  passes (CSS LF/CRLF notice). Initial browser smoke failed **0/6**, capturing an
+  initialization-order error: the sitemap root was detached before looking up
+  its advanced controls. Retained the references before moving the root and
+  reran. Initial `python .simple-focused.py`: **202/204**, no captured errors;
+  both failures were an older broad assertion forbidding any nested summary
+  inside properties. Scoped it to the properties section's own direct summary.
+  Corrected focused run: **204/204 passed**, no captured errors
+  (`.architecture-simple-focused-final.log`). Initial full browser run:
+  **2168/2170 passed**, no captured JavaScript errors
+  (`.architecture-simple-browser.log`); its only failures were those two outdated
+  disclosure assertions. Final `python scripts/browser_review.py` with corrected
+  assertions: **2170/2170 passed**, no captured JavaScript errors
+  (`.architecture-simple-browser-final.log`). Runtime files were held unchanged
+  during both full runs. No application changes were required for those two
+  assertions; properties remain visible while their optional reference may fold.
+- Inspected actual light Basic desktop, dark Advanced 390px visitor sitemap and
+  dark Basic 320px properties captures from `python .simple-visual.py`. Removed
+  temporary review helpers and screenshots. No manual
+  keyboard-only, screen-reader, zoom or Firefox/Safari review; automated checks
+  do not establish full accessibility. Earlier results below are historical.
+- Next: observe learners using the simplified Content structure/Visitor sitemap
+  workflow and complete manual accessibility/cross-browser review. No commit,
+  push or deployment.
+
+## Architecture simplification analysis (11 November 2026)
+
+- User requested a whole-section analysis, particularly overlap between Website
+  content and IA. Reviewed the current content editor, section sitemap controls,
+  legacy destination CRUD/text editor, studio lesson assembly and saved artifact
+  renderer, along with architecture guidance and historical product/recovery
+  reviews. This review changes no runtime behavior.
+- Found a duplicated full content tree (interactive editor and read-only saved
+  artifact), separate destination editing paths available in custom mode, repeated
+  Architecture guidance and multiple differently scoped save/Undo controls.
+  Website content structure already represents content containment/labels; IA
+  should explain the activity rather than suggest another required inventory.
+- Recommended one primary Content structure editor and a separate Visitor
+  sitemap view, with the saved full-tree review available on demand. Keep the
+  established visible properties and Save below Find content on desktop. Group
+  tree utilities, unify Add placement choices and move optional destination links,
+  custom sitemap CRUD/text entry, restore and code inspection into appropriate
+  contextual/advanced areas. Preserve keyboard-operable moving and saved plans.
+- Navigation membership remains distinct from content containment: excluding a
+  sitemap destination does not delete content, and proposals do not rewrite the
+  sample website. Any simplified proposal control must retain the distinction
+  between no replacement and an intentionally blank replacement.
+- Commands run: bounded Get-Content/rg source reads, git status --short and
+  git diff --check. No structure/browser/manual tests run for this analysis;
+  the passing implementation results below are historical.
+- Next: implement the agreed simplification scope, retaining both data models,
+  existing saved-project compatibility, visible properties and responsive Save
+  placement. No runtime edits, commit, push or deployment in this review.
+
+## Visible Architecture properties and action placement (11 November 2026)
+
+- User requested clearer branch-control placement, removal of confusing local
+  numbering, visible properties and Save/review below Find content. Replaced
+  the properties disclosure with an always-visible labelled section. Removed
+  local step numbers from Understand, Develop the content plan and Save/review;
+  the main twelve-step journey remains the progress indicator.
+- Moved move/delete actions and Undo beside the tree's Add item controls. Renamed
+  the action disclosure Move or remove selected item and added the selected
+  item's name as safe text inside it. Selection/creation focus the visible name.
+- Save/review is an independent grid child below Find content on wide screens.
+  Narrow layouts follow DOM order: tree, properties, Save. The external submit
+  button uses form="ia-form" and retains native validation and the original save
+  handler; Discard, status feedback and unsaved-edit protection remain intact.
+- Updated README, architecture notes and the unrun learner trial. Refreshed the
+  two changed runtime asset versions. Updated obsolete disclosure assertions and
+  added coverage for visible properties, contextual tree actions, actual external
+  Save clicks, native required-field validation and responsive Save placement.
+- `python scripts/check_structure.py`: **58 assets verified**. `git diff --check`
+  passes (existing CSS LF/CRLF notice). `python .properties-focused.py`:
+  **194/194 passed**, no captured errors (`.architecture-properties-focused.log`).
+  Full `python scripts/browser_review.py`: **2159/2159 passed**, no captured
+  JavaScript errors (`.architecture-properties-browser.log`). Runtime files were
+  unchanged during this run. The lower check count replaces obsolete property
+  collapse/toggle assertions with visible-section and external-Save coverage;
+  unrelated regression assertions remain intact.
+- `python .properties-visual.py` captured the actual revised light desktop layout,
+  dark Advanced 320px visible properties, and dark Basic 390px Save and sitemap.
+  Inspected all three and removed temporary helpers/screenshots. Manual
+  keyboard-only, screen-reader, zoom and Firefox/Safari
+  review remain outstanding; these checks do not establish full accessibility.
+- Next: observe learners using the revised properties and action layout and
+  complete manual accessibility/cross-browser review. No commit, push or
+  deployment. Earlier results below are historical.
+
+## Architecture centre workspace implementation (11 November 2026)
+
+- User approved the proposed Architecture interface strategy. Moved the existing
+  content editor and sitemap/custom-outline controls into one centre workspace.
+  The left step retains its objective, workspace shortcut and review checklist.
+  Existing IDs, shared validated state, preview/export generators and script order
+  remain intact. Asset query versions refreshed for the three runtime changes.
+- Content selection and editing split at 46rem of available workspace width and
+  stack below it. Added native Add item and Organize selected branch disclosures,
+  with Save, Discard and Undo visible. Longer lesson guidance is collapsible.
+- Fixed silent loss of unsaved form values when selecting/adding another item or
+  returning to Architecture. Dirty forms require Save or Discard before branch
+  changes; same-content rerenders preserve edits. Project-level sample changes,
+  imports and resets load their corresponding plan. No schema change.
+- Updated README, architecture notes and the unrun learner trial. Added browser
+  regressions for shared centre controls, focus routing, unsaved-edit protection,
+  step return and responsive split/stack behavior. The invalid-cycle fixture now
+  explicitly discards its rejected form before continuing; geometry fixtures open
+  the new action disclosures whose controls they measure.
+- Current checks: `python scripts/check_structure.py` verifies **58 assets**;
+  `git diff --check` passes with a CSS LF/CRLF notice. Initial focused
+  `python .architecture-focused.py`: **196/196 passed**, no captured errors
+  (`.architecture-focused.log`). Initial full `python scripts/browser_review.py`:
+  **2151/2161 passed**, no captured JS errors (`.architecture-workspace-browser.log`).
+  Ten failures were fixtures affected by the new dirty-form guard, a stale
+  selection-button reference after rerender, and a fixed viewport assumption
+  rather than available workspace width. Updated these fixtures explicitly;
+  the focused run verified their corrections.
+- Polished primary Save styling, placed branch actions beneath the selected form,
+  made the workspace shortcut scroll immediately to its focused heading and
+  labelled the saved-plan review. Added sitemap-change draft retention checks.
+  Final focused run: **198/198 passed**, no captured errors
+  (`.architecture-focused-final.log`). `python scripts/button_states_review.py`:
+  **7/7 reduced-motion** and **9/9 forced-colour** checks passed, no captured
+  errors (`.architecture-states.log`). Final full `python scripts/browser_review.py`:
+  **2163/2163 passed**, no captured JavaScript errors
+  (`.architecture-workspace-browser-final.log`). Runtime files were unchanged
+  during that final run.
+- The first sandbox launch failed on temporary-profile permissions; browser runs
+  used approved isolated-profile access. `node --check` was attempted for both
+  changed JS files but Node is unavailable; successful browser execution covers
+  their parsing. Historical suite results below predate this implementation.
+- Inspected actual light desktop and dark 390px workspace captures generated by
+  `python .architecture-visual.py`. An initial mobile capture used Chrome's minimum
+  window width; corrected it to an explicit 390px iframe. Final captures verify
+  the light desktop split, dark Advanced 390px tree and dark Basic 320px selected
+  editor/Save/branch controls. Removed temporary helpers and screenshots.
+  No manual keyboard-only, screen-reader,
+  zoom or Firefox/Safari review; automated checks do not establish accessibility.
+- Next: observe learners using the centre workspace and complete manual
+  accessibility/cross-browser review. No commit, push or deployment.
+
+## Architecture workspace UX proposal (11 November 2026)
+
+- Reviewed the user's proposal to simplify the left wizard and place Architecture
+  customization alongside centre-pane learning material. Inspected index.html,
+  layout.css, content-outline.js, contribution/architecture guidance and the
+  historical product/recovery reviews. The desktop control rail is configured at
+  310px; the concern is also the amount of editing concentrated in that rail.
+- Recommended keeping step navigation, a short objective, a workspace link and a
+  review checklist on the left. Put the searchable content tree, selected-item
+  form and contextual branch actions in a centre Architecture workspace. Keep
+  guidance close to the relevant task and longer explanations in disclosures.
+- Proposed one editor using the existing validated project model, with distinct
+  content-planning and sitemap views, visible save feedback and protection for
+  unsaved edits on selection. Proposed stacked tree/editor at narrow widths.
+- This is a design recommendation, not an implemented or learner-validated UI.
+  No runtime assets changed. Commands run were bounded Get-Content/rg source
+  inspections, git status --short and git diff --check; no structure, browser or
+  manual UI checks run. Earlier passing suite results below remain historical.
+- Next: if proceeding, move the existing Architecture editor into the centre,
+  simplify its left step and verify persistence, focus, responsive layout and
+  preview/export agreement with the required checks.
 
 ## Collapsible selected content properties (10 November 2026)
 

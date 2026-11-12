@@ -227,6 +227,8 @@ replacing the iframe or project. Earlier task sketches remain in a disclosure.
 At 900px and below, existing control panes move directly after their lesson.
 Comment placeholders restore them to the sidebar at wider widths; IDs, bindings
 and values are unchanged. Previous/Next moves after the output on narrow screens.
+Architecture's full editor stays in its centre workspace at every width; only
+its short guidance/shortcut pane participates in the sidebar relocation.
 The preview iframe never moves: it remains first in the centre above the lessons,
 preserving its browsing context. Other sections remain visible as collapsed
 disclosures. `DSStudio.activateLesson` lets existing fragment and laboratory
@@ -350,7 +352,98 @@ Feature scripts still share globals (notably `cssExport` is wrapped by advanced 
 
 ## Project planning workflow
 
-### Actual website content structure
+### Content structure workspace
+
+Content structure is the primary Architecture editor; IA names the organising
+activity rather than a second required inventory. `studio-learning.js` provides
+one combined introduction/learning disclosure and wraps the duplicate full saved
+artifact in `#architecture-saved-review`, named Review the Content Plan and
+initially closed. It also contains the existing content Save/Discard/Restore area
+and its status feedback. `#architecture-sitemap`
+is a separate native disclosure, opened by Review visitor sitemap or an item's
+destination shortcut. Its inclusion controls and sole live visitor preview stay
+together. `design-process.js` extracts that preview from the existing escaped
+studio artifact into `#architecture-sitemap-preview`; exports continue to consume
+the complete original artifact renderer. The saved review retains the full
+content tree and guidance, without duplicating the studio visitor preview.
+
+Add uses `#ia-add-placement` and one `#ia-add` button, replacing the three previous
+add-button IDs while retaining inside/beside/top-level behavior and depth bounds.
+Organise content includes keyboard-operable reorder/delete and tree expansion
+utilities. Core properties remain visible; the optional related section/reference
+and destination shortcut live in `#ia-related-section`, opening for link items.
+Proposal inclusion retains the original null versus intentionally empty behavior.
+Restore current sample content shares Save/review's action row with Save and
+Discard. Its nearby scope/Undo help is connected with aria-describedby. The
+original dirty-form guard, per-sample restoration and Undo handler are unchanged.
+Advanced tools retains project-data inspection. The Architecture-specific Inspect
+footer HTML shortcut is removed; the main inspector still supports footer HTML.
+Source selection is the first field in Visitor sitemap. Advanced sitemap options
+contains only the text editor and is hidden for page-derived navigation, where
+there are no applicable advanced controls. Selecting a custom plan opens its
+destination editor without automatically opening Advanced options. The custom destination
+editor is now outside Advanced options and visible when custom source is active.
+
+`section-sitemap.js` exposes `createOutline`, a shared native details/list renderer
+for both page-derived and custom destinations. It reconciles stable IDs and moves
+rows only when their position changes, preserving checkbox focus and branch open
+state. Search reveals matching destinations and ancestors; clearing it restores
+the pre-search expansion. Names use textContent; sources remain the existing
+validated page inventory and custom destination model. The two sources share the
+same responsive outline/properties presentation while keeping their data rules.
+The single preview host follows the active source's workspace without recreation.
+At 58rem of available Architecture width, its grid uses Find destination,
+Selected destination and Visitor sitemap preview columns. At 46–58rem the
+preview spans below the two editing columns; below that all three stack in DOM
+order. The studio-only preview region is focusable with bounded vertical scrolling;
+the complete shared export artifact is unchanged. Ordinary renders do not move
+an already correctly placed preview host, preserving focus and scroll.
+
+Page-derived properties show a read-only label/path, immediate inclusion and an
+authored-target preview link through the existing delegated preview handler.
+Custom properties retain label/parent/type/target editing and immediate inclusion.
+`site-builder.js` adds Save/Discard protection for dirty custom forms on selection,
+creation, reorder/delete, inclusion and Undo. `DSStudio.sitemapEditor.canLeave`
+also guards source switching; imports, resets and sample switches load their
+corresponding forms. The old path select is hidden as an internal compatibility
+bridge for existing selection routes; user-facing selection uses the outline.
+No project-schema, sitemap generation or export changes are introduced.
+
+Architecture uses a centre-pane workspace rather than a full CRUD form in the
+left wizard. `studio-learning.js` moves the existing content editor, section
+sitemap controls and legacy custom/text editors into `#architecture-workspace`,
+before the saved planning artifact. These nodes retain their original IDs,
+listeners and shared project state; the short wizard pane retains its objective,
+workspace shortcut and review checklist at every breakpoint. The content tree
+and selected form use a container-query split at 46rem of workspace width and
+stack below that width, including when the code inspector reduces available room.
+Longer Architecture guidance, Add item choices and branch actions use native
+disclosures. Save, Discard and content Undo remain outside those action disclosures.
+The property editor stays visible without a disclosure or local step numbers.
+Move/remove controls and Undo live with the content tree. The content grid contains
+the tree/browser with Save and review beneath its branch tools, beside the
+property form. Develop the content plan leads the Architecture workspace directly
+after its header and before Content structure. Its controls explicitly associate
+with ia-form; both editing surfaces handle dirty state and invalid fields.
+A selected-item path keeps the top planning disclosure's context clear. Review
+and Save Content Plan retains the IA/sitemap guidance and complete saved artifact.
+The guidance has its own stable host, populated by the existing
+artifact renderer, so later model renders retain this order without replacing
+the action nodes or adding a duplicate introduction. Exports keep the original
+complete artifact. Its external submit button keeps
+`form="ia-form"` so native validation and the existing handler remain authoritative.
+The first unsaved edit opens the review disclosure without moving field focus.
+Save, Discard and dirty-form guards reveal it before focusing Save. Manually
+collapsing it preserves form values and project data; ordinary rendering retains
+its disclosure state. Save-area styles are independent of the content-editor
+ancestor so moved actions keep their responsive wrapping and touch targets.
+
+The content editor guards selection, creation, move/delete, Undo and restoration
+while its form is dirty, announces Save or discard and focuses Save. Same-content
+refreshes and returning to the step preserve the form. Successful saves or Discard
+clear the guard. A changed sample/content snapshot, reset or import loads the
+corresponding form; unsaved forms are not persisted as project data. Sitemap-only
+changes preserve unsaved content forms. No project schema or export editor is added.
 
 The primary Architecture control is now the content outline, distinct from the
 visitor sitemap's destination hierarchy described below. `content-architecture.js`
@@ -366,7 +459,7 @@ wrappers, scripts, styles and decorative SVG internals. It captures headings,
 paragraphs, CTAs and fragment references, figures/alternative text/captions,
 lists/terms/tables, form controls/options and shared Header/Footer content. Header
 logo/wordmark and Home/Hero are explicit. Numeric progress values become strings.
-Default Basic has 132 entries and Advanced 395, with five levels in each.
+Default Basic has 139 entries and Advanced 409, with five levels in each.
 
 The IA lesson within the Advanced sample is represented as a generated planning
 view, and the footer sitemap as generated destinations. Their recursive contents
@@ -411,29 +504,73 @@ selection buttons, search with ancestor context, expand/collapse, a labelled det
 form, child/sibling/root creation, subtree reparent/reorder/delete and one-change
 Undo. IDs preserve identity with repeated labels, rename and moves. Parent options
 omit descendants and moves beyond the depth bound; submit revalidates forged
-choices. Current sample content is read-only; draft text/status/notes plan changes
-without rewriting sample HTML. Per-mode snapshots persist via existing JSON/local
+choices. Website content edits authored text; draft text/status/notes plan changes
+separately. Per-mode snapshots persist via existing JSON/local
 flows. Restoration affects only the current mode and can be undone. Mode changes,
 reset/import and external planning changes clear incompatible Undo history.
 
-The selected-item form groups existing properties into three student-facing parts:
-Understand this item, Develop the content plan, and Save and review. It identifies
-the selected name, path and origin, presents actual content read-only before
+The selected-item form shows Website content and Understand this item beside the
+browser. Develop the content plan is above Content structure; Save and review is
+below the left browser. They share native form ownership. The editor identifies
+the selected name, path and origin, presents a saved-content summary before
 editable properties, and explains each kind of content. Type-specific prompts and
-examples guide proposed wording, image briefs, link text, control instructions or
-container requirements. Purpose/owner/next action remain notes; no schema change
-or automatic sample editing is introduced. The proposal checkbox still preserves
+prompts guide proposed wording, image briefs, link text, control instructions or
+container requirements. Purpose/owner/next action remain notes. The proposal checkbox still preserves
 the null/empty-string distinction. Unsaved feedback and Discard operate on form
 values only; Save uses the existing validated commit and Undo flow. Saving or
 discarding keeps focus on Save. Students are instructed to save before selection.
 Native fieldsets with legends or aria-labelledby and aria-describedby connect
-the controls and help. Selected content properties and Develop the content plan
-are independent native details disclosures, initially closed and reset to closed
-after reset/import. Selection and ordinary rendering preserve their open states;
-toggling them leaves form values and project data intact. Selection focuses the
-properties summary when closed. Adding an item opens properties, and invalid
-controls reveal their containing disclosure before browser validation focuses them. The
+the controls and help. Selected content properties is an always-visible section.
+Develop the content plan is a native disclosure, initially closed and reset to
+closed after reset/import. Ordinary rendering preserves its open state;
+toggling it leaves form values and project data intact. Selection and adding an
+item focus the visible name field. Invalid controls inside the planning disclosure
+reveal it before browser validation focuses them. The
 Architecture overview adds content planning within the existing twelve steps.
+
+Content structure's h3 and introductory paragraph live in the left browser's
+header, keeping the right form aligned to the top of the two-column grid.
+Content readiness is an always-visible field directly after the properties
+heading and before Website content. It uses the existing validated status field
+for all content kinds and remains part of ia-form. The review disclosure is now
+named Review the Content Plan; its Save actions remain beneath the left browser.
+
+With no saved draft, planning fields show current authored wording from the
+selected item's text/alt/label bindings (bounded to 2,400 characters). The Include
+proposal checkbox stays off, preserving null versus explicit empty proposals and
+preventing passive saves from promoting current wording to a proposal. Saved
+drafts always win, including empty strings. Fresh inventories seed existing notes
+with site/item purpose, an explicitly unassigned owner and an item-specific review
+action. Existing saved notes, including blanks, are preserved; a contextual
+placeholder is available for blank notes. No new schema or generic example panel.
+
+`website-content.js` loads after the content inventory and before core state. It
+adds normalized `designProcess.websiteContent.{basic,advanced}` arrays (empty for
+old projects). Each record contains a local sourceKey, allowlisted field,
+fingerprint and plain-text value. The inventory's optional entry callback exposes
+local DOM nodes to a binding registry; labels and bare container text also receive
+inventory entries. Text-node aliases share one canonical binding, so a control's
+label and its separate label entry cannot acquire conflicting overrides.
+Fingerprint mismatches or absent sources are retained/reported and never applied
+to a different node. Fields are limited to 2,000 per mode, 2,400 characters each
+and 120,000 serialized characters per mode; UI saves reject overflow atomically.
+
+Basic/Advanced register raw `*SourceHtml` factories and shared edited `*Html`
+factories. Preview, inspector, copy/download and source-derived sitemap labels
+use the edited factories. With no overrides, authored HTML is returned directly.
+Overrides resolve against locally parsed authored DOM; imported strings are
+assigned only to text nodes or fixed safe attributes, then serialized. They are
+never parsed as markup, selectors, URLs or script. Inline elements and anchors
+remain intact. Relabeling an option adds its original implicit value explicitly
+when necessary, preserving form submission semantics. Containers do not flatten
+their children; generated planning artifacts stay derived. Project-owned spans
+retain Brief identity while surrounding authored wording remains editable.
+
+The existing form transaction commits website text and plan together. Discard
+changes only form values; Undo restores both. Item restoration prepares defaults
+until Save, and sample restoration clears only the active mode's overrides and
+content plan. Mode changes, reset/import and external changes clear incompatible
+Undo history. Save before sample switches, reset or imports.
 
 The old destination editor and raw text outline are secondary collapsed panels,
 shown only for the custom Sitemap source. Canonical sections focus their matching
@@ -566,9 +703,10 @@ The module's initializer binds planning inputs through the existing `apply()` /
 UX requirements-planning overview: identify audience tasks, define essential
 scope/content and ownership/accessibility/dependencies in the brief, group and
 label content, then check a task route with an intended user. Its stated outcome
-is an agreed IA and selected visitor sitemap ready to guide Wireframe. The authored overview is inserted
-by studio learning after the lesson's heading/introduction and before its practice
-task; it adds no planning fields or automated validation of the learner's decisions.
+is an agreed IA and selected visitor sitemap ready to guide Wireframe. Studio
+learning combines the overview and content-planning exercise in one optional
+learning disclosure after a concise introduction; it adds no planning fields or
+automated validation of the learner's decisions.
 The planning module wraps the CSS generator for shared artifact
 styles and the renderer for synchronized controls/lessons. Markup caches preserve
 unchanged artifact nodes and focus through unrelated palette changes. Editing
@@ -592,7 +730,8 @@ their existing background roles; the studio-only token is not exported.
 ## Live CSS/HTML Inspector and sample page
 
 Basic teaching tasks are integrated into the wizard. The inspector remains
-read-only; download complete files to edit their content. The hero demonstrates
+read-only; edit authored text through Architecture or download complete files
+for further HTML changes. The hero demonstrates
 a two-column Grid layout, with Flexbox, Grid and form examples further down.
 Generated Basic HTML is indented and its page CSS uses one declaration per line;
 authored SECTION comments label Page basics, Header, Hero, Skills, Toolkit, Form

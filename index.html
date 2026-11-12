@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261110-content-disclosures">
+    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261111-architecture-tool-context">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261109-three-level-ia">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
@@ -109,7 +109,7 @@
             </div>
             <div class="journey-pane" data-journey-pane="1" hidden>
               <h3 class="journey-stage-title">2. Map the information architecture</h3>
-              <p class="help">Use the brief to identify essential information, content and user tasks. Organize the full information architecture, then select useful sitemap destinations. Check labels and relationships with your audience; the centre lesson guides this planning step.</p>
+              <p class="help">Group and label the information your audience needs. Use the centre workspace to develop content plans and choose visitor sitemap destinations.</p>
               <div id="sitemap-editor"></div>
               <details class="learning-note"><summary>Edit information architecture as text</summary>
               <div class="field process-editor"><label for="plan-pages">Sitemap destination outline</label><textarea id="plan-pages" data-process-field="pages" maxlength="8400" rows="12" aria-describedby="plan-pages-help"></textarea><p class="help" id="plan-pages-help">Use this optional custom plan instead of automatic eyebrow and heading labels. Use the content outline above for the full website inventory and deeper nesting. Custom destination outlines are kept when switching samples. Use one entry per line, up to 64 lines, with Parent &gt; Child &gt; Detail for up to three levels and labels up to 64 characters. Labels are plain text, not URLs. Architecture can show this separate destination outline. Choose custom sitemap inclusion in its destination controls; excluding an entry does not remove website content. Only existing destinations become links.</p><button type="button" class="ghost" id="plan-use-sample">Use complete sample destination outline</button><p class="help" id="plan-sample-status" role="status"></p><a href="#process-ia">Review the full information architecture and sitemap preview</a></div>
@@ -2100,18 +2100,19 @@
       <script src="src/js/brand-palette.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261110-eyebrow-sitemap" defer></script>
+      <script src="src/js/design-process.js?v=20261111-writable-content" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
-      <script src="src/js/section-sitemap.js?v=20261110-eyebrow-sitemap" defer></script>
-      <script src="src/js/content-architecture.js?v=20261110-student-content-plan" defer></script>
+      <script src="src/js/section-sitemap.js?v=20261111-sitemap-three-columns" defer></script>
+      <script src="src/js/content-architecture.js?v=20261111-architecture-tool-context" defer></script>
+      <script src="src/js/website-content.js?v=20261111-writable-content" defer></script>
       <script src="src/js/core-state.js?v=20261110-content-outline" defer></script>
       <script src="src/js/css-dock.js?v=20261109-local-inspector" defer></script>
       <script src="src/js/advanced-params.js?v=20261105-studio-appearance" defer></script>
       <script src="src/js/journey-library.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-design.js?v=20261104-state-colour-dropdowns" defer></script>
-      <script src="src/js/sample-system.js?v=20261110-eyebrow-sitemap" defer></script>
-      <script src="src/js/sample-homepage.js?v=20261110-content-outline" defer></script>
-      <script src="src/js/basic-homepage.js?v=20261110-content-outline" defer></script>
+      <script src="src/js/sample-system.js?v=20261111-writable-content" defer></script>
+      <script src="src/js/sample-homepage.js?v=20261111-writable-content" defer></script>
+      <script src="src/js/basic-homepage.js?v=20261111-writable-content" defer></script>
       <script src="src/js/page-utilities.js?v=20261109-local-inspector" defer></script>
       <script src="src/js/responsive-preview.js?v=20261104-cache-recovery" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
@@ -2123,9 +2124,9 @@
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261019-typography" defer></script>
       <script src="src/js/section-accordions.js?v=20261109-active-lesson-startup" defer></script>
-      <script src="src/js/site-builder.js?v=20261110-eyebrow-sitemap" defer></script>
-      <script src="src/js/content-outline.js?v=20261110-content-disclosures" defer></script>
-      <script src="src/js/studio-learning.js?v=20261110-student-content-plan" defer></script>
+      <script src="src/js/site-builder.js?v=20261111-sitemap-workspace" defer></script>
+      <script src="src/js/content-outline.js?v=20261111-architecture-tool-context" defer></script>
+      <script src="src/js/studio-learning.js?v=20261111-architecture-tool-context" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/palette-process.js?v=20261104-status-palettes" defer></script>
       <script src="src/js/state-palettes.js?v=20261104-state-colour-dropdowns" defer></script>

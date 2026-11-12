@@ -1,5 +1,5 @@
 'use strict';
-/* Keep configuration in the wizard; centre panels explain and demonstrate it.
+/* Architecture is a centre workspace; other configuration stays in the wizard.
    Move existing controls once so their state and event handlers stay shared. */
 DSStudio.register({
   id: 'studio-learning',
@@ -96,9 +96,36 @@ DSStudio.register({
       task.textContent = stage.task;
       lesson.replaceChildren(lesson.querySelector('h3'), lesson.querySelector('p'), task);
       if(stage.id==='architecture') {
-        const overview=document.createElement('div');overview.className='architecture-overview';
+        const overview=document.createElement('details');overview.className='architecture-overview';
         overview.innerHTML='<ol><li><strong>Identify tasks.</strong> Prioritise the main audience’s goals and the information or functions needed to complete them.</li><li><strong>Define scope.</strong> List essential pages and content. Confirm content owners, accessibility needs and dependencies in the brief; note open questions.</li><li><strong>Group and label.</strong> Organise the full agreed content into a clear hierarchy using language the audience understands, including information within pages.</li><li><strong>Develop the content plan.</strong> Select an item, understand its properties and current content, then propose what the audience needs. Record who will supply it and the next action. Save and review the plan before selecting another item.</li><li><strong>Select sitemap destinations.</strong> Choose which IA entries belong in visitor navigation without removing their content. Ask someone where they would start a key task. Revise unclear labels before wireframing.</li></ol><p><strong>Outcome:</strong> An agreed information architecture with a selected visitor sitemap, ready to guide the wireframe.</p>';
-        lesson.insertBefore(overview,task);
+        const overviewSummary=document.createElement('summary');overviewSummary.textContent='About content structure and navigation';overview.prepend(overviewSummary);
+        const guide=get('ia-content-editor').querySelector('.ia-learning-guide');
+        while(guide.children.length>1)overview.append(guide.children[1]);guide.remove();
+        lesson.querySelector('h3').textContent='Organise your website';
+        lesson.querySelector('p').textContent='Organise your website’s content, plan what each item needs, then choose which sections visitors can reach through the sitemap.';
+        task.remove();lesson.append(overview);
+        const workspace=document.createElement('section');workspace.id='architecture-workspace';workspace.className='architecture-workspace';workspace.setAttribute('aria-labelledby','architecture-workspace-title');
+        workspace.innerHTML='<header><h3 id="architecture-workspace-title" tabindex="-1">Architecture workspace</h3></header>';
+        const sitemapAdvanced=get('architecture-sitemap-advanced');
+        sitemapAdvanced.append(get('sitemap-outline-editor'));
+        get('section-sitemap-editor').insertBefore(get('sitemap-destination-editor'),sitemapAdvanced);
+        const sitemap=document.createElement('details');sitemap.id='architecture-sitemap';sitemap.className='architecture-options';
+        const sitemapSummary=document.createElement('summary');sitemapSummary.textContent='Visitor sitemap';sitemap.append(sitemapSummary,get('section-sitemap-editor'));
+        const contentPlan=get('ia-content-plan');
+        for(const control of contentPlan.querySelectorAll('input,textarea,select,button'))control.setAttribute('form','ia-form');
+        workspace.append(contentPlan,get('ia-content-editor'),sitemap);
+        lesson.after(workspace);
+        const review=document.createElement('details');review.id='architecture-saved-review';review.className='architecture-options';
+        const artifact=panel.querySelector('[data-process-artifact="ia"]'),guidance=document.createElement('div');guidance.id='architecture-review-guidance';
+        guidance.append(artifact.querySelector('.process-ia-guidance'));
+        const reviewSummary=document.createElement('summary');reviewSummary.textContent='Review the Content Plan';review.append(reviewSummary,guidance,artifact);workspace.append(review);
+        const advanced=document.createElement('details');advanced.id='architecture-advanced';advanced.className='architecture-options';
+        const advancedSummary=document.createElement('summary');advancedSummary.textContent='Advanced tools';advanced.append(advancedSummary);workspace.append(advanced);
+        const viewSitemap=document.createElement('button');viewSitemap.type='button';viewSitemap.className='ghost';viewSitemap.id='architecture-view-sitemap';viewSitemap.textContent='Review visitor sitemap';
+        viewSitemap.addEventListener('click',()=>{sitemap.open=true;sitemapSummary.focus();sitemap.scrollIntoView({block:'start',behavior:'instant'});});get('ia-save').closest('.ia-save-area').append(viewSitemap);
+        const open=document.createElement('button');open.type='button';open.className='ghost';open.id='open-architecture-workspace';open.textContent='Open Architecture workspace';
+        open.addEventListener('click',()=>{window.dssRevealSection('process-ia',false);get('architecture-workspace-title').focus();get('architecture-workspace-title').scrollIntoView({block:'start',behavior:'instant'});});
+        pane(1).querySelector('p.help').after(open);
       }
       const actions = document.createElement('div'); actions.className = 'button-row step-output';
       const inspect = (label, language, find = '') => {
@@ -109,12 +136,12 @@ DSStudio.register({
         actions.append(button);
       };
       if (stage.index < 4) inspect('Inspect project data', 'json');
-      if (stage.index === 1) inspect('Inspect footer HTML', 'html', 'website-footer');
       if (stage.index >= 4 || stage.id === 'prototype') {
         inspect('Inspect CSS', 'css', stage.find);
         inspect('Inspect HTML', 'html', stage.index === 7 ? 'ds-button--primary' : '<main');
       }
       lesson.append(actions);
+      if(stage.id==='architecture')get('architecture-advanced').append(actions);
       if (stage.id === 'prototype') {
         const previewButton = document.createElement('button'); previewButton.type='button'; previewButton.className='ghost'; previewButton.id='reviewFinalPrototype'; previewButton.textContent='Review live prototype';
         previewButton.addEventListener('click',()=>{preview.open=true;const summary=preview.querySelector('summary');summary.focus();preview.scrollIntoView({block:'start',behavior:'instant'});});

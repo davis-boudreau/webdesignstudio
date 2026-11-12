@@ -29,13 +29,43 @@ acknowledgements are not proof that a task was understood or completed.
 | Make the page spacing more generous. Explain why several gaps change. | Do they use the live Spacing lesson's prediction, before/now comparison, page observation and code connections? Can they distinguish the independent grid gap and Basic's responsive padding multiples? | The preview and active rule agree; the learner explains the foundation/multiple relationship and why viewport width can change the applied multiple. |
 | Check the hero at a phone width. Explain what changes the column layout. | Can they reach the preview and code without losing context? Do they confuse presets with saved breakpoints? | They compare 390 px/Fluid and locate the hero rule and responsive override. |
 | Study a component of your choice and find its rule and controlling tokens. | Do the example selector, optional preview selection and Configure actions make sense? | They connect a real element to an exact rule, token value and source control. |
-| Select the Hero heading and develop a content plan for your audience. Save it and explain what changed. | Can they find and open Selected content properties and Develop the content plan, then collapse either without losing edits? Can they distinguish an item's outline name from its wording, current content from a proposal, and saved from unsaved edits? Do the example and purpose/owner/next-action prompts help? | Their saved proposal, readiness and notes appear in the outline; the sample heading stays unchanged. They can discard a later unsaved edit and find the saved plan again. |
+| Select the Hero heading and develop a content plan for your audience. Save it and explain what changed. | Can they read the visible Selected content properties, open Develop the content plan and collapse the plan without losing edits? Can they find the actions in Review the Content Plan and understand when that section opens? Can they distinguish an item's outline name from its wording, current content from a proposal, and saved from unsaved edits? Do the example and purpose/owner/next-action prompts help? | Their saved proposal, readiness and notes appear in the outline; the sample heading stays unchanged. They can discard a later unsaved edit and find the saved plan again. |
 | Use the Sitemap to find the profile-row example. Exclude its link, then restore it. Explain what changed. | Do they match the visible eyebrow to its Sitemap label and understand the nesting? Can they distinguish Sitemap inclusion from the detailed Website content structure? | The link reaches Flexbox / Profile row; exclusion removes only its navigation link, and restoration brings it back. The example and detailed content remain available throughout. |
 | Export the website and reopen it outside the studio. Save a project backup too. | Do they distinguish complete files from excerpts and website files from project JSON? | index.html and tokens.css work together locally; JSON restores the design in an isolated studio profile. |
 
 For someone continuing an older project, optionally ask them to switch between
 Page eyebrows and headings and Custom destination plan. Check that they understand
 which labels each source uses and can recover their saved custom plan.
+
+For Architecture, observe whether the learner reaches the centre workspace from
+the short wizard step and can use its tree and selected-item form together. Ask
+them to leave a note unsaved and select another item: can they understand the
+Save or discard message and continue? Check Add item placement and Organise content
+discovery, the visible property fields and the Review the Content Plan actions. Return
+to the step with an unsaved note and repeat at a phone width. Can they reopen
+Review the Content Plan after manually collapsing it?
+These are trial prompts; no learner observation has yet validated the workspace.
+
+Ask the learner to edit a heading in Website content, save it and locate it in
+the website preview and HTML inspector. Then write a different proposal in Develop
+the content plan: can they explain which words appear on the page? Try an image
+alternative, form label and option wording. Ask them to discard an unsaved edit,
+restore the selected item's text, Undo, and save/reopen a project JSON file. Check
+whether container and generated-content guidance makes the editable scope clear.
+Repeat at a phone width; record any crowding caused by multiple inline text fields.
+
+Ask whether Content structure feels like one organising task. Can the learner
+open Review visitor sitemap, change an inclusion choice and explain the adjacent
+map? Can they find the optional saved-plan review and Advanced tools without
+mistaking them for required extra inventories? For links, observe whether the
+automatically revealed related-section reference is helpful.
+
+In Visitor sitemap, ask the learner to search for a nested destination, select it
+and explain its location and inclusion. Can they preview an excluded destination
+and understand why its content is still present? In custom mode, ask them to edit
+a label, attempt another selection, then save or discard and continue. Observe
+whether the matching outline/properties pattern reduces the need for help at
+desktop and phone widths. These tasks have not yet been observed with learners.
 
 Ask the learner to use keyboard navigation for part of the session. Separately
 record focus/scroll problems, inaccessible controls, crowded layouts and unclear

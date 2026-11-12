@@ -138,7 +138,7 @@ ${headerLinks}
   <main id="main-content" class="container" tabindex="-1">
     <section id="home" class="sample-grid sample-hero" aria-labelledby="hero-title">
       <div>
-        <p class="sample-eyebrow">${project} / Web Design Field Guide</p>
+        <p class="sample-eyebrow"><span data-website-setting="project">${project}</span> / Web Design Field Guide</p>
         <h1 id="hero-title" class="page-title">A better web starts with one good decision.</h1>
         <p class="sample-lead">Learn by making. Turn a simple page into a thoughtful design system with practical lessons in layout, type, colour and accessible interfaces.</p>
         <div class="button-row sample-section-actions">
@@ -515,10 +515,11 @@ ${flexRecipe}
     title: 'Sample home page',
     init() {
       DSStudio.samples.illustration = illustration;
-      DSStudio.samples.advancedHtml = homepageHtml;
+      DSStudio.samples.advancedSourceHtml = homepageHtml;
+      DSStudio.samples.advancedHtml = () => DSStudio.websiteContent.apply(homepageHtml(),'advanced');
       const previousCss = cssExport;
       cssExport = () => previousCss() + '\n' + homepageCss() + DSStudio.samples.footerCss();
-      htmlExport = homepageHtml;
+      htmlExport = DSStudio.samples.advancedHtml;
       renderCode();
     }
   });

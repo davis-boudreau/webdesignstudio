@@ -38,8 +38,14 @@
   const cache={basic:null,advanced:null},signatures={basic:'',advanced:''};let collecting=false;
   const mode=()=>state.sampleMode==='basic'?'basic':'advanced';
   const hash=value=>{let n=2166136261;for(const char of value){n^=char.charCodeAt(0);n=Math.imul(n,16777619);}return (n>>>0).toString(36);};
-  function inventory(html,sample) {
-    const doc=new DOMParser().parseFromString(html,'text/html'),nodes=[],keys=new Set();
+  function planningNotes(list,node,sample,knownLocation=null) {
+    const location=(knownLocation??path(list,node).join(' / ')).slice(0,220),project=clean(state.project,90)||'this website';
+    const purpose={region:'Keep this shared website area consistent',page:'Bring together content for a visitor task',section:'Organise this topic into a clear reading sequence',group:'Keep these related content items together',text:'Communicate this message clearly',image:'Support the content with a relevant image and useful alternative text',link:'Help visitors understand and reach this destination',field:'Make this control and its instructions understandable'}[node.type]||'Support the visitor task';
+    const review={image:'confirm the image purpose and alternative text',link:'check its wording and destination',field:'check its label, instructions and feedback',text:'check the wording against the surrounding content'}[node.type]||'check the grouping and reading order';
+    return `Purpose: ${purpose} in ${project}, at ${location}.\nOwner: Unassigned.\nNext action: Review this item in the ${sample==='basic'?'Basic HTML and CSS':'Advanced Web Design Field Guide'} prototype and ${review}.`.slice(0,1200);
+  }
+  function inventory(html,sample,onEntry=null,documentSource=null) {
+    const doc=documentSource||new DOMParser().parseFromString(html,'text/html'),nodes=[],keys=new Set(),locations=new Map();let currentElement=null;
     const names=new Map(DSStudio.process.inventory(sample).map(([name,id])=>[id,name]));
     const compact=value=>String(value??'').replace(/\s+/g,' ').trim().slice(0,2400);
     const add=(label,type,value,parent,key,target='')=>{
@@ -48,10 +54,12 @@
       const node={id:'content-'+hash(key),parentId:parent?.id||null,label:label.slice(0,120),type,value:compact(value),reference:'',notes:'',status:'present',sourceKey:key,target,draft:null};
       // Hash collisions are resolved deterministically, never used to merge entries.
       while(nodes.some(old=>old.id===node.id))node.id+='-copy';
-      nodes.push(node);return node;
+      const location=[...(locations.get(parent?.id)||[]),node.label];locations.set(node.id,location);
+      nodes.push(node);node.notes=planningNotes(nodes,node,sample,location.join(' / '));if(onEntry)onEntry(node,currentElement);return node;
     };
     function walk(element,parent,path,depth=1) {
       if(depth>MAX_DEPTH || !element || element.nodeType!==1 || element.matches('script,style,link,svg,template,[aria-hidden="true"]'))return;
+      currentElement=element;
       const tag=element.localName, text=compact(element.textContent),anchor=element.id;
       const key=anchor?'id:'+anchor:path;
       let node=null,stop=false;
@@ -73,6 +81,7 @@
       else if(['ul','ol','dl','table','blockquote'].includes(tag))node=add(({ul:'List',ol:'Ordered list',dl:'Terms and definitions',table:'Table',blockquote:'Quotation'})[tag],'group','',parent,key);
       else if(tag==='img') {node=add('Image','image',element.getAttribute('src')?.startsWith('data:')?'Local generated illustration':'Website image',parent,key);add('Alternative text','text',element.getAttribute('alt')||'Decorative image',node,key+'/alt');return;}
       else if(/^h[1-6]$/.test(tag)){node=add('Heading','text',text,parent,key);stop=true;}
+      else if(tag==='label')node=add('Field label','text',text,parent,key);
       else if(tag==='p' || tag==='figcaption' || tag==='summary' || tag==='legend' || tag==='caption' || tag==='small') {node=add(({p:element.matches('[class*="eyebrow"]')?'Eyebrow':'Paragraph',figcaption:'Caption',summary:'Disclosure label',legend:'Group label',caption:'Table caption',small:'Supporting text'})[tag],'text',text,parent,key);stop=true;}
       else if(tag==='a' || tag==='button') {const href=element.getAttribute('href')||'',target=href.startsWith('#') && names.has(href.slice(1))?href.slice(1):'';const label=tag==='button'?'Button':element.closest('nav')?text:element.matches('.ds-button--primary')?'Primary CTA':element.matches('.ds-button--secondary')?'Secondary CTA':'Link';const link=add(label||'Link',tag==='a'?'link':'field',text,parent,key,target);if(link)link.reference=href.slice(0,1000);return;}
       else if(['input','textarea','select','progress'].includes(tag)) {
@@ -91,6 +100,7 @@
       }
       if(node && node.target==='home')node=add('Hero','group','',node,key+'/hero');
       if(stop){for(const [i,link]of [...element.querySelectorAll('a')].entries())walk(link,node,key+'/link:'+i,depth+1);return;}
+      if(!['label','input','textarea','select','progress'].includes(tag))for(const [index,child]of [...element.childNodes].entries())if(child.nodeType===3 && child.nodeValue.trim())add('Text','text',child.nodeValue,node||parent,key+'/text:'+index);
       [...element.children].forEach((child,index)=>walk(child,node||parent,key+'/'+child.localName+':'+index,depth+(node?1:0)));
     }
     for(const element of doc.querySelectorAll('body > header, body > main > section, body > footer'))walk(element,null,'root/'+element.localName);
@@ -138,5 +148,5 @@
     const branch=(parentId=null)=>`<ul>${(byParent.get(parentId)||[]).map(node=>{const children=byParent.has(node.id),value=node.value;const label=`<strong>${esc(node.label)}</strong> <small>${esc(typeNames[node.type])}${node.status!=='present'?' · '+esc(statusNames[node.status]):''}</small>`;return `<li>${children?`<details data-content-branch="${esc(node.id)}"><summary>${label}</summary>`:label}${value?`<p>${esc(value)}</p>`:''}${node.target?`<p class="help">${node.type==='link'?'References':'Destination'}: ${esc(names.get(node.target)||node.target)}</p>`:''}${node.reference?`<p class="help">Reference: ${esc(node.reference)}</p>`:''}${node.draft!==null?`<p><strong>Planned content:</strong> ${esc(node.draft)||'(deliberately empty)'}</p><p class="help">Sample content is unchanged.</p>`:''}${node.notes?`<p class="help">${esc(node.notes)}</p>`:''}${children?branch(node.id)+'</details>':''}</li>`;}).join('')}</ul>`;
     return `<section class="ia-content-map" aria-label="Complete website content structure"><h4>Website content structure</h4><p>Regions, sections, groups and actual content. Expand a branch to inspect its text, images, controls and destination references. ${list.length} entries.</p>${list.length?branch():'<p>No content entries. Add an entry or restore the sample content inventory.</p>'}</section>`;
   }
-  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory};
+  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory,planningNotes};
 })();

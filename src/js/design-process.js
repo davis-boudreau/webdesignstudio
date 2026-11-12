@@ -74,6 +74,7 @@
     pageLinks: { basic: {}, advanced: {} },
     iaEntries: { basic: [], advanced: [] },
     contentPlan: { basic: null, advanced: null },
+    websiteContent: { basic: [], advanced: [] },
     sitemapSource: { basic: 'auto', advanced: 'auto' },
     sitemapExcluded: { basic: [], advanced: [] },
     showPlanned: false,
@@ -92,6 +93,7 @@
     result.showPlanned = value.showPlanned === true;
     for (const mode of ['basic', 'advanced']) {
       result.contentPlan[mode] = DSStudio.contentArchitecture?.normalizeNodes(value.contentPlan?.[mode],mode) ?? null;
+      result.websiteContent[mode] = DSStudio.websiteContent?.normalize(value.websiteContent?.[mode]) ?? [];
       const allowed = new Set(inventories[mode].flatMap(([,id,children=[]]) => [id,...children.map(([,childId])=>childId)]));
       result.sitemapSource[mode] = ['auto','sections','custom'].includes(value.sitemapSource?.[mode]) ? value.sitemapSource[mode] : 'auto';
       result.sitemapExcluded[mode] = [...new Set((Array.isArray(value.sitemapExcluded?.[mode]) ? value.sitemapExcluded[mode] : []).slice(0,192).filter(id=>allowed.has(id)))];
@@ -311,7 +313,24 @@
           if (control.dataset.processField==='pages') control.setCustomValidity(control.value.split('\n').some(line=>line.split('>').length>3)?'Use at most three information levels: Parent > Child > Detail.':'');
         }
         for (const target of document.querySelectorAll('[data-process-artifact]')) {
-          const markup = artifactHtml(target.dataset.processArtifact, 'studio-plan');
+          let markup = artifactHtml(target.dataset.processArtifact, 'studio-plan');
+          const sitemapPreview=document.getElementById('architecture-sitemap-preview');
+          if(target.dataset.processArtifact==='ia' && sitemapPreview) {
+            // Reuse the exported artifact renderer while showing its visitor map
+            // beside the studio's sitemap controls, only once.
+            const template=document.createElement('template');template.innerHTML=markup;
+            const map=template.content.querySelector('.process-sitemap-preview');
+            if(map)map.tabIndex=0;
+            const previewMarkup=map?.outerHTML||'';
+            if(sitemapPreview.innerHTML!==previewMarkup)sitemapPreview.innerHTML=previewMarkup;
+            const guidanceHost=document.getElementById('architecture-review-guidance');
+            if(guidanceHost) {
+              const guidance=template.content.querySelector('.process-ia-guidance'),guidanceMarkup=guidance?.outerHTML||'';
+              if(guidanceHost.innerHTML!==guidanceMarkup)guidanceHost.innerHTML=guidanceMarkup;
+              guidance?.remove();
+            }
+            map?.remove();markup=template.innerHTML;
+          }
           if (rendered.get(target) !== markup) {
             const openBranches=new Set([...target.querySelectorAll('.ia-content-map details[open][data-content-branch]')].map(node=>node.dataset.contentBranch));
             const destinationOpen=target.querySelector('.ia-destination-map')?.open;
