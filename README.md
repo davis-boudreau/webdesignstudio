@@ -420,7 +420,10 @@ Font sources, responsive type limits, readability, grid rules, surfaces and
 interaction settings are part of the wizard. The **main pane teaches** with
 component examples, token relationships and practice tasks. Selecting a step
 opens its matching lesson automatically, with contextual inspection actions.
-Architecture also provides the content and sitemap editing workspace in this pane.
+Brief editing also takes place in the centre pane at every screen width, with
+seven prompts under Develop the project brief. Project name sits with My local
+projects beside saved designs and the save/load controls. Architecture provides
+the content and sitemap editing workspace in the centre pane.
 Interactive labs remain available for experiments and contrast review.
 
 Brief, Architecture, Typography and Wireframe come before palette design. Record the audience,
@@ -638,8 +641,18 @@ card padding, and 48 px minimum controls. The existing 4 px foundation unit driv
 spacing tokens; saved custom spacing and component dimensions remain editable.
 Fonts, borders and focus indicators keep their own sizing rules.
 
-In **Typography studio → Fonts and CDN integration**, choose System fonts or Google
-Fonts, then select separate heading/body families. The curated web fonts are Inter,
+In **Typography (Step 3)**, use the short sidebar navigator to work through
+content, fonts, body readability, hierarchy, rhythm, responsive type, component
+context and review. Each centre stage pairs browsing and an observation prompt
+with editable properties. Specimens use the actual Architecture website wording;
+edit wording in Architecture. Generated sizes and CSS are read-only.
+
+Scoped resets affect only their named settings. Specimen enlargement and spacing
+overrides are temporary comparisons, not saved tokens or an accessibility pass.
+Check the full website and both wireframe fidelities after choosing type.
+
+In **Choose font families**, choose System fonts or Google Fonts, then select the
+body or heading role to edit its family. The curated web fonts are Inter,
 Source Sans 3 and Literata. Choose additional weights; weights used by the page stay
 included. Font choices and weights travel with project JSON and local saves.
 

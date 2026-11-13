@@ -1,0 +1,40 @@
+.typography-workspace { min-width: 0; container-type: inline-size; }
+.typography-workspace > header .studio-lesson { margin: 0 0 1rem; padding: 0; border: 0; background: none; }
+.type-stage { margin-block: 1rem; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-base); padding: .75rem; }
+.type-stage > summary { min-height: 44px; align-content: center; font-weight: 700; cursor: pointer; }
+.type-editor-columns { display: grid; grid-template-columns: minmax(14rem,.7fr) minmax(0,1.3fr); gap: 1rem; margin-block: 1rem; align-items: start; }
+.type-browser, .type-properties { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-base); padding: 1rem; }
+.type-browser > h4, .type-properties > h4 { margin-top: 0; }
+.type-browser p { font-size: .88rem; }
+.type-observe { border-inline-start: 3px solid var(--control-border); padding-inline-start: .75rem; }
+.typography-workspace :is(input:not([type=checkbox]),select,textarea) { box-sizing: border-box; max-width: 100%; min-width: 0; }
+.typography-workspace :is(select,textarea,input[readonly]) { width: 100%; min-height: 44px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--control-border); border-radius: var(--radius-base); padding: .5rem; }
+.type-properties .fieldline { flex-wrap: wrap; }
+.type-properties .grid2 { grid-template-columns: minmax(0,1fr); }
+.type-browser > button { display: block; max-width: 100%; margin-block: .6rem; }
+.type-reference { margin-block: .75rem; min-width: 0; border: 1px solid var(--border); padding: .6rem; border-radius: var(--radius-base); }
+.type-reference > summary { min-height: 44px; align-content: center; cursor: pointer; }
+.type-stage-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.type-stage-nav { padding-inline-start: 1.5rem; }
+.type-stage-nav li { margin-block: .4rem; }
+.type-stage-nav button { width: 100%; text-align: left; }
+.type-stage-nav [aria-current=step] { font-weight: 700; border-color: var(--control-border); }
+.type-stage-nav [aria-current=step]::before { content: "\2713  "; }
+.typography-workspace button { min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
+.type-specimen > h4 { margin-top: 0; }
+.type-specimen { min-width: 0; margin: 0 0 1rem; border-bottom: 1px solid var(--border); padding: 0 0 1rem; }
+.type-preview-tools { display: grid; gap: .75rem; }
+.type-spacing-label { display: flex; align-items: center; gap: .5rem; min-height: 44px; }
+.type-specimen-scroll { max-width: 100%; overflow: auto; border: 1px solid var(--control-border); background: var(--surface-muted); }
+.type-specimen-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.type-specimen-paper { box-sizing: border-box; padding: 1rem; min-height: 9rem; background: var(--surface); color: var(--text); }
+.type-specimen-text { min-width: 0; }
+.typography-workspace :is(pre,.clamp-css,.font-code) { max-width: 100%; box-sizing: border-box; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.typography-workspace .clamp-metrics { grid-template-columns: repeat(auto-fit,minmax(min(100%,8rem),1fr)); }
+.typography-workspace #clampGraph { max-width: 100%; height: auto; }
+@container (max-width: 45rem) { .type-editor-columns { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 1100px) { .type-editor-columns { grid-template-columns: minmax(0,1fr); } }
+.typography-workspace input[type=range] { min-height: 44px; }
+.typography-workspace h3, .type-stage > summary { scroll-margin-top: var(--studio-section-scroll-offset,125px); }
+/* Closed native disclosures must keep their deferred content out of layout. */
+.typography-workspace details:not([open]) > :not(summary) { display: none; }

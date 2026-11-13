@@ -230,8 +230,12 @@ refinement. The final Prototype
 review actions open the existing preview and inspector or route to Deliver without
 replacing the iframe or project. Earlier task sketches remain in a disclosure.
 
-At 900px and below, existing control panes move directly after their lesson.
-Comment placeholders restore them to the sidebar at wider widths; IDs, bindings
+The Brief control pane (`#brief-editor`) stays directly after its centre lesson
+at every width. It retains the seven original prompt fields and starting preset.
+Project name (`#jProject`) belongs to My local projects outside step-specific
+panes, sharing the original state, autosave, load/reset and export bindings.
+Other control panes move after their lesson at 900px and below.
+Comment placeholders restore those panes to the sidebar at wider widths; IDs, bindings
 and values are unchanged. Previous/Next moves after the output on narrow screens.
 Architecture's full editor stays in its centre workspace at every width; only
 its short guidance/shortcut pane participates in the sidebar relocation.
@@ -1483,6 +1487,37 @@ validate focus geometry, announcements or arbitrary background layers. New state
 styles need matching report coverage and browser regression checks.
 
 ## Typography and section navigation
+
+`typography-workspace.js` initializes after palette-browser. It relocates original
+controls into eight local native disclosures with browse/properties columns and
+moves a single real-content specimen to the top of the active stage's right
+column, before the properties heading and editable fields. Preview controls,
+comparison scope and current website/size metadata travel with that specimen
+across all eight stages.
+`typography-workspace.css` stacks columns on narrow containers, keeps code/specimen
+overflow local and gives controls 44 px targets. Closed local disclosures explicitly
+hide non-summary children to keep deferred content out of layout. The original bare
+clamp-role select receives a dedicated field shared by Hierarchy and Responsive.
+The sidebar holds navigation.
+Generated scale roles are fixed; no new saved type schema is introduced.
+
+Original control nodes and listeners remain authoritative. Hidden legacy aliases
+retain import/binding compatibility; Configure and fragment routes reveal the
+canonical visible editor and its selected family. `revealControl()` only opens
+local disclosures; background synchronization never activates another lesson.
+Direct stage-summary activation handles the accordion transition before focusing
+without implicit browser scrolling and explicitly revealing the new heading.
+Closing an open summary retains native collapse behavior. Programmatic toggle
+synchronization remains local and silent, so background edits do not navigate.
+Scoped resets dispatch the original controls. Shared apply/render wrappers retain
+existing state, preview, font-loading, export and project contracts.
+
+Specimens parse generated HTML with DOMParser and insert wording through
+textContent/value. Component context reads computed styles from the existing live
+preview iframe. No additional font-loading document is created. Enlargement and
+user-spacing comparisons are memory-only and clear on state replacement. Expensive
+specimen rendering runs only while its lesson and local disclosure are open.
+
 
 `font-sources.js` loads after the registry and before core state. Its registered
 module initializes after all deferred scripts have evaluated. The shared

@@ -2,6 +2,188 @@
 
 Updated: 12 November 2026 (America/Halifax).
 
+## Site-specific Brief placeholders (12 November 2026)
+
+- Replaced the generic Write one or two sentences placeholder in all seven Brief
+  editors with distinct Web Design Field Guide examples. They cover students and
+  tutors; Basic/Advanced lessons, layout/component examples and forms; lesson copy,
+  DS assets and descriptions; responsive/keyboard/theme requirements; HTML/CSS/JSON
+  handover; and observable student tasks. Review date, available time, ownership
+  and approval remain explicit items to confirm instead of invented commitments.
+- Kept these as escaped placeholder attributes in the existing brief-field
+  definitions. They guide empty fields; they are not saved brief answers. Refreshed
+  the design-process.js query version in index.html. This is a copy-only change.
+- Commands: python scripts/check_structure.py verifies 68 assets; git diff --check
+  passes. Temporary python .brief-placeholders-review.py inspected all seven
+  rendered placeholders with blank values and reused the nine existing Brief
+  checks: 9/9 pass, no JavaScript errors (.brief-placeholders-review.log). These
+  cover labels/prompts, old saved drafts, JSON/export round trips, validation,
+  escaped draft text and reset. Temporary helper removed after inspection.
+- The full browser suite was not repeated for this copy-only update; the previous
+  2793/2793 result below is historical. No new manual keyboard, screen-reader or
+  narrow-screen visual review was performed for these example strings.
+
+## Centre Brief and local project identity (12 November 2026)
+
+- Moved the existing Brief pane into its centre lesson at every width. The seven
+  prompt editors and starting preset retain their nodes/listeners. Named the form
+  Develop the project brief. The sidebar now holds step navigation and the local
+  project library instead of the full Brief form.
+- Moved the original Project name field above Saved designs in My local projects,
+  outside step-specific panes. Its state, local autosave, new/load/reset and JSON
+  bindings remain shared. No saved-project schema change or cloned editors.
+- Updated the existing responsive placement rule to keep Brief in the centre on
+  both sides of the 900 px breakpoint. Set its preset selector to a 44 px minimum
+  height. Refreshed studio-learning.js/design-process.css asset query versions.
+- Current validation: python scripts/check_structure.py verifies 68 assets;
+  git diff --check passes. Temporary python .brief-centre-review.py passes 12/12
+  focused checks with no JavaScript errors: placement at 320/390/1440 in light/dark,
+  original node identity, naming from another stage without navigation, autosave,
+  local project load and JSON restore (.brief-centre-focused.log). Initial layout
+  checks found the 39 px preset selector; its height is corrected. Screenshots
+  inspected for desktop/light and 320 px/dark Brief. Button-state checks pass
+  7/7 reduced-motion and 9/9 forced-colour (.brief-centre-buttons.log).
+- Full python scripts/browser_review.py passes 2793/2793 with no JavaScript errors
+  (.brief-centre-browser.log). Temporary helpers/screenshots removed; ignored logs
+  retained. Updated README and architecture notes. Previous results below remain
+  historical. git diff --check passes after the documentation update.
+- Completed this layout change. Full manual keyboard-only and assistive-technology
+  review remains unperformed; next usability work can follow the learner trials.
+
+## Typography heading scroll fix (12 November 2026)
+
+- Reproduced the reported jump when opening Choose font families and other
+  Typography stage headers. The native toggle opened the requested stage and
+  closed its expanded sibling above, moving the shared preview and page geometry,
+  but called show(key,false) without revealing the new heading. All 14 direct-open
+  checks failed before the fix at 320/1440 px; the two collapse checks passed.
+- Direct summary activation now completes the shared accordion transition and
+  explicitly reveals its heading. Focus uses preventScroll before the deliberate
+  heading scroll. Clicking an already-open summary still collapses it; optional
+  reference disclosures and silent programmatic synchronization keep their roles.
+- Added regression checks for all seven subsequent stages at phone/desktop widths,
+  visible destination/focus, one open stage, unchanged project data and collapse.
+  Updated architecture notes, learner-trial prompts and affected asset versions
+  in index.html.
+- Current commands/results: python scripts/check_structure.py verifies 68 assets;
+  git diff --check passes. Temporary python .type-scroll-review.py reproduced
+  2/16 before and passes 16/16 after, with no JavaScript errors. Full
+  python scripts/browser_review.py passes 2781/2781 with no JavaScript errors
+  (.type-scroll-browser.log). python scripts/button_states_review.py passes
+  7/7 reduced-motion and 9/9 forced-colour checks (.type-scroll-buttons.log).
+  Temporary helper removed; ignored before/after logs retained. Previous results
+  below remain historical for this fix.
+- Completed this bug fix. Full manual keyboard-only and assistive-technology
+  testing remain unperformed; next usability review can use the learner prompts.
+
+## Typography preview before properties (12 November 2026)
+
+- Moved the shared website-text specimen to the top of the right column before
+  the properties heading in all eight Typography stages. Viewport/enlargement
+  controls, user-spacing comparison, scope note and current website/type/size
+  metadata travel together. This also covers the dynamic font and rhythm headings.
+- Moved the specimen divider below its content and removed its leading spacing
+  so it fits the top of the properties panel. Existing fields, shared model and
+  comparison behavior are reused. Refreshed both runtime asset query versions.
+- Updated architecture notes and existing stage checks to verify the specimen is
+  immediately before the properties heading. Commands so far:
+  python scripts/check_structure.py (68 assets), git diff --check (pass).
+  Focused isolated-browser review passes 77/77 with no JavaScript errors, including
+  preview-first DOM order in all eight stages and phone/desktop layouts in both
+  Studio themes (.type-preview-first-focused.log). Inspected desktop/light and
+  phone/dark Body screenshots; preview controls, specimen and divider precede
+  Selected properties. Temporary helpers/screenshots removed after inspection.
+  Full python scripts/browser_review.py passes 2765/2765 with no JavaScript errors
+  (.type-preview-first-browser.log). Earlier results below remain historical.
+- Completed this layout change. Full manual keyboard-only and assistive-technology
+  testing remain unperformed; next usability work can follow the learner trials.
+
+## Guided Typography workspace implementation (12 November 2026)
+
+- Implemented the approved eight-stage Typography process: content, families,
+  body readability, hierarchy, rhythm, responsive type, component context and
+  review. The sidebar now holds navigation; each centre stage has browse/help
+  and selected-properties columns. One specimen follows the active stage.
+- Relocated original controls/listeners, retained hidden legacy aliases and
+  canonical Configure/fragment routes. Scoped resets preserve unrelated settings.
+  Generated role sizes/CSS remain read-only. The bare legacy visual-role select
+  now has its own field in the browse column, rather than remaining hidden in
+  the legacy calculator. Regression checks verify its visible location in both
+  Hierarchy and Responsive. No project schema changes.
+- Specimens use safe text from the generated Architecture website. Component
+  context reads the existing live preview's computed styles. Enlargement and
+  spacing overrides are temporary, labelled and cleared on import/reset.
+  Background synchronization preserves the current global lesson and focus.
+- Added module/CSS and asset query versions in index.html. Updated README,
+  architecture notes and unperformed learner-trial prompts. Added browser coverage
+  for stage navigation, real wording, scoped edits/resets, saved-state round trips,
+  canonical routes, hostile text, background focus and all eight layouts at
+  320/390/1440 px in both Studio themes. Range controls now have 44 px targets;
+  local headings use the measured sticky-header scroll offset.
+- Final standard browser run: 2765/2765 passed, no JavaScript errors
+  (.type-workspace-verified-browser.log). This verifies the visible role selector
+  and closed-disclosure layout rule. Final text-node cleanup also passes all
+  77 focused Typography checks (.type-clean-review.log). Font/loading compatibility
+  checks pass 37/37; earlier focused Typography/sequence checks pass 117/117.
+  Structure verifies 68 assets; git diff --check passes. Button-state checks pass
+  7/7 reduced-motion and 9/9 forced-colour.
+- Earlier full runs had five narrow-screen overflow failures (2758/2763 and
+  2760/2765). Diagnostic inspection found stale closed-disclosure geometry;
+  explicitly hiding closed local detail contents resolved all five in the final
+  standard suite. A temporary accelerated replay had two additional timing-related
+  Palette failures; it was diagnostic only and is superseded by the standard run.
+- Inspected isolated Chrome screenshots of desktop Body, phone Fonts and final
+  phone Responsive with visible role selector and focus below the header. Removed
+  a literal null text node left by the legacy calculator's missing-field prepend;
+  the final phone screenshot and focused regression confirm its removal.
+- Commands run: python scripts/check_structure.py,
+  python scripts/browser_review.py, python scripts/button_states_review.py,
+  git diff --check, plus temporary isolated-browser diagnostic/focused/screenshot
+  helpers. Helpers and screenshots were removed after inspection; ignored logs
+  remain. Refreshed the new runtime assets' query versions in index.html.
+- Full keyboard-only, screen-reader, browser zoom/reflow and observed student
+  trials remain unperformed. The specimen comparisons do not certify full-page
+  accessibility. Next: conduct the learner trial prompts and record usability
+  observations before expanding the saved typography model.
+
+## Typography workspace analysis and proposed course of action (12 November 2026)
+
+- User requested analysis of the whole Typography step and a step-by-step learning
+  workflow using the Architecture approach. Reviewed index controls/specimens,
+  studio-learning relocation/disclosures, font-sources, clamp-explorer, shared
+  token outputs and Architecture/Palette workspace conventions.
+- Findings: the sidebar mixes font choice, readable body text, tracking,
+  responsive limits and font loading. Visible aliases repeat base/ratio/named
+  scale and tracking settings (including different tracking-unit presentations).
+  Practical specimens/tools are largely under More about typography. The size
+  ladder uses generic text; the practice asks students to recreate frames in an
+  external design tool. Existing controls already share one saved type model.
+- Recommend a short sidebar navigator and an active centre workspace: browse
+  relevant roles/items on the left, selected editable properties on the right,
+  with an always-visible real-site content specimen and clear computed values.
+  One visible editor per saved property; generated sizes/CSS remain read-only.
+- Proposed local learning stages: content/context; font families/sources;
+  body readability; hierarchy/scale; emphasis/rhythm; responsive type;
+  component context; review/continue to Wireframe. Each stage teaches purpose,
+  offers a bounded experiment and asks the learner to explain the visible effect.
+- Reuse original controls/state/exports first; consolidate duplicate editors and
+  move CDN/code/calculation details into contextual optional disclosures. Use
+  actual Architecture website wording; content edits remain in Architecture.
+  Fixed/generated type roles should not receive arbitrary CRUD. New custom
+  styles or saved paragraph/word-spacing/alignment/variable-axis settings would
+  require explicit shared-model/CSS/export work, separate from reorganizing UI.
+- Reviewed official web.dev typography guidance and W3C understanding pages for
+  resize text, reflow and text spacing. User spacing override tolerance is a test
+  behavior, not a claim that authored sliders must use the override values:
+  https://web.dev/learn/design/typography
+  https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html
+  https://www.w3.org/WAI/WCAG22/Understanding/text-spacing.html
+- This is an analysis/recommendation, not an implemented workspace redesign.
+  No runtime assets changed and no browser/structure tests ran for this review.
+- Next: implement the guided workspace using shared controls and real-content
+  specimens; then validate navigation, responsive behavior, import/export,
+  Configure-source links and propagation to both wireframe fidelities.
+
 ## Typography moved after Architecture (12 November 2026)
 
 - User approved the process recommendation. Display order now begins Brief (1),

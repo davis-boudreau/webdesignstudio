@@ -152,3 +152,21 @@ afterwards. Do not treat a small trial as proof of general learning effectivenes
 
 Keep raw participant records outside version control. Commit anonymised findings
 and resulting product decisions only when there is appropriate permission.
+
+For direct Typography header navigation, read to the bottom of one expanded
+stage, then open Choose font families or another stage by its heading. Repeat
+using the keyboard and at phone width. Does the newly opened heading remain
+visible below the header, and can the learner collapse and reopen it? The
+phone/desktop click sequence has automated coverage; observed keyboard and
+assistive-technology use remain unperformed.
+
+For the eight-stage Typography workspace, ask the learner to browse the actual
+headline, choose a heading font without changing the body font, establish readable
+body text, and explain the generated hierarchy. Compare body and heading tracking,
+then explore a role at two viewport widths. Can they distinguish component-owned
+properties from global type settings and find the owning editor? Try the scoped
+resets, Configure links and importing a project. Compare 200% specimen enlargement
+and user-spacing overrides, then confirm these comparisons do not become saved
+tokens. Use keyboard-only navigation and full browser zoom/reflow on the actual
+website. Record understanding, focus, scrolling and wrapping issues; these learner
+and assistive-technology observations remain unperformed.

@@ -90,7 +90,7 @@ DSStudio.register({
       section.dataset.stage = String(stage.index);
       const heading = section.querySelector(':scope > summary h2');
       heading.textContent = `Step ${stage.position + 1} of ${DSStudio.stages.length}: ${stage.label}`;
-      pane(stage.index).querySelector('.journey-stage-title').textContent = stage.label;
+      pane(stage.index).querySelector('.journey-stage-title').textContent = stage.index === 0 ? 'Develop the project brief' : stage.label;
       document.querySelector(`[data-journey-step="${stage.index}"]`).textContent = `${stage.position + 1} · ${stage.label}`;
       const task = document.createElement('p'); task.className = 'step-task';
       task.textContent = stage.task;
@@ -176,7 +176,8 @@ DSStudio.register({
         if (heading) heading.textContent = heading.textContent.replace(/^\d+\.\s*/, '');
       }
     }
-    // Narrow layouts put the real controls immediately after the short lesson,
+    // Brief controls always live in the centre; other stages join their lesson
+    // on narrow layouts. Put the real controls immediately after the short lesson,
     // preserving nodes/listeners rather than creating a second set of editors.
     const narrow = matchMedia('(max-width: 900px)');
     const stepList = document.createElement('details'); stepList.className = 'journey-step-list';
@@ -195,7 +196,7 @@ DSStudio.register({
     const placeControls = () => {
       for (const stage of DSStudio.stages) {
         const controls = pane(stage.index);
-        const destination = narrow.matches ? get(stage.lesson).querySelector('[data-stage-controls]') || get(stage.lesson).querySelector('.studio-lesson') : controlHomes[stage.index];
+        const destination = stage.index === 0 || narrow.matches ? get(stage.lesson).querySelector('[data-stage-controls]') || get(stage.lesson).querySelector('.studio-lesson') : controlHomes[stage.index];
         // Avoid reinserting correctly placed nodes: even a no-op DOM move can
         // discard focus during a delayed resize notification.
         if (destination.nextSibling !== controls) destination.after(controls);

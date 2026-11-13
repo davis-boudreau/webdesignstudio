@@ -18,8 +18,9 @@
     <link rel="stylesheet" href="src/css/content-architecture.css?v=20261111-architecture-tool-context">
     <link rel="stylesheet" href="src/css/palette-workspace.css?v=20261112-colour-token-flow">
     <link rel="stylesheet" href="src/css/palette-browser.css?v=20261112-palette-browser">
+    <link rel="stylesheet" href="src/css/typography-workspace.css?v=20261112-type-heading-scroll">
     <link rel="stylesheet" href="src/css/wireframe-workspace.css?v=20261112-fidelity-tabs">
-    <link rel="stylesheet" href="src/css/design-process.css?v=20261109-three-level-ia">
+    <link rel="stylesheet" href="src/css/design-process.css?v=20261112-centre-brief">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
     <link rel="stylesheet" href="src/css/utility-lesson.css?v=20261106-local-css-first">
@@ -75,7 +76,7 @@
               <button data-journey-step="11" type="button">11 &middot; Deliver</button>
               <button data-journey-step="3" type="button">12 &middot; Prototype</button>
             </div>
-            <div class="journey-pane" data-journey-pane="0">
+            <div class="journey-pane" data-journey-pane="0" id="brief-editor">
               <h3 class="journey-stage-title">1. Write the project brief</h3>
               <p class="help">Agree the website's purpose, audience, first-release pages and features, content, requirements and delivery plan. Keep the brief short; use it to guide information architecture and design choices.</p>
               <details class="learning-note build-guide">
@@ -92,10 +93,6 @@
                 </div>
               </details>
 
-              <div class="field">
-                <label for="jProject">Project name</label>
-                <input id="jProject" maxlength="90" value="My Project" />
-              </div>
               <div class="field">
                 <label for="jPreset">Starting preset</label>
                 <select id="jPreset">
@@ -761,6 +758,10 @@
               <hr />
               <h3>My local projects</h3>
               <p class="help">Saved only in this browser, on this device. No account or server.</p>
+              <div class="field">
+                <label for="jProject">Project name</label>
+                <input id="jProject" maxlength="90" value="My Project" />
+              </div>
               <div class="field">
                 <label for="jProjects">Saved designs</label>
                 <select id="jProjects"></select>
@@ -2102,7 +2103,7 @@
       <script src="src/js/brand-palette.js?v=20261104-palette-process" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
       <script src="src/js/font-sources.js?v=20261019-fonts" defer></script>
-      <script src="src/js/design-process.js?v=20261112-type-before-wireframe" defer></script>
+      <script src="src/js/design-process.js?v=20261112-site-brief-examples" defer></script>
       <script src="src/js/responsive-design.js?v=20261021-responsive-review" defer></script>
       <script src="src/js/section-sitemap.js?v=20261111-wireframe-ready" defer></script>
       <script src="src/js/content-architecture.js?v=20261112-fidelity-tabs" defer></script>
@@ -2129,7 +2130,7 @@
       <script src="src/js/section-accordions.js?v=20261109-active-lesson-startup" defer></script>
       <script src="src/js/site-builder.js?v=20261111-sitemap-workspace" defer></script>
       <script src="src/js/content-outline.js?v=20261111-wireframe-ready" defer></script>
-      <script src="src/js/studio-learning.js?v=20261112-type-before-wireframe" defer></script>
+      <script src="src/js/studio-learning.js?v=20261112-centre-brief" defer></script>
       <script src="src/js/wireframe-workspace.js?v=20261112-type-before-wireframe" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/palette-process.js?v=20261104-status-palettes" defer></script>
@@ -2137,6 +2138,7 @@
       <script src="src/js/webpage-backgrounds.js?v=20261104-background-order" defer></script>
       <script src="src/js/palette-workspace.js?v=20261112-three-ui-anchors" defer></script>
       <script src="src/js/palette-browser.js?v=20261112-three-ui-anchors" defer></script>
+      <script src="src/js/typography-workspace.js?v=20261112-type-heading-scroll" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261103-spacing-lesson" defer></script>
       <script src="src/js/utility-lesson.js?v=20261109-learning-transition" defer></script>
       <script src="src/js/tailwind-bridge.js?v=20261109-learning-transition" defer></script>

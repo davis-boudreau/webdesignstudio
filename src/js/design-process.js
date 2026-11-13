@@ -4,13 +4,13 @@
 (() => {
   // One approved sequence supplies the wizard, centre guide and saved draft.
   const briefFields = [
-    { key: 'goal', label: 'Purpose', prompt: 'Why does this website need to exist? Name its main goal and the action visitors should take.', limit: 600 },
-    { key: 'audience', label: 'Audience', prompt: 'Who is it for, and what information or task brings them to the website?', limit: 600 },
-    { key: 'scope', label: 'Pages and features', prompt: 'What is needed for the first release? List the pages and functions, and say what is out of scope.', limit: 1200 },
-    { key: 'content', label: 'Content', prompt: 'What text, images and logos are needed? Name who will supply them and when.', limit: 1200 },
-    { key: 'constraints', label: 'Design and requirements', prompt: 'Note the brand or tone, mobile and keyboard needs, and any required platform or hosting.', limit: 1200 },
-    { key: 'delivery', label: 'Delivery', prompt: 'Agree a deadline, budget or time limit, what will be handed over, and who approves and maintains the website.', limit: 1200 },
-    { key: 'success', label: 'Success', prompt: 'Describe one observable result or a simple task you can test with a visitor.', limit: 600 }
+    { key: 'goal', placeholder: 'Example: Help students learn layout, typography, colour and accessible interfaces through the Web Design Field Guide, then try its live component examples.', label: 'Purpose', prompt: 'Why does this website need to exist? Name its main goal and the action visitors should take.', limit: 600 },
+    { key: 'audience', placeholder: 'Example: Students learning web design and development, and tutors demonstrating semantic HTML, Flexbox, CSS Grid and reusable interface components.', label: 'Audience', prompt: 'Who is it for, and what information or task brings them to the website?', limit: 600 },
+    { key: 'scope', placeholder: 'Example: Basic and Advanced responsive field guides with navigation, lessons, component examples, layout demonstrations, FAQs and forms. Exclude accounts and payments.', label: 'Pages and features', prompt: 'What is needed for the first release? List the pages and functions, and say what is out of scope.', limit: 1200 },
+    { key: 'content', placeholder: 'Example: Prepare lesson copy, headings, component labels, the DS logo, illustrations and image descriptions. Confirm who supplies and reviews each item before the course review.', label: 'Content', prompt: 'What text, images and logos are needed? Name who will supply them and when.', limit: 1200 },
+    { key: 'constraints', placeholder: 'Example: Use the DS identity, readable typography and consistent components. Support phones, keyboard use and light/dark themes with local HTML and CSS.', label: 'Design and requirements', prompt: 'Note the brand or tone, mobile and keyboard needs, and any required platform or hosting.', limit: 1200 },
+    { key: 'delivery', placeholder: 'Example: Hand over the Basic and Advanced prototypes, HTML/CSS files and project JSON. Confirm the course review date, available time, content approver and future maintainer.', label: 'Delivery', prompt: 'Agree a deadline, budget or time limit, what will be handed over, and who approves and maintains the website.', limit: 1200 },
+    { key: 'success', placeholder: 'Example: A student can find a lesson and use its component example without help. Repeat the task on a phone and using only the keyboard.', label: 'Success', prompt: 'Describe one observable result or a simple task you can test with a visitor.', limit: 600 }
   ];
   // Content inventory: only authored, fixed IDs may become exported destinations.
   const inventories = {
@@ -271,7 +271,7 @@
         const panel = document.querySelector(`#process-${id} > .panel`);
         panel.innerHTML = `<section class="studio-lesson"><h3>${heading}</h3><p>${explanation}</p><p><strong>Practice:</strong> ${exercise}</p><button class="ghost" type="button" data-configure-step="${index}">Configure in wizard · step ${index+1}</button></section><div data-process-artifact="${id}"></div>`;
       }
-      document.getElementById('plan-brief-fields').innerHTML = briefFields.map(({key,label,prompt,limit},index)=>`<div class="field process-editor"><label for="plan-${key}">${index+1}. ${label}</label><p class="help" id="plan-${key}-help">${escapeHtml(prompt)}</p><textarea id="plan-${key}" data-process-field="${key}" aria-describedby="plan-${key}-help" placeholder="Write one or two sentences." maxlength="${limit}" rows="3"></textarea></div>`).join('');
+      document.getElementById('plan-brief-fields').innerHTML = briefFields.map(({key,label,prompt,placeholder,limit},index)=>`<div class="field process-editor"><label for="plan-${key}">${index+1}. ${label}</label><p class="help" id="plan-${key}-help">${escapeHtml(prompt)}</p><textarea id="plan-${key}" data-process-field="${key}" aria-describedby="plan-${key}-help" placeholder="${escapeHtml(placeholder)}" maxlength="${limit}" rows="3"></textarea></div>`).join('');
       const controls = [...document.querySelectorAll('[data-process-field]')];
       const rendered = new Map();
       document.getElementById('process-ia').addEventListener('click',event=>{

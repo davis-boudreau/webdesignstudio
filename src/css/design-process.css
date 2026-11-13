@@ -49,3 +49,4 @@
   .background-model-body { padding: 8px; }
   .background-contained-regions > .background-model-region { padding: 12px; }
 }
+#brief-editor select { min-height: 44px; }
