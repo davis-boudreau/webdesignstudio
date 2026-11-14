@@ -137,6 +137,10 @@ fails that gate, preserving the meaning of the existing required-check context.
 the deployment job requiring successful validation through `needs: validate`.
 Both checkouts use the triggering revision. Validation receives only read access
 to repository contents; the deployment retains Pages and identity-token permissions.
+Repository Pages publishing must be configured as `build_type: workflow` so it
+uses the artifact produced after required validation. This repository setting was
+aligned with the Actions workflow on 14 November 2026 during the first verified
+publication of the refactor.
 No application build step or runtime dependency is introduced. This follows
 [GitHub's reusable workflow model](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows).
 

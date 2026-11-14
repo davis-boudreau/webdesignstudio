@@ -2,6 +2,32 @@
 
 Updated: 14 November 2026 (America/Halifax).
 
+## Refactor merged and published (14 November 2026)
+
+- User authorized merge/publication. Rechecked PR #1: its head was still
+  8bbbdacb38cb3411850634872d428fd0535c43d3, mergeable without conflicts, with no
+  requested changes and all 20 hosted validation jobs successful. Marked the PR
+  ready and merged it using the exact validated head guard. Merge commit:
+  9b1d1c75cd5a9455fbbb86e7cb5b2b96d8464351.
+- Ran git fetch origin, git switch main and git merge --ff-only origin/main.
+  Local main matched the merged remote revision with a clean working tree.
+- Found the repository's Pages setting still used legacy branch publishing.
+  Updated its REST Pages build_type to workflow and verified it, aligning actual
+  publication with the repository's validation-gated Actions workflow. The site
+  URL and enforced HTTPS remain unchanged.
+- [Pages run 43594084678](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43594084678)
+  completed successfully for merge commit 9b1d1c7 on its first attempt: all 21
+  jobs passed (checks, 18 offline browser suites, final structure gate and deploy).
+- Verified [the public site](https://davis-boudreau.github.io/webdesignstudio/)
+  with uncached HTTP requests: index.html and all 71 referenced assets match
+  committed Git bytes, 72/72 checks (.publication-live-check.log). Pages reports
+  built, build_type workflow and HTTPS enforced. This is deployed-file validation,
+  not manual accessibility or browser-interaction testing.
+- This publication handoff changes documentation only. Application files and
+  tests are unchanged from the merged, validated and publicly verified revision.
+  No refactor steps remain; manual accessibility, additional-browser reviews,
+  browser/OS permission checks and optional live-font checks remain separate.
+
 ## Refactor committed and hosted validation passed (14 November 2026)
 
 - Reviewed accumulated runtime changes, project normalization/replacement,

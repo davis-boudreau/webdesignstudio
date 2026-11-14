@@ -88,8 +88,14 @@ external ShellCheck/Pyflakes integrations. The 13 November cleanup did not trigg
 hosted Actions or a Pages deploy. On 14 November,
 [CI run 43592435409](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43592435409)
 passed all 20 jobs for refactor commit `cb7a956`, including the final required
-gate. [Draft PR #1](https://github.com/davis-boudreau/webdesignstudio/pull/1) shows
-the latest revision's status. No merge or Pages deployment was performed.
+gate. The final PR revision `8bbbdac` also passed all 20 jobs in
+[CI run 43592914240](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43592914240).
+After user approval, [PR #1](https://github.com/davis-boudreau/webdesignstudio/pull/1)
+was merged as `9b1d1c7`. [Pages run 43594084678](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43594084678)
+passed all 21 validation/deployment jobs and published the site. Uncached HTTP
+checks confirmed that public index.html and all 71 referenced assets matched
+committed Git bytes (72/72 checks). Repository Pages publishing is now configured
+as `build_type: workflow`, matching the validation-gated Actions deployment.
 Local Bash checks exercised all 16 success/failure/cancelled/skipped combinations
 of gate prerequisites: only `success/success` passes. A failing command piped through
 `tee` also retains its exit status and writes the diagnostic log under `pipefail`.
