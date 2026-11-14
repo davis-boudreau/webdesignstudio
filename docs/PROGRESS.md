@@ -2,7 +2,7 @@
 
 Updated: 14 November 2026 (America/Halifax).
 
-## Refactor review and commit preparation (14 November 2026, in progress)
+## Refactor committed and hosted validation passed (14 November 2026)
 
 - Reviewed accumulated runtime changes, project normalization/replacement,
   synchronous save protection, view subscriptions, ordered export contributors,
@@ -10,8 +10,8 @@ Updated: 14 November 2026 (America/Halifax).
   findings were identified. No runtime edits were made in this review.
 - git fetch origin succeeded; local HEAD and origin/main were aligned at
   02eb7ec before creating refactor/project-lifecycle-test-suites. Main pushes
-  trigger Pages publication, so this work will be pushed on the review branch
-  with a draft PR to run hosted CI before any merge/publication.
+  trigger Pages publication, so the work uses a review branch and draft PR for
+  hosted CI before any merge/publication.
 - Fresh checks this session: python scripts/check_structure.py passes (71
   assets), python scripts/browser_runner_review.py 12/12,
   python scripts/project_model_review.py 14/14 and
@@ -22,9 +22,20 @@ Updated: 14 November 2026 (America/Halifax).
   not a new full run in this session.
 - Reviewed staged scope: 64 source/test/documentation/CI files, no diagnostic
   logs or detected credential patterns. git diff --cached --check passes.
-- Next: commit, push
-  the review branch and check the draft PR's hosted CI. No merge or deployment
-  has been performed.
+- Committed as cb7a956 (Refactor project lifecycle, exports, and browser
+  validation) and pushed refactor/project-lifecycle-test-suites. Created
+  [draft PR #1](https://github.com/davis-boudreau/webdesignstudio/pull/1).
+- [Hosted CI run 43592435409](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43592435409)
+  completed successfully for cb7a9567b68eeb99e4ac329c62577f98131d61db on its first
+  attempt: all 20 jobs succeeded, including checks, all 18 offline browser suites
+  and the final structure gate. This verifies hosted execution of the refactor;
+  the earlier 13 November hosted-CI gaps below remain historical.
+- This handoff update changes documentation only; runtime and test files remain
+  identical to the successfully validated refactor commit. The PR shows the
+  current revision's required status. No merge or Pages deployment was performed.
+- Next: human review of the draft PR, then authorize merge/publication separately.
+  Manual accessibility, additional-browser and optional live-font reviews remain
+  outstanding as documented in TEST_COVERAGE.md.
 
 ## Architecture and test-suite refactor complete (13 November 2026)
 

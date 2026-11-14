@@ -84,8 +84,12 @@ and succeeds only when both prerequisites succeeded.
 Both workflows passed [actionlint 1.7.7](https://github.com/rhysd/actionlint/releases/tag/v1.7.7)
 in this session using the official Windows
 release with its published SHA256 verified. The lint command disabled optional
-external ShellCheck/Pyflakes integrations. No hosted Actions run or Pages deploy
-was triggered, so hosted execution and deployment still need their normal review.
+external ShellCheck/Pyflakes integrations. The 13 November cleanup did not trigger
+hosted Actions or a Pages deploy. On 14 November,
+[CI run 43592435409](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43592435409)
+passed all 20 jobs for refactor commit `cb7a956`, including the final required
+gate. [Draft PR #1](https://github.com/davis-boudreau/webdesignstudio/pull/1) shows
+the latest revision's status. No merge or Pages deployment was performed.
 Local Bash checks exercised all 16 success/failure/cancelled/skipped combinations
 of gate prerequisites: only `success/success` passes. A failing command piped through
 `tee` also retains its exit status and writes the diagnostic log under `pipefail`.
