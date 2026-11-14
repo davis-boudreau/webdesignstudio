@@ -2,6 +2,34 @@
 
 Updated: 14 November 2026 (America/Halifax).
 
+## Colour-repair close-event race found during publication (14 November 2026)
+
+- The publication-record-only revision 07391f6 exposed a real intermittent dialog
+  defect in [Pages run 43594568661](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43594568661).
+  Palette failed 548/575 with a null-session revision error; the required gate
+  blocked that revision's deployment. The already verified 9b1d1c7 site remained
+  published. Runtime files had not changed between the passing and failing runs.
+- Root cause: dialog.close queues a native close event. If the repair dialog is
+  reopened before that older event arrives, its handler cleared the new session
+  and attempted focus restoration outside the active modal. Apply then accessed
+  the missing session. Added three deterministic regressions for delayed close,
+  applying the reopened target and Apply after closure. Before the fix they
+  reproduced null targets/revision errors: 86/90 contrast checks passed
+  (.publication-close-before.log).
+- The close handler now ignores events while the dialog is open or its session
+  is already cleared; closed/sessionless Apply is a no-op. Refreshed the affected
+  runtime asset query to 20261114-repair-session. No retries, skips, timeout
+  increases or export-fixture changes were introduced.
+- python scripts/contrast_review.py now passes 90/90 with no captured JS errors
+  (.publication-fix-contrast_review.log). python scripts/check_structure.py passes
+  (71 assets) and git diff --check passes. Fresh python scripts/palette_review.py
+  passes 575/575, python scripts/browser_review.py 279/279 and
+  python scripts/export_pipeline_review.py 98/98, all with no captured JS errors
+  (.publication-fix-<suite>.log). Reviewed export byte parity is unchanged.
+- Publication of the fix follows the same complete validation gate; current
+  workflow status is available in the repository's Actions history. The 3,105
+  browser-assertion baseline below predates these three added regressions.
+
 ## Refactor merged and published (14 November 2026)
 
 - User authorized merge/publication. Rechecked PR #1: its head was still

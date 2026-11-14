@@ -285,6 +285,22 @@ app.onload=async()=>{
   test('Reset clears repaired button colours and refreshes the selected review', () => evaluate('!Object.keys(state.buttonDesign.overrides).length') && reviewButton('primary','default').getAttribute('aria-current')==='true');
   test('New default button colours meet required text and indicator targets in all states and themes', () => report().filter(row=>row.group.startsWith('Button Laboratory:') && row.scope==='required' && row.threshold!==null).every(row=>row.status==='pass'));
 
+  // A native close event may arrive after the user has already reopened the dialog.
+  app.style.width='1440px';reset();w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('semantics',false);await wait();
+  input('jSemanticRole','text','change');d.getElementById('jSemanticEdit').focus();d.getElementById('jSemanticEdit').click();
+  d.getElementById('repairCancel').click();
+  input('jSemanticRole','control-border','change');d.getElementById('jSemanticEdit').focus();d.getElementById('jSemanticEdit').click();
+  const repairDialog=d.getElementById('colourRepair'),beforeLateClose=evaluate('projectJson()'),beforeText=evaluate('palette().roles.text'),beforeErrors=w.__reviewErrors.length;
+  repairDialog.dispatchEvent(new w.Event('close'));
+  input('repairHex','#7B8A9B');
+  test('Late close from a cancelled repair preserves the reopened editor and its draft',()=>repairDialog.open && d.activeElement===d.getElementById('repairHex') && d.getElementById('repairScope').textContent.includes('--control-border') && evaluate('projectJson()')===beforeLateClose && w.__reviewErrors.length===beforeErrors);
+  d.getElementById('repairApply').click();await wait();
+  test('Reopened repair applies only its current target after a delayed close event',()=>!repairDialog.open && evaluate('state.semanticOverrides?.light?.["control-border"]')==='#7B8A9B' && evaluate('palette().roles.text')===beforeText && d.activeElement===d.getElementById('jSemanticEdit'));
+  if(repairDialog.open)repairDialog.close();await wait();
+  const afterRepair=evaluate('projectJson()'),afterRepairErrors=w.__reviewErrors.length;
+  d.getElementById('repairApply').click();await wait();
+  test('Apply on a closed repair dialog cannot mutate the project or throw',()=>evaluate('projectJson()')===afterRepair && w.__reviewErrors.length===afterRepairErrors && !repairDialog.open);
+
   test('No contrast JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Contrast harness completed',pass:false,error:String(error.stack||error)});}
   finish();

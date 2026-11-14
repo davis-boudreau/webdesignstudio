@@ -19,6 +19,11 @@ Counts below are from the completed full catalogue run on 13 November 2026:
 in all 19 browser launches. The current-run audit is `.final-coverage.log`.
 Counts are assertion occurrences, including loop cases and repeated names;
 they are not line/branch coverage or accessibility conformance measurements.
+The table preserves that completed baseline. On 14 November a publication run
+exposed a delayed colour-repair close-event race. Three deterministic regressions
+were added to `contrast_review.py` (now 90 checks), bringing the current suite's
+assertion inventory to 3,108. These cases failed before the runtime fix and pass
+locally after it; the publication workflow validates the updated suite as usual.
 
 | Suite (`scripts/`) | Checks | Owns |
 | --- | ---: | --- |

@@ -126,12 +126,16 @@
   });
   get('repairCancel').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
+    // Native close events are queued. An older close must not discard a session
+    // that the user has already reopened, or restore focus outside its modal.
+    if (dialog.open || !session) return;
     const opener = session?.opener;
     session = null;
     if (opener?.isConnected && opener.getClientRects().length) opener.focus();
     else get('contrastSummary').focus();
   });
   get('repairApply').addEventListener('click', () => {
+    if (!dialog.open || !session) return;
     const colour = get('repairHex').value.trim().toUpperCase();
     if (!validHex(colour)) return;
     if (projectJson() !== session.revision) {
