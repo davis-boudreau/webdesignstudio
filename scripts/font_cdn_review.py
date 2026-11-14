@@ -3,9 +3,9 @@
 Uses actual Google CSS2 stylesheets and font downloads in an isolated Chrome
 profile. The regular browser_review suite uses deterministic local font fixtures.
 """
-import browser_review as review
+from browser_runner import run_review
 
-review.HARNESS = r'''<!doctype html><meta charset="utf-8"><title>Live font review</title>
+HARNESS = r'''<!doctype html><meta charset="utf-8"><title>Live font review</title>
 <iframe id="app" style="width:1440px;height:1000px" src="/index.html"></iframe>
 <pre id="results">RUNNING</pre><script>
 app.onload=async()=>{
@@ -52,4 +52,4 @@ app.onload=async()=>{
 </script>'''
 
 if __name__ == '__main__':
-    raise SystemExit(review.main())
+    raise SystemExit(run_review(HARNESS))

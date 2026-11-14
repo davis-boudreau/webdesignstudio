@@ -6,7 +6,6 @@ Browser storage may be unavailable in private or restricted contexts. */
   const el = id => document.getElementById(id);
   const STORE = 'dss-v27-projects';
   let step = 0,
-    autosaveSuspended = false,
     activeId = null,
     projects = {};
   const bindings = {
@@ -75,7 +74,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   function serialize() {
     return {
       preset: 'custom',
-      ...JSON.parse(projectJson())
+      ...projectSnapshot()
     };
   }
 
@@ -92,23 +91,13 @@ Browser storage may be unavailable in private or restricted contexts. */
   so every kind of change is written to the active local project. */
   function autosave() {
     clearStaleReadiness();
-    if (!autosaveSuspended && activeId && projects[activeId]) {
+    if (!DSStudio.isReplacingProject() && activeId && projects[activeId]) {
       projects[activeId].data = serialize();
       projects[activeId].updated = new Date().toISOString();
       if (persist()) notify('Changes saved locally to ' + projects[activeId].name + '.');
     }
   }
   window.dssAutosave = autosave;
-  // Loading a different project must not autosave intermediate settings over the old one.
-  const previousImport = importConfig;
-  importConfig = function(data) {
-    autosaveSuspended = true;
-    try {
-      return previousImport(data);
-    } finally {
-      autosaveSuspended = false;
-    }
-  };
   const previousReset = resetStudio;
   resetStudio = function(message) {
     activeId = null;
@@ -132,12 +121,7 @@ Browser storage may be unavailable in private or restricted contexts. */
   }
   for (const [id, key] of Object.entries(bindings)) el(id).addEventListener('input', e => updateKey(key, numbers.has(key) ? Number(e.target.value) : e.target.value));
   /* FIX: keep the guided fields in sync with every change (brand swatch buttons, theme toggle, JSON import, reset). */
-  const prevApply = apply;
-  apply = function() {
-    prevApply();
-    syncJourney();
-    autosave();
-  };
+  DSStudio.on('foundation:updated', () => { syncJourney(); autosave(); });
   el('jPreset').addEventListener('change', e => {
     if (e.target.value === 'example') {
       resetStudio('Example project restored.');

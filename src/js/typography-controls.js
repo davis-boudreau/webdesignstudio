@@ -31,11 +31,7 @@
       get(key).value = event.target.value;
       get(key).dispatchEvent(new Event('input', { bubbles: true }));
     });
-  const originalApply = apply;
-  apply = function() {
-    adv.tracking = state.headingTracking * 100;
-    originalApply();
-    sync();
-  };
+  DSStudio.on('foundation:before', () => { adv.tracking = state.headingTracking * 100; });
+  DSStudio.on('foundation:updated', sync);
   sync();
 })();

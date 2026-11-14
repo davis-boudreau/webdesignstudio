@@ -265,8 +265,7 @@
     init() {
       const style = document.createElement('style');
       style.textContent = processCss(); document.head.append(style);
-      const previousCss = cssExport;
-      cssExport = () => previousCss() + '\n' + processCss();
+      DSStudio.exports.registerCss({id:'planning',stage:'planning',generate:()=> '\n' + processCss()});
       for (const [index, [id,title,heading,explanation,exercise]] of stages.entries()) {
         const panel = document.querySelector(`#process-${id} > .panel`);
         panel.innerHTML = `<section class="studio-lesson"><h3>${heading}</h3><p>${explanation}</p><p><strong>Practice:</strong> ${exercise}</p><button class="ghost" type="button" data-configure-step="${index}">Configure in wizard · step ${index+1}</button></section><div data-process-artifact="${id}"></div>`;
@@ -302,8 +301,7 @@
         document.getElementById('plan-sample-status').textContent = control.validationMessage;
       });
       let feedbackMode = state.sampleMode, feedbackPages = null;
-      const previousRender = renderCode;
-      renderCode = function() {
+      DSStudio.on('output:artifacts', () => {
         const css = processCss();
         if (style.textContent !== css) style.textContent = css;
         const plan = currentPlan();
@@ -342,8 +340,7 @@
             rendered.set(target, markup);
           }
         }
-        previousRender();
-      };
+      });
       renderCode();
     }
   });

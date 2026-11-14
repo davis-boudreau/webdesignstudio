@@ -3,30 +3,7 @@
 State simulations are labelled; browser-native focus/disabled remain testable. */
 (() => {
   const $ = id => document.getElementById(id);
-  const defaults = {
-    variant: 'primary',
-    size: 'md',
-    selectedState: 'default',
-    padX: 16,
-    padY: 8,
-    minHeight: 48,
-    radius: 8,
-    border: 1,
-    weight: 600,
-    focus: '#B86C20',
-    focusWidth: 3,
-    motion: 150,
-    mobileFull: false,
-    overrides: {},
-    sources: {
-      primary: 'primary',
-      secondary: 'secondary',
-      accent: 'accent',
-      outline: 'primary',
-      text: 'primary'
-    },
-    custom: {}
-  };
+  const defaults = DSStudio.project.buttonDefaults();
   const names = {
     primary: 'Primary',
     secondary: 'Secondary',
@@ -81,54 +58,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     selected: 'Persistent pressed state applies only to toggle buttons with aria-pressed.'
   };
 
-  function clampNumber(v, min, max, fallback) {
-    v = Number(v);
-    return Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : fallback;
-  }
-
-  function validColor(c) {
-    return typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
-  }
-
-  function sanitize(raw) {
-    let b = {
-      ...defaults,
-      overrides: {},
-      sources: {
-        ...defaults.sources
-      },
-      custom: {}
-    };
-    if (!raw || typeof raw !== 'object') return b;
-    for (const [k, lo, hi] of [
-        ['padX', 8, 36],
-        ['padY', 6, 22],
-        ['minHeight', 36, 64],
-        ['radius', 0, 28],
-        ['border', 1, 4],
-        ['focusWidth', 2, 5],
-        ['motion', 0, 350]
-      ]) b[k] = clampNumber(raw[k], lo, hi, defaults[k]);
-    b.weight = [400, 500, 600, 700].includes(Number(raw.weight)) ? Number(raw.weight) : 600;
-    b.variant = Object.prototype.hasOwnProperty.call(names, raw.variant) ? raw.variant : 'primary';
-    b.size = ['sm', 'md', 'lg'].includes(raw.size) ? raw.size : 'md';
-    b.selectedState = states.includes(raw.selectedState) ? raw.selectedState : 'default';
-    b.focus = validColor(raw.focus) ? raw.focus : defaults.focus;
-    b.mobileFull = raw.mobileFull === true;
-    for (const k of Object.keys(names)) {
-      const source = raw.sources?.[k];
-      if (['primary', 'secondary', 'accent', 'custom'].includes(source) || validColor(source)) b.sources[k] = source;
-      if (validColor(raw.custom?.[k])) b.custom[k] = raw.custom[k];
-      const item = raw.overrides?.[k];
-      if (item && typeof item === 'object') {
-        b.overrides[k] = {};
-        for (const prop of ['hover', 'active', 'text', 'hoverText', 'activeText', 'bg', 'border'])
-          if (validColor(item[prop])) b.overrides[k][prop] = item[prop];
-      }
-    }
-    return b;
-  }
-  let b = sanitize(state.buttonDesign);
+  const sanitize = DSStudio.project.normalizeButtons;
+  const validColor = validHex;
+  let b = state.buttonDesign;
 
   function hexDark(hex, factor) {
     let n = parseInt(hex.slice(1), 16);
@@ -249,7 +181,6 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   }
 
   function render() {
-    state.buttonDesign = JSON.parse(JSON.stringify(b));
     $('bdContext').textContent = `${names[b.variant]} · ${b.size.toUpperCase()} · ${b.selectedState}`;
     $('bdDescription').textContent = explain[b.selectedState] + (b.selectedState === 'disabled' ? ' This state example is unavailable; explain the prerequisite beside disabled actions in your application.' : '');
     $('bdSingle').innerHTML = btn(b.variant, b.selectedState, b.size, state.theme, true);
@@ -294,18 +225,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   function buttonCSS() {
     return buttonColourCSS() + `\n:root { --button-progress-animation: ${adv.reduce ? 'none' : 'dss-button-progress'}; }\n` + DSStudio.buttonStates.css('.ds-button, .button', 'data-preview-state');
   }
-  // Keep existing JSON/project save mechanisms by storing settings inside the shared state.
-  const oldImport = importConfig;
-  importConfig = function(data) {
-    oldImport(data);
-    b = sanitize(data?.buttonDesign);
-    controls();
-    render();
-  };
-  const oldCss = cssExport;
-  cssExport = function() {
-    return oldCss() + '\n' + buttonCSS();
-  };
+  DSStudio.on('project:install', () => { b = state.buttonDesign; });
+  DSStudio.on('project:sync', controls);
+  DSStudio.exports.registerCss({id:'buttons',stage:'components',order:20,generate:()=> '\n' + buttonCSS()});
   // sample-homepage.js reads shared button settings for generated HTML.
   for (const id of ['bdVariant', 'bdSize', 'bdState', 'bdPaddingX', 'bdPaddingY', 'bdMinHeight', 'bdRadius', 'bdBorder', 'bdWeight', 'bdFocus', 'bdFocusWidth', 'bdMotion', 'bdMobileFull', 'bdHover', 'bdActive', 'bdText', 'bdHoverText', 'bdActiveText', 'bdDefaultBg', 'bdBorderColor', 'bdSource', 'bdCustom']) $(id).addEventListener('input', e => {
     const key = {
@@ -343,7 +265,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
       current[prop] = e.target.value;
       b.overrides[b.variant] = current;
     } else if (key) b[key] = e.target.type === 'checkbox' ? e.target.checked : e.target.type === 'range' || id === 'bdWeight' ? Number(e.target.value) : e.target.value;
-    b = sanitize(b);
+    state.buttonDesign = b = sanitize(b);
     controls();
     render();
     window.dssAutosave?.();
@@ -361,16 +283,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   });
   $('bdExport').addEventListener('click', () => download('design-system-buttons.css', buttonCSS(), 'text/css'));
   // Update the preview when the global theme or foundation colours change.
-  const oldApply = apply;
-  apply = function() {
-    oldApply();
-    render();
-  };
-  /* FIX: Reset / Restore Example / New project now also reset the button design. */
-  document.addEventListener('dss:reset', () => {
-    b = sanitize(null);
-    controls();
-  });
+  DSStudio.on('foundation:updated', render);
   // Read the same resolved colours as the previews and CSS export.
   window.dssGetButtonContrastData = (settings = b, foundation = state) => ({
     settings: JSON.parse(JSON.stringify(settings)),

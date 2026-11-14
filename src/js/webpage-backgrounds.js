@@ -150,8 +150,7 @@ DSStudio.register({
         get(region+'-background-contrast').textContent=`Text ${text.toFixed(2)}:1 · Links ${link.toFixed(2)}:1 · ${text>=4.5&&link>=4.5?'both meet 4.5:1':'review text/link contrast'}`;
       }
     }
-    const previousApply=apply;
-    apply=function(){previousApply();sync();};
+    DSStudio.on('foundation:updated',sync);
     sync();
     DSStudio.emit('lesson:content');
   }

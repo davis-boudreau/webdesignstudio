@@ -93,9 +93,8 @@
   DSStudio.register({
     id: 'sample-system', title: 'Shared website design system',
     init() {
-      const sharedCss = cssExport;
-      DSStudio.samples.foundationCss = () => sharedCss() + '\nbody > main { background: var(--main-background-paint); }\n' + PADDING_REGIONS.map(region=>`body > ${region} { padding: ${PADDING_SIDES.map(side=>`var(--${region}-padding-${side})`).join(' ')}; }`).join('\n') + '\n:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n' + navigationCss();
-      cssExport = DSStudio.samples.foundationCss;
+      DSStudio.exports.registerCss({id:'sample-layout',stage:'layout',generate:()=> '\nbody > main { background: var(--main-background-paint); }\n' + PADDING_REGIONS.map(region=>`body > ${region} { padding: ${PADDING_SIDES.map(side=>`var(--${region}-padding-${side})`).join(' ')}; }`).join('\n') + '\n:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: 3px; }\n' + navigationCss()});
+      DSStudio.samples.foundationCss = DSStudio.exports.sharedCss;
     }
   });
 })();

@@ -244,7 +244,8 @@ DSStudio.register({
     for(const event of ['dss:reset','dss:imported'])document.addEventListener(event,()=>{selected=null;creating=false;previous=null;signature='';dirty=false;expanded.clear();get('ia-search').value='';get('ia-content-plan').open=false;tell('');sync(true);});
     // Rebuild only when actual content/planning changes. Theme and token edits
     // cannot execute imported content or overwrite a form while it is being typed.
-    const before=renderCode;renderCode=function(){model.prepare();before();syncSitemap();sync();};
+    DSStudio.on('output:prepare',model.prepare);
+    DSStudio.on('output:updated',()=>{syncSitemap();sync();});
     DSStudio.on('stage:change',({stage})=>{if(stage.index===1)sync(true);});
     DSStudio.contentEditor={canLeave:canLeaveItem,isDirty:()=>dirty,select(id){
       if(!canLeaveItem())return false;

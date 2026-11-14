@@ -180,11 +180,8 @@
         if (preview) clearLinks(preview);
         renderCode();
       });
-      const previousImport = importConfig;
-      importConfig = function(data) { fallback = false; return previousImport(data); };
-      document.addEventListener('dss:reset', () => { fallback = false; });
-      const previousRender = renderCode;
-      renderCode = function() { sync(); previousRender(); };
+      DSStudio.on('project:install', () => { fallback = false; });
+      DSStudio.on('output:controls', sync);
       sync();
     }
   });

@@ -35,6 +35,15 @@ errors += [f"missing anchor target: #{name}" for name in page.anchors if name no
 for path in [root / 'index.html', *sorted((root / 'src').rglob('*'))]:
     if path.is_file() and re.search(r'nscc', path.read_text(encoding='utf-8'), re.I):
         errors.append(f"institution-specific reference: {path.relative_to(root)}")
+    if path.suffix == '.js' and re.search(r'\b(?:apply|renderCode|renderType|cssExport|htmlExport)\s*=(?!=|>)', path.read_text(encoding='utf-8')):
+        errors.append(f"shared entry point reassigned; use subscriptions or export contributors: {path.relative_to(root)}")
+scripts = re.findall(r'<script\b[^>]*src="(src/js/[^"?]+)', html)
+view_order = ['src/js/studio-registry.js', 'src/js/view-updates.js', 'src/js/core-state.js']
+if any(asset not in scripts for asset in view_order) or [scripts.index(asset) for asset in view_order] != sorted(scripts.index(asset) for asset in view_order):
+    errors.append('registry, view scheduler and core scripts must load in that order')
+export_order = ['src/js/studio-registry.js', 'src/js/export-pipeline.js', 'src/js/core-state.js']
+if any(asset not in scripts for asset in export_order) or [scripts.index(asset) for asset in export_order] != sorted(scripts.index(asset) for asset in export_order):
+    errors.append('registry, export pipeline and core scripts must load in that order')
 if re.search(r"<style>|<script>", html):
     errors.append("index.html contains inline <style>/<script>; move it into src/")
 

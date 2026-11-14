@@ -3,26 +3,7 @@
 Uses a temporary browser profile and a local-only server; saved user projects
 and the user's normal browser session are never opened.
 """
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from html import unescape
-from pathlib import Path
-import json
-import os
-import re
-import shutil
-import subprocess
-import tempfile
-import threading
-from urllib.parse import parse_qs, urlsplit
-
-ROOT = Path(__file__).resolve().parent.parent
-
-
-class ReviewServer(ThreadingHTTPServer):
-    # Chrome requests the deferred local assets in a burst. Keep the Windows
-    # listener queue large enough to avoid intermittent unchanged-asset failures.
-    request_queue_size = 128
+from browser_runner import run_review
 
 
 HARNESS = r'''<!doctype html><meta charset="utf-8"><title>Browser review</title>
@@ -41,7 +22,6 @@ app.onload = async () => {
     document.title='Browser review: '+results.length+' checks; last: '+name;
   };
   const revealArchitecture=()=>d.querySelectorAll('#architecture-sitemap,#architecture-saved-review,#architecture-sitemap-advanced,#architecture-advanced,#sitemap-choices details,#section-sitemap-choices details,#sitemap-editor details').forEach(el=>el.open=true);
-  const addContent=placement=>{d.getElementById('ia-add-placement').value=placement;d.getElementById('ia-add').click();};
   // Destination-editor fixtures explicitly reveal its secondary controls.
   const revealDestinationPlan=()=>{revealArchitecture();const source=d.getElementById('sitemap-source');if(source && source.value!=='custom'){source.value='custom';source.dispatchEvent(new w.Event('change',{bubbles:true}));}d.querySelectorAll('#sitemap-destination-editor, #sitemap-outline-editor, #process-ia .ia-destination-map, #sitemap-choices details, #sitemap-editor details').forEach(el=>el.open=true);};
   const input = (id, value, type='input') => {
@@ -59,7 +39,7 @@ app.onload = async () => {
   const reset = () => {evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const previewDoc = () => d.getElementById('previewPage').contentDocument;
   const previewWindow = () => d.getElementById('previewPage').contentWindow;
-  const saved = () => Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects')))[0].data;
+  const saved = () => JSON.parse(w.localStorage.getItem('dss-v27-projects'))[d.getElementById('jProjects').value].data;
   const wait = (ms=100) => new Promise(resolve => setTimeout(resolve,ms));
   // Blob/File reads use real I/O. A pending local request prevents Chrome's
   // virtual clock from expiring an artificial timer before that I/O completes.
@@ -73,18 +53,12 @@ app.onload = async () => {
       return true;
     } finally {d.removeEventListener('dss:imported',done);w.alert=oldAlert;}
   };
+  const importFile=async text=>{
+    const transfer=new w.DataTransfer();transfer.items.add(new w.File([text],'project.json',{type:'application/json'}));
+    d.getElementById('loadFile').files=transfer.files;
+    await loadSelectedProjectFile();
+  };
   test('No startup JavaScript errors', () => !w.__reviewErrors.length);
-  test('Architecture starts with one primary editor and optional navigation, saved review and advanced tools closed',()=>d.querySelector('#ia-content-editor .ia-browser-heading > h3').textContent==='Content structure' && ['architecture-sitemap','architecture-saved-review','architecture-advanced','architecture-sitemap-advanced'].every(id=>!d.getElementById(id).open) && d.getElementById('architecture-saved-review').contains(d.querySelector('#process-ia .ia-content-map')) && d.querySelectorAll('#process-ia .process-sitemap-preview').length===1 && d.getElementById('architecture-sitemap').contains(d.querySelector('#process-ia .process-sitemap-preview')));
-  test('Fresh startup opens the Brief centre accordion that matches the active builder step',()=>w.DSStudio.activeStage===0 && d.querySelector('[data-journey-step="0"]').getAttribute('aria-current')==='step' && d.getElementById('process-brief').open && !d.getElementById('process-brief').hidden && !d.getElementById('process-ia').open);
-  const stepDisclosure=d.querySelector('.journey-step-list');
-  test('Choose a step starts expanded with all twelve steps available',()=>stepDisclosure.open && stepDisclosure.querySelectorAll('[data-journey-step]').length===12);
-  w.dssShowWizardStep(1,false);w.dssShowWizardStep(0,false);evaluate('apply()');
-  test('Step navigation and rendering keep the step chooser expanded',()=>stepDisclosure.open && w.DSStudio.activeStage===0);
-  stepDisclosure.open=false;w.dssShowWizardStep(1,false);w.dssShowWizardStep(0,false);evaluate('apply()');
-  test('A user-collapsed step chooser stays collapsed across navigation and rendering',()=>!stepDisclosure.open);
-  stepDisclosure.open=true;w.dssShowWizardStep(1,false);w.dssShowWizardStep(0,false);
-  test('A reopened step chooser stays expanded across navigation',()=>stepDisclosure.open);
-  test('Startup defaults to OKLCH across state, both method controls and lesson output',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && d.getElementById('method').value==='oklch' && d.getElementById('rampMethodLabel').textContent==='OKLCH' && d.getElementById('palette-method-status').textContent.includes('OKLCH'));
   test('New projects start with Basic on the left and Advanced on the right',()=>evaluate('state.sampleMode')==='basic' && [...d.querySelectorAll('[aria-label="Website sample complexity"] [role="tab"]')].map(el=>el.id).join(',')==='dockModeBasic,dockModeAdvanced' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockModeBasic').tabIndex===0 && d.getElementById('dockModeAdvanced').tabIndex===-1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic');
   d.getElementById('dockModeAdvanced').click();await wait();
   // Studio appearance is a browser preference; project theme and samples are independent.
@@ -129,19 +103,6 @@ app.onload = async () => {
   test('A fresh document restores dark Studio appearance while its new project stays light',()=>fresh.contentDocument.documentElement.dataset.theme==='dark' && fresh.contentWindow.eval('state.theme')==='light' && fresh.contentDocument.getElementById('themeToggle').getAttribute('aria-pressed')==='true');
   w.localStorage.setItem('dss-studio-appearance','<img src=x onerror=alert(1)>');await loadFresh();
   test('Invalid stored Studio appearance falls back to light without inserting content',()=>fresh.contentDocument.documentElement.dataset.theme==='light' && fresh.contentDocument.getElementById('themeToggle').textContent==='Studio: Light' && !fresh.contentDocument.querySelector('img[onerror]'));
-  // Reload real documents, preserving each section fragment and reopening a
-  // manually collapsed active lesson. Phase indices differ from display order.
-  fresh.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:10000';
-  for(const stage of w.DSStudio.orderedStages) {
-    const fw=fresh.contentWindow,fd=fresh.contentDocument;
-    fw.dssShowWizardStep(stage.index,false);
-    fw.history.replaceState(null,'','#'+stage.lesson);
-    fd.getElementById(stage.lesson).open=false;
-    const priorDoc=fd,priorProject=fw.eval('projectJson()');
-    await new Promise(resolve=>{fresh.onload=resolve;fw.location.reload();});await wait();
-    const reloaded=fresh.contentWindow,doc=fresh.contentDocument;
-    test('Reload opens Step '+(stage.position+1)+' '+stage.label+' and matches the active builder',()=>doc!==priorDoc && reloaded.DSStudio.activeStage===stage.index && doc.querySelector('[data-journey-step="'+stage.index+'"]').getAttribute('aria-current')==='step' && doc.getElementById(stage.lesson).open && !doc.getElementById(stage.lesson).hidden && !doc.querySelector('[data-journey-pane="'+stage.index+'"]').hidden && [...doc.querySelectorAll('#main > .studio-section')].filter(section=>section.id!=='studio-section-4').every(section=>section.open===(section.id===stage.lesson)) && reloaded.eval('projectJson()')===priorProject && !reloaded.__reviewErrors.length);
-  }
   fresh.remove();
   if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();
   for(const width of [320,390,1440])for(const studio of ['light','dark']) {
@@ -150,28 +111,13 @@ app.onload = async () => {
   }
   app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();reset();await wait();
 
-  test('Startup selects Minor Third 1.2 throughout the typography controls and export', () => evaluate('state.ratio===1.2 && cssExport().includes("--type-ratio: 1.2;")') && ['jScalePreset','clampScalePreset'].every(id=>d.getElementById(id).value==='minor-third') && ['ratio','jRatio','clampRatio'].every(id=>d.getElementById(id).value==='1.2'));
-  test('Startup keeps the preview and active Brief expanded with inspector hidden', () => d.querySelector('#main > :first-child').id==='studio-section-4' && [...d.querySelectorAll('#main > .studio-section')].every(section=>!section.hidden && section.open===(section.id==='studio-section-4' || section.id==='process-brief')) && !d.querySelector('.studio-code-dock').open && !d.getElementById('studioInspector').open);
-  test('Hidden inspector leaves one quarter for the desktop builder and the rest for the preview', () => Math.abs(d.querySelector('.sidebar').getBoundingClientRect().width-(d.querySelector('.layout').clientWidth-16)/4)<1 && d.getElementById('dockCss').getBoundingClientRect().height===0);
-  test('Inspector has a native details/summary disclosure arrow in both states',()=>d.getElementById('studioInspector').tagName==='DETAILS' && d.getElementById('inspectorToggle').tagName==='SUMMARY' && d.getElementById('inspectorToggle').textContent==='Live CSS/HTML Inspector' && w.getComputedStyle(d.getElementById('inspectorToggle')).display==='list-item' && d.getElementById('inspectorToggle').tabIndex===0 && d.getElementById('inspectorToggle').getBoundingClientRect().height>=44);
-  test('Competing beginner and centre navigation is removed', () => !d.getElementById('workspaceNav') && !d.getElementById('beginnerStart') && !d.getElementById('beginnerPath') && !d.querySelector('.studio-section-nav') && !d.querySelector('[data-configure-step]'));
-  test('Preview initially fills the centre pane in Fluid mode', () => d.getElementById('previewFrame').dataset.width==='fluid' && d.querySelector('button[data-width="fluid"]').getAttribute('aria-pressed')==='true');
-  test('Twelve wizard steps connect project planning to fifteen centre lessons and the preview', () => d.querySelectorAll('[data-journey-step]').length===12 && d.querySelectorAll('[data-journey-pane]').length===12 && d.querySelectorAll('#main > .studio-section > .panel .studio-lesson').length===15 && d.getElementById('jProgress').textContent.includes('of 12'));
   test('Every exported token has a source in its wizard step or centre Palette workspace', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
     const source=w.dssTokenSource(row), control=source && d.getElementById(source.control);
     return control && (control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step) || (source.step===4 && d.getElementById('palette-workspace').contains(control)) || (source.step===5 && d.getElementById('typography-workspace').contains(control)));
   }));
   test('Derived token families identify their foundation instead of arbitrary overrides', () => ['--space-6','--primary-700','--text-step-4','--text-h1','--font-ui','--heading-tracking','--button-progress-animation'].every(name=>/Derived|Alias/.test(w.dssTokenSource({name}).mode)));
   test('Font, responsive, layout and interaction settings live in their owning workspaces', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]')?.dataset.journeyPane===String(step) || (step===5 && d.getElementById('typography-workspace').contains(d.getElementById(id)))));
-  d.getElementById('studio-section-4').open=false;
-  d.querySelector('[data-journey-step="5"]').click(); input('jBase',18); await wait();
-  const closedPreviewDoc=previewDoc();
-  test('Wizard edits update the generated CSS while the responsive section is collapsed', () => !d.getElementById('studio-section-4').open && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('--font-size-base: 18px;'));
-  evaluate("dssRevealSection('previewPage',false)"); await wait();
-  test('Reopening the collapsed preview keeps the document and current settings', () => d.getElementById('studio-section-4').open && previewDoc()===closedPreviewDoc && parseFloat(previewWindow().getComputedStyle(previewDoc().body).fontSize)===18 && Math.abs(previewWindow().innerWidth-d.getElementById('previewFrame').getBoundingClientRect().width)<2);
-  d.getElementById('studio-section-4').open=false;
   reset(); d.querySelector('[data-journey-step="0"]').click(); await wait();
-  test('Editing and reopening the preview leaves Colour systems collapsed', () => !d.getElementById('studio-section-1').open && !d.getElementById('studio-section-4').open);
   revealAll(); await wait();
   test('Neutral CSS, JSON, and HTML exports', () => !/nscc/i.test(evaluate('cssExport()+projectJson()+htmlExport()')));
   test('Live inspector matches CSS export', () => d.getElementById('dockCss').textContent===evaluate('cssExport()'));
@@ -180,74 +126,11 @@ app.onload = async () => {
   test('HTML IDs are unique', () => {
     const ids=[...d.querySelectorAll('[id]')].map(el=>el.id); return ids.length===new Set(ids).size;
   });
-  for (const method of ['mix','oklch']) {
-    input('method',method);
-    test(method+' ramps preserve anchors and emit valid colours', () => evaluate(`
-      ['primary','secondary','accent'].every(k=>{
-        const ramp=makeRamp(state[k],state.method);
-        return ramp[500]===state[k].toUpperCase() && Object.values(ramp).every(validHex);
-      })`));
-  }
-  test('Known contrast ratios', () => evaluate("contrast('#000000','#FFFFFF')===21 && contrast('#FFFFFF','#FFFFFF')===1"));
   input('jTheme','dark');
   test('Page theme and guided controls synchronize independently of Studio appearance', () => d.documentElement.dataset.projectTheme==='dark' && d.documentElement.dataset.theme==='light' && d.getElementById('jTheme').value==='dark');
   test('Dark theme exports both theme blocks', () => evaluate('cssExport().includes(\'[data-theme="dark"]\') && cssExport().includes("--background: #F3F6FA")'));
+  // Detailed import validation, autosave and round trips: project_library_review.py.
   reset();
-  input('clampMinWidth',480); input('clampMaxWidth',1440); input('clampFactor',.7);
-  const fluidCss=evaluate('fluidTypeCss(5)');
-  const project=evaluate('projectJson()');
-  test('Project JSON preserves responsive typography settings', () => {
-    input('clampFactor',1); input('clampMinWidth',375); input('clampMaxWidth',1280);
-    evaluate('importConfig('+project+')'); return evaluate('fluidTypeCss(5)')===fluidCss;
-  });
-  input('clampFactor',.7);
-  reset();
-  test('Reset restores responsive typography defaults', () => evaluate('JSON.stringify(clampConfig)===JSON.stringify(CLAMP_DEFAULTS)'));
-  test('Import clamps numeric values and rejects executable font text', () => {
-    evaluate('importConfig({base:1e10,ratio:-5,font:"Arial; color:red",project:"<img src=x onerror=alert(1)>"})');
-    const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return evaluate('state.base===22 && state.ratio===1.05 && state.font===DEFAULT.font') && !page.querySelector('img[onerror]') && page.querySelector('.sample-brand').textContent.includes('<img src=x onerror=alert(1)>');
-  });
-  test('Malformed button variant safely falls back', () => {
-    evaluate('importConfig({buttonDesign:{variant:"__proto__"}})');
-    return evaluate('state.buttonDesign.variant')==='primary';
-  });
-  test('Imported clamp settings are finite and bounded', () => {
-    evaluate('importConfig({clampConfig:{minWidth:-1,maxWidth:1e10,mobileFactor:2}})');
-    return evaluate('clampConfig.minWidth===320 && clampConfig.maxWidth===1600 && clampConfig.mobileFactor===1');
-  });
-  reset();
-  w.localStorage.clear(); d.getElementById('jSaveLocal').click();
-  input('advWeight',600,'change');
-  test('Advanced select changes autosave after state updates', () => saved().advanced.weight===600);
-  d.getElementById('advUnderline').checked=false;
-  d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));
-  test('Advanced checkbox changes autosave', () => saved().advanced.underline===false);
-  input('clampBase',20);
-  test('Clamp foundation changes autosave', () => saved().base===20);
-  input('clampFactor',.7);
-  test('Clamp settings autosave', () => saved().clampConfig?.mobileFactor===.7);
-  const beforeImport=JSON.stringify(saved());
-  test('Import does not overwrite the active saved project', () => {
-    evaluate('importConfig({project:"Imported",base:18,advanced:{weight:800}})');
-    return JSON.stringify(saved())===beforeImport;
-  });
-  test('Reset does not overwrite the active saved project', () => {
-    reset(); return JSON.stringify(saved())===beforeImport;
-  });
-  input('bdRadius',18);
-  test('Button settings round trip through JSON', () => {
-    const json=evaluate('projectJson()'); reset(); evaluate('importConfig('+json+')');
-    return evaluate('state.buttonDesign.radius')===18;
-  });
-  test('Heading weight round trips as a finite number', () => {
-    input('advWeight',800,'change');
-    const json=evaluate('projectJson()'); reset(); evaluate('importConfig('+json+')');
-    return evaluate('adv.weight')===800;
-  });
-  reset();
-  test('Default button focus contrasts with light and dark surfaces', () => evaluate("['#FFFFFF','#152236'].every(bg=>contrast(state.buttonDesign.focus,bg)>=3)"));
-  test('New project defaults use 8px component dimensions and a 24px grid gutter', () => evaluate('adv.height===48 && adv.gap===24 && state.buttonDesign.padX===16 && state.buttonDesign.padY===8 && state.buttonDesign.minHeight===48'));
   test('CSS generation reads both themes without writing project state', () => evaluate(`(() => {
     const theme=Object.getOwnPropertyDescriptor(state,'theme');
     Object.defineProperty(state,'theme',{configurable:true,get:()=>theme.value,set:()=>{throw Error('Export changed theme');}});
@@ -279,391 +162,92 @@ app.onload = async () => {
   test('Inspector tabs support arrow-key selection and focus', () => d.activeElement.id==='dockTabHtml' && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockTabCss').tabIndex===-1);
   test('Inspector code panel is labelled by active tab', () => d.getElementById('dockCss').getAttribute('aria-labelledby')==='dockTabHtml');
   d.getElementById('dockTabCss').click();
-  input('advState','loading','change');
-  test('Loading demo exposes busy and disabled states', () => d.getElementById('advDemoButton').disabled && d.getElementById('advDemoButton').getAttribute('aria-busy')==='true');
   reset();
-  input('jFont','Georgia, \'Times New Roman\', serif');
-  test('Typography specimens use selected font', () => w.getComputedStyle(d.querySelector('#mobileType .sample')).fontFamily.includes('Georgia'));
-  reset();
-  for (const width of [320,390,768,1440]) {
-    app.style.width=width+'px'; await wait();
-    test('Page fits '+width+'px viewport', () => {
-      if (d.documentElement.scrollWidth<=w.innerWidth+1) return true;
-      throw Error(JSON.stringify({viewport:w.innerWidth,page:d.documentElement.scrollWidth,overflow:[...d.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>w.innerWidth+1 && el.getBoundingClientRect().width>0 && !el.closest('table,pre,.preview-shell,.studio-code-dock,.studio-section-nav')).slice(0,12).map(el=>({id:el.id,tag:el.tagName,cls:el.className,width:el.getBoundingClientRect().width,right:el.getBoundingClientRect().right}))}));
+  // One Palette/contrast/component path stays in integration. Detailed source,
+  // repair/review and state matrices have independent focused suites.
+  {
+    app.style.width='1440px';reset();w.importConfig({sampleMode:'advanced'});w.dssShowWizardStep(4,false);w.DSStudio.inspector.show({language:'css',section:'all'});await wait();
+    d.getElementById('jSaveLocal').click();const id=d.getElementById('jProjects').value;
+    input('jPrimary','#235678');await wait();
+    test('Colour journey anchor edits reach JSON, local save, preview and inspector',()=>evaluate('state.primary').toUpperCase()==='#235678' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[id].data.primary.toUpperCase()==='#235678' && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('--primary-500: #235678') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
+    input('jSemanticRole','control-border','change');d.getElementById('jSemanticEdit').click();
+    const before=evaluate('projectJson()'),beforeLibrary=w.localStorage.getItem('dss-v27-projects');input('repairHex','#7B8A9B');
+    const previewOnly=evaluate('projectJson()')===before && w.localStorage.getItem('dss-v27-projects')===beforeLibrary;
+    d.getElementById('repairCancel').click();await wait();
+    const cancelled=evaluate('projectJson()')===before;d.getElementById('jSemanticEdit').click();input('repairHex','#7B8A9B');d.getElementById('repairApply').click();await wait();
+    test('Colour journey previews and cancels before committing a reviewed semantic fix',()=>previewOnly && cancelled && evaluate('palette("light").roles["control-border"]')==='#7B8A9B' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[id].data.semanticOverrides.light['control-border']==='#7B8A9B' && w.dssGetContrastChecks().some(row=>row.name==='State Explorer input border' && row.theme==='light' && row.state==='default' && row.fg==='#7B8A9B'));
+    w.dssShowWizardStep(7,false);input('bdVariant','secondary');input('bdSource','custom');input('bdCustom','#345678');input('bdHover','#234567');input('bdHoverText','#FFFFFF');input('bdState','hover');await wait();
+    const motion=previewDoc().createElement('style');motion.textContent='.ds-button{transition:none!important}';previewDoc().head.append(motion);await wait();
+    const buttonFiles=[],oldDownload=w.download;
+    try{w.download=(name,content,type)=>buttonFiles.push({name,content,type});d.getElementById('bdExport').click();}finally{w.download=oldDownload;}
+    test('Colour journey component overrides reach live states, CSS download and saved settings',()=>previewWindow().getComputedStyle(previewDoc().querySelector('.sample-selected-action')).backgroundColor==='rgb(35, 69, 103)' && previewWindow().getComputedStyle(previewDoc().querySelector('.sample-selected-action')).textDecorationLine.includes('underline') && buttonFiles[0].name==='design-system-buttons.css' && buttonFiles[0].content.includes('#234567') && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[id].data.buttonDesign.overrides.secondary.hoverText.toUpperCase()==='#FFFFFF');
+    const json=evaluate('projectJson()'),css=evaluate('cssExport()'),html=evaluate('htmlExport()'),library=w.localStorage.getItem('dss-v27-projects');
+    const files=[],previousDownload=w.download;
+    try{w.download=(name,content,type)=>files.push({name,content,type});d.getElementById('jExportJson').click();}finally{w.download=previousDownload;}
+    await importFile(files[0].content);await wait();
+    test('Colour journey JSON download restores combined palette, repair and component data without overwriting local saves',()=>files[0].content===json && files[0].name==='design-system-studio.json' && evaluate('projectJson()')===json && evaluate('cssExport()')===css && evaluate('htmlExport()')===html && previewDoc().getElementById('dssPreviewStyles').textContent===css && w.localStorage.getItem('dss-v27-projects')===library);
+    reset();app.style.width='1440px';w.DSStudio.inspector.show({language:'css',section:'all'});await wait();
+  }
+  app.style.width='1440px';reset();w.DSStudio.inspector.show({language:'css',section:'all'});await wait();
+  // One typography/spacing journey keeps source, persistence, preview and files connected.
+  {
+    reset();w.importConfig({sampleMode:'advanced'});w.dssShowWizardStep(5,false);await wait();
+    d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value,liveDocument=previewDoc();
+    input('jFont',"Georgia, 'Times New Roman', serif");input('fontSystemHeading','verdana','change');
+    input('jBase',18);input('jScalePreset','major-third','change');input('jLeading',1.7);input('jHeadingLeading',1.35);input('jHeadingTracking',.02);
+    w.dssShowWizardStep(8,false);input('jSpacing',6);input('main-padding-left',17);await wait();
+    const snapshot=evaluate('projectJson()'),css=evaluate('cssExport()'),html=evaluate('htmlExport()');
+    const storedMatches=()=>JSON.stringify(JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectId].data)===JSON.stringify({preset:'custom',...JSON.parse(snapshot)});
+    const matchesType=()=>{const body=previewWindow().getComputedStyle(previewDoc().body),heading=previewWindow().getComputedStyle(previewDoc().querySelector('h1'));return body.fontFamily.includes('Georgia') && body.fontSize==='18px' && Math.abs(parseFloat(body.lineHeight)-30.6)<.1 && heading.fontFamily.includes('Verdana') && Math.abs(parseFloat(heading.letterSpacing)-parseFloat(heading.fontSize)*.02)<.01;};
+    test('Typography and spacing journey autosaves shared edits and updates the original preview',()=>previewDoc()===liveDocument && matchesType() && storedMatches() && css.includes('--space-unit: 6px;') && css.includes('--main-padding-left: 17px;') && d.getElementById('dockCss').textContent===css);
+    input('spacingReflection','Integration comparison only');const beforeComparison=evaluate('projectJson()');d.getElementById('spacingCompare').click();d.getElementById('spacingInspectTokens').click();await wait();
+    test('Spacing comparison and inspection keep typography and saved website settings intact',()=>evaluate('projectJson()')===beforeComparison && d.getElementById('spacingBeforeUnit').textContent==='6 px' && !evaluate('projectJson()+htmlExport()+cssExport()').includes('Integration comparison only') && d.getElementById('dockCss').textContent===css && matchesType());
+    const files={},priorDownload=w.download;
+    try{w.download=(name,content)=>{files[name]=content;};for(const id of ['jExportJson','jExportHtml','jExportCss'])d.getElementById(id).click();}finally{w.download=priorDownload;}
+    reset();await importFile(files['design-system-studio.json']);await wait();
+    test('Typography and spacing website downloads and JSON file restore agree with the saved model',()=>files['tokens.css']===css && files['index.html']===html && evaluate('projectJson()')===snapshot && evaluate('cssExport()')===css && evaluate('htmlExport()')===html && storedMatches() && matchesType() && !d.getElementById('spacingReflection').value);
+    d.getElementById('dockModeBasic').click();await wait();
+    const basicMatches=matchesType() && evaluate('state.spacing===6 && state.regionPadding.main.left===17') && previewDoc().getElementById('lists') && !previewDoc().getElementById('design-process');
+    d.getElementById('dockModeAdvanced').click();await wait();
+    test('Typography and spacing survive Basic and Advanced switching with the matching website and inspector',()=>basicMatches && matchesType() && evaluate('projectJson()')===snapshot && evaluate('htmlExport()')===html && d.getElementById('dockCss').textContent===css);
+    reset();w.DSStudio.inspector.show({language:'css',section:'all'});w.dssShowWizardStep(5,false);await wait();
+  }
+  // Combined responsive source -> live page -> separate downloads -> file restore.
+  for(const mode of ['basic','advanced']) {
+    app.style.width='1440px';reset();w.importConfig({sampleMode:mode});
+    if(d.documentElement.dataset.theme!=='light')d.getElementById('themeToggle').click();
+    w.DSStudio.inspector.show({language:'css',section:'all'});w.dssShowWizardStep(9,false);await wait();
+    input('jProject','Responsive <safe> journey');d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value;
+    const liveDocument=previewDoc(),fieldId=mode==='basic'?'signup-name':'contact-name';
+    previewDoc().getElementById(fieldId).value='Robin fixture';previewDoc().getElementById('footer-sitemap').open=true;
+    for(const [key,value] of Object.entries({stack:640,wide:1152,maxWidth:1280,gutter:20,wideGutter:40}))input('responsive-'+key,value);
+    input('jRadius',24);input('previewTheme','dark','change');d.querySelector('[data-width="mobile"]').click();await wait();
+    const json=evaluate('projectJson()'),html=evaluate('htmlExport()'),css=evaluate('cssExport()'),library=w.localStorage.getItem('dss-v27-projects');
+    test(mode+' responsive journey joins editable cutoffs, autosave and the retained mobile preview',()=>previewDoc()===liveDocument && previewWindow().innerWidth===390 && previewDoc().documentElement.scrollWidth<=391 && previewDoc().getElementById(fieldId).value==='Robin fixture' && previewDoc().getElementById('footer-sitemap').open && previewDoc().documentElement.dataset.theme==='dark' && previewDoc().getElementById('dssPreviewStyles').textContent===css && d.getElementById('dockCss').textContent===css && JSON.stringify(JSON.parse(library)[projectId].data)===JSON.stringify({preset:'custom',...JSON.parse(json)}));
+    const files={},priorDownload=w.download;
+    try{w.download=(name,content,type)=>{files[name]={content,type};};for(const id of ['jExportHtml','jExportCss','jExportJson'])d.getElementById(id).click();}finally{w.download=priorDownload;}
+    const page=d.createElement('iframe');page.style.cssText='width:639px;height:1000px;border:0';
+    const cssUrl=w.URL.createObjectURL(new w.Blob([files['tokens.css'].content],{type:'text/css'}));
+    const exported=new w.DOMParser().parseFromString(files['index.html'].content,'text/html');
+    let layoutsMatch=true;
+    try {
+      page.srcdoc=files['index.html'].content.replace('href="tokens.css"','href="'+cssUrl+'"');
+      await new Promise(resolve=>{page.onload=resolve;d.body.append(page);});
+      for(const width of [639,641,1152]) {
+        page.style.width=width+'px';await wait();const pd=page.contentDocument,pw=page.contentWindow;
+        const layout=pw.getComputedStyle(pd.querySelector(mode==='basic'?'.skills-layout':'.sample-hero'));
+        const columns=mode==='basic'?(layout.flexDirection==='column'?1:2):layout.gridTemplateColumns.split(' ').length;
+        layoutsMatch=layoutsMatch && pd.querySelector('link[rel="stylesheet"]').sheet && !pd.querySelector('style,script') && pd.documentElement.dataset.theme==='dark' && pd.documentElement.scrollWidth<=width+1 && pw.getComputedStyle(pd.querySelector('.container')).paddingLeft===(width>=1152?'40px':'20px') && columns===(width<=640?1:mode==='basic'?2:12);
+      }
+      test(mode+' responsive journey downloads a working separate HTML/CSS pair with the configured layout',()=>files['index.html'].type==='text/html' && files['tokens.css'].type==='text/css' && files['index.html'].content===html && files['tokens.css'].content===css && exported.querySelector('link[href="tokens.css"]') && !exported.querySelector('style,script,safe') && exported.title.includes('Responsive <safe> journey') && layoutsMatch && evaluate('projectJson()')===json);
+    } finally {page.remove();w.URL.revokeObjectURL(cssUrl);}
+    reset();await importFile(files['design-system-studio.json'].content);await wait();
+    test(mode+' responsive journey restores downloaded JSON without overwriting saved projects or retaining form entries',()=>{
+      const checks={mime:files['design-system-studio.json'].type==='application/json',json:evaluate('projectJson()')===json,html:evaluate('htmlExport()')===html,css:evaluate('cssExport()')===css,stack:d.getElementById('responsive-stack').value==='640',gutter:d.getElementById('responsive-wideGutter').value==='40',inspector:d.getElementById('dockCss').textContent===css,previewCss:previewDoc().getElementById('dssPreviewStyles').textContent===css,form:previewDoc().getElementById(fieldId).value==='',library:w.localStorage.getItem('dss-v27-projects')===library};
+      if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify(checks));return true;
     });
   }
-  const desktopPanes=[];
-  for (const width of [1281,1440,1920,2560,3440]) {
-    app.style.width=width+'px'; await wait();
-    const left=d.querySelector('.sidebar').getBoundingClientRect(), centre=d.getElementById('main').getBoundingClientRect(), right=d.querySelector('.studio-code-dock').getBoundingClientRect();
-    const shell=d.querySelector('body > .shell').getBoundingClientRect();
-    desktopPanes.push({width, left:left.width, centre:centre.width, right:right.width, shell:shell.width});
-    test('Three desktop columns keep the builder at 25% and cap the inspector at 25% at '+width+'px', () => Math.abs(left.width-(d.querySelector('.layout').clientWidth-16)/4)<1 && Math.abs(centre.left-left.right-16)<1 && Math.abs(right.left-centre.right-16)<1 && Math.abs(centre.width-right.width*2)<1 && right.width<=(d.querySelector('.layout').clientWidth-16)/4+1 && d.documentElement.scrollWidth<=w.innerWidth+1);
-  }
-  test('All three columns grow across large and ultrawide screens', () => {
-    const first=desktopPanes.find(pane=>pane.width===1440), last=desktopPanes.at(-1);
-    return last.left>first.left && last.centre>first.centre && last.right>first.right;
-  });
-  app.style.width='1280px'; await wait();
-  test('Inspector stacks after the centre when three columns would be cramped', () => {
-    const left=d.querySelector('.sidebar').getBoundingClientRect(), centre=d.getElementById('main').getBoundingClientRect(), right=d.querySelector('.studio-code-dock').getBoundingClientRect();
-    return Math.abs(left.width-(d.querySelector('.layout').clientWidth-16)/4)<1 && Math.abs(centre.left-right.left)<1 && right.top>=centre.bottom && d.documentElement.scrollWidth<=w.innerWidth+1;
-  });
-  app.style.width='900px'; await wait();
-  test('Side panes stack at tablet widths without horizontal page overflow', () => w.getComputedStyle(d.querySelector('.sidebar')).position==='static' && Math.abs(d.querySelector('.sidebar').getBoundingClientRect().left-d.getElementById('main').getBoundingClientRect().left)<1 && d.documentElement.scrollWidth<=w.innerWidth+1);
-  app.style.width='1440px'; await wait();
-  for (const [mode,width] of [['mobile',390],['tablet',768],['desktop',1280]]) {
-    d.querySelector('button[data-width="'+mode+'"]').click(); await wait();
-    test('Preview has exact '+mode+' width', () => {
-      const frame=d.getElementById('previewFrame'), actual=frame.getBoundingClientRect().width;
-      if (Math.abs(actual-width)>=1) throw Error(`Expected ${width}px; got ${actual}px; mode=${frame.dataset.width}; transition=${w.getComputedStyle(frame).transition}`);
-      return true;
-    });
-    test('Preview typography matches the '+mode+' viewport readout', () => {
-      const actual=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontSize);
-      const expected=evaluate(`fluidTypePx(5,${width})`);
-      if (Math.abs(actual-expected)>.11) throw Error(`Expected ${expected}px; got ${actual}px`);
-      return true;
-    });
-    test('Generated document has an exact '+mode+' viewport', () => previewWindow().innerWidth===width);
-    test('Generated sample reflows inside the '+mode+' viewport', () => previewDoc().documentElement.scrollWidth<=previewDoc().documentElement.clientWidth+1);
-  }
-  reset(); await wait();
-  const report = () => w.dssGetContrastChecks();
-  test('Contrast report covers both themes without changing the active theme', () => {
-    return new Set(report().map(row=>row.theme)).size===2 && d.documentElement.dataset.theme==='light' && evaluate('state.theme')==='light';
-  });
-  test('Every button variant and state is represented in both themes', () => {
-    return ['light','dark'].every(theme=>['primary','secondary','accent','outline','text'].every(variant=>
-      ['default','hover','focus','active','selected','disabled','loading'].every(state=>report().some(row=>
-        row.group==='Button Laboratory: text' && row.theme===theme && row.name.toLowerCase()===variant && row.state===state))));
-  });
-  test('Reference swatches and every generated ramp step have candidate checks', () => {
-    const rows=report().filter(row=>row.scope==='candidate');
-    return rows.length===(11+44)*2*2 && rows.every(row=>row.status==='candidate');
-  });
-  test('Disabled controls are exempt and read-only text is tested', () => report().filter(row=>row.state==='disabled').every(row=>row.status==='exempt') &&
-    report().some(row=>row.name==='State Explorer input text' && row.state==='readonly' && row.threshold===4.5));
-  test('Loading exemption follows the actual disabled state', () => {
-    const rows=report().filter(row=>row.state==='loading');
-    return rows.filter(row=>row.group==='Button Laboratory: text').every(row=>row.threshold===4.5) &&
-      rows.filter(row=>row.name==='State Explorer button text').every(row=>row.status==='exempt');
-  });
-  test('Focus indicators have a separate non-text target', () => report().some(row=>row.name==='Primary focus ring' && row.threshold===3 && row.state==='focus'));
-  const oldForeground=report().find(row=>row.name==='Primary' && row.state==='hover' && row.theme==='light').fg;
-  input('bdVariant','primary'); input('bdHoverText','#123456'); await wait();
-  test('Button override updates the contrast inventory', () => report().some(row=>row.name==='Primary' && row.state==='hover' && row.theme==='light' && row.fg==='#123456' && row.fg!==oldForeground));
-  input('bdDefaultBg','#ffffff'); input('bdText','#ffffff'); await wait();
-  test('White text on white is flagged at exactly 1:1', () => report().some(row=>row.name==='Primary' && row.state==='default' && row.ratio===1 && row.status==='review'));
-  input('bdDefaultBg','#ffffff'); input('bdText','#777777'); await wait();
-  test('A ratio below 4.5 is not rounded into a text pass', () => report().some(row=>row.name==='Primary' && row.state==='default' && row.ratio>4.4 && row.ratio<4.5 && row.status==='review'));
-  input('bdDefaultBg','#000000'); input('bdText','#ffffff'); await wait();
-  test('Disabled opacity uses unrounded sRGB compositing', () => {
-    const row=report().find(row=>row.name==='Primary' && row.theme==='light' && row.state==='disabled' && row.location==='surface');
-    const expected=1.05/(Math.pow((.45+.055)/1.055,2.4)+.05);
-    return Math.abs(row.ratio-expected)<1e-10 && row.status==='exempt';
-  });
-  const beforeOpacity=report().find(row=>row.name==='Preview card: --text' && row.theme==='light').ratio;
-  input('advOpacity',20); await wait();
-  test('Surface opacity updates the composited contrast', () => report().find(row=>row.name==='Preview card: --text' && row.theme==='light').ratio<beforeOpacity);
-  input('advColor_danger','#abcdef'); await wait();
-  test('Feedback changes update invalid-state checks', () => report().some(row=>row.name==='State Explorer input border' && row.theme==='light' && row.state==='invalid' && row.fg==='#ABCDEF'));
-  input('contrastTheme','dark','change'); input('contrastResult','review','change');
-  test('Contrast theme and result filters apply together', () => {
-    const shown=[...d.querySelectorAll('#contrastChecks tbody tr')];
-    return shown.length>0 && shown.every(row=>row.dataset.status==='review' && row.cells[0].textContent==='Dark');
-  });
-  input('contrastTheme','all','change'); input('contrastResult','all','change'); input('contrastSort','ratio','change');
-  test('Ratios sort ascending within each result group', () => [...d.querySelectorAll('#contrastChecks tbody')].every(body=>{
-    const values=[...body.rows].map(row=>parseFloat(row.cells[3].textContent));return values.every((value,i)=>!i||value>=values[i-1]);
-  }));
-  input('contrastSearch','Primary focus ring');
-  test('Search narrows the displayed contrast pairs', () => {
-    const shown=[...d.querySelectorAll('#contrastChecks tbody tr')];
-    return shown.length>0 && shown.every(row=>row.cells[1].textContent.includes('Primary focus ring'));
-  });
-  const realDownload=w.download; let contrastCsv;
-  w.download=(name,content)=>{contrastCsv={name,content};};
-  d.getElementById('contrastDownload').click(); w.download=realDownload;
-  test('Contrast CSV exports the currently filtered list', () => contrastCsv.name==='contrast-checks.csv' && contrastCsv.content.includes('Primary focus ring') && !contrastCsv.content.includes('Swatch candidates:'));
-  input('contrastSearch',''); input('contrastSort','priority','change');
-  test('Default sorting puts review rows before passes within groups', () => [...d.querySelectorAll('#contrastChecks tbody')].every(body=>{
-    const ranks={review:0,conditional:1,pass:2,candidate:3,exempt:4};const values=[...body.rows].map(row=>ranks[row.dataset.status]);
-    return values.every((value,i)=>!i||value>=values[i-1]);
-  }));
-  app.style.width='320px';
-  d.querySelector('#contrastChecks .contrast-group summary').click(); await wait();
-  test('Expanded contrast table scrolls within a 320px page', () => d.documentElement.scrollWidth<=w.innerWidth+1);
-  test('Contrast report ratios are finite and between 1 and 21', () => report().every(row=>Number.isFinite(row.ratio) && row.ratio>=1 && row.ratio<=21));
-  reset(); await wait();
-  test('Optional feedback text is a potential use, not a required failure', () => report().filter(row=>row.name.includes('message text')).every(row=>row.scope==='potential' && row.status==='candidate'));
-  test('Button boundaries and extra inner ring checks are conditional', () => report().filter(row=>row.group==='Button Laboratory: indicators' && (row.name.includes('boundary') || row.name.includes('(inner)'))).every(row=>row.status==='conditional'));
-  test('Actual input boundaries remain required checks', () => report().some(row=>row.name==='State Explorer input border' && row.state==='default' && row.theme==='light' && row.status==='review'));
-  const openRepair = predicate => {
-    const row=report().find(predicate);
-    const action=[...d.querySelectorAll('[data-edit-contrast]')].find(el=>el.dataset.editContrast===row.id);
-    action.closest('details').open=true; action.click(); return row;
-  };
-  d.getElementById('jSaveLocal').click();
-  const beforeRepair=evaluate('projectJson()'), beforeRepairCss=evaluate('cssExport()'), beforeRepairStorage=w.localStorage.getItem('dss-v27-projects');
-  openRepair(row=>row.name==='State Explorer input border' && row.state==='default' && row.theme==='light');
-  test('Edit action opens the relevant control-border editor', () => d.getElementById('colourRepair').open && d.getElementById('repairTarget').selectedOptions[0].textContent.includes('--control-border'));
-  test('Repair provides three tested colour suggestions', () => d.querySelectorAll('[data-suggest-colour]').length===3);
-  d.querySelector('[data-suggest-colour]').click();
-  test('Suggestion preview does not mutate state, CSS or saved projects', () => evaluate('projectJson()')===beforeRepair && evaluate('cssExport()')===beforeRepairCss && w.localStorage.getItem('dss-v27-projects')===beforeRepairStorage);
-  test('Preview explains effects on related pairs', () => d.getElementById('repairPreview').textContent.includes('required problems introduced') && d.getElementById('repairPreview').textContent.includes('All worsened pairs'));
-  input('repairHex','#oops');
-  test('Invalid HEX disables Apply', () => d.getElementById('repairApply').disabled);
-  d.getElementById('repairCancel').click(); await wait();
-  test('Cancel leaves the project unchanged', () => !d.getElementById('colourRepair').open && evaluate('projectJson()')===beforeRepair);
-  openRepair(row=>row.name==='State Explorer input border' && row.state==='default' && row.theme==='light');
-  input('repairHex','#7B8A9B');
-  test('Border preview predicts seven required pairs resolved', () => d.getElementById('repairPreview').textContent.includes('7 required problems resolved; 0 required problems introduced'));
-  d.getElementById('repairApply').click(); await wait();
-  test('Apply changes control borders without changing decorative borders', () => evaluate("palette('light').roles['control-border']==='#7B8A9B' && palette('light').roles.border==='#C5D0DD'"));
-  test('Applied border is used by actual input styling', () => w.getComputedStyle(d.getElementById('demoEmail')).borderTopColor==='rgb(123, 138, 155)');
-  test('Editing light theme leaves dark theme unchanged', () => evaluate("palette('dark').roles['control-border']==='#60748D'"));
-  test('Applied semantic colour updates CSS and active local save', () => evaluate('cssExport()').includes('--control-border: #7B8A9B') && Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(p=>p.data.semanticOverrides?.light?.['control-border']==='#7B8A9B'));
-  const repaired=evaluate('projectJson()');
-  reset(); evaluate('importConfig('+repaired+')'); await wait();
-  test('Semantic overrides survive JSON round trip', () => evaluate("palette('light').roles['control-border']==='#7B8A9B'"));
-  input('semanticTheme','light','change'); input('semanticRole','control-border','change');
-  d.getElementById('semanticReset').click(); await wait();
-  test('Use generated colour restores the role fallback', () => evaluate("palette('light').roles['control-border']===palette('light').roles.border"));
-  input('semanticRole','text','change'); d.getElementById('semanticEdit').click(); input('repairHex','#ffffff');
-  test('Harmful preview exposes newly failing related pairs', () => /[1-9]\d* required problems introduced/.test(d.getElementById('repairPreview').textContent) && d.getElementById('repairPreview').querySelector('details').open);
-  d.getElementById('repairCancel').click(); await wait();
-  input('semanticRole','success','change'); d.getElementById('semanticEdit').click();
-  input('repairHex','#137A39'); d.getElementById('repairApply').click(); await wait();
-  test('Semantic editor synchronizes existing feedback controls', () => d.getElementById('advColor_success').value==='#137a39' && evaluate("palette('light').roles.success==='#137A39'"));
-  input('advColor_success','#126b34'); await wait();
-  test('Existing feedback control can replace an editor override', () => evaluate("palette('light').roles.success==='#126B34' && !state.semanticOverrides.light.success"));
-  input('semanticTheme','dark','change'); input('semanticRole','text','change'); d.getElementById('semanticEdit').click();
-  input('repairHex','#DDEEFF'); d.getElementById('repairApply').click(); await wait();
-  test('Dark theme editing preserves light theme and current theme selection', () => evaluate("palette('dark').roles.text==='#DDEEFF' && palette('light').roles.text==='#14253A' && state.theme==='light'"));
-  test('Dark override is exported in the dark block only', () => {
-    const css=evaluate('cssExport()'), dark=css.indexOf('[data-theme="dark"]');
-    return !css.slice(0,dark).includes('--text: #DDEEFF') && css.slice(dark).includes('--text: #DDEEFF');
-  });
-  openRepair(row=>row.name==='Primary' && row.state==='hover' && row.theme==='light');
-  input('repairHex','#123456'); d.getElementById('repairApply').click(); await wait();
-  test('Button repair reaches the selected state in both themes', () => ['light','dark'].every(theme=>report().some(row=>row.name==='Primary' && row.state==='hover' && row.theme===theme && row.fg==='#123456')));
-  openRepair(row=>row.name==='Primary' && row.state==='hover' && row.theme==='light');
-  input('repairHex','#ffffff'); input('jBase',18); await wait();
-  d.getElementById('repairApply').click();
-  test('Stale previews require a renewed review before Apply', () => d.getElementById('colourRepair').open && d.getElementById('repairNotice').textContent.includes('project changed') && evaluate('state.buttonDesign.overrides.primary.hoverText')==='#123456');
-  d.getElementById('repairCancel').click(); await wait();
-  app.style.width='320px';
-  openRepair(row=>row.name==='State Explorer input border' && row.state==='default' && row.theme==='light'); await wait();
-  test('Colour repair dialog fits a 320px viewport', () => d.getElementById('colourRepair').getBoundingClientRect().width<=w.innerWidth && d.getElementById('colourRepair').scrollWidth<=d.getElementById('colourRepair').clientWidth+1);
-  d.getElementById('repairCancel').click(); await wait();
-  evaluate('importConfig({semanticOverrides:{light:{text:"red;position:fixed",unknown:"#000000"},dark:{text:"#abcdef"}}})'); await wait();
-  test('Semantic imports reject unknown roles and malformed colours', () => evaluate("!state.semanticOverrides.light.text && !state.semanticOverrides.light.unknown && palette('dark').roles.text==='#ABCDEF'"));
-  reset(); await wait();
-  test('Reset removes semantic overrides', () => evaluate("!state.semanticOverrides && palette('light').roles['control-border']===palette('light').roles.border"));
-  d.querySelector('[data-journey-step="6"]').click(); await wait();
-  w.dssRevealSection('jSemanticRole',false);
-  test('Palette exposes every semantic role with a friendly label and token', () => {
-    const roles=evaluate('SEMANTIC_COLOUR_KEYS');
-    return d.getElementById('palette-stage-semantics').open && roles.length===d.getElementById('jSemanticRole').options.length && roles.every(key=>[...d.getElementById('jSemanticRole').options].some(option=>option.value===key && option.textContent.includes('--'+key)));
-  });
-  d.getElementById('jSaveLocal').click();
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); input('jSemanticRole','text','change'); await wait();
-    const beforeGuided=evaluate('projectJson()');
-    test(theme+' wizard shows the current semantic value, purpose and generated status', () => d.getElementById('jSemanticCurrent').textContent.includes(evaluate(`palette('${theme}').roles.text`)) && d.getElementById('jSemanticCurrent').textContent.startsWith(theme==='dark'?'Dark:':'Light:') && d.getElementById('jSemanticReset').disabled && d.getElementById('jSemanticHelp').textContent.includes('Default readable text'));
-    d.getElementById('jSemanticEdit').focus(); d.getElementById('jSemanticEdit').click();
-    input('repairHex',theme==='light'?'#14253A':'#DDEEFF');
-    test(theme+' guided semantic edit previews without mutating the project', () => d.getElementById('colourRepair').open && d.getElementById('repairScope').textContent.includes('the '+theme+' theme only') && evaluate('projectJson()')===beforeGuided);
-    d.getElementById('repairCancel').click(); await wait();
-    test(theme+' cancelling guided semantic edits returns focus and preserves colours', () => evaluate('projectJson()')===beforeGuided && d.activeElement===d.getElementById('jSemanticEdit'));
-    d.getElementById('jSemanticEdit').click(); input('repairHex',theme==='light'?'#14253A':'#DDEEFF');
-    d.getElementById('repairApply').click(); await wait();
-    const expected=theme==='light'?'#14253A':'#DDEEFF';
-    test(theme+' guided override updates the preview, export and active local save', () => evaluate(`palette('${theme}').roles.text==='${expected}'`) && previewWindow().getComputedStyle(previewDoc().body).color===(theme==='light'?'rgb(20, 37, 58)':'rgb(221, 238, 255)') && evaluate('cssExport()').includes('--text: '+expected) && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[d.getElementById('jProjects').value].data.semanticOverrides[theme].text===expected && d.getElementById('jSemanticCurrent').textContent.includes('custom override') && !d.getElementById('jSemanticReset').disabled);
-    input('semanticTheme',theme,'change'); input('semanticRole','text','change');
-    test(theme+' centre and guided editors show the same semantic override', () => d.getElementById('semanticCurrent').textContent.includes(expected));
-  }
-  const guidedJson=evaluate('projectJson()'); evaluate('importConfig('+guidedJson+')'); await wait();
-  test('Guided semantic overrides survive project JSON import', () => evaluate("state.semanticOverrides.light.text==='#14253A' && state.semanticOverrides.dark.text==='#DDEEFF'") && d.getElementById('jSemanticCurrent').textContent.includes('#DDEEFF'));
-  d.getElementById('jSemanticReset').click(); await wait();
-  test('Guided reset restores just the selected theme and role', () => evaluate("!state.semanticOverrides.dark.text && state.semanticOverrides.light.text==='#14253A'") && d.getElementById('jSemanticReset').disabled && !d.getElementById('semanticCurrent').textContent.includes('custom override'));
-  app.style.width='320px'; await wait();
-  test('Guided semantic controls fit the narrow studio layout', () => {
-    w.DSStudio.paletteWorkspace.revealControl(d.getElementById('jSemanticEdit'));const pane=d.getElementById('palette-stage-semantics');
-    return pane.scrollWidth<=pane.clientWidth+1 && d.getElementById('jSemanticEdit').getBoundingClientRect().width>0 && d.documentElement.scrollWidth<=320;
-  });
-  app.style.width='1440px'; reset(); await wait();
-  test('Project reset refreshes guided semantic values', () => d.getElementById('jSemanticCurrent').textContent.startsWith('Light:') && d.getElementById('jSemanticReset').disabled && !evaluate('state.semanticOverrides'));
-  d.querySelector('[data-journey-step="7"]').click(); await wait();
-  d.getElementById('bdReview').open=true;
-  d.getElementById('jSaveLocal').click();
-  const reviewButton = (variant, state) => d.querySelector(`[data-review-variant="${variant}"][data-review-state="${state}"]`);
-  const reviewCell = (variant, state, theme) => reviewButton(variant,state).closest('tr').querySelector(`[data-review-theme="${theme}"]`);
-  const reviewPair = (theme, kind) => d.querySelector(`#bdReviewPairs [aria-label="${theme} theme contrast"] [data-kind="${kind}"]`);
-  const selectReview = (variant, state) => {
-    const button=reviewButton(variant,state);
-    button.closest('details').open=true; button.focus(); button.click();
-  };
-  test('Guided button review includes all 35 states and 70 theme results', () =>
-    d.querySelectorAll('#bdReviewVariants details').length===5 &&
-    d.querySelectorAll('#bdReviewVariants tbody tr').length===35 &&
-    d.querySelectorAll('#bdReviewVariants td[data-result]').length===70 &&
-    d.getElementById('bdReviewSummary').textContent.includes('10 disabled exemptions'));
-  test('Every guided result agrees with the full contrast inventory', () => {
-    return ['Primary','Secondary','Accent','Outline','Text'].every(variant=>
-      ['default','hover','focus','active','selected','disabled','loading'].every(state=>
-        ['light','dark'].every(theme=>{
-          const rows=report().filter(row=>row.group.startsWith('Button Laboratory:') && row.name.split(' ')[0]===variant && row.state===state && row.theme===theme && row.scope==='required' && row.threshold!==null);
-          const expected=state==='disabled'?'exempt':rows.some(row=>row.ratio<row.threshold)?'review':'pass';
-          return reviewCell(variant.toLowerCase(),state,theme).dataset.result===expected;
-        })));
-  });
-  const beforeReviewCss=evaluate('cssExport()');
-  const beforeReviewColours=evaluate('JSON.stringify([state.buttonDesign.overrides,state.buttonDesign.custom,state.buttonDesign.sources])');
-  selectReview('secondary','hover'); await wait();
-  test('Selecting a reviewed state synchronizes the wizard and live specimen', () => d.getElementById('bdVariant').value==='secondary' && d.getElementById('bdState').value==='hover' && d.querySelector('#bdSingle .bd-button').textContent.includes('Secondary') && d.getElementById('bdReviewTitle').textContent.includes('Secondary'));
-  test('Review navigation preserves colours and component CSS', () => evaluate('cssExport()')===beforeReviewCss && evaluate('JSON.stringify([state.buttonDesign.overrides,state.buttonDesign.custom,state.buttonDesign.sources])')===beforeReviewColours);
-  test('Review selection has one accessible current-state marker', () => d.querySelectorAll('#bdReviewVariants [aria-current="true"]').length===1 && reviewButton('secondary','hover').getAttribute('aria-current')==='true' && reviewButton('secondary','hover').getAttribute('aria-controls')==='bdReviewSelection');
-  const stableReviewButton=reviewButton('secondary','hover');
-  const stableReviewDetails=stableReviewButton.closest('details');
-  input('bdHover','#ffffff'); input('bdHoverText','#ffffff'); await wait();
-  test('Poor state overrides flag both themes and show their exact text ratio', () => ['light','dark'].every(theme=>reviewCell('secondary','hover',theme).dataset.result==='review') && ['Light','Dark'].every(theme=>reviewPair(theme,'text').textContent.includes('1.000:1')));
-  test('Live contrast refresh preserves review focus and disclosure state', () => reviewButton('secondary','hover')===stableReviewButton && d.activeElement===stableReviewButton && stableReviewDetails.open);
-  const beforeWizardRepair=evaluate('projectJson()');
-  const wizardRepairButton=reviewPair('Light','text').querySelector('button');
-  wizardRepairButton.focus(); wizardRepairButton.click(); input('repairHex','#101820');
-  test('Wizard colour repair previews effects across both themes without committing', () => d.getElementById('colourRepair').open && d.getElementById('repairTarget').selectedOptions[0].textContent.includes('Secondary: hoverText') && evaluate('projectJson()')===beforeWizardRepair);
-  d.getElementById('repairCancel').click(); await wait();
-  test('Cancel returns focus to the wizard edit action and keeps the failing colour', () => d.activeElement===wizardRepairButton && evaluate('projectJson()')===beforeWizardRepair && reviewCell('secondary','hover','light').dataset.result==='review');
-  wizardRepairButton.click(); input('repairHex','#101820');
-  const wizardRepairClosed=new Promise(resolve=>d.getElementById('colourRepair').addEventListener('close',resolve,{once:true}));
-  d.getElementById('repairApply').click(); await Promise.race([wizardRepairClosed,wait(1000)]); await wait();
-  test('Applying a reviewed text fix updates both theme results and returns focus', () => {
-    const themes=['light','dark'].map(theme=>reviewCell('secondary','hover',theme).dataset.result), colour=evaluate('state.buttonDesign.overrides.secondary.hoverText');
-    if(themes.every(result=>result==='pass') && colour==='#101820' && d.activeElement===wizardRepairButton) return true;
-    throw Error(JSON.stringify({themes,colour,active:d.activeElement.outerHTML.slice(0,300),dialogOpen:d.getElementById('colourRepair').open}));
-  });
-  test('Wizard fixes reach the live CSS/HTML preview and project save', () => previewDoc().getElementById('dssPreviewStyles').textContent.includes('--button-secondary-hover-text: #101820') &&
-    previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--secondary')).getPropertyValue('--button-secondary-hover-text').trim()==='#101820' &&
-    Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(p=>p.data.buttonDesign?.overrides.secondary?.hoverText==='#101820'));
-  const wizardRepaired=evaluate('projectJson()'); reset(); evaluate('importConfig('+wizardRepaired+')'); await wait();
-  test('Saved button fixes and selected review state survive JSON round trip', () => reviewButton('secondary','hover').getAttribute('aria-current')==='true' && ['light','dark'].every(theme=>reviewCell('secondary','hover',theme).dataset.result==='pass') && d.getElementById('bdHoverText').value==='#101820');
-  input('bdDefaultBg','#777777'); input('bdText','#000000'); selectReview('secondary','loading'); await wait();
-  test('Loading review retains full opacity and the default text contrast', () => reviewCell('secondary','default','light').dataset.result==='pass' && reviewCell('secondary','loading','light').dataset.result==='pass' && w.getComputedStyle(d.querySelector('#bdMatrix [data-sim="loading"]')).opacity==='1' && report().filter(row=>row.name==='Secondary' && row.state==='loading').every(row=>row.ratio===report().find(other=>other.name===row.name && other.theme===row.theme && other.location===row.location && other.state==='default').ratio));
-  selectReview('secondary','disabled'); await wait();
-  test('Disabled states show informational ratios and an exemption in both themes', () => ['light','dark'].every(theme=>reviewCell('secondary','disabled',theme).dataset.result==='exempt') && ['Light','Dark'].every(theme=>reviewPair(theme,'text').textContent.includes('Exempt (no target)')) && !d.getElementById('bdContrast').textContent.includes('Pass'));
-  input('bdDefaultBg','#000000'); input('bdText','#ffffff'); input('bdFocus','#ffffff'); selectReview('secondary','focus'); await wait();
-  test('Focus review catches a failing ring even when its text passes', () => reviewPair('Light','text').dataset.result==='pass' && reviewPair('Light','focus').dataset.result==='review' && reviewCell('secondary','focus','light').dataset.result==='review' && reviewCell('secondary','focus','dark').dataset.result==='pass');
-  const ringEdit=reviewPair('Light','focus').querySelector('button'); ringEdit.focus(); ringEdit.click(); input('repairHex','#808080'); d.getElementById('repairApply').click(); await wait();
-  test('Ring editing uses the shared focus setting across every variant and theme', () => report().filter(row=>row.group==='Button Laboratory: indicators' && row.name.includes('focus ring')).every(row=>row.fg==='#808080') && evaluate('state.buttonDesign.focus')==='#808080');
-  selectReview('secondary','selected'); await wait();
-  test('Selection reviews expose required outer and conditional inner indicators separately', () => !reviewPair('Light','selection').hidden && reviewPair('Light','inner').dataset.result==='conditional' && reviewPair('Light','inner').textContent.includes('Conditional'));
-  selectReview('secondary','default'); await wait();
-  test('Conditional button boundaries do not turn readable labels into required failures', () => reviewPair('Light','boundary').dataset.result==='conditional' && reviewCell('secondary','default','light').dataset.result==='pass');
-  input('bdVariant','outline'); input('bdState','active'); await wait();
-  test('Existing variant and state selectors update the contrast review selection', () => reviewButton('outline','active').getAttribute('aria-current')==='true' && d.getElementById('bdReviewTitle').textContent.includes('Outline'));
-  const validReview=evaluate('projectJson()');
-  evaluate('dssSelectButtonState("__proto__","default"); dssSelectButtonState("primary","bad-state")'); await wait();
-  test('Review navigation rejects unknown variants and states', () => evaluate('projectJson()')===validReview);
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); app.style.width='320px';
-    d.querySelectorAll('#bdReviewVariants details').forEach(el=>el.open=true); await wait();
-    test('All guided button reviews fit the '+theme+' 320px layout', () => [...d.querySelectorAll('.bd-review-table,.bd-review-selection')].every(el=>el.getBoundingClientRect().width<=w.innerWidth && el.scrollWidth<=el.clientWidth+1) &&
-      [...d.querySelectorAll('#bdReviewVariants button')].every(el=>el.getBoundingClientRect().height>=40 && el.tabIndex===0));
-  }
-  reset(); app.style.width='1440px'; await wait();
-  test('Reset clears repaired button colours and refreshes the selected review', () => evaluate('!Object.keys(state.buttonDesign.overrides).length') && reviewButton('primary','default').getAttribute('aria-current')==='true');
-  test('New default button colours meet required text and indicator targets in all states and themes', () => report().filter(row=>row.group.startsWith('Button Laboratory:') && row.scope==='required' && row.threshold!==null).every(row=>row.status==='pass'));
-  const matrixStates=state=>[...d.querySelectorAll(`#bdMatrix [data-sim="${state}"]`)];
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); await wait();
-    test(theme+' hover cues underline every button variant without changing geometry', () => matrixStates('hover').length===5 && matrixStates('hover').every((button,i)=>{
-      const normal=matrixStates('default')[i];
-      return w.getComputedStyle(button).textDecorationLine.includes('underline') && Math.abs(button.getBoundingClientRect().width-normal.getBoundingClientRect().width)<1 && Math.abs(button.getBoundingClientRect().height-normal.getBoundingClientRect().height)<1;
-    }));
-    test(theme+' pressed states add an inset cue to every variant', () => matrixStates('active').length===5 && matrixStates('active').every(button=>w.getComputedStyle(button).boxShadow.includes('inset')));
-    test(theme+' selected states have a visible checkmark and an unchanged label', () => matrixStates('selected').length===5 && matrixStates('selected').every((button,i)=>{
-      const icon=w.getComputedStyle(button,'::before');
-      return button.getAttribute('aria-pressed')==='true' && icon.content==='""' && parseFloat(icon.borderBottomWidth)>0 && button.textContent===matrixStates('default')[i].textContent;
-    }));
-    test(theme+' focus simulations retain the full outline around every variant', () => matrixStates('focus').every(button=>parseFloat(w.getComputedStyle(button).outlineWidth)===3 && w.getComputedStyle(button).outlineStyle==='solid' && parseFloat(w.getComputedStyle(button).outlineOffset)===3));
-    test(theme+' loading states retain readable opacity, visible progress and text', () => matrixStates('loading').length===5 && matrixStates('loading').every(button=>w.getComputedStyle(button).opacity==='1' && button.textContent==='Processing…' && w.getComputedStyle(button,'::after').content==='""' && parseFloat(w.getComputedStyle(button,'::after').width)>0));
-    test(theme+' disabled states remain natively unavailable and separately explained', () => matrixStates('disabled').every(button=>button.disabled && w.getComputedStyle(button).cursor==='not-allowed'));
-    for (const stateName of ['hover','active','focus','selected','loading','disabled']) {
-      input('bdState',stateName); await wait();
-      const action=previewDoc().querySelector('.sample-selected-action');
-      const style=previewWindow().getComputedStyle(action);
-      test(theme+' exported-page '+stateName+' state has its non-colour cue and semantics', () => {
-        if (stateName==='hover') return style.textDecorationLine.includes('underline');
-        if (stateName==='active') return style.boxShadow.includes('inset');
-        if (stateName==='focus') return style.outlineStyle==='solid' && parseFloat(style.outlineOffset)===3;
-        if (stateName==='selected') {
-          const toggles=[...previewDoc().querySelectorAll('#components button[aria-pressed]')];
-          return toggles.length===2 && toggles[0].textContent===toggles[1].textContent && toggles[0].getAttribute('aria-pressed')==='false' && action.getAttribute('aria-pressed')==='true' && previewWindow().getComputedStyle(action,'::before').content==='""' && previewWindow().getComputedStyle(toggles[0],'::before').visibility==='hidden' && Math.abs(toggles[0].getBoundingClientRect().width-action.getBoundingClientRect().width)<1;
-        }
-        if (stateName==='loading') return action.disabled && action.getAttribute('aria-busy')==='true' && action.textContent==='Processing…' && style.opacity==='1' && previewWindow().getComputedStyle(action,'::after').content==='""';
-        return action.disabled && !!previewDoc().getElementById(action.getAttribute('aria-describedby'))?.textContent.includes('prerequisite');
-      });
-    }
-  }
-  input('advState','loading','change'); await wait();
-  test('State Explorer loading uses the same progress cue and full-opacity text', () => d.getElementById('advDemoButton').textContent==='Processing…' && w.getComputedStyle(d.getElementById('advDemoButton')).opacity==='1' && w.getComputedStyle(d.getElementById('advDemoButton'),'::after').content==='""');
-  input('bdState','loading');
-  d.getElementById('advReduce').checked=true; d.getElementById('advReduce').dispatchEvent(new w.Event('change',{bubbles:true})); await wait();
-  test('Reduce demo animations stops progress in the laboratory and State Explorer', () => ['#bdSingle .bd-button','#advDemoButton'].every(selector=>w.getComputedStyle(d.querySelector(selector),'::after').animationName==='none'));
-  test('Reduced demo motion also reaches the generated page and CSS export', () => previewWindow().getComputedStyle(previewDoc().querySelector('.sample-selected-action'),'::after').animationName==='none' && evaluate('cssExport()').includes('--button-progress-animation: none'));
-  d.getElementById('advReduce').checked=false; d.getElementById('advReduce').dispatchEvent(new w.Event('change',{bubbles:true})); await wait();
-  test('Restoring demo animations preserves the platform reduced-motion preference', () => w.getComputedStyle(d.querySelector('#bdSingle .bd-button'),'::after').animationName===(w.matchMedia('(prefers-reduced-motion: reduce)').matches?'none':'dss-button-progress'));
-  input('advState','selected','change'); await wait();
-  test('State Explorer selection has a checkmark and nearby state guidance', () => w.getComputedStyle(d.getElementById('advDemoButton'),'::before').content==='""' && d.getElementById('advButtonHelp').textContent.includes('Keep the label'));
-  input('bdState','default'); await wait();
-  const focusSpecimen=d.querySelector('#bdSingle .bd-button'); w.dssRevealSection('bdSingle',false);focusSpecimen.focus();
-  test('Actual keyboard-visible focus retains its outline independently of state simulations', () => !focusSpecimen.matches('[data-sim="focus"]') && focusSpecimen.matches(':focus-visible') && parseFloat(w.getComputedStyle(focusSpecimen).outlineWidth)===3);
-  const statesDownload=[]; const priorStateDownload=w.download;
-  w.download=(name,content)=>statesDownload.push({name,content}); d.getElementById('bdExport').click(); w.download=priorStateDownload;
-  test('Standalone button CSS includes the shared state cues, forced-colour fallback and reduced motion', () => statesDownload[0].content.includes('text-decoration-line: underline') && statesDownload[0].content.includes('box-shadow: inset') && statesDownload[0].content.includes('[aria-pressed]::before') && statesDownload[0].content.includes('[aria-busy="true"]::after') && statesDownload[0].content.includes('prefers-reduced-motion: reduce') && statesDownload[0].content.includes('forced-colors: active'));
-  const practicesProject=evaluate('projectJson()');
-  input('bdFocus','#775599'); const customFocusProject=evaluate('projectJson()'); reset(); evaluate('importConfig('+customFocusProject+')'); await wait();
-  test('Imported custom focus colours remain editable under the new default practices', () => evaluate('state.buttonDesign.focus')==='#775599' && evaluate('cssExport()').includes('--button-focus: #775599'));
-  evaluate('importConfig('+practicesProject+')'); reset(); await wait();
-  input('jScalePreset','minor-second','change'); await wait();
-  test('Minor Second preset updates the scale without changing mobile percentage', () => evaluate('state.ratio===1.067 && clampConfig.mobileFactor===.82') && d.getElementById('clampScalePreset').value==='minor-second');
-  input('clampScalePreset','perfect-fourth','change'); await wait();
-  test('Calculator scale preset synchronizes the guided builder', () => evaluate('state.ratio===1.333') && d.getElementById('jScalePreset').value==='perfect-fourth');
-  input('clampFactor',.75); await wait();
-  test('Mobile heading percentage does not change the scale interval', () => evaluate('state.ratio===1.333 && clampConfig.mobileFactor===.75'));
-  input('ratio',1.29); await wait();
-  test('Manual ratio selects Custom in both preset controls', () => d.getElementById('jScalePreset').value==='custom' && d.getElementById('clampScalePreset').value==='custom');
-  reset(); await wait();
-  test('Reset restores Minor Third without changing responsive heading limits', () => evaluate('state.ratio===1.2 && clampConfig.mobileFactor===.82') && d.getElementById('jScalePreset').value==='minor-third' && d.getElementById('clampScalePreset').value==='minor-third');
-  test('Typography ladder displays matching PX and REM values', () => {
-    const base=d.querySelectorAll('#typeLadder .type-row small')[2].textContent;
-    const step=d.querySelectorAll('#typeLadder .type-row small')[3].textContent;
-    return base.includes('16px') && base.includes('1rem') && step.includes('19.2px') && step.includes('1.2rem');
-  });
-  test('Mobile and desktop specimens also include REM values', () => d.querySelector('#mobileType small').textContent.includes('rem') && d.querySelector('#desktopType small').textContent.includes('rem'));
-  input('typoHeadingTracking',.03); input('typoBodyTracking',.02); await wait();
-  test('Direct em controls synchronize all typography editors', () => evaluate('state.headingTracking===.03 && state.bodyTracking===.02 && adv.tracking===3') && d.getElementById('jHeadingTracking').value==='0.03' && d.getElementById('advTrackingOut').textContent==='0.03em');
-  test('Specimen letter spacing scales with the local font size', () => {
-    const heading=w.getComputedStyle(d.querySelector('#desktopType .sample'));
-    const body=w.getComputedStyle(d.querySelectorAll('#desktopType .sample')[3]);
-    return Math.abs(parseFloat(heading.letterSpacing)-parseFloat(heading.fontSize)*.03)<.001 && Math.abs(parseFloat(body.letterSpacing)-.32)<.001;
-  });
-  test('Responsive preview uses heading and body em spacing', () => {
-    const heading=previewWindow().getComputedStyle(previewDoc().querySelector('h1'));
-    const body=previewWindow().getComputedStyle(previewDoc().body);
-    return Math.abs(parseFloat(heading.letterSpacing)-parseFloat(heading.fontSize)*.03)<.001 && Math.abs(parseFloat(body.letterSpacing)-parseFloat(body.fontSize)*.02)<.001;
-  });
-  test('CSS export contains heading and body letter-spacing tokens', () => evaluate('cssExport()').includes('--heading-letter-spacing: 0.03em') && evaluate('cssExport()').includes('--body-letter-spacing: 0.02em'));
-  const typographyProject=evaluate('projectJson()'); reset(); evaluate('importConfig('+typographyProject+')'); await wait();
-  test('Letter-spacing settings round trip through JSON', () => evaluate('state.headingTracking===.03 && state.bodyTracking===.02 && adv.tracking===3'));
-  evaluate('importConfig({advanced:{tracking:-3}})'); await wait();
-  test('Older heading-tracking projects migrate from hundredths to em', () => evaluate('state.headingTracking===-.03 && state.bodyTracking===0'));
-  input('advTracking',2.5); await wait();
-  test('Existing advanced tracking control updates the shared em setting', () => evaluate('state.headingTracking===.025') && d.getElementById('typoHeadingTrackingOut').textContent==='0.025em');
-  d.getElementById('clampReset').click(); await wait();
-  test('Reset responsive limits preserves letter spacing', () => evaluate('clampConfig.mobileFactor===.82 && state.headingTracking===.025'));
+  app.style.width='1440px';reset();d.querySelector('[data-width="desktop"]').click();w.DSStudio.inspector.show({language:'css',section:'all'});w.dssShowWizardStep(5,false);await wait();
   const sections=[...d.querySelectorAll('#main > .studio-section')];
   test('Every centre-pane section has a native heading accordion', () => sections.length===16 && sections.every(el=>el.tagName==='DETAILS' && el.querySelector(':scope > summary > h2')));
   const beforeCollapse=evaluate('projectJson()');
@@ -680,47 +264,11 @@ app.onload = async () => {
   d.querySelector('#studio-section-2 > summary').click();
   test('Individual lesson headings toggle their disclosure', () => !d.getElementById('studio-section-2').open);
   d.querySelector('#studio-section-2 > summary').click(); await wait();
-  test('Active lesson headings and typography controls fit a 320px page', () => d.documentElement.scrollWidth<=w.innerWidth+1);
+  app.style.width='320px';await wait();
+  test('Active lesson headings and typography controls fit a 320px page', () => w.innerWidth===320 && d.documentElement.scrollWidth<=321);
+  app.style.width='1440px';await wait();
   revealAll();
-  reset(); await wait();
-  for (const hex of ['#FF0000','#00FF00','#0000FF','#FFFFFF','#000000','#004780']) {
-    test('OKLCH round trip preserves '+hex, () => evaluate(`oklchHex(...rgbToOklch('${hex}'))` )===hex);
-  }
-  input('oklchRole','accent','change');
-  input('oklchLight',65); input('oklchChroma',.12); input('oklchHue',150);
-  const chosenHex=d.getElementById('oklchHex').textContent;
-  test('OKLCH exploration leaves palette unchanged before Apply', () => evaluate('state.accent')==='#cbdb2a');
-  d.getElementById('oklchApply').click();
-  test('OKLCH Apply updates foundation, guided editor, export and saved project', () => {
-    d.getElementById('jSaveLocal').click();
-    return evaluate('state.accent').toUpperCase()===chosenHex && d.getElementById('jAccent').value.toUpperCase()===chosenHex && evaluate('cssExport()').includes('--accent-500: '+chosenHex) && Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(p=>p.data.accent.toUpperCase()===chosenHex);
-  });
-  input('oklchLight',90); d.getElementById('oklchReset').click();
-  test('OKLCH Load discards exploration and reloads the current palette anchor', () => d.getElementById('oklchHex').textContent===chosenHex);
-  input('oklchLight',60); input('oklchChroma',.4);
-  test('OKLCH warns when chroma exceeds sRGB gamut', () => d.getElementById('oklchGamut').textContent.startsWith('Outside sRGB') && /^#[0-9A-F]{6}$/.test(d.getElementById('oklchHex').textContent));
-  for (const role of ['primary','secondary','accent']) {
-    input('oklchRole',role,'change'); input('oklchLight',65); input('oklchChroma',.12); input('oklchHue',150);
-    d.getElementById('oklchApply').click();
-    const otherRoles=evaluate(`JSON.stringify(Object.fromEntries(['primary','secondary','accent'].filter(key=>key!=='${role}').map(key=>[key,state[key]])))`);
-    const references=evaluate('JSON.stringify(state.brandPalette)');
-    d.getElementById('oklchDefault').click(); await wait();
-    test('OKLCH default reset restores only '+role+' and synchronizes controls, preview, export and saved data', () => {
-      const expected=evaluate(`DEFAULT.${role}`).toUpperCase();
-      d.getElementById('jSaveLocal').click();
-      return evaluate(`state.${role}.toUpperCase()===DEFAULT.${role}.toUpperCase()`)
-        && d.getElementById('oklchHex').textContent===expected
-        && d.getElementById('j'+role[0].toUpperCase()+role.slice(1)).value.toUpperCase()===expected
-        && evaluate('cssExport()').includes('--'+role+'-500: '+expected)
-        && d.getElementById('previewPage').contentDocument.getElementById('dssPreviewStyles').textContent.includes('--'+role+'-500: '+expected)
-        && Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(p=>p.data[role].toUpperCase()===expected)
-        && evaluate(`JSON.stringify(Object.fromEntries(['primary','secondary','accent'].filter(key=>key!=='${role}').map(key=>[key,state[key]])))`)===otherRoles
-        && evaluate('JSON.stringify(state.brandPalette)')===references;
-    });
-    d.getElementById('oklchDefault').click();
-    test('Repeated '+role+' default reset keeps the wheel selection stable', () => d.getElementById('oklchHex').textContent===evaluate(`DEFAULT.${role}.toUpperCase()`) && d.getElementById('oklchRole').value===role);
-  }
-  reset(); await wait();
+  reset();await wait();d.getElementById('dockTabCss').click();
   const downloadCalls=[];
   const originalDownload=w.download;
   w.download=(name,content,type)=>downloadCalls.push({name,content,type});
@@ -746,80 +294,35 @@ app.onload = async () => {
   d.getElementById('tokenDownload').click();
   test('Token search and CSV agree on the filtered tokens', () => [...d.querySelectorAll('#tokenTableBody tr')].every(row=>row.textContent.includes('--button-primary-hover')) && downloadCalls.at(-1).name==='design-system-tokens.csv' && !downloadCalls.at(-1).content.includes('--brand-white'));
   w.download=originalDownload;
-  d.getElementById('jNewLocal').click(); input('jProject','Audit project A'); input('jBase',18); d.getElementById('jSaveLocal').click();
-  const projectA=d.getElementById('jProjects').value;
-  d.getElementById('jNewLocal').click(); input('jProject','Audit project B'); input('jBase',20); d.getElementById('jSaveLocal').click();
-  const projectB=d.getElementById('jProjects').value;
-  d.getElementById('jProjects').value=projectA; d.getElementById('jLoadLocal').click();
-  test('Saved projects load their own settings', () => evaluate('state.base===18 && state.project==="Audit project A"'));
-  input('jBase',19);
-  test('Switching saved projects routes autosave to the loaded project', () => {
-    const stored=JSON.parse(w.localStorage.getItem('dss-v27-projects'));
-    return stored[projectA].data.base===19 && stored[projectB].data.base===20;
+  // Keep one cross-feature persistence path here; detailed library contracts
+  // live in project_library_review.py with a fresh, independent app.
+  d.getElementById('jNewLocal').click();
+  // Import-normalized starter keeps optional map shape stable across backups.
+  w.importConfig({sampleMode:'advanced'});
+  input('jProject','Integration save and restore');input('jBase',18);
+  input('plan-goal','Find a lesson and practise.');input('bdRadius',18);
+  d.getElementById('jSaveLocal').click();const integrationId=d.getElementById('jProjects').value;
+  input('jBase',19);await wait();
+  const integrationJson=evaluate('projectJson()'),integrationCss=evaluate('cssExport()'),integrationHtml=evaluate('htmlExport()');
+  test('End-to-end editor changes autosave a complete local project',()=>{
+    const data=JSON.parse(w.localStorage.getItem('dss-v27-projects'))[integrationId].data;
+    return data.base===19 && data.buttonDesign.radius===18 && data.designProcess.goal==='Find a lesson and practise.';
   });
-  const originalConfirm=w.confirm;
-  w.confirm=()=>false; d.getElementById('jDeleteLocal').click();
-  test('Cancelling deletion preserves the saved project', () => !!JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectA]);
-  w.confirm=()=>true; d.getElementById('jDeleteLocal').click();
-  test('Confirmed deletion removes only the selected project', () => {
-    const stored=JSON.parse(w.localStorage.getItem('dss-v27-projects')); return !stored[projectA] && !!stored[projectB];
-  });
-  w.confirm=originalConfirm;
-  const priorStorage=w.localStorage.getItem('dss-v27-projects');
-  w.localStorage.setItem('dss-v27-projects',JSON.stringify({bad:null,missing:{},array:{name:'Bad',updated:'invalid',data:[]},valid:{name:'Valid',updated:'2026-10-19T12:00:00Z',data:{project:'Recovered',base:18}}}));
-  const recovery=d.createElement('iframe'); recovery.src='/index.html';
-  await new Promise(resolve=>{recovery.onload=resolve;d.body.append(recovery);});
-  test('Malformed saved entries do not prevent startup or valid project recovery', () => {
-    const rd=recovery.contentDocument, rw=recovery.contentWindow;
-    if (rw.__reviewErrors.length || rd.getElementById('jProjects').options.length!==1 || rd.getElementById('jProjects').value!=='valid') return false;
-    rd.getElementById('jLoadLocal').click();
-    return rw.eval('state.project==="Recovered" && state.base===18') && typeof rw.dssGetContrastChecks==='function';
-  });
-  recovery.remove(); w.localStorage.setItem('dss-v27-projects',priorStorage);
-  reset();
-  const originalAlert=w.alert, alerts=[]; w.alert=message=>alerts.push(message);
-  const importFile=async text=>{
-    const transfer=new w.DataTransfer(); transfer.items.add(new w.File([text],'project.json',{type:'application/json'}));
-    d.getElementById('loadFile').files=transfer.files;
-    d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true})); await wait();
-    // File.text() resolves on the browser's I/O clock, independently of virtual
-    // timers. Wait for the handler to clear the input before the next import.
-    for (let attempt=0;attempt<40 && d.getElementById('loadFile').value;attempt++) await wait(50);
-  };
-  await importFile(JSON.stringify({project:'File import',base:21,buttonDesign:{radius:17}}));
-  test('JSON file picker imports all modules and clears the file selection', () => evaluate('state.project==="File import" && state.base===21 && state.buttonDesign.radius===17') && !d.getElementById('loadFile').value);
-  const beforeBadFile=evaluate('projectJson()');
-  await importFile('{broken json');
-  test('Invalid JSON reports an error without changing the project', () => alerts.length===1 && evaluate('projectJson()')===beforeBadFile);
-  await importFile(' '.repeat(6000001));
-  test('Oversized JSON files are rejected without changing the project', () => alerts.at(-1).includes('too large') && evaluate('projectJson()')===beforeBadFile);
-  w.alert=originalAlert;
+  d.getElementById('jNewLocal').click();
+  test('End-to-end New starts Basic without overwriting the saved design',()=>evaluate('state.sampleMode')==='basic' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[integrationId].data.base===19);
+  d.getElementById('jProjects').value=integrationId;d.getElementById('jLoadLocal').click();await wait();
+  test('End-to-end local load restores editors, exports and live preview',()=>evaluate('projectJson()')===integrationJson && d.getElementById('jBase').value==='19' && evaluate('htmlExport()')===integrationHtml && d.getElementById('previewPage').contentDocument.getElementById('dssPreviewStyles').textContent===integrationCss);
+  const integrationDownloads=[],priorIntegrationDownload=w.download;
+  try{w.download=(name,content,type)=>integrationDownloads.push({name,content,type});d.getElementById('jExportJson').click();}
+  finally{w.download=priorIntegrationDownload;}
+  reset();await importFile(integrationDownloads[0].content);await wait();
+  test('End-to-end downloaded JSON reimports through the file picker with matching preview and exports',()=>integrationDownloads[0].name==='design-system-studio.json' && integrationDownloads[0].type==='application/json' && evaluate('projectJson()')===integrationJson && evaluate('cssExport()')===integrationCss && evaluate('htmlExport()')===integrationHtml && d.getElementById('previewPage').contentDocument.getElementById('dssPreviewStyles').textContent===integrationCss);
   const originalClipboard=w.navigator.clipboard;
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.reject(Error('Denied for audit'))}});
   d.getElementById('copyCode').click(); await wait();
   test('Clipboard rejection gives a manual-copy fallback', () => d.getElementById('liveStatus').textContent.includes('Clipboard unavailable'));
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:originalClipboard});
   reset();
-  for (const stateName of ['default','hover','focus','active','selected','disabled','loading','invalid','success','readonly']) {
-    input('advState',stateName,'change');
-    test('State Explorer correctly exposes '+stateName+' semantics', () => {
-      const button=d.getElementById('advDemoButton'), field=d.getElementById('advDemoInput');
-      return button.disabled===['disabled','loading'].includes(stateName) &&
-        button.getAttribute('aria-busy')===String(stateName==='loading') &&
-        button.hasAttribute('aria-pressed')===(stateName==='selected') &&
-        field.disabled===(stateName==='disabled') && field.readOnly===(stateName==='readonly') &&
-        field.getAttribute('aria-invalid')===String(stateName==='invalid');
-    });
-  }
-  reset();
-  for (const [id,value,type] of [['advFocus',5],['advHeight',50],['advWeight',800,'change'],['advMeasure',75],['advBorder',6],['advShadow','strong','change'],['advOpacity',70],['advColumns',260],['advGap',20],['advAlign','end','change'],['advMotion',250],['bdVariant','outline'],['bdSize','lg'],['bdPaddingX',24],['bdPaddingY',18],['bdMinHeight',56],['bdRadius',20],['bdBorder',3],['bdWeight',700],['bdFocusWidth',4],['bdMotion',250],['bdSource','custom'],['bdCustom','#123456'],['bdHover','#234567'],['bdActive','#345678'],['bdText','#456789'],['bdHoverText','#ffffff'],['bdActiveText','#ffffff'],['bdDefaultBg','#eeeeee'],['bdBorderColor','#123456']]) input(id,value,type||'input');
-  input('advAlign','start','change');
-  const fullConfig=JSON.parse(evaluate('projectJson()'));
-  reset(); evaluate('importConfig('+JSON.stringify(fullConfig)+')');
-  test('Advanced and button editor settings survive a full project round trip', () => {
-    const loaded=JSON.parse(evaluate('projectJson()'));
-    return JSON.stringify(loaded.advanced)===JSON.stringify(fullConfig.advanced) && JSON.stringify(loaded.buttonDesign)===JSON.stringify(fullConfig.buttonDesign) && !/undefined|NaN|Infinity/.test(evaluate('cssExport()'));
-  });
   input('brandApplyRole','accent','change');
   const referenceAction=d.querySelector('[data-brand-role="accent"][data-brand-hex="#00BADC"]'); referenceAction.click();
   test('Reference swatch selection synchronizes palette and guided controls', () => d.getElementById('accent').value===d.getElementById('jAccent').value && evaluate('state.accent')===referenceAction.dataset.brandHex.toLowerCase());
@@ -862,1005 +365,7 @@ app.onload = async () => {
   test('Generated reference tokens use the universal brand prefix', () => evaluate('cssExport()').includes('--brand-white: #FFFFFF') && !evaluate('cssExport()').includes('--example-'));
   input('tokenSearch','--brand-'); await wait();
   test('Token catalogue classifies renamed brand references', () => d.querySelectorAll('#tokenTableBody tr').length===11 && [...d.querySelectorAll('#tokenTableBody tr')].every(row=>row.textContent.includes('Brand palette')));
-  const sampleDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-  test('Sample home page has header, main, footer, hero and a single headline', () => !!sampleDoc.querySelector('body > header nav') && !!sampleDoc.querySelector('body > main') && !!sampleDoc.querySelector('body > footer nav') && !!sampleDoc.querySelector('#home .sample-lead') && sampleDoc.querySelectorAll('h1').length===1);
-  test('Every sample navigation and action anchor reaches an existing section', () => [...sampleDoc.querySelectorAll('a[href^="#"]')].every(link=>sampleDoc.getElementById(link.hash.slice(1))));
-  test('Every main section offers primary and secondary actions matching the wizard variants', () => [...sampleDoc.querySelectorAll('main > section')].length===9 && [...sampleDoc.querySelectorAll('main > section')].every(section=>{
-    const rows=section.querySelectorAll('.sample-section-actions');
-    return rows.length===1 && rows[0].children.length===2 && rows[0].firstElementChild.matches('.ds-button--primary') && rows[0].lastElementChild.matches('a.ds-button--secondary[href]') && (section.id==='contact'?rows[0].firstElementChild.matches('form button[type="submit"]'):rows[0].firstElementChild.matches('a[href]'));
-  }));
-  test('Section actions follow selected button size and mobile full-width settings', () => [...sampleDoc.querySelectorAll('.sample-section-actions .ds-button')].every(action=>action.classList.contains('ds-button--lg') && action.classList.contains('ds-button--mobile-full')));
-  test('Header navigation and section actions make every main section reachable', () => {
-    const targets=new Set([...sampleDoc.querySelectorAll('header nav a, .sample-section-actions a')].map(link=>link.getAttribute('href').slice(1)));
-    return [...sampleDoc.querySelectorAll('main > section')].every(section=>targets.has(section.id));
-  });
-  test('Sample images are embedded, labelled and follow the selected palette', () => {
-    const images=[...sampleDoc.querySelectorAll('img')];
-    return images.length>=2 && images.every(img=>img.alt && img.getAttribute('width') && img.src.startsWith('data:image/svg+xml')) && decodeURIComponent(images[0].src).includes(evaluate('palette().roles.primary')) && !sampleDoc.querySelector('script');
-  });
-  test('Sample home page showcases actions, cards, forms, table, FAQ and progress', () => ['.card','.ds-button--primary','.ds-button--secondary','.ds-button--accent','.ds-button--outline','.ds-button--text','form input[type="email"]','select','textarea','input[type="radio"]','input[type="checkbox"]','input[type="range"]','input[readonly]','input[disabled]','table caption','details summary','progress','blockquote'].every(selector=>sampleDoc.querySelector(selector)));
-  test('Field guide offers ten lesson cards with real practice destinations', () => {
-    const cards=[...sampleDoc.querySelectorAll('#services .sample-lesson-card')];
-    return sampleDoc.title.includes('Web Design Field Guide') && cards.length===10 && cards.every(card=>sampleDoc.getElementById(card.querySelector('a').hash.slice(1))) && sampleDoc.querySelector('header a[href="#services"]').textContent==='Lessons';
-  });
-  test('Grid workshop includes twelve tracks, seven layout regions and an inspectable CSS recipe', () => sampleDoc.querySelectorAll('.sample-grid-tracks > span').length===12 && sampleDoc.querySelectorAll('.sample-grid-demo > div').length===7 && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('repeat(12, minmax(0, 1fr))') && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('grid-column: 1 / -1;') && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('.sample-demo-card { grid-column: span 4; }') && sampleDoc.querySelector('.sample-code-solution code').textContent.includes('@media (max-width: 48rem)'));
-  test('Type and colour examples describe the actual selected design settings', () => {
-    const values=[...sampleDoc.querySelectorAll('.sample-type-settings dd')].map(item=>item.textContent);
-    const colours=[...sampleDoc.querySelectorAll('.sample-token-palette code')].map(item=>item.textContent);
-    return JSON.stringify(values)===JSON.stringify(evaluate('[state.base+"px",String(state.ratio),String(state.leading)]')) && JSON.stringify(colours)===JSON.stringify(evaluate('[palette().roles.primary,palette().roles.secondary,palette().roles.accent]'));
-  });
-  test('Flexbox workshop exports working examples, a shared CSS recipe and a layout comparison', () => {
-    const recipe=sampleDoc.querySelector('#flex-lab code').textContent;
-    return sampleDoc.querySelectorAll('.sample-flex-tags [role="listitem"]').length===3
-      && sampleDoc.querySelectorAll('.sample-layout-comparison tbody tr').length===3
-      && sampleDoc.querySelectorAll('.sample-lesson-card.sample-flex-stack').length===10
-      && recipe.includes('flex: 1 1 12rem') && recipe.includes('margin-top: auto') && evaluate('cssExport()').includes(recipe);
-  });
-  test('Sample IDs and labelled controls are valid', () => {
-    const ids=[...sampleDoc.querySelectorAll('[id]')].map(el=>el.id);
-    return ids.length===new Set(ids).size && [...sampleDoc.querySelectorAll('label[for]')].every(label=>sampleDoc.getElementById(label.htmlFor));
-  });
-  input('bdState','loading'); input('advState','invalid','change');
-  const selectedDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-  test('Sample markup reflects selected loading and invalid field states', () => !!selectedDoc.querySelector('.sample-selected-action[disabled][aria-busy="true"]') && selectedDoc.getElementById('contact-email').getAttribute('aria-invalid')==='true');
-  test('Loading demonstrations leave section navigation and the contact action usable', () => [...selectedDoc.querySelectorAll('.sample-section-actions a')].every(link=>link.getAttribute('href')?.startsWith('#') && !link.hasAttribute('aria-disabled') && !link.hasAttribute('disabled')) && !selectedDoc.querySelector('.sample-form button[type="submit"]').disabled);
-  reset(); input('jProject','Cedar Studio'); input('jRadius',24); input('advHeight',52); input('advWeight',800,'change');
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme);
-    const page=d.createElement('iframe'); page.style.cssText='width:1440px;height:1400px;border:0';
-    page.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
-    await new Promise(resolve=>{page.onload=resolve;d.body.append(page);});
-    const pd=page.contentDocument, pw=page.contentWindow;
-    test('Rendered '+theme+' sample applies theme, typography, radius and control height', () => {
-      const heading=pw.getComputedStyle(pd.querySelector('h1')), image=pw.getComputedStyle(pd.querySelector('img')), field=pw.getComputedStyle(pd.querySelector('.input'));
-      const body=pw.getComputedStyle(pd.body), expected=evaluate(`palette('${theme}').roles.background`);
-      return heading.fontWeight==='800' && image.borderRadius==='24px' && parseFloat(field.minHeight)===52 && body.backgroundColor===evaluate(`'rgb('+hexRgb('${expected}').join(', ')+')'`);
-    });
-    test('Rendered '+theme+' hero image loads without external assets', () => pd.querySelector('#home img').complete && pd.querySelector('#home img').naturalWidth===960);
-    test('Rendered '+theme+' button foreground uses the selected component token', () => pw.getComputedStyle(pd.querySelector('.ds-button--primary')).color===evaluate("'rgb('+hexRgb(dssGetButtonContrastData().themes['"+theme+"'].primary.fg).join(', ')+')'"));
-    for (const width of [320,768,1440]) {
-      page.style.width=width+'px'; await wait();
-      test('Rendered '+theme+' home page fits '+width+'px', () => pd.documentElement.scrollWidth<=pw.innerWidth+1);
-      test(theme+' section action pairs fit and keep their spacing at '+width+'px', () => [...pd.querySelectorAll('.sample-section-actions')].every(row=>{
-        const bounds=row.getBoundingClientRect(), buttons=[...row.children].map(button=>button.getBoundingClientRect());
-        const [first,second]=buttons;
-        return buttons.every(box=>box.left>=bounds.left-1 && box.right<=bounds.right+1 && box.height>=44) && (Math.abs(second.top-first.top)<1?second.left-first.right>=7.5:second.top-first.bottom>=7.5);
-      }));
-      test(theme+' header logo and project title scale at '+width+'px', () => {
-        const logo=pd.querySelector('header .sample-logo'), title=pd.querySelector('header .sample-brand-title');
-        const box=logo.getBoundingClientRect(), expected=evaluate(`fluidTypePx(3,${width})`);
-        return logo.textContent==='Logo' && logo.getAttribute('aria-hidden')==='true' && box.width>=44 && Math.abs(box.width-box.height)<1 && logo.scrollWidth<=logo.clientWidth+1 && title.textContent==='Cedar Studio' && Math.abs(parseFloat(pw.getComputedStyle(title).fontSize)-expected)<.11;
-      });
-      const menu=pd.getElementById('sample-menu'), toggle=menu.querySelector('summary');
-      const desktop=pd.querySelector('.sample-desktop-navigation'), mobile=pd.getElementById('sample-mobile-navigation');
-      if (width<=768) {
-        test(theme+' header uses a closed hamburger at '+width+'px', () => pw.getComputedStyle(desktop).display==='none' && toggle.getBoundingClientRect().width>=44 && toggle.getBoundingClientRect().height>=44 && !menu.open && mobile.getClientRects().length===0 && toggle.getAttribute('aria-controls')===mobile.id);
-        toggle.focus(); toggle.click();
-        test(theme+' hamburger opens and closes the navigation at '+width+'px', () => {
-          const opened=menu.open && mobile.getBoundingClientRect().height>0 && mobile.querySelectorAll('a').length===6 && pw.getComputedStyle(toggle.querySelector('.sample-menu-bars')).display==='none' && pd.activeElement===toggle;
-          toggle.click();
-          return opened && !menu.open && mobile.getClientRects().length===0;
-        });
-        test(theme+' menu is borderless with default text and an accent-only icon', () => {
-          const accent=evaluate(`palette('${theme}').roles.accent`), text=evaluate(`palette('${theme}').roles.text`);
-          const colour=hex=>evaluate(`'rgb('+hexRgb('${hex}').join(', ')+')'`);
-          const style=pw.getComputedStyle(toggle);
-          return pw.getComputedStyle(toggle.querySelector('svg')).stroke===colour(accent) && style.color===colour(text) && style.backgroundColor==='rgba(0, 0, 0, 0)' && parseFloat(style.borderTopWidth)===0 && toggle.querySelector('span').textContent==='Menu';
-        });
-      } else {
-        test(theme+' desktop navigation stays visible with its mobile menu closed', () => !menu.open && pw.getComputedStyle(menu).display==='none' && desktop.getBoundingClientRect().height>0 && desktop.querySelectorAll('a').length===6);
-      }
-    }
-    page.remove();
-  }
-  reset(); await wait();
-  const gridPage=d.createElement('iframe'); gridPage.style.cssText='width:1440px;height:1000px;border:0';
-  const loadGridPage = async () => {
-    gridPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
-    await new Promise(resolve=>{gridPage.onload=resolve;if(!gridPage.isConnected)d.body.append(gridPage);});
-  };
-  await loadGridPage();
-  const gridDoc=()=>gridPage.contentDocument, gridWindow=()=>gridPage.contentWindow;
-  const gridStyle=selector=>gridWindow().getComputedStyle(gridDoc().querySelector(selector));
-  for (const underline of [true,false]) {
-    evaluate(`adv.underline=${underline}; applyAdvanced(); renderCode();`);
-    await loadGridPage(); await wait();
-    test('Header navigation overrides the general underline setting '+underline+' in export and preview', () => [gridDoc(),previewDoc()].every(doc=>{
-      const win=doc.defaultView;
-      return [...doc.querySelectorAll('.sample-header .sample-nav a')].every(link=>win.getComputedStyle(link).textDecorationLine==='none') && win.getComputedStyle(doc.querySelector('.sample-footer .footer-links a')).textDecorationLine===(underline?'underline':'none');
-    }));
-    test('All resource table links start plain with general underlines '+underline+' in export and preview', () => [gridDoc(),previewDoc()].every(doc=>{
-      const links=[...doc.querySelectorAll('.sample-table-wrap a')];
-      return links.length===3 && links.every(link=>doc.defaultView.getComputedStyle(link).textDecorationLine==='none');
-    }));
-  }
-  reset(); await wait(); await loadGridPage();
-  for (const theme of ['light','dark']) {
-    gridDoc().documentElement.dataset.theme=theme;
-    for (const width of [320,1440]) {
-      gridPage.style.width=width+'px'; await wait();
-      gridDoc().getElementById('sample-menu').open=width<=768;
-      const link=gridDoc().querySelector(width<=768?'.sample-mobile-navigation a':'.sample-desktop-navigation a');
-      const style=gridDoc().querySelector('style'), original=style.textContent;
-      // Equal-specificity class substitutions exercise the exported pointer-state cascade.
-      style.textContent=original.replaceAll(':hover','.review-hover').replaceAll(':active','.review-active');
-      try {
-        test(theme+' header navigation underlines on hover without resizing at '+width+'px', () => {
-          const before=link.getBoundingClientRect(); link.classList.add('review-hover');
-          const hovered=gridWindow().getComputedStyle(link), after=link.getBoundingClientRect();
-          const passes=hovered.textDecorationLine==='underline' && Math.abs(before.width-after.width)<1 && Math.abs(before.height-after.height)<1;
-          link.classList.remove('review-hover'); return passes;
-        });
-        test(theme+' header navigation adds a non-colour pressed cue at '+width+'px', () => {
-          const normal=parseFloat(gridWindow().getComputedStyle(link).textDecorationThickness);
-          link.classList.add('review-active'); const pressed=gridWindow().getComputedStyle(link);
-          const passes=pressed.textDecorationLine==='underline' && parseFloat(pressed.textDecorationThickness)>normal;
-          link.classList.remove('review-active'); return passes;
-        });
-        test(theme+' header navigation uses the button keyboard focus ring at '+width+'px', () => {
-          link.focus(); const focus=gridWindow().getComputedStyle(link), root=gridWindow().getComputedStyle(gridDoc().documentElement);
-          const expected=evaluate(`'rgb('+hexRgb('${root.getPropertyValue('--button-focus').trim()}').join(', ')+')'`);
-          const passes=gridDoc().activeElement===link && link.matches(':focus-visible') && focus.outlineStyle==='solid' && focus.outlineWidth===root.getPropertyValue('--button-focus-width').trim() && focus.outlineColor===expected && focus.outlineOffset==='3px';
-          link.blur(); return passes;
-        });
-        const resources=[...gridDoc().querySelectorAll('.sample-table-wrap a')];
-        test(theme+' resource links underline on hover without resizing at '+width+'px', () => resources.every(resource=>{
-          const before=resource.getBoundingClientRect(); resource.classList.add('review-hover');
-          const computed=gridWindow().getComputedStyle(resource), after=resource.getBoundingClientRect();
-          const passes=computed.textDecorationLine==='underline' && Math.abs(before.width-after.width)<1 && Math.abs(before.height-after.height)<1;
-          resource.classList.remove('review-hover'); return passes;
-        }));
-        test(theme+' resource links have a stronger pressed underline at '+width+'px', () => resources.every(resource=>{
-          const normal=parseFloat(gridWindow().getComputedStyle(resource).textDecorationThickness);
-          resource.classList.add('review-active'); const computed=gridWindow().getComputedStyle(resource);
-          const passes=computed.textDecorationLine==='underline' && parseFloat(computed.textDecorationThickness)>normal;
-          resource.classList.remove('review-active'); return passes;
-        }));
-        test(theme+' resource links retain the shared keyboard focus ring at '+width+'px', () => resources.every(resource=>{
-          resource.focus(); const computed=gridWindow().getComputedStyle(resource), root=gridWindow().getComputedStyle(gridDoc().documentElement);
-          const expected=evaluate(`'rgb('+hexRgb('${root.getPropertyValue('--button-focus').trim()}').join(', ')+')'`);
-          const passes=gridDoc().activeElement===resource && resource.matches(':focus-visible') && computed.outlineStyle==='solid' && computed.outlineWidth===root.getPropertyValue('--button-focus-width').trim() && computed.outlineColor===expected && computed.outlineOffset==='3px';
-          resource.blur(); return passes;
-        }));
-      } finally { style.textContent=original; }
-    }
-  }
-  gridPage.style.width='1440px'; await loadGridPage();
-  test('Wide page uses twelve tracks with six-column halves and four-column cards', () => {
-    const width=selector=>gridDoc().querySelector(selector).getBoundingClientRect().width;
-    return ['.sample-hero','.sample-split','.card-grid'].every(selector=>gridStyle(selector).gridTemplateColumns.split(' ').length===12) && Math.abs(width('.sample-hero > div')*2+24-width('.sample-hero'))<1 && Math.abs(width('.card-grid > .card')*3+48-width('.card-grid'))<1;
-  });
-  test('Default layout padding, margins and gutters follow the 8px spacing scale', () => {
-    const checks=[['main','paddingLeft',32],['.sample-hero','paddingTop',80],['.sample-section','paddingTop',64],['.card','paddingTop',24],['.sample-home h1','marginBottom',16],['.sample-lead','marginBottom',24],['.card-grid','columnGap',24],['.sample-home .input','paddingLeft',16],['.sample-home .input','paddingTop',8],['.sample-footer .footer-inner','paddingTop',32]];
-    return checks.every(([selector,prop,size])=>parseFloat(gridStyle(selector)[prop])===size);
-  });
-  test('Footer spacing is applied once and ordinary selects retain the surface colour', () => gridStyle('.sample-footer').paddingTop==='0px' && gridStyle('.sample-footer').marginTop==='0px' && gridStyle('select.input').backgroundColor===gridStyle('.card').backgroundColor && gridStyle('input[readonly]').backgroundColor!==gridStyle('select.input').backgroundColor);
-  test('Link and button state colours survive the simplified cascade in both themes', () => {
-    // Substitute classes of equal specificity to resolve pointer-state CSS in headless Chrome.
-    const style=gridDoc().querySelector('style'), original=style.textContent;
-    style.textContent=original.replaceAll(':hover','.review-hover').replaceAll(':active','.review-active')+'\n.ds-button { transition: none !important; }';
-    try {
-      return ['light','dark'].every(theme=>{
-        gridDoc().documentElement.dataset.theme=theme;
-        return ['primary','secondary','accent','outline','text'].every(variant=>['hover','active'].every(stateName=>[...gridDoc().querySelectorAll('.ds-button--'+variant)].every(button=>{
-        button.classList.add('review-'+stateName);
-        const computed=gridWindow().getComputedStyle(button), root=gridWindow().getComputedStyle(gridDoc().documentElement);
-        const rgb=value=>evaluate(`'rgb('+hexRgb('${value.trim()}').join(', ')+')'`);
-        const matches=computed.color===rgb(root.getPropertyValue('--button-'+variant+'-'+stateName+'-text')) && computed.backgroundColor===rgb(root.getPropertyValue('--button-'+variant+'-'+stateName));
-        button.classList.remove('review-'+stateName);
-        return matches;
-        })));
-      });
-    } finally { style.textContent=original; gridDoc().documentElement.dataset.theme='light'; }
-  });
-  for (const width of [320,390,600,768,900,1024,1280,1440]) {
-    gridPage.style.width=width+'px'; await wait();
-    test('Grid and spacing fit the generated page at '+width+'px', () => {
-      const doc=gridDoc(), cards=[...doc.querySelectorAll('#services .card')], row=doc.querySelector('#services .card-grid').getBoundingClientRect();
-      const expected=width<476?1:width<710?2:3;
-      const firstRow=cards.filter(card=>Math.abs(card.getBoundingClientRect().top-cards[0].getBoundingClientRect().top)<1);
-      return doc.documentElement.scrollWidth<=width+1 && firstRow.length===expected && cards.every(card=>card.getBoundingClientRect().left>=row.left-1 && card.getBoundingClientRect().right<=row.right+1) && (width>768 || gridStyle('.sample-hero').gridTemplateColumns.split(' ').length===1);
-    });
-    test('Tutorial grid adapts spans and keeps every region in bounds at '+width+'px', () => {
-      const doc=gridDoc(), demo=doc.querySelector('.sample-grid-demo'), bounds=demo.getBoundingClientRect(), figure=doc.querySelector('.sample-grid-figure').getBoundingClientRect(), notes=doc.querySelector('.sample-lab-notes').getBoundingClientRect();
-      const columns=gridStyle('.sample-grid-demo').gridTemplateColumns.split(' ').length;
-      const gap=parseFloat(gridStyle('.sample-grid-demo').columnGap), main=doc.querySelector('.sample-demo-main').getBoundingClientRect(), aside=doc.querySelector('.sample-demo-aside').getBoundingClientRect(), cards=[...doc.querySelectorAll('.sample-demo-card')];
-      const spans=width<=768?[...demo.children].every(region=>Math.abs(region.getBoundingClientRect().width-bounds.width)<1):Math.abs(main.width-aside.width*2-gap)<1 && Math.abs(cards.reduce((total,card)=>total+card.getBoundingClientRect().width,0)+gap*2-bounds.width)<1;
-      return columns===(width<=768?1:12) && spans && (width<=1024?notes.top>figure.bottom:notes.left>figure.right) && [...demo.children].every(region=>{const box=region.getBoundingClientRect();return box.left>=bounds.left-1 && box.right<=bounds.right+1 && region.scrollWidth<=region.clientWidth+1;});
-    });
-  }
-  gridPage.style.width='768px'; input('advColumns',320); input('advGap',32); await loadGridPage();
-  test('Card minimum width and gutter controls still change responsive column counts', () => gridStyle('.card-grid').gridTemplateColumns.split(' ').length===2 && gridStyle('.card-grid').columnGap==='32px');
-  test('Tutorial grid uses the configured grid gap', () => gridStyle('.sample-grid-demo').gap==='32px');
-  test('Flexbox rows share the configured grid gap', () => gridStyle('.sample-flex-row').gap==='32px' && gridStyle('.sample-flex-media').gap==='32px');
-  for (const theme of ['light','dark']) {
-    evaluate(`state.theme='${theme}'; apply();`); await loadGridPage();
-    for (const width of [320,390,768,1280,1440]) {
-      gridPage.style.width=width+'px'; await wait();
-      test(theme+' Flexbox examples align, wrap and fit at '+width+'px', () => {
-        const doc=gridDoc(), row=doc.querySelector('.sample-flex-row'), tags=doc.querySelector('.sample-flex-tags'), media=doc.querySelector('.sample-flex-media');
-        const marker=doc.querySelector('.sample-flex-marker').getBoundingClientRect(), copy=doc.querySelector('.sample-flex-copy').getBoundingClientRect();
-        const rowStyle=gridStyle('.sample-flex-row');
-        return rowStyle.display==='flex' && rowStyle.flexWrap==='wrap' && rowStyle.alignItems==='center' && rowStyle.justifyContent==='space-between'
-          && gridStyle('.sample-flex-copy').flexGrow==='1' && gridStyle('.sample-flex-copy').flexShrink==='1'
-          && gridStyle('.sample-flex-stack').flexDirection==='column'
-          && (width>390 || (tags.getBoundingClientRect().top>row.firstElementChild.getBoundingClientRect().bottom && copy.top>=marker.bottom))
-          && [row,tags,media,...row.children,...media.children].every(el=>{const box=el.getBoundingClientRect();return box.left>=0 && box.right<=width+1 && el.scrollWidth<=el.clientWidth+1;})
-          && doc.documentElement.scrollWidth<=width+1;
-      });
-    }
-  }
-  gridPage.style.width='320px'; await wait();
-  test('Large custom gutters and card minimums collapse without mobile overflow', () => gridStyle('.card-grid').gridTemplateColumns.split(' ').length===1 && gridDoc().documentElement.scrollWidth<=320);
-  evaluate('importConfig({spacing:3,advanced:{gap:12,height:42},buttonDesign:{padX:18,padY:12,minHeight:44}})');
-  await loadGridPage();
-  test('Imported spacing and component dimensions are preserved without snapping', () => evaluate('state.spacing===3 && adv.gap===12 && adv.height===42 && state.buttonDesign.padX===18 && state.buttonDesign.padY===12 && state.buttonDesign.minHeight===44') && gridStyle('.card').paddingTop==='18px' && gridStyle('.ds-button').paddingLeft==='18px' && gridStyle('.input').minHeight==='42px');
-  gridPage.remove();
-  reset(); await wait();
-  const actionDocument=previewDoc(), actionProject=evaluate('projectJson()');
-  for (const link of [...previewDoc().querySelectorAll('.sample-lesson-card a')]) {
-    const target=previewDoc().getElementById(link.getAttribute('href').slice(1));
-    link.click(); await wait(20);
-    test('Field-guide lesson link to '+link.getAttribute('href')+' browses its live example', () => previewDoc()===actionDocument && previewDoc().activeElement===target && Math.abs(target.getBoundingClientRect().top-24)<2 && evaluate('projectJson()')===actionProject);
-  }
-  for (const link of [...previewDoc().querySelectorAll('.sample-section-actions a')]) {
-    const target=previewDoc().getElementById(link.getAttribute('href').slice(1));
-    link.click(); await wait(20);
-    test('Preview '+link.closest('section').id+' action to '+link.getAttribute('href')+' browses its destination', () => previewDoc()===actionDocument && previewDoc().activeElement===target && Math.abs(target.getBoundingClientRect().top-24)<2 && evaluate('projectJson()')===actionProject);
-  }
-  test('Live preview uses the generated HTML and CSS without a second stylesheet request', () => {
-    const parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return previewDoc().querySelector('h1').outerHTML===parsed.querySelector('h1').outerHTML && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && !previewDoc().querySelector('link[rel="stylesheet"]');
-  });
-  test('Export and live preview use Home, About, Resources and Contact footer shortcuts in order', () => {
-    const parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return [parsed,previewDoc()].every(doc=>JSON.stringify([...doc.querySelectorAll('footer nav[aria-label="Footer navigation"] a')].map(link=>[link.textContent,link.getAttribute('href')]))===JSON.stringify([['Home','#home'],['About','#about'],['Resources','#resources'],['Contact','#contact']]));
-  });
-  for (const link of [...previewDoc().querySelectorAll('footer nav[aria-label="Footer navigation"] a')]) {
-    const target=previewDoc().getElementById(link.getAttribute('href').slice(1));
-    link.click(); await wait(20);
-    test('Preview footer '+link.textContent+' link browses its section', () => previewDoc()===actionDocument && previewDoc().activeElement===target && Math.abs(target.getBoundingClientRect().top-24)<2);
-  }
-  test('Live preview sandbox supports form validation while blocking scripts and top navigation', () => {
-    const sandbox=d.getElementById('previewPage').sandbox;
-    return sandbox.contains('allow-same-origin') && sandbox.contains('allow-forms') && !sandbox.contains('allow-scripts') && !sandbox.contains('allow-top-navigation');
-  });
-  d.getElementById('dockTabHtml').click();
-  d.getElementById('jSaveLocal').click();
-  const themedProject=d.getElementById('jProjects').value;
-  const bothThemeCss=evaluate('cssExport()');
-  input('dockTheme','dark','change'); await wait();
-  test('Inspector theme selection synchronizes project editors, preview and exported HTML', () => evaluate('state.theme')==='dark' && d.documentElement.dataset.projectTheme==='dark' && d.documentElement.dataset.theme==='light' && d.getElementById('jTheme').value==='dark' && d.getElementById('previewTheme').value==='dark' && previewDoc().documentElement.dataset.theme==='dark' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('previewPage').title.includes('dark'));
-  test('Inspector theme is saved to the active project', () => JSON.parse(w.localStorage.getItem('dss-v27-projects'))[themedProject].data.theme==='dark');
-  test('Theme selection retains a CSS export containing both theme definitions', () => evaluate('cssExport()')===bothThemeCss && evaluate('cssExport()').includes('[data-theme="dark"]'));
-  input('previewTheme','light','change'); await wait();
-  test('Preview theme control synchronizes the inspector and saved project', () => d.getElementById('dockTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[themedProject].data.theme==='light');
-  const savedBeforeStudioToggle=JSON.stringify(saved()), filesBeforeStudioToggle=evaluate('[projectJson(),htmlExport(),cssExport()]');
-  d.getElementById('themeToggle').click(); await wait();
-  test('Studio appearance leaves the active saved project and exported files unchanged',()=>JSON.stringify(saved())===savedBeforeStudioToggle && JSON.stringify(evaluate('[projectJson(),htmlExport(),cssExport()]'))===JSON.stringify(filesBeforeStudioToggle));
-  test('Studio appearance toggle leaves page theme controls and preview unchanged', () => d.documentElement.dataset.theme==='dark' && d.getElementById('dockTheme').value==='light' && d.getElementById('previewTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light');
-  evaluate('importConfig({project:"Imported theme",theme:"light",studioAppearance:"light"})'); await wait();
-  test('Imported theme reaches both selectors and the generated preview', () => d.getElementById('dockTheme').value==='light' && d.getElementById('previewTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light' && previewDoc().title.includes('Imported theme'));
-  test('Imported project cannot override the local Studio preference',()=>d.documentElement.dataset.theme==='dark' && w.localStorage.getItem('dss-studio-appearance')==='dark');
-  d.getElementById('jProjects').value=themedProject;d.getElementById('jLoadLocal').click();await wait();
-  test('Loading a saved project preserves Studio appearance and restores its page theme',()=>d.documentElement.dataset.theme==='dark' && evaluate('state.theme')==='light' && d.getElementById('previewTheme').value==='light');
-  reset();await wait();
-  test('Project reset preserves Studio appearance',()=>d.documentElement.dataset.theme==='dark' && evaluate('state.theme')==='light');
-  d.getElementById('themeToggle').click();
-  input('jProject','Live preview'); input('jPrimary','#294f77'); input('bdSize','lg'); await wait();
-  test('Preview imagery and component classes follow live project changes', () => previewDoc().querySelector('.sample-brand').textContent.includes('Live preview') && decodeURIComponent(previewDoc().querySelector('img').src).includes(evaluate('palette().roles.primary')) && !!previewDoc().querySelector('.ds-button--lg') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
-  test('Tutorial palette readouts and swatches follow live semantic roles', () => {
-    const expected=evaluate('[palette().roles.primary,palette().roles.secondary,palette().roles.accent]');
-    return [...previewDoc().querySelectorAll('.sample-token-palette li')].every((item,i)=>item.querySelector('code').textContent===expected[i] && previewWindow().getComputedStyle(item.querySelector('.sample-palette-dot')).backgroundColor===evaluate(`'rgb('+hexRgb('${expected[i]}').join(', ')+')'`));
-  });
-  test('Tutorial typography readouts follow live wizard settings', () => JSON.stringify([...previewDoc().querySelectorAll('.sample-type-settings dd')].map(item=>item.textContent))===JSON.stringify(evaluate('[state.base+"px",String(state.ratio),String(state.leading)]')));
-  const browsingDoc=previewDoc(), studioHash=w.location.hash;
-  previewDoc().querySelector('header a[href="#resources"]').click(); await wait();
-  test('Sample navigation scrolls within the generated page without opening the studio inside it', () => previewDoc()===browsingDoc && previewWindow().scrollY>0 && Math.abs(previewDoc().getElementById('resources').getBoundingClientRect().top-24)<2 && previewWindow().location.href.startsWith('about:srcdoc') && w.location.hash===studioHash);
-  previewDoc().querySelector('a[href="#working-together"]').click(); await wait();
-  test('Sample resource links reveal their FAQ destination inside the preview', () => previewDoc().getElementById('working-together').open && previewDoc()===browsingDoc);
-  previewDoc().getElementById('contact-name').value='Taylor';
-  previewDoc().getElementById('contact-email').value='taylor@example.com';
-  previewDoc().querySelector('input[name="copy"]').checked=true;
-  previewDoc().querySelector('input[value="workshop"]').checked=true;
-  previewWindow().scrollTo(0,500); await wait();
-  const originalNameControl=previewDoc().getElementById('contact-name'), browsePosition=previewWindow().scrollY;
-  input('jRadius',20); await wait();
-  test('CSS-only edits preserve browsing position, controls and entered values', () => previewDoc().getElementById('contact-name')===originalNameControl && originalNameControl.value==='Taylor' && Math.abs(previewWindow().scrollY-browsePosition)<2 && previewWindow().getComputedStyle(previewDoc().querySelector('img')).borderRadius==='20px');
-  input('dockTheme','dark','change'); await wait();
-  test('HTML and theme refreshes preserve entered fields, choices, FAQs and scroll', () => previewDoc()===browsingDoc && previewDoc().getElementById('contact-name')!==originalNameControl && previewDoc().getElementById('contact-name').value==='Taylor' && previewDoc().querySelector('input[name="copy"]').checked && previewDoc().querySelector('input[value="workshop"]').checked && previewDoc().getElementById('working-together').open && Math.abs(previewWindow().scrollY-browsePosition)<2);
-  const previewAddress=previewWindow().location.href;
-  previewDoc().querySelector('form').requestSubmit(); await wait();
-  test('Sample form submission remains in the preview without sending an enquiry', () => previewWindow().location.href===previewAddress && previewDoc().getElementById('contact-note').textContent.includes('No enquiry has been sent'));
-  d.querySelector('button[data-width="fluid"]').click(); app.style.width='390px'; await wait();
-  const firstFluidWidth=previewWindow().innerWidth;
-  test('Fluid preview uses its actual available viewport at mobile width', () => Math.abs(firstFluidWidth-d.getElementById('previewFrame').getBoundingClientRect().width)<1 && previewDoc().documentElement.scrollWidth<=previewDoc().documentElement.clientWidth+1 && d.documentElement.scrollWidth<=w.innerWidth+1);
-  app.style.width='768px'; await wait();
-  test('Fluid preview follows pane resizing and retains entered form values', () => previewWindow().innerWidth>firstFluidWidth && Math.abs(previewWindow().innerWidth-d.getElementById('previewFrame').getBoundingClientRect().width)<1 && previewDoc().getElementById('contact-name').value==='Taylor');
-  input('jProject','Safe </style><script>parent.__previewInjection=1</scr'+'ipt>'); await wait();
-  test('Preview inserts generated CSS as text and keeps project markup escaped', () => !w.__previewInjection && !previewDoc().querySelector('script') && previewDoc().querySelector('.sample-brand').textContent.includes('</style><script>') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && previewDoc().styleSheets[0].cssRules.length>0);
-  reset(); await wait();
-  d.querySelector('button[data-width="mobile"]').click(); await wait();
-  previewDoc().getElementById('sample-menu').querySelector('summary').click();
-  input('jAccent','#D97706'); await wait();
-  test('Open preview hamburger follows live accent edits and retains its open state', () => previewDoc().getElementById('sample-menu').open && previewWindow().getComputedStyle(previewDoc().querySelector('.sample-menu-icon')).stroke==='rgb(217, 119, 6)' && d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
-  input('dockTheme','dark','change'); await wait();
-  test('Preview hamburger follows the dark theme accent', () => previewDoc().getElementById('sample-menu').open && previewWindow().getComputedStyle(previewDoc().querySelector('.sample-menu-icon')).stroke===evaluate("'rgb('+hexRgb(palette('dark').roles.accent).join(', ')+')'"));
-  const beforeMenuNavigation=evaluate('projectJson()');
-  previewDoc().getElementById('sample-mobile-navigation').querySelector('a[href="#services"]').click(); await wait();
-  test('Opened mobile menu links browse the generated page without changing its project settings', () => Math.abs(previewDoc().getElementById('services').getBoundingClientRect().top-24)<2 && previewWindow().location.href.startsWith('about:srcdoc') && evaluate('projectJson()')===beforeMenuNavigation);
-  const menuProject=evaluate('projectJson()');
-  previewDoc().getElementById('sample-menu').querySelector('summary').click();
-  test('Closing the mobile menu changes only the preview disclosure', () => !previewDoc().getElementById('sample-menu').open && evaluate('projectJson()')===menuProject);
-  input('jProject','A long project name that should wrap beside the mobile menu without hiding the navigation'); await wait();
-  test('Mobile header accommodates long project names without overflowing', () => previewDoc().documentElement.scrollWidth<=previewDoc().documentElement.clientWidth+1 && previewDoc().getElementById('sample-menu').querySelector('summary').getBoundingClientRect().width>=44);
-  reset(); await wait();
-  const previousHeaderSize=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('.sample-brand-title')).fontSize);
-  input('jProject','Harbour House'); input('jRatio',1.4); await wait();
-  test('Live header title follows the project name and heading typography', () => previewDoc().querySelector('header .sample-brand-title').textContent==='Harbour House' && previewDoc().querySelector('header .sample-logo').textContent==='Logo' && parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('.sample-brand-title')).fontSize)>previousHeaderSize && d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
-  reset(); await wait();
-  test('Reset restores the light theme across the inspector and preview', () => d.getElementById('dockTheme').value==='light' && d.getElementById('previewTheme').value==='light' && previewDoc().documentElement.dataset.theme==='light');
-  test('System fonts remain the offline default in the studio, preview and HTML export', () => evaluate('state.fontSettings.source')==='system' && !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]') && !evaluate('htmlExport()').includes('fonts.googleapis.com') && d.getElementById('fontFallback').disabled);
-  input('fontSystemHeading','georgia','change'); await wait();
-  test('Separate system heading and body fonts reach specimens and the generated page', () => w.getComputedStyle(d.querySelector('#mobileType [data-font-role="heading"]')).fontFamily.includes('Georgia') && w.getComputedStyle(d.querySelector('#mobileType [data-font-role="body"]')).fontFamily.includes('Arial') && previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontFamily.includes('Georgia') && previewWindow().getComputedStyle(previewDoc().body).fontFamily.includes('Arial'));
-  evaluate(`importConfig({font:"Georgia, 'Times New Roman', serif"})`); await wait();
-  test('Legacy font projects import without opting in to network fonts', () => evaluate('state.fontSettings.source==="system" && state.fontSettings.systemHeading==="same"') && previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontFamily.includes('Georgia') && !d.querySelector('link[data-dss-font]'));
-  evaluate('importConfig({fontSettings:{source:"https://evil.invalid",body:"Inter; color:red",heading:"__proto__",systemHeading:"bad",weights:["400",-1,400,500,10000]}})');
-  test('Font imports reject arbitrary sources, family CSS and invalid weights', () => evaluate('state.fontSettings.source==="system" && state.fontSettings.body==="inter" && state.fontSettings.heading==="same" && state.fontSettings.systemHeading==="same" && JSON.stringify(state.fontSettings.weights)==="[400,500]"') && !evaluate('cssExport()+htmlExport()').includes('evil.invalid'));
-  reset(); await wait();
-  // Serve deterministic local font-face fixtures; the separate live-CDN smoke check
-  // verifies real downloads without making this regression suite depend on Google.
-  let fontFixtureMode='ok';
-  const fontRequests=[], fontRestores=[];
-  for (const doc of [d, previewDoc()]) {
-    const head=doc.head, originalAppend=head.append;
-    head.append=function(...nodes) {
-      for (const node of nodes) if (node.tagName==='LINK' && node.href?.startsWith('https://fonts.')) {
-        const originalUrl=new URL(node.href);
-        if (node.rel==='stylesheet') {
-          fontRequests.push(node.href);
-          node.href='/__font_fixture__'+originalUrl.search+'&mode='+fontFixtureMode;
-        } else node.href=w.location.origin;
-      }
-      return originalAppend.apply(this,nodes);
-    };
-    fontRestores.push(()=>{head.append=originalAppend;});
-  }
-  d.getElementById('jSaveLocal').click();
-  const fontProjectId=d.getElementById('jProjects').value;
-  input('fontSource','google','change');
-  test('Google font selection reports loading and enables the CDN controls', () => d.getElementById('fontLoadStatus').dataset.state==='loading' && !d.getElementById('fontGoogleOptions').hidden && d.getElementById('font').disabled && d.getElementById('jFont').disabled);
-  await wait(250);
-  test('Font stylesheets and font faces load successfully through the browser', () => d.getElementById('fontLoadStatus').dataset.state==='loaded' && [...d.fonts].some(face=>face.family.includes('Inter') && face.status==='loaded') && [...previewDoc().fonts].some(face=>face.family.includes('Inter') && face.status==='loaded'));
-  test('A shared heading/body family produces one family request per document', () => fontRequests.length===2 && fontRequests.every(href=>new URL(href).searchParams.getAll('family').length===1));
-  input('fontGoogleHeading','literata','change'); await wait(250);
-  test('Google heading/body selections update specimens, components and the preview', () => w.getComputedStyle(d.querySelector('#mobileType [data-font-role="heading"]')).fontFamily.includes('Literata') && w.getComputedStyle(d.querySelector('#mobileType [data-font-role="body"]')).fontFamily.includes('Inter') && w.getComputedStyle(d.querySelector('.bd-button')).fontFamily.includes('Inter') && previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontFamily.includes('Literata') && previewWindow().getComputedStyle(previewDoc().querySelector('.sample-brand-title')).fontFamily.includes('Literata') && previewWindow().getComputedStyle(previewDoc().body).fontFamily.includes('Inter'));
-  const fontExport=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-  test('HTML exports include deduplicated preconnects, crossorigin and the CSS2 font request', () => fontExport.querySelectorAll('link[rel="preconnect"]').length===2 && fontExport.querySelector('link[href="https://fonts.gstatic.com"]').hasAttribute('crossorigin') && fontExport.querySelector('link[href^="https://fonts.googleapis.com/css2?"]').getAttribute('href')===evaluate('DSStudio.fonts.url()') && evaluate('htmlExport()').includes('&amp;display=swap'));
-  test('Font requests include selected families, page weights and italic body copy', () => {
-    const request=new URL(evaluate('DSStudio.fonts.url()'));
-    return request.searchParams.get('display')==='swap' && request.searchParams.getAll('family').join('|').includes('Inter:ital,wght@0,400;0,600;0,700;1,400') && request.searchParams.getAll('family').join('|').includes('Literata:wght@400;600;700');
-  });
-  d.getElementById('fontWeight500').click(); input('advWeight',800,'change'); input('bdWeight',700); await wait(250);
-  test('Optional and currently used weights stay represented in generated requests', () => evaluate('DSStudio.fonts.url()').includes('0,500') && evaluate('DSStudio.fonts.url()').includes('0,800') && d.getElementById('fontWeight800').checked && d.getElementById('fontWeight800').disabled && d.getElementById('fontWeight400').disabled);
-  evaluate('importConfig({...JSON.parse(projectJson()),buttonDesign:{...state.buttonDesign,weight:650}})'); await wait(250);
-  test('Font requests use the validated button weight after import', () => evaluate('state.buttonDesign.weight===600 && !DSStudio.fonts.url().includes("0,650")') && evaluate('cssExport()').includes('--button-font-weight: 600'));
-  input('bdWeight',700); await wait(250);
-  test('Font settings autosave with the active local project', () => JSON.parse(w.localStorage.getItem('dss-v27-projects'))[fontProjectId].data.fontSettings.heading==='literata' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[fontProjectId].data.fontSettings.weights.includes(500));
-  test('Learning examples match the actual HTML links and font tokens', () => d.getElementById('fontHtmlCode').textContent===evaluate('DSStudio.fonts.htmlLinks()') && d.getElementById('fontCssCode').textContent.includes('--font-heading: "Literata"') && evaluate('cssExport()').includes('--font-body: "Inter"') && evaluate('cssExport()').includes('--font-ui: var(--font-body)'));
-  const fontCssBefore=evaluate('cssExport()'), fontHtmlBefore=evaluate('htmlExport()'), fontJsonBefore=evaluate('projectJson()');
-  const mainFontLink=d.querySelector('link[data-dss-font][rel="stylesheet"]'), previewFontLink=previewDoc().querySelector('link[data-dss-font][rel="stylesheet"]');
-  input('jRadius',20); await wait();
-  test('Unrelated live edits preserve existing font stylesheet nodes', () => d.querySelector('link[data-dss-font][rel="stylesheet"]')===mainFontLink && previewDoc().querySelector('link[data-dss-font][rel="stylesheet"]')===previewFontLink);
-  input('jRadius',12); await wait();
-  const beforeFallbackRequests=fontRequests.length;
-  d.getElementById('fontFallback').click(); await wait();
-  test('Fallback comparison updates samples and preview without altering saved settings or exports', () => w.getComputedStyle(d.querySelector('#mobileType [data-font-role="heading"]')).fontFamily.includes('Georgia') && !previewWindow().getComputedStyle(previewDoc().body).fontFamily.includes('Inter') && !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]') && d.getElementById('fontLoadStatus').dataset.state==='fallback' && evaluate('cssExport()')===fontCssBefore && evaluate('htmlExport()')===fontHtmlBefore && evaluate('projectJson()')===fontJsonBefore && fontRequests.length===beforeFallbackRequests);
-  d.getElementById('fontFallback').click(); await wait(250);
-  test('Turning comparison off restores selected fonts in the same preview document', () => previewDoc().documentElement.dataset.theme==='light' && previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontFamily.includes('Literata') && d.getElementById('fontLoadStatus').dataset.state==='loaded');
-  const fontRoundTrip=evaluate('projectJson()');
-  reset(); evaluate('importConfig('+fontRoundTrip+')'); await wait(250);
-  test('Font selections and weights survive JSON import and reset clears comparison', () => evaluate('state.fontSettings.heading==="literata" && state.fontSettings.body==="inter" && state.fontSettings.weights.includes(500)') && d.getElementById('fontSource').value==='google' && !d.getElementById('fontFallback').checked && previewWindow().getComputedStyle(previewDoc().body).fontFamily.includes('Inter'));
-  fontFixtureMode='error'; input('fontGoogleBody','source-sans-3','change'); await wait(250);
-  test('A failed font stylesheet offers readable fallbacks and a retry action', () => d.getElementById('fontLoadStatus').dataset.state==='error' && !d.getElementById('fontRetry').hidden && previewDoc().querySelector('h1').getBoundingClientRect().height>0);
-  fontFixtureMode='ok'; d.getElementById('fontRetry').click(); await wait(250);
-  // Offscreen iframe text may defer font use until painted; explicitly request
-  // the face to verify that retry made it available to the preview document.
-  await previewDoc().fonts.load('400 16px "Source Sans 3"');
-  test('Retry recovers both selected font families without resetting the project', () => {
-    const report={status:d.getElementById('fontLoadStatus').dataset.state,body:evaluate('state.fontSettings.body'),faces:[...previewDoc().fonts].map(face=>({family:face.family,status:face.status})),links:[...previewDoc().querySelectorAll('link[data-dss-font]')].map(link=>link.href)};
-    if (report.status!=='loaded' || report.body!=='source-sans-3' || !report.faces.some(face=>face.family.includes('Source Sans 3') && face.status==='loaded')) throw Error(JSON.stringify(report));
-    return true;
-  });
-  input('fontSource','system','change'); await wait();
-  test('Switching to system fonts removes all managed font connections and restores body controls', () => !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]') && !d.getElementById('font').disabled && !d.getElementById('jFont').disabled && !evaluate('htmlExport()').includes('fonts.googleapis.com'));
-  fontFixtureMode='error'; input('fontSource','google','change'); input('fontSource','system','change'); await wait(250);
-  test('Stale font callbacks cannot replace the status after switching back to system fonts', () => d.getElementById('fontLoadStatus').dataset.state==='system' && !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]'));
-  for (const restore of fontRestores) restore();
-  reset(); await wait();
-  d.getElementById('dockTabCss').click();
-  for (const theme of ['light','dark']) {
-    input('dockTheme',theme,'change'); input('bdVariant','secondary'); input('bdSource','custom'); input('bdCustom','#b52266'); await wait();
-    // Resolve live styles without transition timing affecting the sampled colour.
-    const motion=previewDoc().createElement('style'); motion.textContent='.ds-button { transition: none !important; }'; previewDoc().head.append(motion);
-    const secondaryActions=()=>[...previewDoc().querySelectorAll('.sample-section-actions > :last-child')];
-    test(theme+' secondary custom base colour updates every page action pair', () => secondaryActions().length===9 && secondaryActions().every(action=>action.matches('a.ds-button--secondary') && previewWindow().getComputedStyle(action).backgroundColor==='rgb(181, 34, 102)'));
-    test(theme+' secondary edits keep primary actions and the outline example independent', () => previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(0, 71, 128)' && !!previewDoc().querySelector('#components .ds-button--outline'));
-    input('bdCustom','#196b63'); await wait();
-    test(theme+' repeated custom colour edits reach the live page without a palette change', () => secondaryActions().every(action=>previewWindow().getComputedStyle(action).backgroundColor==='rgb(25, 107, 99)') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
-    test(theme+' wizard and page show the same secondary default colour', () => w.getComputedStyle(d.querySelector('#bdSingle .bd-button')).backgroundColor===previewWindow().getComputedStyle(secondaryActions()[0]).backgroundColor);
-  }
-  const secondaryExport=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-  test('Secondary custom-colour exports use the matching variant for all section actions', () => [...secondaryExport.querySelectorAll('.sample-section-actions > :last-child')].every(action=>action.classList.contains('ds-button--secondary')) && evaluate('cssExport()').includes('--button-secondary-bg: #196b63'));
-  reset(); await wait();
-  d.querySelector('[data-journey-step="4"]').click(); await wait();
-  // Palette uses Architecture-style browsing and selected form properties.
-  {
-    reset();w.dssShowWizardStep(4,false);await wait();const ui=w.DSStudio.paletteWorkspace;
-    test('All Palette stages separate browsing from selected properties',()=>d.querySelectorAll('.palette-editor-columns').length===7 && [...d.querySelectorAll('.palette-editor-columns')].every(el=>el.children[0].classList.contains('palette-browser') && el.children[1].classList.contains('palette-properties')));
-    const before=evaluate('projectJson()');d.querySelector('[data-palette-colour="blue"]').click();await wait();
-    test('Selecting a brand shows its existing editable properties with focus',()=>d.getElementById('palette-brand-selection').value==='blue' && d.querySelector('[data-palette-colour="blue"]').getAttribute('aria-pressed')==='true' && d.activeElement===d.querySelector('[data-brand-id="blue"] [data-brand-field="name"]') && evaluate('projectJson()')===before);
-    input('palette-brand-query','not-present-anywhere');await wait();test('Brand search explains an empty result while keeping the selected properties',()=>d.getElementById('palette-brand-results').textContent.includes('No matching') && ![...d.querySelectorAll('#palette-brand-list button')].some(el=>!el.hidden) && d.getElementById('palette-brand-selection').value==='blue' && !d.querySelector('[data-brand-id="blue"]').hidden);input('palette-brand-query','');
-    d.getElementById('jBrandAdd').click();await wait();const newId=d.getElementById('palette-brand-selection').value;
-    test('Brand Add belongs to the browser and focuses the new right-hand properties',()=>d.getElementById('palette-browse-brand').contains(d.getElementById('jBrandAdd')) && d.getElementById('palette-properties-brand').contains(d.activeElement) && d.querySelector('[data-palette-colour="'+newId+'"]').getAttribute('aria-pressed')==='true');
-    d.getElementById('palette-brand-remove').click();await wait();test('Browser removal delegates to the existing guarded brand CRUD',()=>!evaluate('state.brandPalette').some(row=>row.id===newId) && d.activeElement===d.getElementById('jBrandAdd'));
-    ui.show('roles',false);input('palette-anchor-selection','secondary','change');await wait();test('Anchor browsing exposes just the selected form and its reset action',()=>!d.getElementById('jSecondary').closest('.field').hidden && d.getElementById('jPrimary').closest('.field').hidden && !d.getElementById('palette-reset-secondary').hidden && d.getElementById('palette-properties-roles').contains(d.getElementById('jSecondary')));
-    ui.show('shades',false);d.querySelector('[data-palette-family="neutral"]').click();await wait();test('Shade browsing shows one family as read-only form fields',()=>d.querySelectorAll('#main-palette-steps > [data-palette-role]:not([hidden])').length===1 && d.querySelector('#main-palette-steps [data-palette-role="neutral"] .palette-value-field').readOnly && d.querySelector('#main-palette-steps [data-palette-role="neutral"] .palette-value-label').textContent==='--neutral-50' && !d.getElementById('neutralPaletteAnchor').closest('section').hidden);
-    ui.show('semantics',false);input('jSemanticRole','text','change');const original=evaluate('palette().roles.text'),proposal=original.toUpperCase()==='#246A68'?'#345678':'#246A68';input('palette-semantic-hex',proposal);await wait();
-    test('Semantic properties stage an editable proposal without changing the website',()=>d.getElementById('palette-browse-semantics').contains(d.getElementById('jSemanticRole')) && d.getElementById('palette-properties-semantics').contains(d.getElementById('palette-semantic-hex')) && d.getElementById('palette-semantic-token').readOnly && evaluate('palette().roles.text')===original && d.getElementById('palette-semantic-proposal-status').textContent.includes('not applied'));
-    d.getElementById('jSemanticEdit').focus();d.getElementById('jSemanticEdit').click();await wait();test('Semantic Preview uses the proposed property value in the existing contrast dialog',()=>d.getElementById('colourRepair').open && d.getElementById('repairHex').value.toUpperCase()===proposal && evaluate('palette().roles.text')===original);d.getElementById('repairCancel').click();await wait();test('Cancelling preview returns to right-hand properties and keeps saved colours',()=>d.activeElement===d.getElementById('jSemanticEdit') && evaluate('palette().roles.text')===original);
-    d.getElementById('palette-semantic-discard').click();await wait();test('Discard restores the current value and clears proposal validity',()=>d.getElementById('palette-semantic-hex').value.toUpperCase()===original.toUpperCase() && d.getElementById('palette-semantic-hex').validity.valid && d.getElementById('palette-semantic-discard').disabled);
-    input('palette-semantic-hex',proposal);d.getElementById('jSemanticEdit').click();await wait();d.getElementById('repairApply').click();await wait();test('Applying the semantic proposal updates existing project and property fields',()=>evaluate('palette().roles.text').toUpperCase()===proposal && d.getElementById('palette-semantic-hex').value.toUpperCase()===proposal && d.getElementById('palette-semantic-discard').disabled);
-    input('palette-semantic-hex','bad');d.getElementById('jSemanticEdit').click();await wait();test('Invalid property proposals remain in the inspector without opening a dialog',()=>!d.getElementById('colourRepair').open && !d.getElementById('palette-semantic-hex').validity.valid);d.getElementById('palette-semantic-discard').click();
-    w.dssConfigureToken({name:'--primary-500',scope:'Light / base'});await wait();test('Source routing selects and reveals the correct anchor properties',()=>!d.getElementById('jPrimary').closest('.field').hidden && d.getElementById('palette-anchor-selection').value==='primary' && d.activeElement===d.getElementById('jPrimary'));
-    ui.show('components',false);input('palette-component-family','cards','change');ui.show('roles',false);evaluate('state.semanticOverrides={...state.semanticOverrides,light:{...state.semanticOverrides?.light,surface:"#EEECDD"}};apply()');await wait();d.querySelector('#palette-stage-components > summary').click();await wait();
-    test('Native stage opening refreshes generated property fields after hidden changes',()=>{const code=d.querySelector('[data-component-token="--surface"]');return code.hidden && code.nextElementSibling.readOnly && code.nextElementSibling.value==='#EEECDD';});
-    d.getElementById('brandPalette').open=false;evaluate('state.semanticOverrides.light.surface="#CCDDEE";apply()');d.getElementById('brandPalette').open=true;await wait();test('Manual Palette reopening refreshes read-only properties after hidden changes',()=>d.querySelector('[data-component-token="--surface"]').nextElementSibling.value==='#CCDDEE');
-    for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(4,false);await wait();for(const stage of ['brand','roles','shades','semantics','backgrounds','components','review']){ui.show(stage,false);await wait();test(theme+' '+stage+' Palette browser/properties fit '+width+'px',()=>{const grid=d.querySelector('#palette-stage-'+stage+' .palette-editor-columns'),left=grid.children[0].getBoundingClientRect(),right=grid.children[1].getBoundingClientRect();return d.documentElement.scrollWidth<=w.innerWidth+1 && (grid.clientWidth>720?Math.abs(left.top-right.top)<=1:right.top>=left.bottom-1) && [...grid.querySelectorAll('input,select,button')].filter(el=>el.getBoundingClientRect().height>0).every(el=>el.getBoundingClientRect().right<=w.innerWidth+1);});}}
-    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();await wait();
-  }
-  // End Palette browser checks.
-  // Every UI anchor is discoverable and edits its own source colour.
-  {
-    reset();w.dssShowWizardStep(4,false);await wait();const ui=w.DSStudio.paletteWorkspace,selector=d.getElementById('palette-anchor-selection'),keys=['primary','secondary','accent'];
-    ui.show('roles',false);await wait();
-    test('UI anchor list visibly offers Primary, Secondary and Accent',()=>selector.size===3 && [...selector.options].map(option=>option.textContent).join(',')==='Primary,Secondary,Accent' && d.getElementById('palette-browse-roles').contains(selector));
-    for(const theme of ['light','dark']){
-      input('palette-theme',theme,'change');
-      for(const [index,key]of keys.entries()){
-        const title=key[0].toUpperCase()+key.slice(1),brandId='j'+title+'Brand',pickerId='j'+title;
-        selector.focus();input('palette-anchor-selection',key,'change');await wait();
-        test(theme+' '+key+' selection exposes its own editable properties and retains selector focus',()=>selector.value===key && d.activeElement===selector && keys.every(other=>d.getElementById('j'+other[0].toUpperCase()+other.slice(1)).closest('.field').hidden===(other!==key)) && !d.getElementById(pickerId).disabled && !d.getElementById(brandId).disabled && d.getElementById('palette-properties-title-roles').textContent===title+' anchor properties');
-        const before=JSON.parse(evaluate('projectJson()')),hex=evaluate('state.brandPalette['+(index+3)+'].hex');input(brandId,hex,'change');await wait();
-        test(theme+' '+key+' brand assignment updates only that anchor',()=>evaluate('state.'+key).toUpperCase()===hex.toUpperCase() && keys.every(other=>other===key || evaluate('state.'+other)===before[other]) && selector.value===key);
-        const custom=['#235678','#765432','#9a286b'][index];input(pickerId,custom);await wait();
-        test(theme+' '+key+' custom colour reaches project JSON and generated ramp',()=>JSON.parse(evaluate('projectJson()'))[key].toUpperCase()===custom.toUpperCase() && evaluate('cssExport()').toUpperCase().includes('--'+key.toUpperCase()+'-500: '+custom.toUpperCase()) && d.getElementById(brandId).value==='' && selector.value===key);
-      }
-    }
-    const snapshot=JSON.parse(evaluate('projectJson()'));w.importConfig(snapshot);await wait();ui.show('roles',false);await wait();
-    test('All three custom anchors survive project JSON loading',()=>keys.every(key=>evaluate('state.'+key)===snapshot[key]) && selector.value==='primary');
-    input('palette-anchor-selection','accent','change');d.getElementById('palette-reset-accent').click();await wait();
-    test('Selected Accent reset preserves Primary and Secondary',()=>evaluate('state.accent===DEFAULT.accent') && evaluate('state.primary')===snapshot.primary && evaluate('state.secondary')===snapshot.secondary && selector.value==='accent');
-    reset();w.dssShowWizardStep(4,false);await wait();
-  }
-
-  // Guided Palette: a compact wizard and editable centre process.
-  {
-    const ui=w.DSStudio.paletteWorkspace;
-    reset();w.dssShowWizardStep(4,false);await wait();
-    test('Palette wizard is a short guide and all colour editors live in the centre',()=>!d.querySelector('[data-journey-pane="4"] input,[data-journey-pane="4"] select') && d.querySelectorAll('#palette-workspace [data-palette-stage]').length===7 && d.getElementById('palette-workspace').contains(d.getElementById('jPrimary')) && d.getElementById('palette-workspace').contains(d.getElementById('jBrandEditor')));
-    test('Brand creation and count are visible collection actions without placeholder text',()=>d.getElementById('jBrandAdd').parentElement===d.getElementById('palette-browse-brand') && d.getElementById('jBrandCount').parentElement===d.getElementById('jBrandAdd').parentElement && !d.getElementById('palette-stage-brand').textContent.includes('nullnull'));
-    const snapshot=evaluate('projectJson()');
-    for(const key of ['brand','roles','shades','semantics','backgrounds','components','review']){ui.show(key);await wait();test('Palette '+key+' stage is explained, visible and selected without editing data',()=>d.querySelectorAll('#palette-workspace > details.palette-stage[open]').length===1 && d.getElementById('palette-stage-'+key).open && d.querySelector('[data-palette-go="'+key+'"]').getAttribute('aria-current')==='step' && d.activeElement===d.querySelector('#palette-stage-'+key+' > summary') && d.querySelector('#palette-stage-'+key+' .palette-browser > p').textContent.length>80 && evaluate('projectJson()')===snapshot);}
-    ui.show('brand',false);d.getElementById('jBrandEditor').closest('details').open=true;
-    d.getElementById('jBrandAdd').click();await wait();
-    const added=evaluate('state.brandPalette.at(-1).id'),selectedRow=()=>d.querySelector('#jBrandEditor [data-brand-id]:not([hidden])');
-    test('Adding a brand colour selects its single visible editable row',()=>d.getElementById('palette-brand-selection').value===added && d.querySelectorAll('#jBrandEditor [data-brand-id]:not([hidden])').length===1 && selectedRow().contains(d.activeElement));
-    const name=selectedRow().querySelector('[data-brand-field="name"]');name.value='Harbour <safe> teal';name.dispatchEvent(new w.Event('change',{bubbles:true}));
-    const colour=selectedRow().querySelector('[data-brand-field="hex"]');colour.value='#246a68';colour.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
-    test('Selected brand edits update names and tokens safely without duplicating controls',()=>d.getElementById('palette-brand-selection').selectedOptions[0].textContent.includes('Harbour <safe> teal') && !d.querySelector('#palette-workspace safe') && evaluate('cssExport()').includes('--brand-'+added+': #246A68') && d.querySelectorAll('#jBrandEditor').length===1);
-    input('jPrimaryBrand','#246A68','change');const secondary=evaluate('state.secondary');
-    ui.show('brand',false);ui.selectBrand(added);selectedRow().querySelector('[data-remove-brand]').click();await wait();
-    test('Removing a selected reference preserves its copied UI colour and selects an available row',()=>evaluate('state.primary')==='#246a68' && !evaluate('state.brandPalette').some(row=>row.id===added) && selectedRow() && d.activeElement===d.getElementById('jBrandAdd'));
-    ui.show('roles',false);d.getElementById('palette-reset-primary').click();await wait();
-    test('Reset UI assignment changes only that required role',()=>evaluate('state.primary===DEFAULT.primary') && evaluate('state.secondary')===secondary);
-    input('palette-theme','light','change');ui.show('review',false);input('palette-status-role','warning','change');input('palette-status-colour','#654321');await wait();
-    input('palette-theme','dark','change');input('palette-status-colour','#aabbcc');await wait();
-    test('Feedback colour creates independent overrides in both themes',()=>evaluate('state.semanticOverrides.light.warning')==='#654321' && evaluate('state.semanticOverrides.dark.warning').toUpperCase()==='#AABBCC' && d.getElementById('palette-status-source').textContent.includes('custom override'));
-    d.getElementById('palette-status-reset').click();await wait();
-    test('Clearing feedback colour removes only the current theme override',()=>!evaluate('state.semanticOverrides.dark.warning') && evaluate('state.semanticOverrides.light.warning')==='#654321');
-    for(const region of ['body','header','main','footer']){ui.show('backgrounds',false);input('palette-region-selection',region,'change');test('Background '+region+' exposes just the selected region',()=>[...d.querySelectorAll('.page-background-editor fieldset')].filter(el=>!el.hidden).length===1 && !d.getElementById(region==='body'?'body-background-controls':region+'-background-hex').closest('fieldset').hidden);}
-    w.dssConfigureToken({name:'--header-background',scope:'Dark'});await wait();
-    test('Configure background selects the correct stage, region and theme before focus',()=>d.getElementById('palette-stage-backgrounds').open && d.getElementById('palette-region-selection').value==='header' && evaluate('state.theme')==='dark' && d.activeElement===d.getElementById('header-background-colour'));
-    const preserved=JSON.parse(evaluate('projectJson()'));w.importConfig(preserved);await wait();
-    test('Import retains palette data and starts at brand references without modifying settings',()=>d.getElementById('palette-stage-brand').open && evaluate('state.semanticOverrides.light.warning')==='#654321' && !evaluate('state.semanticOverrides.dark.warning'));
-    ui.show('review',false);[...d.querySelectorAll('#palette-stage-review button')].find(button=>button.textContent==='Review live website').click();await wait();
-    test('Palette review opens the live website and leaves focus at the result',()=>d.getElementById('studio-section-4').open && d.activeElement===d.getElementById('previewShell'));
-    [...d.querySelectorAll('#palette-stage-review button')].find(button=>button.textContent==='Check contrast and accessibility').click();await wait();
-    test('Palette accessibility review reaches its destination with visible native focus',()=>w.DSStudio.activeStage===10 && d.activeElement===d.querySelector('#studio-section-5 > summary'));
-    for(const theme of ['light','dark'])for(const width of [320,390,1440]){
-      app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(4,false);await wait();
-      for(const key of ['brand','roles','shades','semantics','backgrounds','components','review']){ui.show(key,false);await wait();test(theme+' Palette '+key+' controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#palette-stage-'+key+' input,#palette-stage-'+key+' select,#palette-stage-'+key+' button')].filter(el=>el.getBoundingClientRect().height>0).every(el=>{const box=el.getBoundingClientRect();return box.right<=w.innerWidth+1 && box.left>=0 && (el.type==='range'||box.height>=44);}));}
-    }
-    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();w.dssShowWizardStep(4,false);await wait();
-  }
-  // Complete colour-token flow: semantic sources and component outputs.
-  {
-    reset();w.dssShowWizardStep(4,false);await wait();const ui=w.DSStudio.paletteWorkspace;
-    test('Semantic and component colours follow shade generation in Palette',()=>[...d.querySelectorAll('#palette-workspace > [data-palette-stage]')].map(el=>el.dataset.paletteStage).join(',')==='brand,roles,shades,semantics,backgrounds,components,review' && d.querySelector('[data-journey-step="6"]').textContent.includes('Colour lab'));
-    input('tokenSearch','--surface');await wait();
-    test('Semantic token catalogue identifies the visible Palette step rather than its internal index',()=>[...d.querySelectorAll('#tokenTableBody tr')].find(row=>row.querySelector('td:nth-child(2) code')?.textContent==='--surface').textContent.includes('wizard step 5'));
-    input('tokenSearch','');
-    for(const theme of ['light','dark']){
-      input('palette-theme',theme,'change');ui.show('components',false);
-      for(const family of ['cards','inputs','links','buttons']){input('palette-component-family',family,'change');await wait();test(theme+' '+family+' component colours read the actual exported token values',()=>[...d.querySelectorAll('[data-component-token]')].length>=2 && [...d.querySelectorAll('[data-component-token]')].every(el=>el.textContent===((theme==='dark'?w.dssReadTokens().find(row=>row.name===el.dataset.componentToken && row.scope==='Dark'):null)||w.dssReadTokens().find(row=>row.name===el.dataset.componentToken && row.scope!=='Dark')).value));}
-    }
-    input('palette-button-variant','secondary','change');input('bdSource','primary');input('bdText','#102030');await wait();
-    test('Palette button source and overrides update the existing button settings',()=>evaluate('state.buttonDesign.variant')==='secondary' && evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.secondary.text').toUpperCase()==='#102030' && ['light','dark'].every(theme=>w.dssGetButtonContrastData().themes[theme].secondary.fg.toUpperCase()==='#102030'));
-    input('palette-button-variant','primary','change');input('bdText','#aabbcc');input('bdFocus','#445566');input('palette-button-variant','secondary','change');await wait();
-    d.getElementById('palette-button-clear').click();await wait();
-    test('Clearing component overrides preserves its source, other variants and shared focus',()=>!evaluate('state.buttonDesign.overrides.secondary') && evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC' && evaluate('state.buttonDesign.focus').toUpperCase()==='#445566');
-    d.getElementById('palette-button-focus-reset').click();await wait();
-    test('Shared button focus resets separately from variant overrides',()=>evaluate('state.buttonDesign.focus').toUpperCase()===w.dssGetButtonDefaultContrastColour('secondary','focus').toUpperCase() && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC');
-    input('palette-component-family','cards','change');d.querySelector('#palette-component-values button').click();await wait();
-    test('Component semantic source opens Palette role editing with focus',()=>w.DSStudio.activeStage===4 && d.getElementById('palette-stage-semantics').open && d.getElementById('jSemanticRole').value==='surface' && d.activeElement===d.getElementById('jSemanticRole'));
-    w.dssConfigureToken({name:'--button-outline-hover',scope:'Dark'});await wait();
-    test('Button token source opens the component family and correct variant before focus',()=>w.DSStudio.activeStage===4 && d.getElementById('palette-stage-components').open && d.getElementById('palette-component-family').value==='buttons' && d.getElementById('palette-button-variant').value==='outline' && d.activeElement===d.getElementById('bdHover'));
-    const savedColours=JSON.parse(evaluate('projectJson()'));w.importConfig(savedColours);await wait();
-    test('Colour-flow editing round trips through the existing project schema',()=>evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC' && !Object.hasOwn(JSON.parse(evaluate('projectJson()')),'paletteWorkspace'));
-    for(const width of [320,390,1440]){app.style.width=width+'px';await wait();for(const variant of ['primary','secondary','accent','outline','text']){w.dssConfigureToken({name:'--button-'+variant+'-bg',scope:'Light / base'});await wait();test(variant+' expanded component colour controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#palette-button-colours input,#palette-button-colours select,#palette-button-colours button')].filter(el=>el.getBoundingClientRect().height>0).every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.right<=w.innerWidth+1;}));}}
-    app.style.width='1440px';reset();await wait();
-  }
-  // Palette visibility helpers must preserve unrelated lessons and focus.
-  {
-    reset();w.dssShowWizardStep(3,false);await wait();const prototype=d.getElementById('studio-plan-choose'),link=prototype.querySelector('a');for(let node=link.parentElement;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;link.focus();input('jPrimary','#225577');await wait();
-    test('Background palette updates preserve the prototype lesson, nodes and focus',()=>w.DSStudio.activeStage===3 && d.getElementById('studio-plan-choose')===prototype && d.activeElement===link);
-    w.dssShowWizardStep(7,false);d.getElementById('bdReview').open=true;const review=d.querySelector('[data-review-variant="secondary"][data-review-state="hover"]');review.closest('details').open=true;review.focus();review.click();await wait();input('bdHover','#ffffff');input('bdHoverText','#ffffff');await wait();
-    test('Background button-colour updates keep the existing contrast review focused',()=>w.DSStudio.activeStage===7 && d.activeElement===review && review.closest('details').open);
-    const edit=d.querySelector('#bdReviewPairs [aria-label="Light theme contrast"] [data-kind="text"] button');edit.focus();edit.click();input('repairHex','#101820');d.getElementById('repairCancel').click();await wait();
-    test('Contrast dialog cancel still returns to its visible review action',()=>d.activeElement===edit && !d.getElementById('colourRepair').open);
-    w.dssConfigureToken({name:'--text',scope:'Dark'});await wait();test('Explicit semantic source navigation still activates Palette',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('jSemanticRole'));
-    w.dssConfigureToken({name:'--button-secondary-hover-text',scope:'Dark'});await wait();test('Explicit component source navigation still reveals and focuses its colour field',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('bdHoverText') && !d.getElementById('palette-button-colours').hidden);
-    w.dssShowWizardStep(7,false);d.getElementById('brandPalette').open=true;w.DSStudio.paletteWorkspace.show('components',false);input('palette-component-family','buttons','change');await wait();test('Manually expanded Palette refreshes component values without forcing the builder step',()=>w.DSStudio.activeStage===7 && d.querySelectorAll('[data-component-token]').length===8 && !d.getElementById('palette-component-values').textContent.includes('Not available'));
-    d.getElementById('dockModeBasic').click();input('bdVariant','primary');input('bdDefaultBg','#602d54');await wait();test('Unrelated button-colour changes retain the connected action example',()=>w.DSStudio.activeStage===7 && d.getElementById('studyExample').value==='action' && d.getElementById('studyTokens').textContent.toLowerCase().includes('#602d54'));
-    reset();await wait();
-  }
-  // End Palette visibility preservation checks.
-  // End complete colour-token flow checks.
-  // End guided Palette checks.
-  const brandSelect=role=>d.getElementById('j'+role[0].toUpperCase()+role.slice(1)+'Brand');
-  const brandField=(id,field)=>d.querySelector(`[data-brand-id="${id}"] [data-brand-field="${field}"]`);
-  const editBrand=(id,field,value)=>{const el=brandField(id,field);w.DSStudio.paletteWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(field==='name'?'change':'input',{bubbles:true}));};
-  test('Guided Brand Palette lists all starter colours and all three role dropdowns', () => d.querySelectorAll('#jBrandSwatches li').length===11 && ['primary','secondary','accent'].every(role=>brandSelect(role).options.length===12 && [...brandSelect(role).options].slice(1).every(option=>/^#[0-9A-F]{6}$/.test(option.value) && option.textContent.includes(option.value))));
-  for (const [role,hex] of [['primary','#00BADC'],['secondary','#F37327'],['accent','#004780']]) {
-    input(brandSelect(role).id,hex,'change'); await wait();
-    test('Brand selection updates '+role+' across main and guided controls and live CSS', () => evaluate(`state.${role}`)===hex.toLowerCase() && d.getElementById(role).value===hex.toLowerCase() && d.getElementById('j'+role[0].toUpperCase()+role.slice(1)).value===hex.toLowerCase() && previewDoc().getElementById('dssPreviewStyles').textContent.includes('--'+role+'-500: '+hex));
-  }
-  input('jSecondary','#123456'); await wait();
-  test('Manual role colours remain available and show Custom in the brand dropdown', () => brandSelect('secondary').value==='' && evaluate('state.secondary')==='#123456');
-  input('primary','#F37327'); await wait();
-  test('Advanced role edits synchronize the matching guided brand choice', () => brandSelect('primary').value==='#F37327');
-  d.getElementById('jBrandEditor').closest('details').open=true;
-  d.getElementById('jBrandAdd').click(); await wait();
-  test('Adding a named brand colour offers an editable focused row', () => evaluate('state.brandPalette.length')===12 && d.activeElement===brandField('colour-1','name'));
-  editBrand('colour-1','name','Harbour teal');
-  const mainBeforeBrandEdit=evaluate('JSON.stringify([state.primary,state.secondary,state.accent])');
-  const stableBrandPicker=brandField('colour-1','hex'); stableBrandPicker.focus();
-  editBrand('colour-1','hex','#246a68'); await wait();
-  test('Editing a brand reference preserves Main Palette choices and editor focus', () => evaluate('JSON.stringify([state.primary,state.secondary,state.accent])')===mainBeforeBrandEdit && brandField('colour-1','hex')===stableBrandPicker && d.activeElement===stableBrandPicker);
-  test('Custom brand colours reach dropdowns, reference swatches, export and contrast candidates', () => ['primary','secondary','accent'].every(role=>[...brandSelect(role).options].some(option=>option.value==='#246A68' && option.textContent.includes('Harbour teal'))) && d.getElementById('brandSwatches').textContent.includes('Harbour teal') && evaluate('cssExport()').includes('--brand-colour-1: #246A68') && report().some(row=>row.name==='Brand: Harbour teal (--brand-colour-1) / white text' && row.bg==='#246A68'));
-  input('jAccentBrand','#246A68','change'); d.getElementById('jSaveLocal').click();
-  const brandProjectId=d.getElementById('jProjects').value;
-  editBrand('blue','hex','#224488'); await wait();
-  test('Brand palette edits autosave without overwriting independent role choices', () => JSON.parse(w.localStorage.getItem('dss-v27-projects'))[brandProjectId].data.brandPalette.find(item=>item.id==='blue').hex==='#224488' && evaluate('state.accent')==='#246a68');
-  const brandedProject=evaluate('projectJson()');
-  reset(); evaluate('importConfig('+brandedProject+')'); await wait();
-  test('Brand palette names, token IDs, colours and role selections survive JSON round trip', () => evaluate('state.brandPalette.length')===12 && brandField('colour-1','name').value==='Harbour teal' && brandSelect('accent').value==='#246A68' && evaluate('cssExport()').includes('--brand-blue: #224488'));
-  d.querySelector('[data-remove-brand="colour-1"]').click(); await wait();
-  test('Removing a selected brand reference keeps its UI colour and removes obsolete exports', () => evaluate('state.accent')==='#246a68' && brandSelect('accent').value==='' && !evaluate('cssExport()').includes('--brand-colour-1:') && !report().some(row=>row.name.includes('--brand-colour-1')) && d.activeElement.id==='jBrandAdd');
-  evaluate('importConfig({primary:"#123456",secondary:"#456789",accent:"#987654"})'); await wait();
-  test('Older projects receive starter brand references while retaining custom Main Palette colours', () => evaluate('state.brandPalette.length===11 && state.primary==="#123456" && state.secondary==="#456789" && state.accent==="#987654"') && ['primary','secondary','accent'].every(role=>brandSelect(role).value===''));
-  evaluate('importConfig({brandPalette:[{id:"safe",name:"<img src=x onerror=alert(1)>",hex:"#abcdef"},{id:"bad;css",name:"Bad",hex:"#ffffff"},{id:"badhex",name:"Bad",hex:"red;position:fixed"},{id:"safe",name:"Duplicate",hex:"#000000"}]})'); await wait();
-  test('Imported brand palettes reject duplicate IDs, CSS injection and invalid colours', () => evaluate('state.brandPalette.length===1 && state.brandPalette[0].id==="safe" && state.brandPalette[0].hex==="#ABCDEF"') && evaluate('cssExport()').includes('--brand-safe: #ABCDEF') && !evaluate('cssExport()').includes('--brand-bad'));
-  test('Imported brand names are rendered as text in every palette surface', () => d.getElementById('jBrandSwatches').textContent.includes('<img') && !d.querySelector('#jBrandSwatches img, #brandSwatches img') && [...brandSelect('primary').options].some(option=>option.textContent.includes('<img')));
-  test('The final remaining brand colour cannot be removed', () => d.querySelector('[data-remove-brand="safe"]').disabled);
-  evaluate('importConfig({brandPalette:[{id:"one",name:"primary-500",hex:"#123456"},{id:"two",name:"primary-500",hex:"#654321"}]})'); await wait();
-  test('Duplicate brand names retain unique contrast identities and cannot impersonate ramp anchors', () => {
-    const rows=report().filter(row=>row.name.startsWith('Brand: primary-500'));
-    return rows.length===8 && new Set(rows.map(row=>row.id)).size===8 && rows.every(row=>row.targets.every(target=>target.type!=='anchor'));
-  });
-  evaluate('importConfig({brandPalette:Array.from({length:30},(_,i)=>({id:"test-"+i,name:"A".repeat(90),hex:"#123456"}))})'); await wait();
-  test('Imported palettes enforce 24 colours and bounded names', () => evaluate('state.brandPalette.length===24 && state.brandPalette.every(item=>item.name.length===40)') && d.getElementById('jBrandAdd').disabled);
-  for (const theme of ['light','dark']) {
-    app.style.width='320px'; input('jTheme',theme); d.querySelector('[data-journey-step="4"]').click();
-    d.getElementById('jBrandEditor').closest('details').open=true; await wait();
-    test('Brand editing and role dropdowns fit '+theme+' 320px layouts', () => [d.getElementById('jBrandEditor'),d.getElementById('jBrandSwatches'),...['primary','secondary','accent'].map(brandSelect)].every(el=>el.getBoundingClientRect().width<=w.innerWidth && el.scrollWidth<=el.clientWidth+1));
-  }
-  reset(); app.style.width='1440px'; await wait();
-  test('Reset restores starter Brand Palette and Main Palette choices', () => evaluate('state.brandPalette.length===11') && brandSelect('primary').value==='#004780' && brandSelect('secondary').value==='#495965' && brandSelect('accent').value==='#CBDB2A');
-  d.getElementById('brandPalette').open=true;w.DSStudio.paletteWorkspace.revealControl(d.getElementById('brandApplyRole'));
-  const swatch=id=>d.querySelector(`[data-brand-swatch="${id}"]`);
-  test('Brand Colour Palette names its purpose and replaces the whole-project reset with editing', () => d.querySelector('#brandPalette > summary h2').textContent==='Step 5 of 12: Palette' && !d.getElementById('restoreDefaults') && d.getElementById('brandEditPalette').textContent==='Edit Brand Palette');
-  test('Every brand swatch has one complete clickable card with an explicit role action', () => d.querySelectorAll('#brandSwatches .brand-swatch').length===11 && [...d.querySelectorAll('#brandSwatches .brand-swatch')].every(card=>card.querySelectorAll('button').length===1 && !!card.querySelector('button .brand-swatch-color') && card.querySelector('button').getAttribute('aria-label').startsWith('Set Primary UI colour to') && d.getElementById(card.querySelector('button').getAttribute('aria-describedby'))===card.querySelector('[data-brand-usage]')));
-  const beforeRoleChoice=evaluate('projectJson()'); input('brandApplyRole','secondary','change'); await wait();
-  test('Choosing a target role prepares every card without changing project colours', () => evaluate('projectJson()')===beforeRoleChoice && [...d.querySelectorAll('#brandSwatches button')].every(button=>button.dataset.brandRole==='secondary' && button.textContent.includes('Set as Supporting colour')));
-  d.getElementById('jSaveLocal').click(); const swatchProjectId=d.getElementById('jProjects').value;
-  const roleLabels={primary:'Primary UI colour',secondary:'Supporting colour',accent:'Accent colour'};
-  for (const [role,id,hex] of [['primary','accent-orange','#F37327'],['secondary','white','#FFFFFF'],['accent','blue','#004780']]) {
-    input('brandApplyRole',role,'change');
-    const priorRoles=evaluate('JSON.stringify([state.primary,state.secondary,state.accent])');
-    const beforeSwatchPalette=evaluate('JSON.stringify(state.brandPalette)');
-    const action=swatch(id).querySelector('button'); action.focus();
-    // Click the colour block itself, rather than only the text label.
-    swatch(id).querySelector('.brand-swatch-color').click(); await wait();
-    test('Any swatch can set '+role+' and visibly confirm its assignment', () => evaluate(`state.${role}`)===hex.toLowerCase() && swatch(id).querySelector('[data-brand-usage]').textContent.includes(roleLabels[role]) && swatch(id).dataset.current==='true' && d.getElementById('brandFeedback').textContent.includes(roleLabels[role]+' set to') && d.getElementById('brandFeedback').textContent.includes(hex));
-    test(role+' swatch updates preserve other roles, brand references and keyboard focus', () => {
-      const prior=JSON.parse(priorRoles),after=JSON.parse(evaluate('JSON.stringify([state.primary,state.secondary,state.accent])'));
-      return ['primary','secondary','accent'].every((key,i)=>key===role || prior[i]===after[i]) && evaluate('JSON.stringify(state.brandPalette)')===beforeSwatchPalette && swatch(id).querySelector('button')===action && d.activeElement===action;
-    });
-    test(role+' swatch stays synchronized with summary, guided controls, preview and local save', () => d.getElementById('brandCurrent'+role[0].toUpperCase()+role.slice(1)).textContent.includes(hex) && brandSelect(role).value===hex && previewWindow().getComputedStyle(previewDoc().documentElement).getPropertyValue('--button-'+role+'-bg').trim().toUpperCase()===hex && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[swatchProjectId].data[role]===hex.toLowerCase());
-  }
-  input('brandApplyRole','secondary','change'); d.getElementById('brandFeedback').textContent=''; swatch('blue').querySelector('[data-brand-usage]').click(); await wait();
-  test('Clicking the usage footer applies the swatch just like its colour and label', () => evaluate('state.secondary')==='#004780' && d.getElementById('brandFeedback').textContent.includes('Supporting colour set to Deep blue'));
-  const beforeEditShortcut=evaluate('projectJson()'); d.getElementById('brandEditPalette').click(); await wait();
-  test('Edit Brand Palette opens the guided editor, focuses its name control and preserves the project', () => !d.querySelector('[data-journey-pane="4"]').hidden && d.getElementById('jBrandEditor').closest('details').open && d.activeElement===d.getElementById('jBrandEditor').querySelector('input') && evaluate('projectJson()')===beforeEditShortcut);
-  const existingBlueCard=swatch('blue'); editBrand('blue','name','Harbour blue'); await wait();
-  test('Renaming a brand reference updates cards and current assignments without recreating controls', () => swatch('blue')===existingBlueCard && swatch('blue').querySelector('strong').textContent==='Harbour blue' && d.getElementById('brandCurrentAccent').textContent.includes('Harbour blue'));
-  input('brandApplyRole','primary','change'); input('jPrimary','#13579b'); await wait();
-  test('Custom role edits clear current-card styling and update the visible summary', () => d.getElementById('brandCurrentPrimary').textContent==='Custom colour · #13579B' && !d.querySelector('#brandSwatches [data-current="true"]'));
-  input('jPrimary','#004780'); await wait();
-  test('Guided dropdowns and swatch cards reflect the same current colour', () => swatch('blue').dataset.current==='true' && swatch('blue').querySelector('[data-brand-usage]').textContent.includes('Primary UI colour') && swatch('blue').querySelector('[data-brand-usage]').textContent.includes('Accent colour'));
-  for (const theme of ['light','dark']) {
-    app.style.width='320px'; input('jTheme',theme); await wait();
-    test('Swatch actions and current role summaries fit '+theme+' 320px layouts', () => [d.getElementById('palette-anchor-selection'),d.getElementById('brandApplyRole'),...d.querySelectorAll('#brandSwatches .brand-swatch')].every(el=>el.getBoundingClientRect().width>0 && el.getBoundingClientRect().width<=w.innerWidth && el.scrollWidth<=el.clientWidth+1));
-  }
-  reset(); app.style.width='1440px'; await wait();
-  test('Reset restores the swatch target and current-role feedback', () => d.getElementById('brandApplyRole').value==='primary' && d.getElementById('brandCurrentPrimary').textContent.includes('#004780') && swatch('blue').dataset.current==='true');
-  // Inline state colours edit/reset existing sources, with mirrored defaults.
-  reset();app.style.width='1440px';w.dssShowWizardStep(4);await wait();
-  const stateColour=(view,key)=>d.querySelector('#interaction-palette-'+view+' [data-state-colour="'+key+'"]');
-  input('interaction-palette-controls-component','general','change');
-  d.getElementById('jSaveLocal').click();const inlineSavedId=d.getElementById('jProjects').value;
-  const hoverColour=stateColour('lesson','hover'),hoverCard=hoverColour.closest('details');w.DSStudio.paletteWorkspace.revealControl(hoverColour);hoverCard.open=true;hoverColour.focus();
-  const originalDarkHover=evaluate('palette("dark").roles["primary-hover"]');
-  hoverColour.value='#00BADC';hoverColour.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-  test('Inline semantic state colour keeps focus/disclosure, mirrors controls, autosaves and edits only its theme',()=>d.activeElement===hoverColour && hoverCard.open && stateColour('controls','hover').value==='#00BADC' && evaluate('state.semanticOverrides.light["primary-hover"]')==='#00BADC' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[inlineSavedId].data.semanticOverrides.light['primary-hover']==='#00BADC' && evaluate('palette("dark").roles["primary-hover"]')===originalDarkHover && d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] [data-shade="500"]').textContent.includes('#00BADC'));
-  input(hoverColour.id,'default','change');await wait();
-  test('Inline Default removes a semantic override and restores its generated source colour',()=>!evaluate('state.semanticOverrides.light["primary-hover"]') && stateColour('lesson','hover').value==='default' && stateColour('lesson','hover').options[0].textContent.includes(evaluate('palette().roles["primary-hover"]').toUpperCase()));
-  input(stateColour('lesson','invalid').id,'#00BADC','change');input(stateColour('controls','readonly').id,'#CBDB2A','change');await wait();
-  test('Invalid and read-only dropdowns update their actual feedback/surface sources',()=>evaluate('state.semanticOverrides.light.danger')==='#00BADC' && evaluate('state.semanticOverrides.light["surface-muted"]')==='#CBDB2A' && d.querySelector('#status-palette-ramp-lessons [data-palette-role="danger"] [data-shade="500"]').textContent.includes('#00BADC'));
-  const inlineProject=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(inlineProject)+')');await wait();
-  test('Inline state colour choices survive JSON round-trip using existing saved fields',()=>stateColour('lesson','invalid').value==='#00BADC' && stateColour('controls','readonly').value==='#CBDB2A' && !Object.keys(JSON.parse(evaluate('projectJson()'))).some(key=>/statePalette/i.test(key)));
-  input('interaction-palette-controls-component','primary','change');
-  input(stateColour('lesson','hover').id,'#00BADC','change');input(stateColour('controls','active').id,'#CBDB2A','change');await wait();
-  test('Button hover and pressed dropdowns update separate real component properties in both themes',()=>['light','dark'].every(theme=>{const data=w.dssGetButtonContrastData().themes[theme].primary;return data.hover==='#00BADC' && data.active==='#CBDB2A';}) && stateColour('controls','hover').value==='#00BADC' && stateColour('lesson','active').value==='#CBDB2A');
-  input(stateColour('lesson','hover').id,'default','change');await wait();
-  test('Default removes only the selected button property override',()=>!evaluate('state.buttonDesign.overrides.primary.hover') && evaluate('state.buttonDesign.overrides.primary.active')==='#CBDB2A' && stateColour('controls','hover').value==='default');
-  input(stateColour('lesson','default').id,'#00BADC','change');await wait();
-  test('Shared button base dropdowns synchronize default, disabled and loading and explain the scope',()=>['default','disabled','loading'].every(key=>stateColour('lesson',key).value==='#00BADC') && d.getElementById(stateColour('lesson','default').getAttribute('aria-describedby')).textContent.includes('Disabled, Loading'));
-  input(stateColour('controls','focus').id,'#00BADC','change');await wait();
-  test('Focus dropdown updates the shared focus/selected source across variants',()=>w.DSStudio.statePalettes.variants.every(variant=>w.DSStudio.statePalettes.entries('light',variant).filter(entry=>['focus','selected'].includes(entry.key)).every(entry=>entry.anchor==='#00BADC')) && stateColour('lesson','selected').value==='#00BADC');
-  input(stateColour('lesson','selected').id,'default','change');await wait();
-  test('Focus Default restores the button default without changing other properties',()=>evaluate('state.buttonDesign.focus')==='#B86C20' && evaluate('state.buttonDesign.overrides.primary.active')==='#CBDB2A' && stateColour('controls','focus').value==='default');
-  input('interaction-palette-lesson-component','outline','change');input(stateColour('lesson','default').id,'#00BADC','change');await wait();
-  test('Transparent state dropdown edits its foreground while retaining a transparent background',()=>w.dssGetButtonContrastData().themes.light.outline.bg==='transparent' && w.dssGetButtonContrastData().themes.light.outline.fg==='#00BADC' && stateColour('controls','disabled').value==='#00BADC');
-  input(stateColour('controls','default').id,'default','change');await wait();
-  test('Transparent state Default removes the foreground override',()=>!evaluate('state.buttonDesign.overrides.outline.text') && stateColour('lesson','default').value==='default');
-  const beforeInvalidStateChoice=evaluate('projectJson()');input(stateColour('lesson','hover').id,'not-a-colour','change');await wait();
-  test('Inline state dropdown rejects unsupported values without changing project data',()=>evaluate('projectJson()')===beforeInvalidStateChoice);
-  // Every general/button interaction state exposes shades from its resolved source.
-  reset();w.dssShowWizardStep(4);await wait();
-  const interactionGroups=['general','primary','secondary','accent','outline','text'];
-  const interactionStates=['default','hover','focus','active','selected','disabled','loading','invalid','success','readonly'];
-  for(const method of ['mix','oklch']) for(const theme of ['light','dark']) {
-    input('jRamp',method);input('jTheme',theme);await wait();
-    const allStateTokens=w.dssReadTokens();
-    for(const group of interactionGroups) {
-      const beforeStatePaletteView=evaluate('projectJson()');
-      input('interaction-palette-controls-component',group,'change');await wait();
-      const entries=w.DSStudio.statePalettes.entries(theme,group);
-      test(method+' '+theme+' '+group+' has every state, eleven exported shades and a configuration source',()=>entries.length===(group==='general'?10:7) && entries.every(entry=>{
-        const expected=evaluate('makeRamp('+JSON.stringify(entry.anchor)+',state.method)');
-        return Array.from({length:11},(_,i)=>[50,100,200,300,400,500,600,700,800,900,950][i]).every(step=>{
-          const token=allStateTokens.find(token=>token.name===entry.prefix+'-'+step && (token.scope==='Dark')===(theme==='dark'));
-          return token && token.value===expected[step] && w.dssTokenSource(token)?.control===entry.control;
-        });
-      }));
-      test(method+' '+theme+' '+group+' mirrored state lessons show actual CSS and preserve project data',()=>['interaction-palette-controls','interaction-palette-lesson'].every(id=>d.getElementById(id+'-component').value===group && [...d.querySelectorAll('#'+id+' [data-interaction-state]')].length===entries.length && entries.every(entry=>{
-        const card=d.querySelector('#'+id+' [data-interaction-state="'+entry.key+'"]');
-        return card.querySelectorAll('[data-shade]').length===11 && card.querySelector('[data-shade="500"]').textContent.includes(entry.prefix+'-500: '+entry.anchor+';');
-      })) && evaluate('projectJson()')===beforeStatePaletteView);
-      test(method+' '+theme+' '+group+' gives every state a labelled Default and brand colour dropdown',()=>['controls','lesson'].every(view=>entries.every(entry=>{const select=stateColour(view,entry.key);return select && d.querySelector('label[for="'+select.id+'"]') && d.getElementById(select.getAttribute('aria-describedby')) && select.options[0].value==='default' && [...select.options].some(option=>option.value==='#00BADC');})));
-    }
-  }
-  input('interaction-palette-controls-component','outline','change');await wait();
-  test('Transparent variant state ramps explicitly use the foreground source',()=>['default','disabled','loading'].every(key=>{
-    const entry=w.DSStudio.statePalettes.entries('dark','outline').find(entry=>entry.key===key);
-    return entry.source==='--button-outline-text' && entry.control==='bdText' && entry.cue.includes('transparent') && d.querySelector('#interaction-palette-lesson [data-interaction-state="'+key+'"]').textContent.includes('transparent');
-  }));
-  evaluate('dssSetButtonContrastColour("outline","bg","#3a5b7c")');await wait();
-  test('Button overrides regenerate state ramps and update transparent-source routing without stale views',()=>{
-    const entry=w.DSStudio.statePalettes.entries('dark','outline').find(entry=>entry.key==='default');
-    return entry.anchor==='#3A5B7C' && entry.source==='--button-outline-bg' && entry.control==='bdDefaultBg' && d.querySelector('#interaction-palette-lesson [data-interaction-state="default"] [data-shade="500"]').textContent.includes('#3A5B7C') && w.dssTokenSource({name:entry.prefix+'-500',scope:'Dark'}).control==='bdDefaultBg';
-  });
-  d.querySelector('#interaction-palette-lesson [data-interaction-state="default"] button').click();await wait();
-  test('Interaction shade inspector contains the complete current stylesheet and preview uses it',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
-  d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] button:last-child').click();await wait();
-  test('Button state shade configure reaches the correct variant and property',()=>w.DSStudio.activeStage===4 && d.getElementById('bdVariant').value==='outline' && d.activeElement===d.getElementById('bdHover'));
-  w.dssShowWizardStep(4);input('interaction-palette-controls-component','general','change');await wait();
-  const generalDisclosure=d.querySelector('#interaction-palette-controls [data-interaction-state="readonly"]');generalDisclosure.open=true;
-  input('jTheme','light');await wait();
-  test('General state theme changes preserve disclosure nodes and include all State Explorer states',()=>generalDisclosure===d.querySelector('#interaction-palette-controls [data-interaction-state="readonly"]') && generalDisclosure.open && [...d.getElementById('advState').options].every(option=>interactionStates.includes(option.value)));
-  d.querySelector('#interaction-palette-lesson [data-interaction-state="invalid"] button:last-child').click();await wait();
-  test('Invalid state shade configure reaches the current theme Danger semantic colour',()=>w.DSStudio.activeStage===4 && d.getElementById('jSemanticRole').value==='danger' && evaluate('state.theme')==='light');
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    d.querySelectorAll('#interaction-palette-controls details, #interaction-palette-lesson details').forEach(el=>el.open=true);
-    test('All expanded interaction state ramps fit '+width+'px with usable component and colour selectors',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['interaction-palette-controls','interaction-palette-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1 && d.getElementById(id+'-component').getBoundingClientRect().height>=44 && [...el.querySelectorAll('[data-state-colour]')].every(select=>select.getBoundingClientRect().height>=44);}));
-  }
-  const stableCatalogueRow=d.querySelector('#tokenTableBody tr');w.dssUpdateTokenCatalogue();
-  test('Unchanged state exports retain catalogue rows instead of rebuilding the large table',()=>d.querySelector('#tokenTableBody tr')===stableCatalogueRow);
-  input('tokenSearch','');const stableBrandCatalogueRow=d.querySelector('#tokenTableBody tr');input('jBase',19);await wait();
-  test('Editing one foundation token refreshes its catalogue value while reusing unaffected rows',()=>d.querySelector('#tokenTableBody tr')===stableBrandCatalogueRow && d.querySelector('[data-token-name="--font-size-base"]').closest('tr').textContent.includes('19px'));
-  // Status ramps reuse resolved theme colours and the exported shade generator.
-  reset();w.dssShowWizardStep(4);await wait();
-  for(const method of ['mix','oklch']) for(const theme of ['light','dark']) {
-    input('jRamp',method);input('jTheme',theme);await wait();
-    test(method+' '+theme+' status ramps preserve semantic anchors and match preview/export',()=>evaluate(`
-      STATUS_PALETTE_ROLES.every(role=>{
-        const anchor=palette('${theme}').roles[role],ramp=makeRamp(anchor,state.method);
-        return steps.every(step=>cssExport().includes('--'+role+'-'+step+': '+ramp[step]+';')) && ramp[500]===anchor;
-      })`) && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
-    test(method+' '+theme+' status teaching reads all eleven theme-specific exported steps',()=>['status-palette-steps','status-palette-ramp-lessons'].every(id=>['success','warning','danger'].every(role=>{
-      const rows=[...d.querySelectorAll('#'+id+' [data-palette-role="'+role+'"] [data-shade]')];
-      const tokens=w.dssReadTokens().filter(row=>(row.scope==='Dark')===(theme==='dark'));
-      return rows.length===11 && rows.every(row=>row.textContent.includes('--'+role+'-'+row.dataset.shade+': '+tokens.find(token=>token.name==='--'+role+'-'+row.dataset.shade).value+';'));
-    })) && d.getElementById('status-palette-theme').textContent.includes(theme==='dark'?'Dark':'Light'));
-  }
-  evaluate('state.semanticOverrides={light:{success:"#246840",warning:"#784500",danger:"#903344"},dark:{success:"#88DDAA",warning:"#EECC77",danger:"#EE8899"}};apply();renderCode()');await wait();
-  test('Status overrides regenerate each theme independently and catalogue routes to the semantic source',()=>['light','dark'].every(theme=>['success','warning','danger'].every(role=>{
-    const token=w.dssReadTokens().find(row=>row.name==='--'+role+'-500' && (row.scope==='Dark')===(theme==='dark'));
-    const source=w.dssTokenSource(token);
-    return token.value===evaluate('state.semanticOverrides.'+theme+'.'+role) && token.type==='Colour ramp' && source.step===4 && source.semantic===role && source.control==='jSemanticRole';
-  })));
-  d.querySelector('#status-palette-steps [data-palette-role="danger"] button').click();await wait();
-  test('Status shade inspection opens complete synchronized CSS',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true');
-  const statusBeforeConfigure=evaluate('projectJson()');
-  d.querySelector('#status-palette-steps [data-palette-role="warning"] .button-row button:last-child').click();await wait();
-  test('Status configuration reaches the correct theme role without changing project data',()=>w.DSStudio.activeStage===4 && d.getElementById('jSemanticRole').value==='warning' && evaluate('state.theme')==='dark' && evaluate('projectJson()')===statusBeforeConfigure);
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    d.querySelectorAll('#status-palette-steps details, #status-palette-ramp-lessons details').forEach(el=>el.open=true);
-    test('Expanded status steps fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['status-palette-steps-controls','status-palette-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
-  }
-  // Palette process: explicit token names, exported ramps and final Prototype.
-  reset();app.style.width='1440px';w.dssShowWizardStep(4);await wait();
-  d.getElementById('jBrandEditor').closest('details').open=true;
-  const tokenField=()=>d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');
-  const beforeTokenRoles=evaluate('JSON.stringify([state.primary,state.secondary,state.accent])');
-  const displayName=d.querySelector('[data-brand-id="blue"] [data-brand-field="name"]');
-  displayName.value='Ocean blue';displayName.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-  test('Colour display names remain independent of brand token names',()=>tokenField().value==='blue' && evaluate('cssExport()').includes('--brand-blue: #004780'));
-  const stableTokenInput=tokenField();w.DSStudio.paletteWorkspace.revealControl(stableTokenInput);stableTokenInput.focus();stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-  test('Token rename updates exports, teaching surfaces and catalogue while retaining focus and copied roles',()=>d.activeElement===stableTokenInput && d.querySelector('[data-brand-id="ocean-blue"] [data-brand-field="id"]')===stableTokenInput && evaluate('cssExport()').includes('--brand-ocean-blue: #004780') && !evaluate('cssExport()').includes('--brand-blue:') && d.getElementById('palette-brand-token-list').textContent.includes('--brand-ocean-blue: #004780;') && w.dssReadTokens().some(row=>row.name==='--brand-ocean-blue') && evaluate('JSON.stringify([state.primary,state.secondary,state.accent])')===beforeTokenRoles);
-  for(const invalid of ['white','Bad name','x;--evil','']) {
-    stableTokenInput.value=invalid;stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-    test('Token suffix rejects '+JSON.stringify(invalid)+' without changing saved data',()=>!stableTokenInput.validity.valid && evaluate('state.brandPalette.some(item=>item.id==="ocean-blue")') && evaluate('cssExport()').includes('--brand-ocean-blue: #004780'));
-  }
-  stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));
-  d.getElementById('jSaveLocal').click();const tokenProject=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(tokenProject)+')');await wait();
-  test('Token suffix survives project JSON import and local storage',()=>d.querySelector('[data-brand-id="ocean-blue"] [data-brand-field="id"]').value==='ocean-blue' && Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>project.data.brandPalette.some(item=>item.id==='ocean-blue')));
-  test('Palette sequence puts Main Palette generation before backgrounds, then interaction state steps in both panes',()=>{
-    const pairs=[[d.getElementById('jRamp'),d.getElementById('palette-steps-controls')],[d.getElementById('palette-steps-controls'),d.querySelector('.page-background-editor')],[d.getElementById('palette-token-lesson'),d.getElementById('webpage-background-lesson')],[d.querySelector('.page-background-editor'),d.getElementById('interaction-palette-controls')],[d.getElementById('webpage-background-lesson'),d.getElementById('interaction-palette-lesson')]];
-    return pairs.every(([before,after])=>Boolean(before.compareDocumentPosition(after)&w.Node.DOCUMENT_POSITION_FOLLOWING));
-  });
-  for(const method of ['mix','oklch']) for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) {
-    for(const [role,hex] of (method==='mix'?[['primary','#004780'],['secondary','#495965'],['accent','#CBDB2A']]:[['primary','#00BADC'],['secondary','#F37327'],['accent','#EF426F']])) input('j'+role[0].toUpperCase()+role.slice(1)+'Brand',hex,'change');
-    input('jRamp',method);d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);await wait();
-    test(method+' '+mode+' '+theme+' all Main Palette shade steps match exported tokens',()=>evaluate('state.method')===method && ['primary','secondary','accent'].every(role=>{
-      const rows=[...d.querySelectorAll('#palette-ramp-lessons [data-palette-role="'+role+'"] [data-shade]')];
-      const tokens=w.dssReadTokens();return rows.length===11 && rows.every(row=>row.textContent.includes('--'+role+'-'+row.dataset.shade+': '+tokens.find(token=>token.name==='--'+role+'-'+row.dataset.shade).value+';')) && rows.find(row=>row.dataset.shade==='500').textContent.includes(evaluate('state.'+role).toUpperCase()) && rows.find(row=>row.dataset.shade==='500').dataset.anchor==='true';
-    }));
-    test(method+' '+mode+' '+theme+' semantic explanation follows both exported themes',()=>['primary','secondary','accent'].every(role=>{
-      const text=d.querySelector('#palette-ramp-lessons [data-palette-role="'+role+'"] .palette-token-chain').textContent;
-      const tokens=w.dssReadTokens().filter(token=>token.name==='--'+role);return tokens.every(token=>text.includes('--'+role+': '+token.value+';')) && text.includes('generated from --'+role+'-'+(role==='secondary'?700:500)) && text.includes('generated from --'+role+'-300');
-    }));
-  }
-  input('jPrimaryBrand','#004780','change');evaluate('state.semanticOverrides={light:{primary:"#123456"},dark:{}};apply()');await wait();
-  test('Palette lesson distinguishes semantic overrides from generated shade values',()=>d.querySelector('#palette-ramp-lessons [data-palette-role="primary"] .palette-token-chain').textContent.includes('--primary: #123456; (custom semantic override)') && d.querySelector('#palette-ramp-lessons [data-palette-role="primary"] [data-shade="500"]').textContent.includes('#004780'));
-  d.querySelector('#palette-ramp-lessons [data-palette-role="primary"] button').click();await wait();
-  test('Palette shade inspection shows complete current CSS',()=>d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true');
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();d.getElementById('jBrandEditor').closest('details').open=true;d.querySelectorAll('#main-palette-steps details').forEach(el=>el.open=true);
-    test('Palette token teaching and expanded ramps fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['palette-steps-controls','palette-token-lesson','jBrandEditor'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
-  }
-  app.style.width='1440px';reset();w.dssShowWizardStep(4);await wait();
-  const resetTokenInput=d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');w.DSStudio.paletteWorkspace.revealControl(resetTokenInput);resetTokenInput.focus();resetTokenInput.value='white';resetTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));reset();await wait();
-  test('Reset restores token suffix values and clears stale validation while retaining editor focus',()=>resetTokenInput.value==='blue' && resetTokenInput.validity.valid && d.activeElement===resetTokenInput);
-  w.dssShowWizardStep(0,false);await wait();
-  const beforeOrderedWalk=evaluate('projectJson()');
-  test('Centre lessons follow wizard order immediately after the unchanged preview',()=>[...d.querySelectorAll('#main > .studio-section')].slice(1,13).every((section,position)=>section.id===w.DSStudio.orderedStages[position].lesson));
-  for(const [position,index] of w.DSStudio.stageOrder.entries()) {
-    if(position)d.getElementById('jNext').click();await wait();
-    test('Next follows stage '+(position+1)+' '+w.DSStudio.stages[index].label,()=>w.DSStudio.activeStage===index && d.getElementById('jProgress').textContent.startsWith('Step '+(position+1)+' of 12') && d.querySelector('[data-journey-step="'+index+'"]').getAttribute('aria-current')==='step' && evaluate('projectJson()')===beforeOrderedWalk);
-  }
-  const finalPrototypeDocument=previewDoc();d.getElementById('reviewFinalPrototype').click();await wait();
-  test('Final Prototype reviews the existing live page with native preview focus',()=>d.getElementById('studio-section-4').open && d.activeElement===d.querySelector('#studio-section-4 > summary') && previewDoc()===finalPrototypeDocument && d.getElementById('jNext').hidden);
-  d.getElementById('reviewPrototypeExport').click();await wait();
-  test('Prototype export route opens existing Deliver without replacing project or preview',()=>w.DSStudio.activeStage===11 && !d.querySelector('[data-journey-pane="11"]').hidden && previewDoc()===finalPrototypeDocument && evaluate('projectJson()')===beforeOrderedWalk);
-  // End palette process checks.
-  // Neutral palette follows Primary UI without a second editable anchor.
-  reset();w.dssShowWizardStep(4);await wait();
-  const neutralRows=()=>w.dssReadTokens().filter(row=>/^--neutral-\d+$/.test(row.name));
-  for(const method of ['mix','oklch']) for(const primary of ['#004780','#F37327','#008050','#000000','#FFFFFF','#808080']) {
-    input('jRamp',method);input('jPrimary',primary);await wait();
-    const colours=neutralRows().map(row=>row.value);
-    test(method+' '+primary+' produces eleven valid neutral steps ordered light to dark',()=>colours.length===11 && new Set(colours).size===11 && colours.every((hex,i)=>/^#[0-9A-F]{6}$/.test(hex) && (i===0 || evaluate('lum('+JSON.stringify(colours[i-1])+')')>evaluate('lum('+JSON.stringify(hex)+')'))));
-    test(method+' '+primary+' neutral midpoint retains hue at low chroma or remains grey',()=>{
-      const source=evaluate('rgbToOklch(state.primary)'),mid=evaluate('rgbToOklch(palette().n[500])');
-      const delta=Math.abs(Math.atan2(Math.sin(source[2]-mid[2]),Math.cos(source[2]-mid[2])));
-      const rgb=evaluate('hexRgb(palette().n[500])');
-      return mid[1]<=Math.min(source[1]*.12,.025)+.003 && (source[1]<.005?Math.max(...rgb)-Math.min(...rgb)<=1:delta<.2) && Math.abs(mid[0]-.6)<.005;
-    });
-    test(method+' '+primary+' neutral lesson reads real tokens and distinguishes its midpoint',()=>['main-palette-steps','palette-ramp-lessons'].every(id=>{
-      const rows=[...d.querySelectorAll('#'+id+' [data-palette-role="neutral"] [data-shade]')];
-      return rows.length===11 && rows.every(row=>row.textContent.includes('--neutral-'+row.dataset.shade+': '+neutralRows().find(token=>token.name==='--neutral-'+row.dataset.shade).value+';')) && rows.find(row=>row.dataset.shade==='500').textContent.includes('derived midpoint');
-    }));
-  }
-  input('jPrimary','#004780');await wait();const blueNeutrals=JSON.stringify(neutralRows());
-  input('jSecondary','#F37327');input('jAccent','#EF426F');await wait();
-  test('Supporting and Accent changes do not alter Neutral',()=>JSON.stringify(neutralRows())===blueNeutrals);
-  input('jPrimary','#F37327');await wait();
-  test('Changing Primary UI hue updates Neutral and all background option groups',()=>JSON.stringify(neutralRows())!==blueNeutrals && ['page','header','main','footer'].every(region=>{
-    const options=[...d.getElementById(region+'-background-brand').querySelectorAll('optgroup option')];return options.length===11 && options.every((option,i)=>option.value===neutralRows()[i].value && option.textContent.includes(neutralRows()[i].name));
-  }));
-  const selectedNeutral=neutralRows().find(row=>row.name==='--neutral-100').value;
-  for(const region of ['page','header','main','footer']) input(region+'-background-brand',selectedNeutral,'change');
-  await wait();
-  for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
-    for(const region of ['page','header','main','footer'])input(region+'-background-brand',selectedNeutral,'change');await wait();
-    const checkNeutral=(pd,pw)=>['body','header','main','footer'].every(region=>pw.getComputedStyle(pd.querySelector(region==='body'?'body':'body > '+region)).backgroundColor==='rgb('+evaluate('hexRgb('+JSON.stringify(selectedNeutral)+')').join(', ')+')');
-    test(mode+' '+theme+' applies a neutral step in all four live backgrounds',()=>checkNeutral(previewDoc(),previewWindow()) && neutralRows().length===11);
-    const page=d.createElement('iframe');page.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(page);await wait();
-    test(mode+' '+theme+' standalone export includes and applies Neutral',()=>checkNeutral(page.contentDocument,page.contentWindow) && page.contentDocument.querySelector('style').textContent.includes('--neutral-100: '+selectedNeutral));page.remove();
-  }
-  const assignedNeutrals=evaluate('JSON.stringify(state.semanticOverrides)');input('jPrimary','#008050');await wait();
-  test('New neutral generation preserves previously copied background choices',()=>evaluate('JSON.stringify(state.semanticOverrides)')===assignedNeutrals && evaluate('palette().roles.background')===selectedNeutral);
-  const neutralProject=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();reset();evaluate('importConfig('+JSON.stringify(neutralProject)+')');await wait();
-  test('Neutral regenerates from saved Primary and method without storing another anchor',()=>evaluate('state.primary')==='#008050' && neutralRows().length===11 && !Object.hasOwn(JSON.parse(evaluate('projectJson()')),'neutral') && evaluate('JSON.stringify(state.semanticOverrides)')===assignedNeutrals);
-  test('Neutral catalogue tokens are classified and configured from Primary UI',()=>neutralRows().every(row=>row.type==='Colour ramp' && w.dssTokenSource(row).control==='jPrimary' && w.dssTokenSource(row).step===4));
-  w.dssConfigureToken(neutralRows()[0]);await wait();
-  test('Configure Neutral focuses Primary rather than creating an independent colour',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('jPrimary'));
-  const neutralCandidates=w.dssGetContrastChecks().filter(row=>/^neutral-\d+ /.test(row.name));
-  test('Every neutral step has contrast candidates with valid Primary source targets',()=>neutralCandidates.length===44 && neutralCandidates.every(row=>row.scope==='candidate' && row.targets.some(target=>target.type==='anchor' && target.key==='primary')));
-  d.querySelector('#palette-ramp-lessons [data-palette-role="neutral"] button').click();await wait();
-  test('Neutral Inspect CSS uses the current complete stylesheet',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--neutral-500:'));
-  const neutralBackgroundInspect=d.querySelectorAll('#palette-ramp-lessons [data-palette-role="neutral"] button')[1];neutralBackgroundInspect.click();await wait();
-  test('Neutral background inspection targets an existing semantic declaration',()=>neutralBackgroundInspect.textContent==='Inspect background CSS' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--background:') && d.getElementById('dockCss').scrollTop>0);
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);d.querySelector('#main-palette-steps [data-palette-role="neutral"]').open=true;await wait();
-    test('Neutral palette fits '+width+'px with expanded steps',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['main-palette-steps','palette-ramp-lessons'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
-  }
-  app.style.width='1440px';reset();await wait();
-  test('Reset restores the Primary-derived neutral default',()=>JSON.stringify(evaluate('palette().n'))===JSON.stringify(evaluate('makeNeutralRamp(DEFAULT.primary,DEFAULT.method)')));
-  input('jRamp','mix');evaluate('resetStudio()');await wait();
-  test('Reset restores OKLCH and its neutral output after RGB mix',()=>evaluate('state.method')==='oklch' && d.getElementById('jRamp').value==='oklch' && JSON.stringify(evaluate('palette().n'))===JSON.stringify(evaluate('makeNeutralRamp(state.primary,"oklch")')));
-  input('jRamp','mix');d.getElementById('jNewLocal').click();await wait();
-  test('New projects restore OKLCH after choosing RGB mix',()=>evaluate('state.method')==='oklch' && d.getElementById('method').value==='oklch');
-  for(const method of ['mix','oklch']) {
-    evaluate('importConfig({method:'+JSON.stringify(method)+'})');await wait();
-    test('Import preserves explicit '+method+' ramp choice',()=>evaluate('state.method')===method && d.getElementById('jRamp').value===method && d.getElementById('method').value===method);
-  }
-  evaluate('importConfig({method:"invalid"})');await wait();
-  test('Invalid imported methods fall back to OKLCH',()=>evaluate('state.method')==='oklch');
-  evaluate('importConfig({})');await wait();
-  test('Projects without a method inherit OKLCH',()=>evaluate('state.method')==='oklch');
-  // End neutral palette checks.
-  // Background transparency paints alpha without fading region contents.
-  reset();w.dssShowWizardStep(4);await wait();
-  const opacityRegions=['body','header','main','footer'];
-  const opacityId=region=>(region==='body'?'page':region)+'-background';
-  test('Background opacity defaults to fully opaque for existing projects',()=>opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1 && d.getElementById(opacityId(region)+'-opacity').value==='100'));
-  const opacityColours={body:'#004780',header:'#F37327',main:'#5FC5BF',footer:'#EF426F'};
-  for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) for(const percent of [0,35,100]) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
-    for(const region of opacityRegions){input(opacityId(region)+'-hex',opacityColours[region]);input(opacityId(region)+'-opacity',percent);}
-    await wait();
-    const checkOpacity=(pd,pw)=>opacityRegions.every(region=>{
-      const el=pd.querySelector(region==='body'?'body':'body > '+region),style=pw.getComputedStyle(el),rgb=evaluate('hexRgb('+JSON.stringify(opacityColours[region])+')');
-      return style.opacity==='1' && style.backgroundColor===(percent===100?'rgb('+rgb.join(', ')+')':'rgba('+rgb.join(', ')+', '+percent/100+')');
-    });
-    test(mode+' '+theme+' '+percent+'% background paint preserves full content opacity',()=>checkOpacity(previewDoc(),previewWindow()) && previewWindow().getComputedStyle(previewDoc().querySelector('header a')).opacity==='1' && opacityRegions.every(region=>d.getElementById(opacityId(region)+'-opacity-value').textContent===percent+'%' && d.getElementById(region+'-background-opacity-code').textContent==='--'+region+'-background-opacity: '+percent/100+';'));
-    const standalone=d.createElement('iframe');standalone.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(standalone);await wait();
-    test(mode+' '+theme+' '+percent+'% standalone transparency matches live output',()=>checkOpacity(standalone.contentDocument,standalone.contentWindow) && standalone.contentWindow.getComputedStyle(standalone.contentDocument.documentElement).backgroundColor===evaluate("'rgb('+hexRgb(palette().roles.surface).join(', ')+')'"));standalone.remove();
-  }
-  input('jTheme','light');input('jSemanticRole','surface','change');evaluate('state.semanticOverrides.light.surface="#FFFFFF";state.semanticOverrides.light.text="#000000";apply()');
-  input('page-background-opacity',50);input('header-background-opacity',50);await wait();
-  test('Translucent Header contrast uses the actual Body-over-canvas blend',()=>{
-    const row=w.dssGetContrastChecks().find(row=>row.theme==='light'&&row.group==='Text and semantic roles'&&row.name==='--text'&&row.location==='--header-background');
-    return row.bg==='#B98B73' && d.getElementById('header-background-composite').textContent.includes('#B98B73') && d.getElementById('body-background-composite').textContent.includes('#80A3C0');
-  });
-  const savedOpacity=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();await wait();
-  test('Opacity values autosave with the existing project state',()=>Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>project.data.backgroundOpacity?.light?.header===50));
-  reset();evaluate('importConfig('+JSON.stringify(savedOpacity)+')');await wait();
-  test('JSON round trip restores both themes and all opacity sliders',()=>evaluate('state.backgroundOpacity.light.header')===50 && evaluate('state.backgroundOpacity.dark.header')===100 && d.getElementById('header-background-opacity').value==='50');
-  const previousOpacity=evaluate('state.backgroundOpacity.light.header');input('header-background-brand',evaluate('palette().n[100]'),'change');await wait();
-  test('Brand or Neutral background selection preserves its opacity choice',()=>evaluate('state.backgroundOpacity.light.header')===previousOpacity);
-  input('jTheme','dark');input('header-background-opacity',25);input('main-background-opacity',35);d.getElementById('header-background-reset').click();await wait();
-  test('Background reset clears current-region colour and alpha only',()=>!evaluate('state.backgroundOpacity.dark.header') && !evaluate('state.semanticOverrides.dark["header-background"]') && evaluate('backgroundOpacity("header")')===1 && evaluate('state.backgroundOpacity.dark.main')===35 && evaluate('state.backgroundOpacity.light.header')===50);
-  const alphaToken=w.dssReadTokens().find(row=>row.name==='--header-background-opacity'&&row.scope==='Light / base');w.dssConfigureToken(alphaToken);await wait();
-  test('Opacity catalogue source selects its theme and focuses its range',()=>evaluate('state.theme')==='light' && w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('header-background-opacity'));
-  d.getElementById('header-background-opacity').focus();input('header-background-opacity',64);await wait();
-  test('Opacity edits preserve focus and update complete inspector CSS',()=>d.activeElement===d.getElementById('header-background-opacity') && (w.DSStudio.inspector.show({language:'css',section:'all',find:'--header-background-opacity:'}),d.getElementById('dockCss').textContent===evaluate('cssExport()')) && d.getElementById('dockCss').textContent.includes('--header-background-opacity: 0.64;'));
-  evaluate('importConfig({backgroundOpacity:{light:{body:-20,header:240,main:33.6,footer:"20",unknown:0},dark:{body:null,header:{bad:1},main:50,footer:0}}})');await wait();
-  test('Opacity imports clamp finite numbers, round percentages and reject non-numeric data',()=>evaluate('state.backgroundOpacity.light.body===0 && state.backgroundOpacity.light.header===100 && state.backgroundOpacity.light.main===34 && !("footer" in state.backgroundOpacity.light) && !("unknown" in state.backgroundOpacity.light) && !("body" in state.backgroundOpacity.dark) && !("header" in state.backgroundOpacity.dark) && state.backgroundOpacity.dark.main===50 && state.backgroundOpacity.dark.footer===0'));
-  evaluate('importConfig({backgroundOpacity:{light:{body:NaN,header:Infinity,main:-Infinity}}})');await wait();
-  test('Non-finite opacity imports remain fully opaque',()=>opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1));
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    test('Opacity controls and centre model fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && opacityRegions.every(region=>{const el=d.getElementById(opacityId(region)+'-opacity');w.DSStudio.paletteWorkspace.revealControl(el);return el.getBoundingClientRect().height>=44 && el.getBoundingClientRect().width>0 && el.getAttribute('aria-describedby')==='background-opacity-help';}) && d.getElementById('webpage-background-lesson').scrollWidth<=d.getElementById('webpage-background-lesson').clientWidth+1);
-  }
-  app.style.width='1440px';input('page-background-opacity',0);evaluate('resetStudio()');await wait();
-  test('Reset removes custom opacity data and restores opaque defaults',()=>!evaluate('state.backgroundOpacity') && opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1 && d.getElementById(opacityId(region)+'-opacity').value==='100'));
-  // End background transparency checks.
-  // Region padding extends the existing layout without replacing content gutters.
-  reset();w.dssShowWizardStep(4);await wait();
-  const paddingRegions=['header','main','footer'],paddingSides=['top','right','bottom','left'];
-  const paddingValues=()=>Object.fromEntries(paddingRegions.map(region=>[region,paddingSides.map(side=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')'))]));
-  test('Region padding starts at zero and is available only for Header, Main and Footer',()=>paddingRegions.every(region=>d.getElementById(region+'-padding-controls') && paddingValues()[region].every(value=>value===0)) && !d.getElementById('body-padding-controls'));
-  for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) for(const width of [320,1440]) for(const value of [0,64]) {
-    app.style.width=width+'px';d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);w.dssShowWizardStep(4);
-    for(const region of paddingRegions)for(const side of paddingSides)input(region+'-padding-'+side,value);await wait();
-    const checkPadding=(pd,pw)=>paddingRegions.every(region=>{
-      const style=pw.getComputedStyle(pd.querySelector('body > '+region));
-      const gutter=mode==='advanced'&&region==='main'?parseFloat(pw.getComputedStyle(pd.querySelector('header > .container')).paddingLeft):0;
-      return paddingSides.every(side=>Math.abs(parseFloat(style.getPropertyValue('padding-'+side))-value-(['left','right'].includes(side)?gutter:0))<.1);
-    });
-    test(mode+' '+theme+' '+width+'px region padding '+value+'px matches live output',()=>checkPadding(previewDoc(),previewWindow()) && paddingRegions.every(region=>d.getElementById(region+'-padding-code').textContent.includes('--'+region+'-padding-left: '+value+'px;')));
-    const page=d.createElement('iframe');page.style.cssText='width:'+width+'px;height:800px;border:0';page.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(page);await wait();
-    test(mode+' '+theme+' '+width+'px region padding '+value+'px exports without overflow',()=>checkPadding(page.contentDocument,page.contentWindow) && page.contentDocument.documentElement.scrollWidth<=width+1);page.remove();
-  }
-  app.style.width='1440px';w.dssShowWizardStep(4);await wait();
-  for(const [index,region] of paddingRegions.entries())for(const [sideIndex,side] of paddingSides.entries())input(region+'-padding-'+side,8+index*16+sideIndex*4);await wait();
-  test('All four padding sides are independently saved and shown in the centre',()=>paddingRegions.every((region,index)=>paddingSides.every((side,sideIndex)=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')')===8+index*16+sideIndex*4 && d.getElementById(region+'-padding-'+side+'-value').textContent===(8+index*16+sideIndex*4)+' px')));
-  const sharedPadding=evaluate('JSON.stringify(state.regionPadding)');input('jTheme','light');await wait();
-  test('Region padding is shared across themes',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding && d.getElementById('header-padding-left').value==='20');
-  input('header-background-hex','#123456');input('header-background-opacity',40);d.getElementById('header-background-reset').click();await wait();
-  test('Resetting a background preserves its separate padding',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding);
-  const paddingProject=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();await wait();
-  test('Region padding autosaves in existing local projects',()=>Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>JSON.stringify(project.data.regionPadding)===sharedPadding));
-  reset();evaluate('importConfig('+JSON.stringify(paddingProject)+')');await wait();
-  test('Region padding round trips through project JSON',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding && d.getElementById('footer-padding-left').value==='52');
-  const nonHeaderPadding=evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])');d.getElementById('header-padding-reset').click();await wait();
-  test('Padding reset restores one region without changing colours, alpha or other regions',()=>paddingValues().header.every(value=>value===0) && evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])')===nonHeaderPadding);
-  const paddingToken=w.dssReadTokens().find(row=>row.name==='--main-padding-left');w.dssConfigureToken(paddingToken);await wait();
-  test('Padding catalogue source reveals and focuses the actual slider',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('main-padding-left') && d.getElementById('main-padding-controls').open);
-  input('main-padding-left',17);await wait();
-  test('Padding edits preserve focus and update the centre inset',()=>d.activeElement===d.getElementById('main-padding-left') && d.getElementById('main-padding-demo').style.paddingLeft==='17px');
-  d.querySelector('#main-padding-demo').parentElement.querySelector('button').click();await wait();
-  test('Inspect padding opens complete live CSS at the real padding tokens',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--main-padding-left: 17px;') && d.getElementById('dockCss').scrollTop>0);
-  evaluate('importConfig({regionPadding:{header:{top:-10,right:500,bottom:13.6,left:"20",unknown:10},main:{top:NaN,right:Infinity,bottom:null,left:32},footer:"bad",body:{top:20}}})');await wait();
-  test('Padding imports accept only bounded finite numbers and known regions/sides',()=>evaluate('state.regionPadding.header.top===0 && state.regionPadding.header.right===64 && state.regionPadding.header.bottom===14 && !("left" in state.regionPadding.header) && !("unknown" in state.regionPadding.header) && state.regionPadding.main.left===32 && !("top" in state.regionPadding.main) && !("right" in state.regionPadding.main) && !("bottom" in state.regionPadding.main) && !("body" in state.regionPadding) && !("footer" in state.regionPadding)'));
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    paddingRegions.forEach(region=>d.getElementById(region+'-padding-controls').open=true);await wait();
-    test('Expanded padding controls and demos fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && paddingRegions.every(region=>{
-      const details=d.getElementById(region+'-padding-controls'),demo=d.getElementById(region+'-padding-demo');
-      w.DSStudio.paletteWorkspace.revealControl(d.getElementById(region+'-padding-top'));w.DSStudio.paletteWorkspace.revealControl(demo);
-      return details.scrollWidth<=details.clientWidth+1 && demo.scrollWidth<=demo.clientWidth+1 && paddingSides.every(side=>d.getElementById(region+'-padding-'+side).getBoundingClientRect().height>=44);
-    }));
-  }
-  app.style.width='1440px';evaluate('resetStudio()');await wait();
-  test('Reset clears custom region padding and restores existing spacing defaults',()=>!evaluate('state.regionPadding') && paddingRegions.every(region=>paddingValues()[region].every(value=>value===0) && d.getElementById(region+'-padding-reset').disabled));
-  // End region padding checks.
   reset(); await wait(); input('tokenSearch','');
-  d.querySelector('[data-journey-step="3"]').click();
-  test('Wizard ends at Prototype without implying completed checks', () => !d.querySelector('[data-journey-pane="3"]').hidden && d.getElementById('jNext').hidden && d.getElementById('jProgress').textContent.includes('Step 12 of 12') && !d.querySelector('.journey-steps .is-complete'));
-  d.getElementById('jBack').click();
-  test('Back from Prototype reaches Deliver',()=>!d.querySelector('[data-journey-pane="11"]').hidden && !d.getElementById('jNext').hidden);
-  d.getElementById('jBack').click();
-  test('Back navigation reaches accessibility and restores Next', () => !d.querySelector('[data-journey-pane="10"]').hidden && !d.getElementById('jNext').hidden);
   for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',4],['--button-secondary-hover-text','Dark','bdHoverText',4],['--brand-blue','Light / base',null,4]]) {
     d.getElementById('studio-section-8').open=true;
     const button=d.querySelector(`[data-token-name="${name}"][data-token-scope="${scope}"]`);
@@ -1873,31 +378,6 @@ app.onload = async () => {
   test('Button token routing selects the matching variant', () => evaluate('state.buttonDesign.variant')==='secondary');
   test('Semantic catalogue routing retains the intended theme role', () => d.getElementById('jSemanticRole').value==='text');
   test('Constant-sized body text and the base scale step route to the base-size control', () => ['--text-step-2','--text-body','--text-small'].every(name=>w.dssTokenSource({name}).control==='jBase'));
-  d.querySelector('[data-journey-step="5"]').click(); d.getElementById('jSaveLocal').click();
-  input('jHeadingLeading',1.4); await wait();
-  test('Wizard heading line-height updates exported CSS and rendered page', () => evaluate('state.headingLeading===1.4 && cssExport().includes("--heading-leading: 1.4;")') && Math.abs(parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('h1')).lineHeight)/parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontSize)-1.4)<.01);
-  test('Heading line-height autosaves to the active local project', () => JSON.parse(w.localStorage.getItem('dss-v27-projects'))[d.getElementById('jProjects').value].data.headingLeading===1.4);
-  input('jLeading',1.7); input('advWeight',800,'change'); await wait();
-  test('Typography ladder follows heading and body line-height settings', () => [...d.querySelectorAll('#typeLadder .sample')].every(sample=>{
-    const style=w.getComputedStyle(sample), expected=sample.dataset.fontRole==='heading'?1.4:1.7;
-    return Math.abs(parseFloat(style.lineHeight)/parseFloat(style.fontSize)-expected)<.01;
-  }));
-  test('Heading specimens and ladder follow the selected heading weight', () => [...d.querySelectorAll('#mobileType [data-font-role="heading"],#desktopType [data-font-role="heading"],#typeLadder [data-font-role="heading"]')].every(sample=>w.getComputedStyle(sample).fontWeight==='800') && [...d.querySelectorAll('#typeLadder [data-font-role="body"]')].every(sample=>w.getComputedStyle(sample).fontWeight==='400'));
-  test('Spacing chart lists exactly the numbered spacing tokens in the CSS export', () => {
-    const shown=[...d.querySelectorAll('#spacingBars .space-row span')].map(span=>'--'+span.firstChild.textContent);
-    const exported=w.dssReadTokens().filter(row=>/^--space-\d+$/.test(row.name)).map(row=>row.name);
-    return JSON.stringify(shown)===JSON.stringify(exported) && !shown.includes('--space-3');
-  });
-  input('jSpacing',8); await wait();
-  test('Spacing chart labels update from the same source as exported tokens', () => [...d.querySelectorAll('#spacingBars .space-row span')].every(span=>parseInt(span.lastChild.textContent)===Number(span.firstChild.textContent.split('-')[1])*8) && evaluate('cssExport()').includes('--space-unit: 8px;'));
-  input('jSpacing',4);
-  const headingProject=evaluate('projectJson()'); evaluate('importConfig('+headingProject+')'); await wait();
-  test('Heading line-height survives JSON imports and synchronizes the wizard', () => evaluate('state.headingLeading')===1.4 && d.getElementById('jHeadingLeading').value==='1.4');
-  evaluate('importConfig({headingLeading:99})'); await wait();
-  test('Imported heading line-height is bounded and old projects keep the default', () => {
-    const bounded=evaluate('state.headingLeading')===1.6;
-    evaluate('importConfig({})'); return bounded && evaluate('state.headingLeading')===1.18;
-  });
   for (const theme of ['light','dark']) {
     input('jTheme',theme); app.style.width='320px';
     for (const step of [5,8,9,10,11]) {
@@ -1908,837 +388,58 @@ app.onload = async () => {
     }
   }
   app.style.width='1440px'; reset(); await wait();
-  const teachingProject=evaluate('projectJson()');
-  d.querySelector('[data-journey-step="8"]').click();
-  test('One selection connects spacing controls and lesson without changing the project', () => !d.querySelector('[data-journey-pane="8"]').hidden && !d.getElementById('studio-section-3').hidden && d.getElementById('studio-section-3').open && evaluate('projectJson()')===teachingProject && d.activeElement===d.querySelector('#studio-section-3 > summary h2'));
-  d.documentElement.style.scrollBehavior='auto';
-  d.documentElement.style.overflowAnchor='none';
-  for (const width of [320,390,768,1280,1440,2560]) {
-    app.style.width=width+'px'; await wait();
-    d.querySelector('[data-journey-step="6"]').click(); await wait();
-    const section=d.getElementById('studio-section-1');
-    w.dispatchEvent(new w.Event('resize'));
-    section.scrollIntoView({block:'start',behavior:'instant'}); await wait();
-    test('Active lesson fits beneath the sticky header at '+width+'px', () => {
-      const header=d.querySelector('.topbar').getBoundingClientRect(), summary=section.querySelector('summary').getBoundingClientRect();
-      return summary.top>=header.bottom+7 && summary.bottom<=w.innerHeight && d.documentElement.scrollWidth<=w.innerWidth+1;
-    });
-    test('Inspector stays right on desktop and follows the centre on smaller screens at '+width+'px', () => {
-      const code=d.querySelector('.studio-code-dock').getBoundingClientRect(), centre=d.getElementById('main').getBoundingClientRect();
-      return (width>1280?code.left>=centre.right:code.top>=centre.bottom) && d.querySelector('#main > :first-child').id==='studio-section-4';
-    });
-  }
-  d.documentElement.style.removeProperty('scroll-behavior');
-  d.documentElement.style.removeProperty('overflow-anchor');
-  evaluate('importConfig({ratio:1.25})'); await wait();
-  test('Previously saved Major Third projects retain their explicit scale', () => evaluate('state.ratio===1.25') && d.getElementById('jScalePreset').value==='major-third');
-  evaluate('importConfig({})'); await wait();
-  test('Projects without a ratio inherit the Minor Third default', () => evaluate('state.ratio===1.2') && d.getElementById('clampScalePreset').value==='minor-third');
-  input('jRatio',1.4); d.getElementById('jNewLocal').click(); await wait();
-  test('New project starts with Minor Third after a custom scale', () => evaluate('state.ratio===1.2') && d.getElementById('jScalePreset').value==='minor-third');
   test('Delivery reviews include planning and report their actual checklist count', () => {
     const boxes=[...d.querySelectorAll('.readiness-item')];
     boxes[0].checked=true; boxes[0].dispatchEvent(new w.Event('change'));
     const passes=boxes.length===8 && boxes[0].parentElement.textContent.includes('brief') && boxes[1].parentElement.textContent.includes('prototype') && d.getElementById('readinessStatus').textContent.startsWith('1 of 8');
     boxes[0].checked=false; boxes[0].dispatchEvent(new w.Event('change')); return passes;
   });
-  test('Content and typography planning lead into Wireframe and Palette, with Prototype final', () => {
-    const labels=[...d.querySelectorAll('[data-journey-step]')].map(button=>button.textContent);
-    const destinations=w.DSStudio.orderedStages.slice(0,5).map(stage=>'#'+stage.lesson);
-    return ['Brief','Architecture','Typography','Wireframe','Palette'].every((label,index)=>labels[index].includes(label))
-      && labels.at(-1)==='12 · Prototype' && w.DSStudio.orderedStages.filter(stage=>stage.phase==='Plan').length===4
-      && JSON.stringify(destinations)===JSON.stringify(['#process-brief','#process-ia','#studio-section-2','#process-wireframe','#brandPalette']);
-  });
-  for (const [index,id] of ['brief','ia','wireframe','prototype'].entries()) {
-    d.querySelector(`[data-journey-step="${index}"]`).click();
-    const before=evaluate('projectJson()');
-    await wait();
-    test(id+' wizard shortcut opens its centre lesson without changing project data', () => d.getElementById('process-'+id).open && evaluate('projectJson()')===before);
-    d.querySelector(`[data-journey-step="${index}"]`).click();
-    test(id+' lesson returns to the correct wizard stage and focuses its heading', () => !d.querySelector(`[data-journey-pane="${index}"]`).hidden && d.activeElement===d.querySelector(`#process-${id} > summary h2`));
-  }
-  // Planning workshops are part of the Advanced sample; New now starts Basic.
+  w.dssShowWizardStep(3,false);
+  // One shared-planning path remains in integration; detailed workflow and
+  // Brief fixtures live in planning_review.py.
+  reset();w.importConfig({sampleMode:'advanced'});w.dssShowWizardStep(0,false);await wait();
+  input('jProject','Integration planning fixture');input('plan-goal','Find a practical lesson.');
+  input('plan-audience','Learners reviewing the field guide.');input('plan-content','Tutor supplies the examples.');
+  input('plan-delivery','Tutor reviews the exported website.');input('plan-prototypeTask','Choose a lesson without help.');
+  d.getElementById('jSaveLocal').click();const planningJourneyId=d.getElementById('jProjects').value;
+  input('plan-prototypeNotes','The learner found the right example.');await wait();
+  const planningJourneyData=evaluate('JSON.stringify(state.designProcess)'),planningJourneyHtml=evaluate('htmlExport()');
+  test('Planning journey connects edited Brief and prototype notes to local save and Advanced preview',()=>JSON.stringify(JSON.parse(w.localStorage.getItem('dss-v27-projects'))[planningJourneyId].data.designProcess)===planningJourneyData && d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent==='Learners reviewing the field guide.' && previewDoc().querySelector('#brief-lab [data-brief-field="content"] dd').textContent==='Tutor supplies the examples.' && previewDoc().querySelector('#prototype-lab').textContent.includes('The learner found the right example.'));
+  const planningJourneyFiles=[],priorPlanningDownload=w.download;
+  try{w.download=(name,content,type)=>planningJourneyFiles.push({name,content,type});d.getElementById('jExportJson').click();}
+  finally{w.download=priorPlanningDownload;}
+  reset();await importFile(planningJourneyFiles[0].content);await wait();
+  test('Planning journey JSON download reimports through the file picker with matching editors and website',()=>planningJourneyFiles[0].name==='design-system-studio.json' && JSON.stringify(JSON.parse(planningJourneyFiles[0].content).designProcess)===planningJourneyData && evaluate('JSON.stringify(state.designProcess)')===planningJourneyData && d.getElementById('plan-delivery').value==='Tutor reviews the exported website.' && evaluate('htmlExport()')===planningJourneyHtml);
+  d.getElementById('dockModeBasic').click();await wait();
+  const planningJourneyBasic=evaluate('JSON.stringify(state.designProcess)')===planningJourneyData && !previewDoc().querySelector('#design-process');
   d.getElementById('dockModeAdvanced').click();await wait();
-  input('jProject','Community learning hub'); d.getElementById('jSaveLocal').click();
-  const planProjectId=d.getElementById('jProjects').value;
-  for (const [key,value] of Object.entries({audience:'New community members',goal:'Find a workshop and prepare a question.',scope:'Workshop listings and resources',content:'Organiser supplies workshop copy and photographs.',delivery:'Release in two weeks; organiser approves and maintains content.',success:'Find the right workshop without help.',constraints:'Keyboard and phone access',pages:'Home\nWorkshops > Layout\nWorkshops > Colour\nResources\nContact',prototypeTask:'Find the layout workshop.',prototypeNotes:'The participant hesitated at the first label.'})) input('plan-'+key,value);
-  await wait();
-  const processData=evaluate('JSON.stringify(state.designProcess)');
-  test('Planning fields autosave with the active local project', () => JSON.stringify(JSON.parse(w.localStorage.getItem('dss-v27-projects'))[planProjectId].data.designProcess)===processData);
-  test('Brief, architecture, wireframe and prototype artifacts use the edited plan', () => d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent==='New community members' && d.querySelector('#process-ia .process-map').textContent.includes('Workshops') && d.querySelectorAll('#process-ia .process-map > ul > li').length===4 && d.querySelectorAll('#process-ia .process-map ul ul > li').length===2 && d.querySelector('#process-wireframe #wf-page') && d.querySelector('#process-prototype').textContent.includes('Find the layout workshop.'));
-  test('Planning edits reach the HTML inspector, JSON export and responsive sample', () => {
-    d.getElementById('dockTabHtml').click();
-    return d.getElementById('dockCss').textContent===evaluate('htmlExport()') && evaluate('htmlExport()').includes('New community members') && JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess)===processData && previewDoc().querySelector('#brief-lab').textContent.includes('New community members') && previewDoc().querySelector('#wireframe-lab .wireframe-source-note');
-  });
-  const planExport=evaluate('projectJson()');
-  reset(); evaluate('importConfig('+planExport+')'); await wait();
-  test('All planning fields round trip through JSON and synchronize the editors', () => evaluate('JSON.stringify(state.designProcess)')===processData && [...d.querySelectorAll('[data-process-field]')].every(control=>control.value===JSON.parse(processData)[control.dataset.processField]));
-  d.getElementById('jNewLocal').click(); input('plan-goal','A separate project task.'); d.getElementById('jSaveLocal').click();
-  input('jProjects',planProjectId,'change'); d.getElementById('jLoadLocal').click(); await wait();
-  test('Local project switching restores planning without overwriting the previous project', () => evaluate('JSON.stringify(state.designProcess)')===processData && JSON.stringify(JSON.parse(w.localStorage.getItem('dss-v27-projects'))[planProjectId].data.designProcess)===processData);
-  await importFile(JSON.stringify({project:'Imported planning file',designProcess:JSON.parse(processData)}));
-  test('Actual JSON file input restores planning fields and lessons', () => evaluate('state.project')==='Imported planning file' && !d.getElementById('loadFile').value && evaluate('JSON.stringify(state.designProcess)')===processData && d.getElementById('plan-goal').value==='Find a workshop and prepare a question.');
-  evaluate('importConfig({primary:"#123456"})'); await wait();
-  test('Legacy projects receive starter planning data while preserving their palette', () => evaluate('state.primary==="#123456" && JSON.stringify(state.designProcess)===JSON.stringify(DSStudio.process.defaults())'));
-  evaluate('importConfig({designProcess:{audience:42,pages:["Bad"],layout:"split;display:none",scope:"x".repeat(5000),goal:"",unknown:"ignored"}})'); await wait();
-  test('Imported planning validates field types, lengths, arrangement and empty drafts', () => evaluate('state.designProcess.audience===DSStudio.process.defaults().audience && state.designProcess.pages===DSStudio.process.defaults().pages && state.designProcess.layout==="split" && state.designProcess.scope.length===1200 && state.designProcess.goal==="" && !("unknown" in state.designProcess)') && d.getElementById('plan-goal').value==='');
-  test('Architecture parsing bounds entries, depth and labels', () => {
-    const groups=w.DSStudio.process.hierarchy(Array.from({length:100},(_,i)=>'Group '+i+'x'.repeat(80)+' > Child > Ignored').join('\n'));
-    return groups.length===64 && groups.every(([label,children])=>label.length===64 && children.length===1 && children[0]==='Child');
-  });
-  for (const value of [null,[],42,'invalid']) {
-    evaluate('importConfig({designProcess:'+JSON.stringify(value)+'})');
-    test('Malformed planning '+JSON.stringify(value)+' uses safe defaults', () => evaluate('JSON.stringify(state.designProcess)===JSON.stringify(DSStudio.process.defaults())'));
-  }
-  const hostile='<img src=x onerror="window.planExecuted=true"><script>window.planExecuted=true<\/script>';
-  input('plan-audience',hostile); input('plan-pages',hostile+' > Child'); input('plan-prototypeNotes',hostile); await wait();
-  test('Planning text is escaped in studio lessons, exports and the live sample', () => {
-    const exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return !d.querySelector('[data-process-artifact] img, [data-process-artifact] script') && !exported.querySelector('#design-process img, #design-process script') && !previewDoc().querySelector('#design-process img, #design-process script') && d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent===hostile && exported.querySelector('#brief-lab [data-brief-field="audience"] dd').textContent===hostile && !w.planExecuted;
-  });
-  reset(); await wait();
-  test('Editing planning never mutates the starter defaults; reset restores every field', () => evaluate('JSON.stringify(state.designProcess)===JSON.stringify(DSStudio.process.defaults()) && JSON.stringify(DEFAULT.designProcess)===JSON.stringify(DSStudio.process.defaults())'));
-  d.getElementById('process-prototype').open=true;
-  d.querySelector('#process-prototype .step-more').open=true;
-  w.dssRevealSection('process-prototype',false);
-  const prototypeNode=d.getElementById('studio-plan-choose'); prototypeNode.querySelector('a').focus();
-  input('jAccent','#00badc'); await wait();
-  test('Unrelated palette edits preserve planning nodes and prototype focus', () => d.getElementById('studio-plan-choose')===prototypeNode && d.activeElement===prototypeNode.querySelector('a'));
-  d.getElementById('process-prototype').open=true;
-  d.querySelector('a[href="#studio-plan-choose"]').click(); await wait();
-  test('Centre prototype links reach real screen anchors', () => w.location.hash==='#studio-plan-choose' && d.getElementById('process-prototype').open);
-  d.querySelector('a[href="#studio-plan-discover"]').click(); await wait();
-  test('Centre prototype supports returning to the first screen', () => w.location.hash==='#studio-plan-discover');
-  for (const destination of ['choose','review','discover']) {
-    const source=destination==='choose'?'discover':destination==='review'?'choose':'review';
-    previewDoc().querySelector(`#sample-plan-${source} a[href="#sample-plan-${destination}"]`).click(); await wait();
-    test('Live prototype navigates to '+destination+' inside the preview', () => previewDoc().getElementById('sample-plan-'+destination).getBoundingClientRect().top>=-1 && previewDoc().getElementById('sample-plan-'+destination).getBoundingClientRect().top<previewWindow().innerHeight && !w.__reviewErrors.length);
-  }
-  const processPage=d.createElement('iframe'); processPage.style.cssText='width:1440px;height:1200px;border:0';
-  const loadProcessPage=async()=>{
-    processPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
-    await new Promise(resolve=>{processPage.onload=resolve;if(!processPage.isConnected)d.body.append(processPage);});
-  };
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); await loadProcessPage();
-    for (const width of [320,390,768,1440]) {
-      processPage.style.width=width+'px'; app.style.width=width+'px'; await wait();
-      const pd=processPage.contentDocument, pw=processPage.contentWindow;
-      test(theme+' planning artifacts and controls fit at '+width+'px', () => {
-        revealAll();
-        const wire=pd.querySelector('.wireframe-source-note');
-        return pd.documentElement.scrollWidth<=width+1 && d.documentElement.scrollWidth<=width+1 && wire && wire.textContent.includes('read-only') && [...pd.querySelectorAll('#design-process .process-wireframe > div, #design-process .process-screens > li')].every(el=>{const box=el.getBoundingClientRect();return box.left>=0 && box.right<=width+1 && el.scrollWidth<=el.clientWidth+1;});
-      });
-    }
-    processPage.style.width='320px'; app.style.width='320px'; await wait();
-    for (const step of [0,1,2,3]) {
-      d.querySelector(`[data-journey-step="${step}"]`).click(); await wait();
-      test(theme+' planning wizard stage '+(step+1)+' fits a 320px studio', () => {
-        const controls=[...d.querySelectorAll(`[data-journey-pane="${step}"] textarea, [data-journey-pane="${step}"] select`)];
-        if (d.documentElement.scrollWidth<=320 && controls.every(el=>el.scrollWidth<=el.clientWidth+1)) return true;
-        throw Error(JSON.stringify({page:d.documentElement.scrollWidth,viewport:w.innerWidth,controls:controls.map(el=>({id:el.id,width:el.clientWidth,scroll:el.scrollWidth}))}));
-      });
-    }
-  }
-  processPage.remove(); app.style.width='1440px'; reset(); await wait();
-  const standalone=d.createElement('iframe'); standalone.style.cssText='width:1440px;height:1000px;border:0';
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); input('jProject','Standalone homepage'); input('jBase',18); await wait();
-    const files={}; w.download=(name,content,type)=>{files[name]={content,type};};
-    d.getElementById('jExportHtml').click(); d.getElementById('jExportCss').click(); w.download=originalDownload;
-    const parsed=new w.DOMParser().parseFromString(files['index.html'].content,'text/html');
-    test(theme+' standalone pair has a relative CSS link, embedded images and no studio scripts or inline styles', () => parsed.querySelector('link[rel="stylesheet"][href="tokens.css"]') && !parsed.querySelector('script,style') && [...parsed.querySelectorAll('img')].every(img=>img.src.startsWith('data:image/svg+xml')) && parsed.documentElement.dataset.theme===theme);
-    const cssUrl=w.URL.createObjectURL(new w.Blob([files['tokens.css'].content],{type:'text/css'}));
-    standalone.srcdoc=files['index.html'].content.replace('href="tokens.css"','href="'+cssUrl+'"');
-    await new Promise(resolve=>{standalone.onload=resolve;if(!standalone.isConnected)d.body.append(standalone);});
-    const pd=standalone.contentDocument, pw=standalone.contentWindow;
-    test(theme+' HTML loads its separate complete stylesheet and basic website components', () => pd.querySelector('link[rel="stylesheet"]').sheet && !pd.querySelector('style,script') && pw.getComputedStyle(pd.body).fontSize==='18px' && pd.querySelector('.sample-brand').textContent.includes('Standalone homepage') && ['header nav','main','#home .sample-lead','img','.card','form input[type="email"]','table','details summary','.sample-notice','progress','footer nav'].every(selector=>pd.querySelector(selector)));
-    for (const width of [320,768,1440]) {
-      standalone.style.width=width+'px'; await wait();
-      test(theme+' separately linked website reflows at '+width+'px', () => pd.documentElement.scrollWidth<=width+1 && pw.getComputedStyle(pd.querySelector('.sample-hero')).gridTemplateColumns.split(' ').length===(width<=768?1:12));
-    }
-    standalone.style.width='320px'; await wait();
-    const menu=pd.getElementById('sample-menu'); menu.querySelector('summary').click();
-    test(theme+' standalone mobile menu and FAQ work with native HTML', () => {
-      const faq=pd.getElementById('getting-started'), wasOpen=faq.open; faq.querySelector('summary').click();
-      return menu.open && pd.querySelector('.sample-mobile-navigation').getBoundingClientRect().height>0 && faq.open!==wasOpen && !pd.querySelector('.sample-form').checkValidity();
-    });
-    w.URL.revokeObjectURL(cssUrl);
-  }
-  standalone.remove(); reset(); await wait();
-  const advancedHtml=evaluate('htmlExport()'), advancedCss=evaluate('cssExport()');
-  evaluate('resetStudio()');await wait();
-  test('Sample mode resets to Basic with a labelled independent tab group', () => evaluate('state.sampleMode')==='basic' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')==='dockModeBasic' && d.querySelector('[aria-label="Website sample complexity"]'));
-  d.getElementById('dockTabHtml').click(); d.getElementById('dockModeBasic').click(); await wait();
-  test('Basic selection synchronizes inspector, preview and central exports while retaining the language tab', () => evaluate('state.sampleMode')==='basic' && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('codeView').textContent===evaluate('codeContent()') && previewDoc().querySelector('.skill-cards') && !previewDoc().querySelector('#design-process'));
-  test('Basic exports shared system foundations without the Advanced gallery styles', () => evaluate('cssExport()').length<advancedCss.length && evaluate('cssExport()').includes('--space-unit:') && evaluate('cssExport()').includes('--button-pad-x:') && evaluate('cssExport()').includes('repeat(auto-fit, minmax(') && !evaluate('cssExport()').includes('.sample-grid-demo'));
-  const basicDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-  test('Basic hero embeds the same accessible offline illustration as Advanced and the live inspector', () => {
-    const image=basicDoc.querySelector('#home img'), advanced=new w.DOMParser().parseFromString(advancedHtml,'text/html').querySelector('#home img');
-    const live=previewDoc().querySelector('#home img');
-    return image && image.getAttribute('src')===advanced.getAttribute('src') && image.getAttribute('src').startsWith('data:image/svg+xml;') && image.alt.length>0 && image.width===960 && image.height===720 && live.complete && live.naturalWidth===960 && live.getAttribute('src')===image.getAttribute('src') && d.getElementById('dockCss').textContent===evaluate('htmlExport()');
-  });
-  test('Basic HTML has exactly four main sections, one heading, logo/nav, hero, three cards, signup and footer', () => basicDoc.querySelectorAll('main > section').length===4 && basicDoc.querySelectorAll('h1').length===1 && basicDoc.querySelector('header .logo[aria-hidden="true"]') && basicDoc.querySelector('header nav[aria-label]') && basicDoc.querySelector('#home .button') && basicDoc.querySelectorAll('.skill-cards article').length===3 && basicDoc.querySelector('#signup form') && basicDoc.querySelector('footer nav[aria-label], footer nav[aria-labelledby]') && basicDoc.querySelector('footer a[href="#top"]'));
-  test('Basic is a compact component showcase without long code recipes or exercises', () => basicDoc.querySelector('h1').textContent==='Start with the essentials.' && !basicDoc.querySelector('main pre, main .practice') && !/Try it:|workshop sign-up|HTML \/ Meaning/.test(basicDoc.querySelector('main').textContent) && basicDoc.querySelectorAll('main > section h2').length===3);
-  test('Basic showcase keeps one native form, component FAQ and footer disclosure', () => basicDoc.querySelectorAll('details').length===3 && basicDoc.querySelectorAll('main form').length===1 && basicDoc.getElementById('contact-form') && basicDoc.getElementById('basic-faq').closest('#basic-usability') && basicDoc.getElementById('footer-sitemap'));
-  test('Basic semantic structure distinguishes sections, independent articles and related aside content', () => basicDoc.querySelectorAll('main').length===1 && basicDoc.querySelectorAll('h1').length===1 && [...basicDoc.querySelectorAll('main section')].every(section=>section.getAttribute('aria-labelledby') && section.contains(basicDoc.getElementById(section.getAttribute('aria-labelledby')))) && basicDoc.querySelector('.layout-example .content-sidebar > article[aria-labelledby="main-content-example-title"] + aside[aria-labelledby="related-links-title"]') && basicDoc.querySelectorAll('.skill-cards > article').length===3 && !basicDoc.querySelector('asside') && basicDoc.querySelector('header nav[aria-label]') && basicDoc.querySelector('footer nav[aria-labelledby="sitemap-title"]') && basicDoc.querySelector('.skip-link').hash==='#main-content');
-  test('Basic names header destinations and hero actions after the components they reach', () => [...basicDoc.querySelectorAll('.desktop-navigation a')].map(a=>a.textContent).join(',')==='Home,Components,Layouts,Forms' && [...basicDoc.querySelectorAll('#home .section-actions a')].map(a=>a.hash).join(',')==='#features,#lists');
-  test('Basic form groups native radio choices with a legend and one initial choice', () => basicDoc.querySelector('#form-options > legend').textContent==='Learning preference' && basicDoc.querySelectorAll('#form-options input[type="radio"][name="learning"]').length===2 && basicDoc.querySelectorAll('#form-options input:checked').length===1 && [...basicDoc.querySelectorAll('#form-options input')].every(input=>input.closest('label')) && basicDoc.querySelector('#basic-signup-note[role="status"]'));
-  test('Basic optional select and textarea start empty with matching labels', () => ['signup-topic','signup-question'].every(id=>basicDoc.getElementById(id).value==='' && !basicDoc.getElementById(id).required && basicDoc.querySelector('label[for="'+id+'"]')) && basicDoc.getElementById('signup-question').defaultValue==='');
-  test('Basic footer has main navigation and a four-section eyebrow sitemap', () => basicDoc.querySelectorAll('footer nav').length===2 && basicDoc.querySelector('footer .footer-links') && basicDoc.getElementById('footer-sitemap').tagName==='DETAILS' && !basicDoc.getElementById('footer-sitemap').open && [...basicDoc.querySelectorAll('footer .footer-links a')].map(a=>a.hash).join(',')==='#home,#features,#lists,#signup' && [...basicDoc.querySelectorAll('#sitemap .sitemap-list > li > a')].map(a=>a.textContent).join(',')==='HTML & CSS essentials,Components / Flexbox,Layouts / CSS Grid,Forms / Labels & controls' && basicDoc.querySelectorAll('#sitemap a').length===12 && basicDoc.querySelector('#sitemap a[href="#home"]') && !basicDoc.querySelector('#sitemap a[href="#footer"]'));
-  test('Basic gives every main section one primary CTA and one secondary route', () => [...basicDoc.querySelectorAll('main > section')].every(section => {
-    const pair=section.querySelector('.section-actions');
-    return pair && pair.children.length===2 && pair.children[0].classList.contains('ds-button--primary') && pair.children[1].classList.contains('ds-button--secondary') && !pair.querySelector('[disabled], [aria-busy], [data-preview-state]');
-  }));
-  test('Basic feature cards offer distinct paths into the practical toolkit', () => [...basicDoc.querySelectorAll('.skill-cards article > a')].map(a=>a.hash).join(',')==='#list-collection,#list-workflow,#list-terms');
-  d.querySelector('[data-width="mobile"]').click(); await wait();
-  const basicMenuAccent=evaluate('state.accent');
-  previewDoc().querySelector('#basic-menu summary').click(); input('jAccent','#3769a8'); await wait();
-  test('Basic preview preserves an open hamburger through live palette edits', () => previewDoc().getElementById('basic-menu').open && previewWindow().getComputedStyle(previewDoc().querySelector('.menu-icon')).color==='rgb(55, 105, 168)');
-  previewDoc().querySelector('#basic-menu a[href="#lists"]').click(); await wait();
-  test('Basic mobile navigation reaches the toolkit inside the preview', () => previewDoc().activeElement===previewDoc().getElementById('lists'));
-  previewDoc().getElementById('basic-menu').open=false; input('jAccent',basicMenuAccent);
-  d.querySelector('[data-width="fluid"]').click(); await wait();
-  const basicActionProject=evaluate('projectJson()');
-  for (const link of [...previewDoc().querySelectorAll('.section-actions a, .skill-cards article > a')]) {
-    const page=previewDoc(), target=page.getElementById(link.hash.slice(1));
-    link.click(); await wait();
-    test('Basic action to '+link.getAttribute('href')+' navigates within the preview and focuses its destination', () => previewDoc()===page && page.activeElement===target && evaluate('projectJson()')===basicActionProject);
-  }
-  const basicActionSettings=evaluate('projectJson()');
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); input('bdVariant','secondary'); input('bdDefaultBg','#602d54'); input('bdText','#ffffff'); input('bdSize','lg');
-    d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true})); await wait();
-    test(theme+' Basic CTAs follow wizard variant colours, size and width settings in the preview and HTML inspector', () => {
-      const page=previewDoc(), links=[...page.querySelectorAll('.section-actions .ds-button--secondary')];
-      return links.length===4 && links.every(a=>previewWindow().getComputedStyle(a).backgroundColor==='rgb(96, 45, 84)' && a.classList.contains('ds-button--lg') && a.classList.contains('ds-button--mobile-full')) && previewWindow().getComputedStyle(page.querySelector('.section-actions .ds-button--primary')).backgroundColor!=='rgb(96, 45, 84)' && d.getElementById('dockCss').textContent===evaluate('htmlExport()');
-    });
-    d.querySelector('button[data-width="mobile"]').click(); await wait();
-    test(theme+' Basic mobile CTAs use the selected full width and retain visible keyboard focus', () => {
-      const page=previewDoc(), pairs=[...page.querySelectorAll('.section-actions')], link=page.querySelector('#features .ds-button--secondary');
-      link.focus();
-      return pairs.every(pair=>[...pair.children].every(a=>Math.abs(a.getBoundingClientRect().width-pair.getBoundingClientRect().width)<2)) && link.matches(':focus-visible') && previewWindow().getComputedStyle(link).outlineStyle==='solid' && page.documentElement.scrollWidth<=390;
-    });
-    d.querySelector('button[data-width="fluid"]').click(); await wait();
-    d.getElementById('dockTabCss').click();
-    test(theme+' Basic CSS inspector and preview share the wizard-generated CTA stylesheet', () => d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('#602d54'));
-    d.getElementById('dockTabHtml').click();
-  }
-  evaluate('importConfig('+basicActionSettings+')'); await wait();
-  test('Basic HTML IDs, fragment destinations and form labels resolve without scripts or inline styles', () => {
-    const ids=[...basicDoc.querySelectorAll('[id]')].map(el=>el.id);
-    return ids.length===new Set(ids).size && !basicDoc.querySelector('script,style') && basicDoc.querySelector('link[href="tokens.css"]') && [...basicDoc.querySelectorAll('a[href^="#"]')].every(link=>basicDoc.getElementById(link.hash.slice(1))) && [...basicDoc.querySelectorAll('label[for]')].every(label=>basicDoc.getElementById(label.htmlFor));
-  });
-  for (const [key,id] of [['End','dockModeAdvanced'],['Home','dockModeBasic'],['ArrowRight','dockModeAdvanced'],['ArrowLeft','dockModeBasic']]) {
-    const selected=d.querySelector('.studio-dock-modes [aria-selected="true"]');
-    selected.dispatchEvent(new w.KeyboardEvent('keydown',{key,bubbles:true})); await wait();
-    test('Mode tabs support '+key+' navigation and one tab stop', () => d.activeElement===d.getElementById(id) && d.getElementById(id).getAttribute('aria-selected')==='true' && [...d.querySelectorAll('.studio-dock-modes button')].filter(button=>button.tabIndex===0).length===1 && d.getElementById('dockSamplePanel').getAttribute('aria-labelledby')===id);
-  }
-  d.getElementById('dockModeAdvanced').click();await wait();
-  test('Returning to Advanced preserves its exact generated page and CSS', () => evaluate('htmlExport()')===advancedHtml && evaluate('cssExport()')===advancedCss);
-  d.getElementById('dockModeBasic').click(); await wait(); d.getElementById('jSaveLocal').click();
-  const basicProjectId=d.getElementById('jProjects').value, basicProject=evaluate('projectJson()');
-  test('Basic selection is saved with the active local project and JSON', () => JSON.parse(basicProject).sampleMode==='basic' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[basicProjectId].data.sampleMode==='basic');
-  reset(); evaluate('importConfig('+basicProject+')'); await wait();
-  test('Import restores Basic tab selection, preview and export generation', () => evaluate('state.sampleMode')==='basic' && d.getElementById('dockModeBasic').getAttribute('aria-selected')==='true' && previewDoc().querySelector('.signup-form'));
-  const basicFiles=[]; w.download=(name,content,type)=>basicFiles.push({name,content,type});
-  for (const [index,button] of [...d.querySelectorAll('[data-website-download]')].entries()) {
-    button.click(); const html=button.dataset.websiteDownload==='html';
-    test('Basic website download '+index+' uses the selected sample and matching file name', () => basicFiles.at(-1).name===(html?'index.html':'tokens.css') && basicFiles.at(-1).content===evaluate(html?'htmlExport()':'cssExport()'));
-  }
-  let basicCopied=''; Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async text=>{basicCopied=text;}}});
-  for (const language of ['html','css']) {
-    d.getElementById(language==='html'?'dockTabHtml':'dockTabCss').click(); d.getElementById('dockCopy').click(); await wait(); d.getElementById('dockDownload').click();
-    test('Basic '+language+' copy and inspector download match the visible code', () => basicCopied===d.getElementById('dockCss').textContent && basicFiles.at(-1).content===basicCopied && basicFiles.at(-1).name===(language==='html'?'index.html':'tokens.css'));
-  }
-  test('Basic keeps section inspection without a separate exercise guide', () => !d.getElementById('dockLearning').hidden && !d.querySelector('.dock-start') && w.DSStudio.stages[8].task.includes('spacing unit'));
-  for (const section of ['basics','header','hero','skills','toolkit','form','footer']) {
-    input('dockSection',section,'change');
-    for (const language of ['html','css']) {
-      d.getElementById(language==='html'?'dockTabHtml':'dockTabCss').click();
-      const shown=d.getElementById('dockCss').textContent;
-      test('Basic '+section+' '+language+' excerpt isolates its authored section', () => shown.includes('SECTION: '+section) && shown!==evaluate(language==='html'?'htmlExport()':'cssExport()') && (section!=='hero' || !shown.includes('SECTION: toolkit')));
-      d.getElementById('dockCopy').click(); await wait(); d.getElementById('dockDownload').click();
-      test('Basic '+section+' '+language+' copies excerpt but downloads complete file', () => basicCopied===shown && basicFiles.at(-1).content===evaluate(language==='html'?'htmlExport()':'cssExport()') && basicFiles.at(-1).name===(language==='html'?'index.html':'tokens.css'));
-    }
-  }
-  input('dockSection','hero','change');
-  const beforeExercisePadding=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('.hero')).paddingTop), beforeExerciseUnit=evaluate('state.spacing');
-  input('jSpacing',6); await wait();
-  test('Focused CSS follows live spacing changes without changing complete preview styles', () => previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('.hero')).paddingTop)===beforeExercisePadding*6/beforeExerciseUnit && d.getElementById('dockCss').textContent.includes('grid-template-columns'));
-  input('dockSection','basics','change');
-  test('Page basics shows current spacing token definitions for the live exercise', () => d.getElementById('dockCss').textContent.includes('--space-unit: 6px;') && d.getElementById('dockCss').textContent.includes('--space-4: calc(var(--space-unit) * 4);'));
-  input('dockSection','hero','change');
-  d.getElementById('dockModeAdvanced').click(); await wait();
-  test('Advanced hides learning controls and always shows complete code', () => d.getElementById('dockLearning').hidden && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
-  d.getElementById('dockModeBasic').click(); await wait();
-  test('Returning to Basic restores its section filter without saving it in project state', () => d.getElementById('dockSection').value==='hero' && !d.getElementById('dockLearning').hidden && !JSON.parse(evaluate('projectJson()')).dockSection);
-  let finishExcerptCopy;
-  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:()=>new Promise(resolve=>{finishExcerptCopy=resolve;})}});
-  d.getElementById('dockCopy').click(); input('dockSection','header','change'); finishExcerptCopy(); await wait();
-  test('A delayed clipboard result cannot label another section as copied', () => d.getElementById('dockCopy').textContent==='Copy CSS excerpt');
-  w.DSStudio.inspector.show();
-  for (const theme of ['light','dark']) {
-    input('dockTheme',theme,'change');
-    for (const width of [320,1440]) {
-      app.style.width=width+'px'; await wait();
-      test(theme+' Basic learning controls fit at '+width+'px with expanded guide', () => {
-        const learning=d.getElementById('dockLearning'), select=d.getElementById('dockSection');
-        return learning.scrollWidth<=learning.clientWidth+1 && select.getBoundingClientRect().width<=learning.clientWidth && learning.clientHeight>0 && select.getBoundingClientRect().bottom<=learning.getBoundingClientRect().bottom+1 && select.labels[0].textContent==='Study a section' && select.tabIndex===0;
-      });
-    }
-  }
-  input('dockTheme','light','change');
-  input('dockSection','all','change'); input('jSpacing',4); await wait();
-  test('Complete file restores export parity and formatted labelled markup', () => d.getElementById('dockCss').textContent===evaluate('cssExport()') && /<article[^>]+>\n\s+<p/.test(evaluate('htmlExport()')) && /\.hero-layout \{\n\s+display: grid;/.test(evaluate('cssExport()')));
-  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:originalClipboard}); w.download=originalDownload;
-  const initialBasicImage=previewDoc().querySelector('#home img').getAttribute('src');
-  input('jProject','Harbour learning club'); input('jBase',18); input('jPrimary','#196b63'); input('advGap',32); await wait();
-  test('Basic hero illustration follows live palette edits and HTML exports', () => {
-    const live=previewDoc().querySelector('#home img'), exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#home img');
-    return live.complete && live.naturalWidth===960 && live.getAttribute('src')!==initialBasicImage && live.getAttribute('src')===exported.getAttribute('src') && decodeURIComponent(live.getAttribute('src')).includes(evaluate('palette().roles.primary'));
-  });
-  test('Basic design settings update its HTML, CSS, preview and source descriptions', () => previewDoc().querySelector('.brand').textContent.includes('Harbour learning club') && previewWindow().getComputedStyle(previewDoc().body).fontSize==='18px' && previewWindow().getComputedStyle(previewDoc().querySelector('.skill-cards')).gap==='32px' && d.getElementById('dockNote').textContent.startsWith('Basic CSS'));
-  const basicForm=previewDoc().querySelector('form');
-  test('Basic signup has required name/email/consent and native invalid-input checks', () => !basicForm.checkValidity() && ['signup-name','signup-email'].every(id=>previewDoc().getElementById(id).required) && basicForm.querySelector('input[type="checkbox"]').required);
-  previewDoc().getElementById('signup-name').value='Taylor'; previewDoc().getElementById('signup-email').value='taylor@example.com'; basicForm.querySelector('input[type="checkbox"]').checked=true;
-  previewDoc().getElementById('signup-topic').value='grid'; previewDoc().getElementById('signup-question').value='How do columns adapt?';
-  previewDoc().querySelector('input[name="learning"][value="group"]').checked=true;
-  previewDoc().getElementById('basic-faq').open=true;
-  const basicBrowsingDoc=previewDoc(); basicForm.requestSubmit(); await wait();
-  test('Basic live signup validates and remains a static demonstration without navigating', () => previewDoc()===basicBrowsingDoc && basicForm.checkValidity() && previewDoc().getElementById('basic-signup-note').textContent.includes('No message has been sent'));
-  input('jRadius',20); await wait();
-  test('Basic optional controls and native FAQ retain state across live edits', () => previewDoc().getElementById('signup-topic').value==='grid' && previewDoc().getElementById('signup-question').value==='How do columns adapt?' && previewDoc().getElementById('basic-faq').open && previewDoc().querySelector('input[name="learning"][value="group"]').checked);
-  test('Basic form values survive live design edits', () => previewDoc().getElementById('signup-name').value==='Taylor' && previewDoc().querySelector('input[type="checkbox"]').checked);
-  d.getElementById('dockModeAdvanced').click(); await wait();
-  test('Switching sample modes resets browsing without leaking Basic form values into Advanced', () => previewDoc().getElementById('contact-name').value==='' && Math.abs(previewWindow().scrollY)<1);
-  d.getElementById('dockModeBasic').click(); await wait();
-  test('Switching back to Basic begins a fresh browsing session', () => previewDoc().getElementById('signup-name').value==='' && !previewDoc().querySelector('input[type="checkbox"]').checked);
-  const basicPage=d.createElement('iframe'); basicPage.style.cssText='width:1440px;height:1000px;border:0';
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme); await wait();
-    const cssUrl=w.URL.createObjectURL(new w.Blob([evaluate('cssExport()')],{type:'text/css'}));
-    const htmlUrl=w.URL.createObjectURL(new w.Blob([evaluate('htmlExport()').replace('href="tokens.css"','href="'+cssUrl+'"')],{type:'text/html'}));
-    basicPage.src=htmlUrl;
-    await new Promise(resolve=>{basicPage.onload=resolve;if(!basicPage.isConnected)d.body.append(basicPage);});
-    const pd=basicPage.contentDocument, pw=basicPage.contentWindow;
-    const footerDisclosure=pd.getElementById('footer-sitemap'),footerSummary=pd.getElementById('sitemap-toggle');
-    test(theme+' Basic sitemap starts collapsed with a native disclosure and visible heading',()=>!footerDisclosure.open && footerSummary.tagName==='SUMMARY' && pw.getComputedStyle(footerSummary).display==='list-item' && footerSummary.getBoundingClientRect().height>=44 && pd.querySelector('#sitemap a').getBoundingClientRect().height===0);
-    footerSummary.click();
-
-    test(theme+' Basic standalone hero loads its current theme illustration without external assets', () => {
-      const image=pd.querySelector('#home img');
-      return image.complete && image.naturalWidth===960 && image.naturalHeight===720 && image.alt.length>0 && image.getAttribute('src')===evaluate('DSStudio.samples.illustration(palette().roles)');
-    });
-    for (const width of [320,390,768,1440]) {
-      basicPage.style.width=width+'px'; await wait();
-      test(theme+' Basic hamburger switches navigation at '+width+'px', () => {
-        const menu=pd.getElementById('basic-menu'), desktop=pd.querySelector('.desktop-navigation');
-        const links=nav=>[...nav.querySelectorAll('a')].map(link=>link.getAttribute('href')).join(',');
-        const mobile=pd.querySelector('.mobile-navigation');
-        menu.open=false;
-        const narrow=width<=768;
-        if (links(desktop)!==links(mobile) || pw.getComputedStyle(menu).display!==(narrow?'block':'none') || pw.getComputedStyle(desktop).display!==(narrow?'none':'block') || mobile.getClientRects().length) return false;
-        if (!narrow) return true;
-        const summary=menu.querySelector('summary'); summary.focus(); summary.click();
-        const opened=menu.open && mobile.getClientRects().length>0 && pw.getComputedStyle(pd.querySelector('.menu-bars')).display==='none' && pw.getComputedStyle(pd.querySelector('.menu-close')).display!=='none' && summary.getBoundingClientRect().height>=44 && pw.getComputedStyle(summary).outlineStyle==='solid' && [...mobile.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44 && link.getBoundingClientRect().right<=width+1);
-        summary.click();
-        return opened && !menu.open && !mobile.getClientRects().length;
-      });
-      test(theme+' Basic toolkit is a conventional equal-width CSS Grid at '+width+'px', () => {
-        const grid=pd.querySelector('.list-grid'), cards=[...grid.children], sizes=cards.map(card=>card.getBoundingClientRect());
-        return pw.getComputedStyle(grid).display==='grid' && sizes.every(box=>Math.abs(box.width-sizes[0].width)<1 && box.right<=width+1) && cards.every(card=>pw.getComputedStyle(card).gridRowEnd==='auto') && (width===1440?sizes.every(box=>Math.abs(box.top-sizes[0].top)<1):true);
-      });
-      test(theme+' Basic hero image and text reflow at '+width+'px', () => {
-        const layout=pd.querySelector('.hero-layout'), text=layout.firstElementChild.getBoundingClientRect(), image=pd.querySelector('#home img').getBoundingClientRect();
-        return pw.getComputedStyle(layout).gridTemplateColumns.split(' ').length===(width<=768?1:2) && image.width>0 && Math.abs(image.width/image.height-4/3)<.01 && image.right<=width+1 && (width<=768 ? image.top>=text.bottom : image.left>=text.right);
-      });
-      test(theme+' Basic sitemap columns have vertically stacked child links at '+width+'px', () => {
-        const groups=[...pd.querySelectorAll('#sitemap .sitemap-list > li')], children=[...pd.querySelectorAll('#sitemap .sitemap-list > li > ul')];
-        const map=pd.querySelector('#sitemap'), grid=map.querySelector('.sitemap-list'), mapBox=map.getBoundingClientRect(), gridBox=grid.getBoundingClientRect();
-        if (pw.getComputedStyle(pd.getElementById('sitemap-title')).textAlign!=='left' || pw.getComputedStyle(grid).justifyItems!=='center' || Math.abs((gridBox.left+gridBox.right)/2-(mapBox.left+mapBox.right)/2)>1) return false;
-        return groups.length===4 && children.length===3 && children.every((list,index)=>{
-          const style=pw.getComputedStyle(list), bounds=list.getBoundingClientRect(), links=[...list.querySelectorAll('a')], boxes=links.map(link=>link.getBoundingClientRect());
-          return style.display==='flex' && style.flexDirection==='column' && pw.getComputedStyle(list.parentElement).textAlign==='center' && links.length===[3,4,1][index] && boxes.every((box,i)=>box.left>=bounds.left-1 && box.right<=bounds.right+1 && box.height>=44 && Math.abs((box.left+box.right)/2-(bounds.left+bounds.right)/2)<1 && (!i||box.top>=boxes[i-1].bottom-1));
-        }) && (width!==1440||groups.every(group=>Math.abs(group.getBoundingClientRect().top-groups[0].getBoundingClientRect().top)<1)) && pd.documentElement.scrollWidth<=width+1;
-      });
-      test(theme+' Basic content/sidebar layout and UI components fit at '+width+'px', () => {
-        const layout=pd.querySelector('.content-sidebar'), children=[...layout.children], boxes=children.map(el=>el.getBoundingClientRect());
-        return pw.getComputedStyle(layout).gridTemplateColumns.split(' ').length===(width<=768?1:2) && (width<=768?boxes[1].top>=boxes[0].bottom:boxes[1].left>=boxes[0].right && boxes[0].width>boxes[1].width) && [...pd.querySelectorAll('.component-demo, .content-sidebar > *, #signup select, #signup textarea, #signup fieldset')].every(el=>el.getBoundingClientRect().right<=width+1 && el.getBoundingClientRect().width>0) && pw.getComputedStyle(pd.querySelector('.media-object')).display==='flex' && pd.querySelector('.avatar[aria-hidden="true"]') && pd.querySelector('.badge').textContent==='Available';
-      });
-      test(theme+' Basic section actions wrap inside their containers at '+width+'px', () => [...pd.querySelectorAll('.section-actions')].every(pair=>{
-        const bounds=pair.getBoundingClientRect();
-        return parseFloat(pw.getComputedStyle(pair).gap)>0 && [...pair.children].every(action=>{const box=action.getBoundingClientRect();return box.left>=bounds.left-1 && box.right<=bounds.right+1 && box.height>=44;});
-      }));
-      test(theme+' Basic sections have distinct responsive compositions at '+width+'px', () => {
-        const columns=selector=>pw.getComputedStyle(pd.querySelector(selector)).gridTemplateColumns.split(' ').length;
-        const skills=pd.querySelector('.skills-intro').getBoundingClientRect(), lessons=pd.querySelector('.skill-cards').getBoundingClientRect();
-        const form=pd.querySelector('.signup-form').getBoundingClientRect(), area=pd.querySelector('.signup-layout').getBoundingClientRect();
-        return pw.getComputedStyle(pd.querySelector('.skills-layout')).display==='flex' && pw.getComputedStyle(pd.querySelector('.skills-layout')).flexDirection===(width<=768?'column':'row') && pw.getComputedStyle(pd.querySelector('.skill-cards')).display==='flex' && [...pd.querySelectorAll('#features *')].every(el=>!['grid','inline-grid'].includes(pw.getComputedStyle(el).display)) && columns('.signup-layout')===1 && (width<=768?lessons.top>=skills.bottom:lessons.left>=skills.right) && Math.abs((form.left+form.right)/2-(area.left+area.right)/2)<2 && pw.getComputedStyle(pd.querySelector('.signup-form')).maxWidth!=='none' && pd.querySelector('.hero-image figcaption');
-      });
-      test(theme+' Basic classic footer keeps its layout inside the open sitemap disclosure at '+width+'px', () => {
-        const footer=pd.querySelector('.site-footer'), layout=footer.querySelector('.footer-inner');
-        const identity=layout.querySelector('.footer-identity').getBoundingClientRect(), nav=layout.querySelector('nav').getBoundingClientRect(), links=[...layout.querySelectorAll('nav a')];
-        return layout.children.length===2 && pw.getComputedStyle(layout).display==='grid' && footer.querySelector('.footer-brand') && !footer.querySelector('.footer-lesson') && footer.querySelectorAll('nav').length===2 && footer.querySelector('#sitemap').tagName==='NAV' && pw.getComputedStyle(footer.querySelector('.sitemap-list')).display==='grid' && (width<=768?nav.top>=identity.bottom:nav.left>=identity.right && Math.abs(nav.top-identity.top)<1) && (width!==1440||links.every(link=>Math.abs(link.getBoundingClientRect().top-links[0].getBoundingClientRect().top)<1)) && footer.querySelector('details').open && [...footer.querySelectorAll('a')].every(link=>link.getBoundingClientRect().height>=44);
-      });
-      test(theme+' Basic standalone page reflows with its separate stylesheet at '+width+'px', () => {
-        const grid=pd.querySelector('.skill-cards'), cards=[...grid.children], first=cards[0].getBoundingClientRect();
-        const columns=cards.filter(card=>Math.abs(card.getBoundingClientRect().top-first.top)<1).length;
-        return pd.querySelector('link').sheet && !pd.querySelector('style,script') && pd.documentElement.scrollWidth<=width+1 && !pd.querySelector('.lesson-code') && columns===1 && pw.getComputedStyle(grid).display==='flex' && pw.getComputedStyle(pd.querySelector('.signup-layout')).gridTemplateColumns.split(' ').length===1 && [...pd.querySelectorAll('header nav a, footer nav[aria-label="Footer navigation"] a, .button')].filter(el=>el.getClientRects().length).every(el=>el.getBoundingClientRect().height>=44);
-      });
-    }
-    pd.querySelector('#basic-faq summary').focus(); pd.querySelector('#basic-faq summary').click();
-    test(theme+' Basic native FAQ opens with a visible focus outline and no scripts', () => pd.getElementById('basic-faq').open && pw.getComputedStyle(pd.querySelector('#basic-faq summary')).outlineStyle==='solid' && !pd.querySelector('script'));
-    pd.querySelector('#basic-faq summary').click();
-    pd.querySelector('.site-footer .sitemap-list > li > a[href="#features"]').click(); await wait();
-    test(theme+' Basic footer Services link reaches its real section', () => pw.location.hash==='#features' && pd.getElementById('features').getBoundingClientRect().top>=-1);
-    test(theme+' Basic standalone sitemap expands without scripts and has real destinations', () => pd.getElementById('sitemap').tagName==='NAV' && footerDisclosure.open && [...pd.querySelectorAll('#sitemap a')].every(link=>link.getBoundingClientRect().height>=44 && pd.getElementById(link.hash.slice(1))));
-    pd.querySelector('.skip-link').focus();
-    test(theme+' Basic skip link and focus outline are visible with keyboard focus', () => pd.activeElement===pd.querySelector('.skip-link') && pd.activeElement.getBoundingClientRect().top>=0 && pw.getComputedStyle(pd.activeElement).outlineStyle==='solid');
-    pd.querySelector('.back-to-top').click(); await wait();
-    test(theme+' Basic standalone Back to top uses a real native fragment destination', () => pw.location.hash==='#top' && pd.getElementById('top').getBoundingClientRect().top>=-1 && pd.getElementById('top').getBoundingClientRect().top<10);
-    w.URL.revokeObjectURL(cssUrl); w.URL.revokeObjectURL(htmlUrl);
-  }
-  basicPage.remove();
-  evaluate('importConfig({sampleMode:"<script>",project:"<img src=x onerror=alert(1)>"})');
-  test('Invalid sample mode falls back to Basic', () => evaluate('state.sampleMode')==='basic');
-  evaluate('importConfig({sampleMode:"basic",project:"<img src=x onerror=alert(1)>"})');
-  test('Basic escapes imported project text in its title and brand', () => {
-    const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return page.querySelectorAll('img').length===1 && page.querySelector('#home img').getAttribute('src').startsWith('data:image/svg+xml;') && !page.querySelector('script,[onerror]') && page.querySelector('.brand').textContent.includes('<img src=x onerror=alert(1)>');
-  });
-  evaluate('importConfig({})'); await wait();
-  test('Legacy projects without a sample mode retain Advanced', () => evaluate('state.sampleMode')==='advanced' && d.getElementById('dockModeAdvanced').getAttribute('aria-selected')==='true');
-  d.getElementById('dockModeAdvanced').click(); evaluate('resetStudio()'); await wait();
-  test('Reset restores Basic mode and its matching preview and exports', () => evaluate('state.sampleMode')==='basic' && previewDoc().querySelector('.skill-cards') && !previewDoc().querySelector('#design-process') && evaluate('htmlExport()').includes('skill-cards') && d.getElementById('sampleModeHelp').textContent.startsWith('Basic'));
-  d.getElementById('dockModeAdvanced').click();await wait();
-  test('Brief lesson teaches seven website-project prompts instead of displaying a prefilled project', () => d.querySelectorAll('#process-brief .process-brief-guide > li').length===7 && d.querySelector('#process-brief .process-brief-template').textContent.includes('[audience]') && !d.querySelector('#process-brief .process-brief-draft') && ['goal','audience','scope','content','constraints','delivery','success'].every(key=>d.getElementById('plan-'+key).value===''));
-  test('Website brief covers scope, content ownership, requirements, delivery and a concrete example', () => {
-    const lesson=d.querySelector('#process-brief'), guide=lesson.querySelector('.process-brief-guide').textContent;
-    return ['Purpose:','Audience:','Pages and features:','Content:','Design and requirements:','Delivery:','Success:'].every(label=>guide.includes(label)) && ['out of scope','who will supply','deadline','budget','approves','maintains'].every(term=>guide.includes(term)) && lesson.querySelector('.process-brief-example').textContent.includes('online ordering is out of scope') && lesson.querySelector('.learning-reference a').href==='https://www.smashingmagazine.com/2018/02/comprehensive-website-planning-guide-part1/' && !lesson.querySelector('a[href*="gov.uk"]') && previewDoc().querySelector('#brief-lab .process-brief-example') && evaluate('htmlExport()').includes('Build [website] for [audience]');
-  });
-  test('Website brief example and wizard labels render cleanly with preserved saved fields', () => d.querySelector('#process-brief .process-brief-example h4').textContent==='Example: a small café website' && d.querySelector('#process-brief .process-brief-example').textContent.includes("today's opening hours") && d.querySelector('label[for="plan-goal"]').textContent==='1. Purpose' && d.querySelector('label[for="plan-constraints"]').textContent==='5. Design and requirements');
-  test('Brief wizard has the seven approved lesson questions in the same order with matching labels and prompts', () => {
-    const controls=[...d.querySelectorAll('#plan-brief-fields [data-process-field]')], lesson=[...d.querySelectorAll('#process-brief .process-brief-guide li')];
-    return JSON.stringify(controls.map(el=>el.dataset.processField))===JSON.stringify(['goal','audience','scope','content','constraints','delivery','success']) && controls.every((el,i)=>d.querySelector('label[for="'+el.id+'"]').textContent===(i+1)+'. '+lesson[i].querySelector('strong').textContent.slice(0,-1) && lesson[i].textContent.trim().endsWith(d.getElementById(el.getAttribute('aria-describedby')).textContent));
-  });
-  previewDoc().getElementById('working-together').open=true;
-  input('plan-audience','Draft audience'); await wait();
-  test('Adding the first brief draft preserves the correct preview FAQ and menu state', () => previewDoc().getElementById('working-together').open && !previewDoc().getElementById('sample-menu').open && !previewDoc().querySelector('.process-brief-draft').open);
-  reset(); await wait();
-  evaluate('importConfig({designProcess:{audience:"Local readers",goal:"Find opening times",scope:"Home and contact",success:"Find an answer",constraints:"Small budget"}})'); await wait();
-  test('Existing brief drafts remain available beside the training guide', () => d.querySelector('#process-brief .process-brief-guide') && d.querySelector('#process-brief [data-brief-field="audience"] dd').textContent==='Local readers' && d.getElementById('plan-goal').value==='Find opening times');
-  test('Legacy combined brief notes stay intact and new Content/Delivery fields start blank', () => d.getElementById('plan-scope').value==='Home and contact' && d.getElementById('plan-constraints').value==='Small budget' && d.getElementById('plan-content').value==='' && d.getElementById('plan-delivery').value==='');
-  input('plan-content','Owner supplies text, logo and photos.'); input('plan-delivery','Two weeks; owner approves and maintains.'); await wait();
-  const sevenFieldBrief=evaluate('projectJson()'); reset(); evaluate('importConfig('+sevenFieldBrief+')'); await wait();
-  test('Seven-field brief round trips and updates the centre draft and exported website', () => d.getElementById('plan-content').value==='Owner supplies text, logo and photos.' && d.getElementById('plan-delivery').value==='Two weeks; owner approves and maintains.' && d.querySelector('#process-brief [data-brief-field="content"] dd').textContent==='Owner supplies text, logo and photos.' && d.querySelector('#process-brief [data-brief-field="delivery"] dd').textContent==='Two weeks; owner approves and maintains.' && evaluate('htmlExport()').includes('Owner supplies text, logo and photos.') && evaluate('htmlExport()').includes('Two weeks; owner approves and maintains.') && JSON.stringify([...d.querySelectorAll('#process-brief .process-brief dt')].map(el=>el.textContent))===JSON.stringify([...d.querySelectorAll('#process-brief .process-brief-guide strong')].map(el=>el.textContent.slice(0,-1))));
-  evaluate('importConfig({designProcess:{content:"x".repeat(5000),delivery:42}})'); await wait();
-  test('New brief fields validate imported types and lengths', () => d.getElementById('plan-content').value.length===1200 && d.getElementById('plan-delivery').value==='');
-  input('plan-content','<img src=x onerror=alert(1)>'); input('plan-delivery','<script>alert(1)<\/script>'); await wait();
-  test('Content and Delivery remain escaped text in centre and exported drafts', () => !d.querySelector('#process-brief .process-brief-draft img, #process-brief .process-brief-draft script') && d.querySelector('#process-brief [data-brief-field="content"] dd').textContent.includes('<img') && !new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#brief-lab .process-brief-draft img, #brief-lab .process-brief-draft script'));
-  reset(); await wait();
-  test('Reset clears all seven brief editors and saved values', () => ['goal','audience','scope','content','constraints','delivery','success'].every(key=>d.getElementById('plan-'+key).value==='' && evaluate('state.designProcess.'+key)===''));
-  d.querySelector('[data-journey-step="9"]').click();
-  test('Responsive is a distinct phase between Layout and Accessibility with grid controls and a centre lesson', () => !d.querySelector('[data-journey-pane="9"]').hidden && d.getElementById('advColumns').closest('[data-journey-pane]').dataset.journeyPane==='9' && !d.getElementById('responsiveDesign').hidden && d.getElementById('responsiveDesign').open);
-  test('Responsive page tokens are classified as Layout and route to the correct wizard controls', () => w.dssReadTokens().filter(row=>row.name.startsWith('--page-')).every(row=>row.type==='Layout') && [['--page-max-width','responsive-maxWidth'],['--page-gutter','responsive-gutter'],['--page-gutter-wide','responsive-wideGutter']].every(([name,id])=>w.dssTokenSource({name}).step===9 && w.dssTokenSource({name}).control===id));
-  evaluate('importConfig({responsiveDesign:{stack:960,wide:1,maxWidth:1e9,gutter:-20,wideGutter:"evil"}})');
-  test('Responsive imports bound lengths and keep ordered breakpoints', () => evaluate('state.responsiveDesign.stack===960 && state.responsiveDesign.wide===1120 && state.responsiveDesign.maxWidth===1600 && state.responsiveDesign.gutter===8 && state.responsiveDesign.wideGutter===32'));
-  evaluate('importConfig({responsiveDesign:{stack:NaN,wide:Infinity,maxWidth:null,gutter:"48",wideGutter:NaN}})');
-  test('Nonfinite or nonnumeric responsive imports use safe defaults', () => evaluate('JSON.stringify(state.responsiveDesign)===JSON.stringify(DSStudio.responsive.defaults())'));
-  for (const value of [null,[],42,'bad']) {
-    evaluate('importConfig({responsiveDesign:'+JSON.stringify(value)+'})');
-    test('Malformed responsive data '+JSON.stringify(value)+' uses defaults', () => evaluate('JSON.stringify(state.responsiveDesign)===JSON.stringify(DSStudio.responsive.defaults())'));
-  }
-  evaluate('importConfig({responsiveDesign:{stack:701,wide:1001,maxWidth:1237,gutter:19,wideGutter:37}})'); await wait();
-  test('Valid responsive lengths retain exact imported values in sliders and exports', () => ['stack','wide','maxWidth','gutter','wideGutter'].every(key=>Number(d.getElementById('responsive-'+key).value)===evaluate('state.responsiveDesign.'+key)) && evaluate('state.responsiveDesign.stack===701 && state.responsiveDesign.maxWidth===1237'));
-  reset(); d.getElementById('jSaveLocal').click(); const responsiveProjectId=d.getElementById('jProjects').value;
-  for (const [key,value] of Object.entries({stack:640,wide:1152,maxWidth:1280,gutter:20,wideGutter:40})) input('responsive-'+key,value);
-  await wait();
-  const responsiveData=evaluate('JSON.stringify(state.responsiveDesign)'), responsiveJson=evaluate('projectJson()');
-  test('Responsive lesson reports the actual preview media-query state', () => {
-    const narrow=previewWindow().matchMedia('(max-width: 40rem)').matches;
-    return d.getElementById('responsiveLessonViewport').textContent.includes(narrow?'Narrow: main sections stack.':'Main sections can sit side by side.');
-  });
-
-  test('Responsive controls update outputs, source recipes, preview and active local save', () => d.getElementById('responsive-stackOut').textContent.includes('40rem') && d.getElementById('responsiveRecipe').textContent.includes('@media (max-width: 40rem)') && d.getElementById('responsiveLessonViewport').textContent.includes('Current preview:') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && JSON.stringify(JSON.parse(w.localStorage.getItem('dss-v27-projects'))[responsiveProjectId].data.responsiveDesign)===responsiveData);
-  reset(); evaluate('importConfig('+responsiveJson+')'); await wait();
-  test('Responsive settings round trip through project JSON and synchronize sliders', () => evaluate('JSON.stringify(state.responsiveDesign)')===responsiveData && d.getElementById('responsive-wide').value==='1152');
-  const responsivePage=d.createElement('iframe'); responsivePage.style.cssText='width:1440px;height:1000px;border:0';
-  for (const mode of ['advanced','basic']) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();
-    for (const theme of ['light','dark']) {
-      input('jTheme',theme); await wait();
-      const css=evaluate('cssExport()');
-      test(mode+' '+theme+' exports literal breakpoints and shared container values', () => css.includes('@media (max-width: 40rem)') && css.includes('@media (min-width: 72rem)') && css.includes('--page-max-width: 80rem;') && css.includes('--page-gutter: 1.25rem;') && !/@media[^\{]*var\(/.test(css));
-      responsivePage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+css+'</style>');
-      await new Promise(resolve=>{responsivePage.onload=resolve;if(!responsivePage.isConnected)d.body.append(responsivePage);});
-      const pd=responsivePage.contentDocument,pw=responsivePage.contentWindow;
-      for (const width of [639,640,641,1151,1152,1153,1440]) {
-        responsivePage.style.width=width+'px'; await wait();
-        test(mode+' '+theme+' obeys configured cutoffs and gutters at '+width+'px', () => {
-          const container=pw.getComputedStyle(pd.querySelector('.container'));
-          const composition=pw.getComputedStyle(pd.querySelector(mode==='basic'?'.skills-layout':'.sample-hero'));
-          const columns=mode==='basic'?(composition.flexDirection==='column'?1:2):composition.gridTemplateColumns.split(' ').length;
-          return pd.documentElement.scrollWidth<=width+1 && container.maxWidth==='1280px' && container.paddingLeft===(width>=1152?'40px':'20px') && columns===(width<=640?1:mode==='basic'?2:12);
-        });
-      }
-      if (mode==='advanced') test('Advanced grid recipe reflects the edited breakpoint', () => pd.querySelector('.sample-code-solution code').textContent.includes('@media (max-width: 40rem)'));
-    }
-  }
-  responsivePage.remove();
-  test('Changing sample modes preserves shared responsive decisions', () => evaluate('JSON.stringify(state.responsiveDesign)')===responsiveData);
-  reset(); await wait();
-  test('Reset restores responsive defaults without mutating the starter object', () => evaluate('JSON.stringify(state.responsiveDesign)===JSON.stringify(DSStudio.responsive.defaults()) && JSON.stringify(DEFAULT.responsiveDesign)===JSON.stringify(DSStudio.responsive.defaults())'));
-  d.getElementById('dockModeBasic').click(); await wait();
-  test('Basic lists lesson contains unordered, ordered and description lists with titles', () => previewDoc().querySelectorAll('#lists .list-grid > article').length===3 && ['ul','ol','dl'].every(selector=>previewDoc().querySelector('#lists .list-grid '+selector)) && [...previewDoc().querySelectorAll('#lists .list-grid > article')].every(card=>card.querySelector('h3')));
-  for (const mode of ['advanced','basic']) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click(); await wait();
-    test(mode+' sitemap renders its intended depth and preserves the complete Architecture plan', () => {
-      const page=previewDoc(), links=[...page.querySelectorAll('#sitemap a')], ids=new Set(links.map(a=>a.hash.slice(1)));
-      const expected=w.DSStudio.process.samplePages(mode);
-      const fullCount=expected.split('\n').length, topCount=w.DSStudio.process.hierarchy(expected).length;
-      return d.getElementById('plan-pages').value===expected && links.length===w.DSStudio.sectionSitemap.nodes().length && !page.querySelector('#sitemap .sitemap-planned') && links.every(a=>page.querySelectorAll('[id="'+a.hash.slice(1)+'"]').length===1) && [...page.querySelectorAll('main > section')].every(el=>el.id && ids.has(el.id)) && d.querySelectorAll('#process-ia .process-map li').length===fullCount && (mode!=='basic'||page.querySelectorAll('#sitemap ul ul a').length===8) && evaluate('htmlExport()').includes('id="sitemap"');
-    });
-  }
-  d.getElementById('process-ia').open=true;
-  const planBeforeBasicView=evaluate('state.designProcess.pages');
-  for(const theme of ['light','dark']) {
-    input('jTheme',theme);
-    for(const width of [320,768,1440]) {
-      app.style.width=width+'px'; await wait();
-      test(theme+' Basic plan aligns parent groups and related children at '+width+'px', () => {
-        const map=d.querySelector('#process-ia .process-map--basic'), list=map.querySelector(':scope > ul'), groups=[...list.children];
-        const gap=parseFloat(w.getComputedStyle(list).columnGap), bounds=list.getBoundingClientRect(), boxes=groups.map(group=>group.getBoundingClientRect());
-        const inline=list.clientWidth>=groups.length*144+(groups.length-1)*gap;
-        return groups.map(group=>group.querySelector('strong').textContent).join(',')==='Home,Components,Layouts,Forms,Footer' && w.getComputedStyle(list).display==='flex' && boxes.every(box=>box.left>=bounds.left-1 && box.right<=bounds.right+1) && (!inline||boxes.every(box=>Math.abs(box.top-boxes[0].top)<1)) && groups.every(group=>{
-          const children=group.querySelector('ul'), title=group.querySelector('strong').getBoundingClientRect();
-          return !children||(children.getBoundingClientRect().top>=title.bottom && Math.abs(children.getBoundingClientRect().left-title.left)<1);
-        }) && map.querySelectorAll('ul ul > li').length===w.DSStudio.process.entries().filter(node=>node.depth>1).length && d.documentElement.scrollWidth<=width+1 && evaluate('state.designProcess.pages')===planBeforeBasicView && d.getElementById('plan-pages').value.includes('Forms') && d.getElementById('plan-pages').value.includes('Footer') && previewDoc().querySelector('#signup') && previewDoc().querySelector('footer');
-      });
-    }
-  }
-  app.style.width='1440px'; input('jTheme','light');
-  input('plan-pages','Home\nSIGN-UP\n footer \nFlexbox > Forms'); await wait();
-  test('Basic IA shows Forms/Footer aliases as part of its full model', () => [...d.querySelectorAll('#process-ia .process-map > ul > li > strong')].map(el=>el.textContent).join(',')==='Home,SIGN-UP,footer,Flexbox' && d.querySelector('#process-ia .process-map ul ul li').textContent==='Forms' && evaluate('state.designProcess.pages')==='Home\nSIGN-UP\n footer \nFlexbox > Forms');
-  input('plan-pages','Forms\nFooter'); await wait();
-  test('Basic IA retains Forms and Footer even when not sitemap destinations', () => d.querySelectorAll('#process-ia .process-map > ul > li').length===2 && d.querySelector('#process-ia .process-map').textContent.includes('sitemap destination outline') && evaluate('state.designProcess.pages')==='Forms\nFooter');
-  input('plan-pages',w.DSStudio.process.samplePages('basic')); await wait();
-  test('Basic footer contains only Components, Layouts and Forms while the complete plan is preserved', () => {
-    const full=new w.DOMParser().parseFromString(evaluate('DSStudio.process.sitemapHtml()'),'text/html');
-    return previewDoc().querySelectorAll('#sitemap a').length===14 && full.querySelectorAll('a').length===14 && full.querySelector('ul ul') && [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li > a')].map(a=>a.textContent).join(',')==='Components,Layouts,Forms' && previewDoc().querySelectorAll('#sitemap ul ul a').length===11 && [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].every((group,i)=>Boolean(group.querySelector('ul')));
-  });
-  input('plan-pages','Home > Forms\nFuture > Flexbox\nGrid & lists'); await wait();
-  test('Basic expanded sitemap keeps known children under their parent and never promotes orphan children', () => [...previewDoc().querySelectorAll('#sitemap a')].map(a=>a.hash).join(',')==='#lists' && !previewDoc().querySelector('#sitemap ul ul') && evaluate('state.designProcess.pages')==='Home > Forms\nFuture > Flexbox\nGrid & lists' && d.querySelectorAll('#process-ia .process-map li').length===5);
-  input('plan-pages','Flexbox > Semantic HTML\nFlexbox > Unbuilt topic\nGrid & lists > Ordered lists'); await wait();
-  test('Basic expanded sitemap includes linked children and safely omits unlinked child labels', () => previewDoc().querySelectorAll('#sitemap a').length===4 && previewDoc().querySelectorAll('#sitemap ul ul a').length===2 && !previewDoc().querySelector('#sitemap .sitemap-planned') && !previewDoc().querySelector('#sitemap').textContent.includes('Unbuilt topic') && evaluate('state.designProcess.pages').includes('Unbuilt topic'));
-  input('plan-pages','Home > Enquiry form\nFooter > Common questions\nServices > Website design'); await wait();
-  test('Home and Footer groups and their children are omitted from custom footer navigation', () => [...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].every(group=>group.querySelector('a').hash==='#features' && group.querySelector('ul')) && previewDoc().querySelectorAll('#sitemap a').length===2 && evaluate('state.designProcess.pages').includes('Footer > Common questions'));
-  const previousMockPlan="Home\nServices\nServices > Website design\nServices > Content planning\nServices > Responsive websites\nResources\nResources > Project checklist\nResources > How we work\nResources > Useful terms\nContact\nContact > Enquiry form\nContact > Common questions\nFooter";
-  evaluate('importConfig('+JSON.stringify({sampleMode:'basic',designProcess:{pages:previousMockPlan}})+')'); await wait();
-  test('Previous mock-site inventory resolves to the component scope without mutating saved data', () => evaluate('state.designProcess.pages')===previousMockPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===12 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
-  const previousTutorialPlan='Hero\nFlexbox\nFlexbox > Semantic HTML\nFlexbox > Flexbox layout\nFlexbox > Responsive navigation\nGrid & lists\nGrid & lists > Unordered lists\nGrid & lists > Ordered lists\nGrid & lists > Description lists\nForms\nFooter';
-  evaluate('importConfig('+JSON.stringify({sampleMode:'basic',designProcess:{pages:previousTutorialPlan}})+')'); await wait();
-  test('The previous complete tutorial plan resolves to the mock inventory without overwriting saved data', () => evaluate('state.designProcess.pages')===previousTutorialPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===12 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
-  const previousBasicPlan='Home\nWhat you can learn\nWhat you can learn > Give content meaning\nWhat you can learn > Let the layout adapt\nWhat you can learn > Make the basics easy\nLists\nLists > What to include\nLists > A simple workflow\nLists > Useful terms\nSign up\nFooter';
-  evaluate('importConfig('+JSON.stringify({sampleMode:'basic',designProcess:{pages:previousBasicPlan}})+')'); await wait();
-  test('Old complete Basic inventories resolve to tutorial labels without changing stored planning data', () => evaluate('state.designProcess.pages')===previousBasicPlan && d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap a[href="#features"]').textContent==='Components / Flexbox');
-  input('plan-pages','Home\nWhat you can learn > Give content meaning\nLists > What to include\nSign up'); await wait();
-  test('Custom legacy Basic parent and child labels retain real destinations', () => previewDoc().querySelectorAll('#sitemap a').length===5 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
-  input('plan-pages','Home\nFeatures\nLists\nSign up\nFuture > Account'); await wait();
-  test('Basic footer sitemap filters Architecture to linked parent and child entries', () => {
-    const map=previewDoc().querySelector('#sitemap .sitemap-list');
-    return map.children.length===3 && map.querySelectorAll('a').length===3 && !map.querySelector('ul, span, .sitemap-planned') && d.querySelector('#process-ia .process-map').textContent.includes('Account') && [...map.querySelectorAll('a')].every(a=>previewDoc().getElementById(a.hash.slice(1))) && previewDoc().querySelector('footer #sitemap');
-  });
-  input('plan-pages','Home\nLearn > Articles\nSign up'); await wait();
-  test('Architecture edits update the centre map, Basic footer and downloadable HTML together', () => d.querySelector('#process-ia .process-map').textContent.includes('Learn') && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && !previewDoc().querySelector('#sitemap a[href="#features"]') && !evaluate('htmlExport()').includes('Articles') && evaluate('projectJson()').includes('Articles'));
-  const customSitemap=d.getElementById('plan-pages').value, customSitemapExport=evaluate('projectJson()');
-  d.getElementById('dockModeAdvanced').click(); await wait();
-  test('Custom IA survives mode changes while unlinked sitemap entries remain hidden', () => d.getElementById('plan-pages').value===customSitemap && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && d.querySelector('#process-ia .process-map').textContent.includes('Articles'));
-  evaluate('importConfig('+customSitemapExport+')'); await wait();
-  test('Custom sitemap survives JSON round trip while Basic omits unlinked entries', () => d.getElementById('plan-pages').value===customSitemap && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && previewDoc().querySelectorAll('#sitemap a').length===1);
-  input('plan-pages','<img src=x onerror=alert(1)> > <script>bad<\/script>'); await wait();
-  test('Sitemap labels cannot inject HTML or arbitrary destinations', () => {
-    const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return !page.querySelector('#sitemap img, #sitemap script, #sitemap a') && !page.querySelector('#sitemap').textContent.includes('onerror=alert(1)') && page.querySelector('#sitemap').textContent.includes('No sitemap destinations selected') && d.getElementById('plan-pages').validationMessage.includes('three information levels') && !d.querySelector('#process-ia .process-map img, #process-ia .process-map script');
-  });
-  input('plan-pages',''); await wait();
-  test('Empty Architecture has an honest empty sitemap and keeps real footer navigation', () => previewDoc().querySelector('#sitemap').textContent.includes('No sitemap destinations selected') && previewDoc().querySelector('footer .footer-brand[href="#home"]'));
-  d.getElementById('plan-use-sample').click(); await wait();
-  test('Use complete sitemap restores the full Basic mock-site plan and expanded footer links', () => d.getElementById('plan-pages').value===w.DSStudio.process.samplePages('basic') && previewDoc().querySelectorAll('#sitemap a').length===14 && d.querySelectorAll('#process-ia .process-map li').length===w.DSStudio.process.samplePages('basic').split('\n').length);
-  for (const mode of ['advanced','basic']) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click(); await wait();
-    input('plan-pages','Home\nCustom > Future page'); await wait();
-    d.getElementById('process-ia').open=false;
-    d.getElementById('plan-use-sample').click(); await wait();
-    test(mode+' sitemap button restores stored/editor/centre/preview/inspector content and gives visible feedback', () => {
-      const expected=w.DSStudio.process.samplePages(mode), parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-      return evaluate('state.designProcess.pages')===expected && d.getElementById('plan-pages').value===expected && d.getElementById('process-ia').open && !d.querySelector('#process-ia .process-map').textContent.includes('Future page') && !previewDoc().querySelector('#sitemap .sitemap-planned') && previewDoc().querySelector('#sitemap').innerHTML===parsed.querySelector('#sitemap').innerHTML && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()') && d.getElementById('plan-sample-status').textContent.includes('destination outline applied:');
-    });
-    const restored=evaluate('projectJson()');
-    d.getElementById('plan-use-sample').click(); await wait();
-    test(mode+' repeated sitemap clicks confirm an already complete map without changing data', () => evaluate('projectJson()')===restored && d.getElementById('plan-sample-status').textContent.includes('already complete'));
-    input('plan-pages','Home\nMy next page'); await wait();
-    test(mode+' editing a restored sitemap clears outdated confirmation', () => d.getElementById('plan-sample-status').textContent==='');
-    d.getElementById('plan-use-sample').click(); await wait();
-  }
-  const listsPage=d.createElement('iframe'); listsPage.style.cssText='width:1440px;height:1000px;border:0';
-  listsPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
-  await new Promise(resolve=>{listsPage.onload=resolve;d.body.append(listsPage);});
-  for (const width of [320,390,1440]) {
-    listsPage.style.width=width+'px'; await wait();
-    test('Basic list cards and sitemap fit at '+width+'px', () => {
-      const pd=listsPage.contentDocument, cards=[...pd.querySelectorAll('#lists .list-grid > article')], boxes=cards.map(card=>card.getBoundingClientRect());
-      return pd.documentElement.scrollWidth<=width+1 && boxes.every(box=>box.left>=0 && box.right<=width+1) && (width===1440?(Math.abs(boxes[1].top-boxes[0].top)<1 && boxes[1].left>=boxes[0].right && Math.abs(boxes[2].top-boxes[0].top)<1 && boxes[2].left>=boxes[1].right):(boxes[1].top>=boxes[0].bottom && boxes[2].top>=boxes[1].bottom));
-    });
-  }
-  listsPage.remove();
-  for (const mode of ['basic','advanced']) {
-    evaluate('importConfig('+JSON.stringify({sampleMode:mode,designProcess:{pages:'Home\nLessons > Layout\nLessons > Typography\nLessons > Colour\nResources\nContact'}})+')'); await wait();
-    test(mode+' old starter upgrades to the complete map without planned placeholders', () => d.getElementById('plan-pages').value===w.DSStudio.process.samplePages(mode) && !previewDoc().querySelector('#sitemap .sitemap-planned'));
-  }
-  reset(); await wait();
-  const systemPage=d.createElement('iframe'); systemPage.style.cssText='width:1440px;height:1000px;border:0';
-  for (const edited of [false,true]) {
-    if (edited) {
-      for (const [id,value,type] of [['jSpacing',6],['jBase',20],['jRatio',1.25],['advMeasure',52],['advBorder',2],['advHeight',56],['advShadow','strong','change'],['advOpacity',72],['advAlign','center','change'],['advFocus',5],['bdPaddingX',28],['bdPaddingY',14],['bdRadius',18],['bdMinHeight',60],['bdWeight',600],['bdSize','lg'],['bdVariant','primary'],['bdDefaultBg','#602d54'],['bdText','#ffffff']]) input(id,value,type||'input');
-      const editedProject=evaluate('projectJson()'); reset(); evaluate('importConfig('+editedProject+')'); await wait();
-    }
-    for (const theme of ['light','dark']) {
-      input('jTheme',theme); await wait();
-      const signatures=[];
-      for (const mode of ['advanced','basic']) {
-        d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click(); await wait();
-        const css=evaluate('cssExport()');
-        systemPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+css+'</style>');
-        await new Promise(resolve=>{systemPage.onload=resolve;if(!systemPage.isConnected)d.body.append(systemPage);});
-        const pd=systemPage.contentDocument,pw=systemPage.contentWindow;
-        const style=selector=>pw.getComputedStyle(pd.querySelector(selector));
-        const signature={body:style('body').font,h1:style('h1').font,h2:style('main h2').font,h3:style('main h3').font,padding:style('.card').padding,border:style('.card').border,shadow:style('.card').boxShadow,opacity:style('.card').opacity,measure:style('.card p:last-of-type').maxWidth,input:style('.input').minHeight,inputPadding:style('.input').padding,button:style('#home .ds-button').padding,buttonHeight:style('#home .ds-button').minHeight,buttonRadius:style('#home .ds-button').borderRadius,buttonWeight:style('#home .ds-button').fontWeight,buttonBackground:style('#home .ds-button').backgroundColor,buttonText:style('#home .ds-button').color,align:style(mode==='basic'?'.skill-cards':'.card-grid').alignItems,footerPadding:style('.footer-inner').padding,footerLinkWeight:style(mode==='basic'?'.sitemap-list > li > a':'.footer-links a').fontWeight,navFont:style('header nav a').font,navDecoration:style('header nav a').textDecorationLine,background:style('body').backgroundColor};
-        signatures.push(signature);
-        test(mode+' '+theme+' '+(edited?'edited/imported':'default')+' follows system dimensions in standalone CSS',()=> css.startsWith(w.DSStudio.samples.foundationCss()) && signature.padding===(edited?'36px':'24px') && signature.input===(edited?'56px':'48px') && signature.opacity===(edited?'0.72':'1') && signature.align===(edited?'center':'stretch') && Math.abs(parseFloat(style('h1').fontSize)-evaluate('fluidTypePx(5,1440)'))<.2 && (!edited || (Math.abs(parseFloat(signature.button)-17.08)<.02 && signature.buttonRadius==='18px' && signature.buttonBackground==='rgb(96, 45, 84)' && signature.buttonText==='rgb(255, 255, 255)' && signature.shadow!=='none')));
-        if (mode==='basic') test(theme+' Basic sign-up width follows the '+(edited?'edited/imported':'default')+' reading measure',()=>style('.signup-form').maxWidth!=='none' && style('.signup-form').maxWidth===signature.measure);
-        const previewStyle=previewWindow().getComputedStyle(previewDoc().querySelector('.card'));
-        test(mode+' preview and inspector use the same edited system as downloads',()=>previewStyle.padding===signature.padding && previewStyle.opacity===signature.opacity && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()'));
-        const map=pd.getElementById('sitemap');
-        const footerDisclosure=pd.getElementById('footer-sitemap'),footerSummary=pd.getElementById('sitemap-toggle');
-        test(mode+' '+theme+' sitemap starts collapsed in standalone export',()=>!footerDisclosure.open && footerSummary.tagName==='SUMMARY' && pw.getComputedStyle(footerSummary).display==='list-item' && footerSummary.getBoundingClientRect().height>=44 && map.getBoundingClientRect().height===0);
-        footerSummary.click();
-
-        test(mode+' footer presents its sitemap and working return destination',()=> map.tagName==='NAV' && map.closest('details').open && pw.getComputedStyle(pd.getElementById('sitemap-title')).textAlign==='left' && pd.querySelector('.footer-bottom a[href="#top"]') && pd.getElementById('top'));
-        test(mode+' footer sitemap works without JavaScript and keeps all destinations valid',()=> map.tagName==='NAV' && [...map.querySelectorAll('a')].every(a=>a.getBoundingClientRect().height>=44 && pd.getElementById(a.hash.slice(1))));
-        footerSummary.focus();
-        test(mode+' '+theme+' sitemap summary retains the shared visible focus ring',()=>pd.activeElement===footerSummary && pw.getComputedStyle(footerSummary).outlineStyle==='solid' && pw.getComputedStyle(footerSummary).outlineWidth===style(':root').getPropertyValue('--button-focus-width').trim());
-        footerSummary.click();
-        test(mode+' '+theme+' sitemap heading collapses its content while remaining available',()=>!footerDisclosure.open && map.getBoundingClientRect().height===0 && footerSummary.getBoundingClientRect().height>=44);
-        footerSummary.click();
-
-        for (const width of [320,390,1440]) {
-          systemPage.style.width=width+'px'; await wait();
-          const menu=pd.querySelector('.basic-menu, .sample-menu'); if(menu)menu.open=width<=768;
-          const navLink=pd.querySelector(mode==='basic'?(width<=768?'.mobile-navigation a':'.desktop-navigation a'):width<=768?'.sample-mobile-navigation a':'.sample-desktop-navigation a');
-          test(mode+' '+theme+' navigation matches Advanced text at '+width+'px '+(edited?'edited':'default'),()=>{
-            const ns=pw.getComputedStyle(navLink), live=previewWindow().getComputedStyle(previewDoc().querySelector('header nav a'));
-            return ns.fontWeight==='600' && ns.fontFamily===style('body').fontFamily && ns.fontSize===style('body').fontSize && ns.textDecorationLine==='none' && live.fontWeight==='600' && live.textDecorationLine==='none' && navLink.getBoundingClientRect().height>0;
-          });
-          navLink.focus();
-          test(mode+' navigation retains the Advanced focus ring at '+width+'px',()=>pd.activeElement===navLink && pw.getComputedStyle(navLink).outlineStyle==='solid' && pw.getComputedStyle(navLink).outlineWidth===style(':root').getPropertyValue('--button-focus-width').trim());
-          test(mode+' '+theme+' footer fits '+width+'px '+(edited?'edited':'default'),()=>pd.documentElement.scrollWidth<=width+1 && [...pd.querySelectorAll('.website-footer a')].every(el=>{const box=el.getBoundingClientRect();return box.left>=0 && box.right<=width+1 && box.height>=44;}) && [...map.querySelectorAll('.sitemap-list > li')].every(group=>pw.getComputedStyle(group).textAlign==='center') && [...map.querySelectorAll('.sitemap-list ul')].every(list=>{const bounds=list.getBoundingClientRect();return pw.getComputedStyle(list).flexDirection==='column' && [...list.querySelectorAll('a')].every(link=>{const box=link.getBoundingClientRect();return Math.abs((box.left+box.right)/2-(bounds.left+bounds.right)/2)<1;});}));
-        }
-        systemPage.style.width='1440px'; await wait();
-      }
-      test(theme+' '+(edited?'edited/imported':'default')+' Basic and Advanced share typography, spacing, components and footer styles',()=>JSON.stringify(signatures[0])===JSON.stringify(signatures[1]));
-    }
-  }
-  systemPage.remove(); reset(); await wait();
-  d.getElementById('dockModeBasic').click(); await wait();
-  w.dssShowWizardStep(1);
-  const saveSitemap = async (label,parent='',target='planned') => {
-    d.getElementById('sitemap-new').click();
-    d.getElementById('sitemap-label').value=label;
-    d.getElementById('sitemap-parent').value=parent;
-    d.getElementById('sitemap-target').value=target;
-    d.getElementById('sitemap-form').requestSubmit(); await wait();
-  };
-  // Ordinary edits must retain visibility in project data, UI and generated output.
-  for (const mode of ['basic','advanced']) for (const visible of [false,true]) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
-    const destination=w.DSStudio.process.inventory(mode).find(([,id])=>!['home','footer','top'].includes(id))[1];
-    evaluate('state.designProcess=DSStudio.process.normalize('+JSON.stringify({
-      pages:'Overview\nOverview > Linked entry\nOverview > Second entry\nFuture page',
-      pageLinks:{[mode]:{'Overview':destination,'Linked entry':destination,'Second entry':destination,'Future page':''}},
-      showPlanned:visible
-    })+');apply()');await wait();
-    w.dssShowWizardStep(1);
-    const initial=evaluate('JSON.stringify(state.designProcess)');
-    const visibilityMatches=()=>evaluate('state.designProcess.showPlanned')===visible &&
-      d.getElementById('sitemap-planned').checked===visible &&
-      JSON.parse(evaluate('projectJson()')).designProcess.showPlanned===visible &&
-      Boolean(previewDoc().querySelector('#sitemap .sitemap-planned'))===visible &&
-      Boolean(new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap .sitemap-planned'))===visible;
-    const undoSitemap=async action=>{
-      d.getElementById('sitemap-undo').click();await wait();
-      test(mode+' '+visible+' Undo restores '+action+' and visibility',()=>evaluate('JSON.stringify(state.designProcess)')===initial && visibilityMatches() && d.getElementById('sitemap-undo').disabled);
-    };
-    input('sitemap-items','0:0','change');
-    d.getElementById('sitemap-label').value='Renamed entry';d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' '+visible+' rename preserves visibility and destination',()=>visibilityMatches() && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Renamed entry' && a.hash==='#'+destination));
-    await undoSitemap('rename');
-    await saveSitemap('New planned page');
-    test(mode+' '+visible+' creation preserves visibility',()=>visibilityMatches() && evaluate('state.designProcess.pages').includes('New planned page') && previewDoc().querySelector('#sitemap').textContent.includes('New planned page')===visible);
-    await undoSitemap('creation');
-    input('sitemap-items','0:0','change');d.getElementById('sitemap-delete').click();await wait();
-    test(mode+' '+visible+' deletion preserves visibility',()=>visibilityMatches() && !evaluate('state.designProcess.pages').includes('Linked entry') && !previewDoc().querySelector('#sitemap').textContent.includes('Linked entry'));
-    await undoSitemap('deletion');
-    input('sitemap-items','0:0','change');d.getElementById('sitemap-down').click();await wait();
-    test(mode+' '+visible+' reorder preserves visibility and changes order',()=>visibilityMatches() && w.DSStudio.process.hierarchy(evaluate('state.designProcess.pages'))[0][1][1]==='Linked entry');
-    await undoSitemap('reorder');
-    d.getElementById('sitemap-planned').click();await wait();
-    test(mode+' '+visible+' checkbox explicitly changes visibility',()=>evaluate('state.designProcess.showPlanned')===!visible && d.getElementById('sitemap-planned').checked===!visible);
-    await undoSitemap('visibility toggle');
-  }
-  reset();d.getElementById('dockModeBasic').click();await wait();w.dssShowWizardStep(1);
-  d.getElementById('sitemap-planned').click();await wait();
-  await saveSitemap('Our team');
-  test('Sitemap CRUD creates a planned group visible in Basic preview and export',()=>previewDoc().querySelector('#sitemap').textContent.includes('Our team') && previewDoc().querySelector('#sitemap .sitemap-planned') && evaluate('htmlExport()').includes('Our team') && d.querySelector('#process-ia').textContent.includes('Our team'));
-  const teamIndex=w.DSStudio.process.hierarchy(evaluate('DSStudio.process.currentPlan().pages')).findIndex(([name])=>name==='Our team');
-  await saveSitemap('Meet the mentor',String(teamIndex),'basic-layout');
-  test('Sitemap CRUD creates a relationship with a safe existing destination',()=>[...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].some(group=>group.textContent.includes('Our team') && group.querySelector('ul a[href="#basic-layout"]')?.textContent==='Meet the mentor'));
-  d.getElementById('sitemap-label').value='Meet Alex';d.getElementById('sitemap-form').requestSubmit();await wait();
-  test('Sitemap CRUD renames labels while preserving destinations and inspector output',()=>previewDoc().querySelector('#sitemap a[href="#basic-layout"]').textContent!=='Meet the mentor' && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Meet Alex'&&a.hash==='#basic-layout') && !evaluate('htmlExport()').includes('Meet the mentor') && d.getElementById('dockCss').textContent===evaluate(d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true'?'htmlExport()':'cssExport()'));
-  d.getElementById('sitemap-parent').value='1';d.getElementById('sitemap-form').requestSubmit();await wait();
-  test('Sitemap CRUD reparents a child under Components',()=>[...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].some(group=>group.querySelector(':scope > a')?.textContent==='Components' && [...group.querySelectorAll('ul a')].some(a=>a.textContent==='Meet Alex')));
-  d.getElementById('sitemap-up').click();await wait();
-  test('Sitemap CRUD reorders children in the rendered footer',()=>w.DSStudio.process.hierarchy(evaluate('state.designProcess.pages'))[1][1].at(-2)==='Meet Alex');
-  const beforeDelete=evaluate('JSON.stringify(state.designProcess)');
-  d.getElementById('sitemap-delete').click();await wait();
-  test('Sitemap CRUD deletes an entry',()=>!evaluate('htmlExport()').includes('Meet Alex'));
-  d.getElementById('sitemap-undo').click();await wait();
-  test('Sitemap CRUD undo restores relationships and destination mapping',()=>evaluate('JSON.stringify(state.designProcess)')===beforeDelete && evaluate('htmlExport()').includes('Meet Alex'));
-  const customBuilder=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(customBuilder)+')');await wait();
-  test('Sitemap relationships and destination mapping survive JSON round trip',()=>evaluate('htmlExport()').includes('Meet Alex') && previewDoc().querySelector('#sitemap .sitemap-planned') && d.getElementById('sitemap-undo').disabled);
-  await saveSitemap('<img src=x onerror=alert(1)>');
-  test('Sitemap CRUD rejects relationship delimiters without injecting markup',()=>!previewDoc().querySelector('#sitemap img') && d.getElementById('sitemap-status').textContent.includes('unique label'));
-  const maliciousLinks={pageLinks:{basic:{Bad:'javascript:alert(1)',Safe:'basic-layout',Planned:''},advanced:{Bad:'basic-layout'}},showPlanned:true};
-  test('Imported sitemap targets accept only fixed IDs for the corresponding mode',()=>{
-    const normalized=w.DSStudio.process.normalize(maliciousLinks);return !Object.hasOwn(normalized.pageLinks.basic,'Bad') && normalized.pageLinks.basic.Safe==='basic-layout' && normalized.pageLinks.basic.Planned==='' && !Object.hasOwn(normalized.pageLinks.advanced,'Bad');
-  });
-  d.getElementById('plan-use-sample').click();await wait();
-  test('Complete sitemap restores default labels, link mappings and visibility',()=>!evaluate('state.designProcess.showPlanned') && Object.keys(evaluate('state.designProcess.pageLinks.basic')).length===0 && !previewDoc().querySelector('#sitemap .sitemap-planned'));
-  input('sitemap-items','1:1','change');
-  d.getElementById('sitemap-label').value='Mentor profile';d.getElementById('sitemap-form').requestSubmit();await wait();
-  test('Renaming a child retains its sibling order and existing destination',()=>w.DSStudio.process.hierarchy(evaluate('state.designProcess.pages'))[1][1][1]==='Mentor profile' && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Mentor profile'&&a.hash==='#basic-layout'));
-  input('plan-pages','Home\nComponents');await wait();
-  test('External text edits invalidate sitemap undo instead of restoring stale data',()=>d.getElementById('sitemap-undo').disabled);
-  input('plan-pages',Array.from({length:64},(_,i)=>'Planned '+i).join('\n'));await wait();
-  await saveSitemap('Too many');await saveSitemap('Still too many');
-  test('Sitemap CRUD enforces entry limits and remains usable after repeated rejections',()=>w.DSStudio.process.hierarchy(evaluate('state.designProcess.pages')).length===64 && d.getElementById('sitemap-status').textContent.includes('64 entries'));
-  d.getElementById('plan-use-sample').click();await wait();
-  d.getElementById('sitemap-planned').click();await wait();
-  await saveSitemap('Research <notes');
-  test('Sitemap labels render as escaped text without creating page sections',()=>previewDoc().querySelector('#sitemap').textContent.includes('Research <notes') && !previewDoc().querySelector('#sitemap notes') && previewDoc().querySelectorAll('main > section').length===4);
-  for (const width of [320,1440]) {
-    app.style.width=width+'px';await wait();
-    test('Custom Sitemap outline and properties fit at '+width+'px',()=>[...d.querySelectorAll('#sitemap-editor select:not([hidden]), #sitemap-editor input:not([type="checkbox"]), #sitemap-editor button')].every(el=>{const box=el.getBoundingClientRect(),parent=d.getElementById('sitemap-editor').getBoundingClientRect();return box.width>0 && box.left>=parent.left-1 && box.right<=parent.right+1;}));
-  }
-  d.getElementById('plan-use-sample').click();await wait();
-  w.dssShowWizardStep(4);
-  const defaultCanvas=evaluate('palette().roles.background');
-  input('page-background-hex','#E1E9F0');await wait();
-  test('Page background control updates tokens, inspector and Basic preview',()=>evaluate('palette().roles.background')==='#E1E9F0' && previewWindow().getComputedStyle(previewDoc().body).backgroundColor==='rgb(225, 233, 240)' && evaluate('cssExport()').includes('--background: #E1E9F0') && d.getElementById('page-background-colour').value==='#e1e9f0');
-  for (const [theme,colour,rgb] of [['light','#E1E9F0','rgb(225, 233, 240)'],['dark','#172635','rgb(23, 38, 53)']]) {
-    evaluate(`state.theme='${theme}';apply()`);input('page-background-hex',colour);await wait();
-    const checkCanvas=(pd,pw)=>pw.getComputedStyle(pd.body).backgroundColor===rgb && [...pd.querySelectorAll('main > section')].length===4 && [...pd.querySelectorAll('main > section')].every(section=>pw.getComputedStyle(section).backgroundColor==='rgba(0, 0, 0, 0)');
-    test(theme+' Basic selected background is visible behind every main section',()=>checkCanvas(previewDoc(),previewWindow()));
-    const canvasPage=d.createElement('iframe');
-    canvasPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');
-    d.body.append(canvasPage);await wait();
-    test(theme+' Basic exported background is visible behind every main section',()=>checkCanvas(canvasPage.contentDocument,canvasPage.contentWindow));
-    canvasPage.remove();
-  }
-  evaluate("state.theme='light';apply()");await wait();
-  input('page-background-hex','bad');await wait();
-  test('Page background rejects invalid input without changing state',()=>evaluate('palette().roles.background')==='#E1E9F0');
-  const backgroundProject=JSON.parse(evaluate('projectJson()'));reset();evaluate('importConfig('+JSON.stringify(backgroundProject)+')');await wait();
-  test('Page background survives project round trip',()=>evaluate('palette().roles.background')==='#E1E9F0');
-  d.getElementById('dockModeAdvanced').click();await wait();
-  test('Page background applies to Advanced as well as Basic',()=>previewWindow().getComputedStyle(previewDoc().body).backgroundColor==='rgb(225, 233, 240)');
-  evaluate("state.theme='dark';apply()");await wait();
-  input('page-background-colour','#172635');await wait();
-  test('Page background is independently editable per theme',()=>evaluate('state.semanticOverrides.dark.background')==='#172635' && evaluate('state.semanticOverrides.light.background')==='#E1E9F0' && previewWindow().getComputedStyle(previewDoc().body).backgroundColor==='rgb(23, 38, 53)');
-  d.getElementById('page-background-reset').click();await wait();
-  test('Page background reset restores only the current theme',()=>!evaluate('state.semanticOverrides.dark.background') && evaluate('state.semanticOverrides.light.background')==='#E1E9F0');
-  evaluate("state.theme='light';apply()");d.getElementById('page-background-reset').click();await wait();
-  test('Page background reset restores the default canvas',()=>evaluate('palette().roles.background')===defaultCanvas);
-  reset();await wait();
-  w.dssShowWizardStep(4);
-  const regions=['header','main','footer'];w.DSStudio.paletteWorkspace.revealControl(d.getElementById('page-background-colour'));
-  test('Background controls follow Brand and Main Palettes, in page order',()=>{
-    const pane=d.querySelector('[data-journey-pane="4"]'),editor=d.querySelector('.page-background-editor');
-    return Boolean(d.getElementById('jRamp').compareDocumentPosition(editor)&w.Node.DOCUMENT_POSITION_FOLLOWING) &&
-      [...editor.querySelectorAll('legend')].map(el=>el.textContent).join('|')==='Body background|Header background|Main background|Footer background' &&
-      d.getElementById('palette-stage-backgrounds').contains(editor) && !pane.contains(editor) && d.querySelector('#palette-workspace #webpage-background-lesson');
-  });
-  test('Body is a visible first-class control and contains the centre page regions',()=>d.getElementById('body-background-controls').closest('[data-palette-stage]').dataset.paletteStage==='backgrounds' && d.getElementById('page-background-colour').getBoundingClientRect().height>=44 && ['header','main','footer'].every(region=>d.getElementById('body-background-value').closest('section').querySelector('.background-contained-regions').contains(d.getElementById(region+'-background-value'))));
-  test('Every background selector offers the complete Brand Palette in its saved order',()=>regions.concat('page').every(region=>{
-    const values=[...d.getElementById(region+'-background-brand').children].filter(el=>el.tagName==='OPTION').slice(1);
-    return values.length===evaluate('state.brandPalette.length') && values.every((option,i)=>option.value===evaluate('state.brandPalette')[i].hex && option.textContent.includes(evaluate('state.brandPalette')[i].name));
-  }));
-  const regionColours={light:['#004780','#5FC5BF','#F37327'],dark:['#EF426F','#495965','#57B7E7']};
-  const bodyColours={light:'#00BADC',dark:'#2B71B9'};
-  for (const theme of ['light','dark']) {
-    input('jTheme',theme);await wait();
-    input('page-background-brand',bodyColours[theme],'change');await wait();
-    test(theme+' Body brand choice updates the existing background role and centre model',()=>evaluate('palette().roles.background')===bodyColours[theme] && d.getElementById('body-background-value').textContent==='--background: '+bodyColours[theme]+';' && d.getElementById('body-background-contrast').textContent.includes('Text '));
-    for (const [index,region] of regions.entries()) {
-      input(region+'-background-brand',regionColours[theme][index],'change');await wait();
-      test(theme+' '+region+' background selects a brand value independently',()=>evaluate('palette().roles')[region+'-background']===regionColours[theme][index] && d.getElementById(region+'-background-hex').value===regionColours[theme][index] && d.getElementById(region+'-background-value').textContent.includes(regionColours[theme][index]));
-    }
-    for (const mode of ['basic','advanced']) {
-      d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
-      const checkRegions=(pd,pw)=>pw.getComputedStyle(pd.body).backgroundColor==='rgb('+evaluate('hexRgb('+JSON.stringify(bodyColours[theme])+')').join(', ')+')' && regions.every((region,i)=>{
-        const rgb=evaluate('hexRgb('+JSON.stringify(regionColours[theme][i])+')');
-        return pw.getComputedStyle(pd.querySelector('body > '+region)).backgroundColor==='rgb('+rgb.join(', ')+')';
-      });
-      test(theme+' '+mode+' preview paints Body and all three regions and preserves card surfaces',()=>checkRegions(previewDoc(),previewWindow()) && previewWindow().getComputedStyle(previewDoc().querySelector('.card')).backgroundColor!==previewWindow().getComputedStyle(previewDoc().querySelector('main')).backgroundColor);
-      const exportPage=d.createElement('iframe');exportPage.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(exportPage);await wait();
-      test(theme+' '+mode+' standalone HTML and CSS paint the same backgrounds',()=>checkRegions(exportPage.contentDocument,exportPage.contentWindow));exportPage.remove();
-      for (const region of ['body',...regions]) for (const language of ['css','html']) {
-        const row=d.getElementById(region+'-background-value').closest('section');row.querySelector('[data-background-inspect="'+language+'"]').click();await wait();
-        test(theme+' '+mode+' '+region+' Inspect '+language+' shows the complete current output',()=>d.getElementById('studioInspector').open && d.getElementById('dockCss').textContent===evaluate(language==='css'?'cssExport()':'htmlExport()') && d.getElementById(language==='css'?'dockTabCss':'dockTabHtml').getAttribute('aria-selected')==='true');
-      }
-    }
-  }
-  const regionProject=JSON.parse(evaluate('projectJson()'));input('jProject','Region background test');d.getElementById('jSaveLocal').click();await wait();
-  input('header-background-colour','#123456');await wait();
-  test('A custom region picker updates the current inspector output',()=>evaluate("palette().roles['header-background']")==='#123456' && d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
-  d.getElementById('jLoadLocal').click();await wait();
-  test('Saved projects restore autosaved per-theme region and Body backgrounds',()=>evaluate('state.semanticOverrides.dark["header-background"]')==='#123456' && evaluate('state.semanticOverrides.light["header-background"]')===regionColours.light[0] && evaluate('state.semanticOverrides.dark.background')===bodyColours.dark && evaluate('state.semanticOverrides.light.background')===bodyColours.light);
-  reset();evaluate('importConfig('+JSON.stringify(regionProject)+')');await wait();
-  test('Region and Body backgrounds survive project JSON round trip',()=>regions.every((region,i)=>evaluate('state.semanticOverrides.dark')[region+'-background']===regionColours.dark[i] && evaluate('state.semanticOverrides.light')[region+'-background']===regionColours.light[i]) && evaluate('state.semanticOverrides.dark.background')===bodyColours.dark && evaluate('state.semanticOverrides.light.background')===bodyColours.light);
-  w.dssConfigureToken({name:'--background',scope:'Light'});await wait();
-  test('Body token source routes to the correct theme and visible Body control',()=>evaluate('state.theme')==='light' && w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('page-background-colour'));
-  input('jTheme','dark');await wait();
-  input('main-background-hex','#123ABC');await wait();
-  input('main-background-hex','red;/*');await wait();
-  test('Invalid region hex cannot change state or generated output',()=>evaluate('state.semanticOverrides.dark["main-background"]')==='#123ABC' && !evaluate('cssExport()').includes('red;/*') && d.getElementById('main-background-hex').getAttribute('aria-invalid')==='true');
-  for (const region of regions) {d.getElementById(region+'-background-reset').click();await wait();}
-  test('Region reset restores current-theme defaults and retains other-theme choices',()=>regions.every((region,i)=>!evaluate('state.semanticOverrides.dark')[region+'-background'] && evaluate('state.semanticOverrides.light')[region+'-background']===regionColours.light[i]) && evaluate("palette().roles['main-background']===palette().roles.background && palette().roles['header-background']===palette().roles.surface && palette().roles['footer-background']===palette().roles.surface"));
-  input('page-background-hex','#234567');await wait();
-  test('Default Main background follows subsequent canvas changes',()=>evaluate("palette().roles['main-background']==='#234567'"));
-  d.getElementById('page-background-reset').click();await wait();
-  test('Body reset restores only its theme and updates default Main',()=>!evaluate('state.semanticOverrides.dark.background') && evaluate('state.semanticOverrides.light.background')===bodyColours.light && evaluate('palette().roles.background===palette().roles["main-background"]'));
-  input('header-background-brand','#FFFFFF','change');await wait();
-  evaluate("state.brandPalette=state.brandPalette.map(item=>item.hex==='#FFFFFF'?{...item,name:'<img onerror=alert(1)>',hex:'#EEEEEE'}:item);apply()");await wait();
-  test('Brand edits refresh all choices safely while existing assignments retain copied hex',()=>evaluate("palette().roles['header-background']")==='#FFFFFF' && regions.every(region=>[...d.getElementById(region+'-background-brand').options].some(option=>option.value==='#EEEEEE'&&option.textContent.includes('<img onerror=alert(1)>'))) && !d.querySelector('#webpage-region-controls img'));
-  evaluate('importConfig({semanticOverrides:{light:{"header-background":"url(javascript:alert(1))","main-background":{},"footer-background":"#abc"},dark:{"header-background":"#abcdef"}}})');await wait();
-  test('Imported region overrides validate hex types and lengths',()=>evaluate("!state.semanticOverrides.light['header-background'] && !state.semanticOverrides.light['main-background'] && !state.semanticOverrides.light['footer-background'] && state.semanticOverrides.dark['header-background']==='#ABCDEF'"));
-  for (const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    test('Background controls and centre lesson fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['body-background-controls','webpage-region-controls','webpage-background-lesson'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}) && ['page',...regions].every(region=>['brand','colour','hex'].every(kind=>{const el=d.getElementById(region+'-background-'+kind);w.DSStudio.paletteWorkspace.revealControl(el);el.focus();return d.activeElement===el && el.getBoundingClientRect().height>=44;})));
-  }
+  test('Planning journey survives Basic and Advanced switching with the correct sample boundary',()=>planningJourneyBasic && evaluate('JSON.stringify(state.designProcess)')===planningJourneyData && evaluate('htmlExport()')===planningJourneyHtml && previewDoc().querySelector('#brief-lab [data-brief-field="audience"] dd').textContent==='Learners reviewing the field guide.');
   app.style.width='1440px';reset();await wait();
-  test('Reset clears all region overrides and restores selectors',()=>!evaluate('state.semanticOverrides') && regions.every(region=>d.getElementById(region+'-background-reset').disabled));
-  reset(); await wait();
+  // One custom-sitemap journey stays in integration; sitemap_review.py owns
+  // CRUD, inclusion/source/compatibility and responsive editor matrices.
+  {
+    app.style.width='1440px';reset();w.importConfig({sampleMode:'basic',designProcess:{pages:w.DSStudio.process.samplePages('basic'),sitemapSource:{basic:'custom',advanced:'sections'}}});w.dssShowWizardStep(1,false);revealDestinationPlan();w.DSStudio.inspector.show({language:'html',section:'all'});await wait();
+    const entry=w.DSStudio.process.entries().find(node=>node.label==='Content card');
+    const choose=()=>{const button=[...d.querySelectorAll('#sitemap-choices button')].find(el=>el.dataset.sitemapNodeId===entry.id);for(let parent=button.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;button.click();};
+    choose();d.getElementById('jSaveLocal').click();const id=d.getElementById('jProjects').value;
+    const before=evaluate('projectJson()'),library=w.localStorage.getItem('dss-v27-projects'),body=previewDoc().querySelector('main').innerHTML,css=evaluate('cssExport()');
+    input('sitemap-label','Integration lesson link');input('sitemap-target','basic-structure','change');
+    test('Sitemap journey keeps unsaved destination edits outside the model and local save',()=>evaluate('projectJson()')===before && w.localStorage.getItem('dss-v27-projects')===library && !d.getElementById('sitemap-discard').disabled);
+    d.getElementById('sitemap-save').click();await wait();const saved=evaluate('projectJson()');
+    test('Sitemap journey saves a stable destination in storage, preview, inspector and exported HTML',()=>{
+      const node=w.DSStudio.process.entries().find(row=>row.id===entry.id),exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+      return node.label==='Integration lesson link' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[id].data.designProcess.pageLinks.basic[node.label]==='basic-structure' && previewDoc().querySelector('#sitemap a[href="#basic-structure"]').textContent===node.label && exported.querySelector('#sitemap a[href="#basic-structure"]').textContent===node.label && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && previewDoc().querySelector('main').innerHTML===body && evaluate('cssExport()')===css;
+    });
+    const files=[],oldDownload=w.download;
+    try{w.download=(name,content,type)=>files.push({name,content,type});d.getElementById('jExportJson').click();}
+    finally{w.download=oldDownload;}
+    input('sitemap-label','Discard this label');d.getElementById('sitemap-discard').click();
+    const discarded=evaluate('projectJson()')===saved && d.getElementById('sitemap-label').value==='Integration lesson link';
+    d.getElementById('sitemap-undo').click();await wait();
+    test('Sitemap journey Discard and Undo restore the prior destination without changing website content',()=>discarded && evaluate('projectJson()')===before && w.DSStudio.process.entries().find(row=>row.id===entry.id).label==='Content card' && previewDoc().querySelector('main').innerHTML===body);
+    const libraryBeforeFile=w.localStorage.getItem('dss-v27-projects');await importFile(files[0].content);await wait();choose();
+    test('Sitemap journey downloaded JSON restores the edited destination without overwriting the local library',()=>files[0].name==='design-system-studio.json' && files[0].type==='application/json' && files[0].content===saved && evaluate('projectJson()')===saved && d.getElementById('sitemap-label').value==='Integration lesson link' && previewDoc().querySelector('#sitemap a[href="#basic-structure"]').textContent==='Integration lesson link' && w.localStorage.getItem('dss-v27-projects')===libraryBeforeFile && previewDoc().querySelector('main').innerHTML===body);
+  }
   input('jProject','My learning project'); input('jBase',18);
   const beforeLearning=JSON.parse(evaluate('projectJson()'));
   const settleLearningColours=()=>{const style=previewDoc().createElement('style');style.textContent='.ds-button { transition: none !important; }';previewDoc().head.append(style);};
@@ -2754,7 +455,8 @@ app.onload = async () => {
   input('bdDefaultBg','#602d54'); await wait(); settleLearningColours();
   test('A beginner colour change updates the example, connected token and inspector together',()=>previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(96, 45, 84)' && d.getElementById('studyTokens').textContent.toLowerCase().includes('#602d54') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
   d.querySelector('[data-journey-step="8"]').click();
-  test('Spacing exercise opens the existing source control',()=>!d.querySelector('[data-journey-pane="8"]').hidden && !d.querySelector('[data-journey-pane="8"]').hidden);
+  await wait();
+  test('Spacing exercise opens the existing source control',()=>{const control=d.getElementById('jSpacing'),box=control.getBoundingClientRect();return !d.querySelector('[data-journey-pane="8"]').hidden && box.width>0 && box.height>0 && !control.disabled;});
   const beforeLearningPadding=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('#lists')).paddingTop);
   input('jSpacing',6); await wait();
   test('Spacing connection shows derived values from the current generator',()=>d.getElementById('studyTokens').textContent.includes('--space-unit: 6px') && d.getElementById('studyTokens').textContent.includes('--space-8: calc(var(--space-unit) * 8)') && Math.abs(parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('#lists')).paddingTop)-beforeLearningPadding*1.5)<.1 && d.getElementById('studyRule').textContent.includes('var(--space-8)') && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
@@ -2805,43 +507,23 @@ app.onload = async () => {
     test('Workspace shortcuts and focused code remain usable at '+width+'px',()=>d.documentElement.scrollWidth<=width+1 && [...d.querySelectorAll('.step-output button')].filter(button=>button.getBoundingClientRect().width>0).every(button=>button.getBoundingClientRect().height>=44) && d.activeElement===d.getElementById('dockCss') && d.getElementById('dockCss').getBoundingClientRect().bottom>0 && d.getElementById('dockCss').getBoundingClientRect().top<app.contentWindow.innerHeight);
   }
   app.style.width='1440px';d.querySelector('button[data-width="fluid"]').click();d.getElementById('exampleConnections').open=false;reset();await wait();
-  // Regression coverage for the shared journey and confirmed action/scope defects.
+  // One learner journey remains here; navigation_review.py owns the route,
+  // breakpoint, disclosure, focus and fragment-reload matrices.
   app.style.width='1440px';reset();await wait();
-  const wizardProject=evaluate('projectJson()');
-  const wizardPreviewDocument=previewDoc();
-  for (const stage of w.DSStudio.stages) {
-    d.querySelector(`[data-journey-step="${stage.index}"]`).click();
-    test('Shared stage '+stage.id+' selects one lesson, controls and focused heading',()=>{
-      const active=d.getElementById(stage.lesson);
-      return !d.querySelector(`[data-journey-pane="${stage.index}"]`).hidden && !active.hidden && active.open && d.querySelector('#main > :first-child').id==='studio-section-4' && d.activeElement===active.querySelector(':scope > summary h2') && [...d.querySelectorAll('#main > .studio-section')].filter(section=>section.open).length===(d.getElementById('studio-section-4').open?2:1) && evaluate('projectJson()')===wizardProject;
-    });
-    if(stage.index<4) {
-      d.querySelector('#'+stage.lesson+' [data-inspect="json"]').click();
-      test(stage.id+' inspects actual planning data in the single inspector',()=>d.getElementById('dockTabJson').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('projectJson()'));
-    } else {
-      d.querySelector('#'+stage.lesson+' [data-inspect="css"]').click();
-      test(stage.id+' inspects complete CSS and a real declaration',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && (!stage.find || evaluate('cssExport()').includes(stage.find)));
-    }
-  }
-  await wait();
-  test('Stage navigation preserves the live preview browsing context',()=>previewDoc()===wizardPreviewDocument && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
-  d.getElementById('jBack').click();
-  test('Previous changes lesson and controls together',()=>evaluate('DSStudio.activeStage')===10 && !d.getElementById('studio-section-5').hidden);
-  d.getElementById('jNext').click();
-  test('Next changes lesson and controls together',()=>evaluate('DSStudio.activeStage')===11 && !d.getElementById('studio-section-6').hidden);
-  for (const width of [320,390,1440]) {
-    app.style.width=width+'px';await wait();
-    d.querySelector('[data-journey-step="7"]').click();
-    const controls=d.querySelector('[data-journey-pane="7"]');
-    test('Actual controls join the lesson on narrow screens at '+width+'px',()=>width<=900?controls.closest('.studio-section')?.id==='buttonDesignLab' && controls.previousElementSibling.classList.contains('studio-lesson'):controls.closest('.studio-journey')!==null);
-    const row=w.dssReadTokens().find(token=>token.name==='--space-unit');
-    w.dssConfigureToken(row);
-    test('Token source route selects its lesson and exact control at '+width+'px',()=>evaluate('DSStudio.activeStage')===8 && !d.getElementById('studio-section-3').hidden && d.activeElement===d.getElementById('jSpacing'));
-  }
-  app.style.width='1440px';await wait();
-  w.dssRevealSection('studio-section-8',false);
-  d.querySelector('#studio-section-8 > .panel > button').click();
-  test('Reference return restores the current step without changing settings',()=>!d.getElementById('studio-section-8').open && !d.getElementById('studio-section-3').hidden && evaluate('projectJson()')===wizardProject);
+  const journeyPreview=previewDoc();
+  d.querySelector('[data-journey-step="0"]').click();input('plan-goal','Choose a lesson and practise.');
+  test('Learner journey starts with Brief controls and the matching lesson',()=>w.DSStudio.activeStage===0 && d.getElementById('process-brief').open && d.getElementById('plan-goal').value==='Choose a lesson and practise.');
+  d.querySelector('[data-journey-step="5"]').click();input('jBase',18);d.getElementById('jBase').focus();await wait();
+  test('Learner journey connects Typography editing to the current preview and CSS',()=>w.DSStudio.activeStage===5 && d.getElementById('studio-section-2').open && d.activeElement===d.getElementById('jBase') && previewDoc()===journeyPreview && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('--font-size-base: 18px;'));
+  d.querySelector('[data-journey-step="11"]').click();
+  d.querySelector('#studio-section-6 [data-inspect="css"]').click();await wait();
+  test('Learner journey reaches Deliver and inspects the edited CSS',()=>w.DSStudio.activeStage===11 && d.getElementById('studio-section-6').open && d.getElementById('studioInspector').open && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && evaluate('state.designProcess.goal')==='Choose a lesson and practise.');
+  const journeyFiles=[],oldJourneyDownload=w.download;
+  try{w.download=(name,content,type)=>journeyFiles.push({name,content,type});d.querySelectorAll('[data-website-download]').forEach(button=>button.click());}
+  finally{w.download=oldJourneyDownload;}
+  test('Learner journey hands over the current website without replacing the preview document',()=>journeyFiles.some(file=>file.name==='index.html' && file.content===evaluate('htmlExport()')) && journeyFiles.some(file=>file.name==='tokens.css' && file.content===evaluate('cssExport()')) && previewDoc()===journeyPreview);
+  // The following readiness fixtures explicitly start from their Spacing stage.
+  reset();w.dssShowWizardStep(8,false);await wait();
   const reviewBox=d.querySelector('.readiness-item');
   const acknowledge=()=>{reviewBox.checked=true;reviewBox.dispatchEvent(new w.Event('change',{bubbles:true}));};
   acknowledge();input('jSpacing',5);
@@ -2850,12 +532,6 @@ app.onload = async () => {
   test('Reset clears readiness even if the same values are restored',()=>!reviewBox.checked);
   acknowledge();evaluate('importConfig(JSON.parse(projectJson()))');d.dispatchEvent(new w.Event('dss:imported'));
   test('Loading a project clears readiness acknowledgements',()=>!reviewBox.checked);
-  evaluate("state.designProcess.pageLinks.advanced={'Advanced custom':'about'};state.designProcess.pageLinks.basic={'Basic custom':'features'};apply()");
-  d.getElementById('dockModeBasic').click();d.getElementById('plan-use-sample').click();
-  test('Restoring Basic sitemap preserves Advanced link mappings',()=>evaluate("state.designProcess.pageLinks.advanced['Advanced custom']") ==='about' && evaluate('Object.keys(state.designProcess.pageLinks.basic).length')===0);
-  evaluate("state.designProcess.pageLinks.basic={'Basic custom':'features'};apply()");
-  d.getElementById('dockModeAdvanced').click();d.getElementById('plan-use-sample').click();
-  test('Restoring Advanced sitemap preserves Basic link mappings',()=>evaluate("state.designProcess.pageLinks.basic['Basic custom']") ==='features' && evaluate('Object.keys(state.designProcess.pageLinks.advanced).length')===0);
   const beforeClampClipboard=w.navigator.clipboard;
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.reject(new Error('Clipboard denied'))}});
   d.getElementById('clampCopy').click();await wait();
@@ -2866,174 +542,6 @@ app.onload = async () => {
   d.getElementById('saveBtn').click();d.getElementById('jExportJson').click();
   test('Project JSON entry points export identical filenames and data',()=>unifiedDownloads.length===2 && unifiedDownloads[0].name===unifiedDownloads[1].name && unifiedDownloads[0].content===unifiedDownloads[1].content);
   w.download=beforeUnifiedDownload;
-  // Sitemap disclosure retains its existing grid/navigation and browsing state.
-  for (const mode of ['basic','advanced']) {
-    app.style.width='1440px';reset();await wait();
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
-    const footerDocument=previewDoc();
-    test(mode+' live sitemap starts collapsed without changing its saved plan',()=>!previewDoc().getElementById('footer-sitemap').open && previewDoc().getElementById('sitemap').tagName==='NAV' && previewDoc().getElementById('sitemap').getAttribute('aria-labelledby')==='sitemap-title');
-    previewDoc().getElementById('sitemap-toggle').click();previewDoc().getElementById('sitemap-toggle').focus();
-    input('jAccent','#246a68');await wait();
-    test(mode+' open sitemap and summary focus survive live palette rendering',()=>previewDoc()===footerDocument && previewDoc().getElementById('footer-sitemap').open && previewDoc().activeElement.id==='sitemap-toggle');
-    input('jTheme','dark');await wait();
-    test(mode+' sitemap stays open across theme updates',()=>previewDoc().getElementById('footer-sitemap').open);
-    previewDoc().getElementById('sitemap-toggle').click();input('jRadius',18);await wait();
-    test(mode+' collapsed sitemap stays collapsed after CSS edits',()=>!previewDoc().getElementById('footer-sitemap').open && !evaluate('projectJson()').includes('footer-sitemap'));
-    const footerFragment=previewDoc().createElement('a');footerFragment.href='#sitemap';footerFragment.textContent='Review sitemap';previewDoc().body.append(footerFragment);footerFragment.click();await wait();
-    test(mode+' preview fragment navigation reveals the collapsed sitemap destination',()=>previewDoc().getElementById('footer-sitemap').open && previewDoc().activeElement===previewDoc().getElementById('sitemap'));
-    footerFragment.remove();
-    const accordionPage=d.createElement('iframe'),accordionUrl=w.URL.createObjectURL(new w.Blob([evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>')],{type:'text/html'}));
-    accordionPage.src=accordionUrl;await new Promise(resolve=>{accordionPage.onload=resolve;d.body.append(accordionPage);});
-    const fd=accordionPage.contentDocument,fw=accordionPage.contentWindow,disclosure=fd.getElementById('footer-sitemap');
-    fw.location.hash='sitemap';await wait();
-    test(mode+' standalone native fragment reveals the map without a script',()=>disclosure.open && !fd.querySelector('script') && fw.location.hash==='#sitemap');
-    fd.getElementById('sitemap-toggle').click();
-    test(mode+' standalone summary can collapse the fragment-revealed map',()=>!disclosure.open && fd.getElementById('sitemap').getBoundingClientRect().height===0);
-    accordionPage.remove();w.URL.revokeObjectURL(accordionUrl);
-  }
-  reset();await wait();
-  // A lesson uses the learner's own settings, real output and session comparison.
-  for (const mode of ['basic','advanced']) for (const theme of ['light','dark']) {
-    app.style.width='1440px';reset();await wait();
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
-    const beforeSpacingLesson=evaluate('projectJson()');
-    d.querySelector('[data-journey-step="8"]').click();await wait();
-    const spacingNode=d.querySelector('#studio-section-3 > .panel > .spacing-lesson');
-    const exampleId=mode==='basic'?'lists':'services',exampleSelector=mode==='basic'?'.section':'.sample-section';
-    test(mode+' '+theme+' spacing lesson connects five teaching parts without replacing the design',()=>spacingNode && [...spacingNode.querySelectorAll(':scope > section:not(#utilityLesson) > h4')].map(heading=>heading.textContent).join('|')==='Understand|Try|Observe|Inspect|Reflect' && evaluate('projectJson()')===beforeSpacingLesson && d.getElementById('spacingPrompt').textContent.includes('4 px to 6 px'));
-    test(mode+' '+theme+' lesson starts its comparison from current exported spacing',()=>d.getElementById('spacingBeforeUnit').textContent==='4 px' && d.getElementById('spacingBefore4').textContent==='16 px' && d.getElementById('spacingBefore8').textContent==='32 px' && d.getElementById('spacingCss').textContent.includes('--space-4: calc(var(--space-unit) * 4);'));
-    d.getElementById('spacingEdit').click();
-    test(mode+' '+theme+' lesson routes to the actual spacing control',()=>d.activeElement===d.getElementById('jSpacing') && evaluate('DSStudio.activeStage')===8);
-    const spacingDocument=previewDoc();
-    const beforeLessonPadding=parseFloat(previewWindow().getComputedStyle(previewDoc().getElementById(exampleId)).paddingBlockStart);
-    input('jSpacing',6);await wait();
-    test(mode+' '+theme+' spacing edit updates explanation, tokens and page without stealing control focus',()=>d.activeElement===d.getElementById('jSpacing') && previewDoc()===spacingDocument && d.getElementById('spacingNowUnit').textContent==='6 px' && d.getElementById('spacingNow4').textContent==='24 px' && d.getElementById('spacingNow8').textContent==='48 px' && d.getElementById('spacingBeforeUnit').textContent==='4 px' && d.getElementById('spacingObservation').textContent.includes('4 px to 6 px') && parseFloat(previewWindow().getComputedStyle(previewDoc().getElementById(exampleId)).paddingBlockStart)===beforeLessonPadding*1.5);
-    test(mode+' '+theme+' lesson shows the current sample HTML and consuming CSS rule',()=>evaluate('htmlExport()').includes(d.getElementById('spacingHtml').textContent) && d.getElementById('spacingHtml').textContent.includes('id="'+exampleId+'"') && d.getElementById('spacingHtml').children.length===0 && d.getElementById('spacingCss').textContent.includes(exampleSelector+' {') && d.getElementById('spacingConnection').textContent.includes('page currently measures '+parseFloat(previewWindow().getComputedStyle(previewDoc().getElementById(exampleId)).paddingBlockStart)+' px'));
-    input('spacingReflection','My explanation <scr'+'ipt>window.lessonInjected=true</scr'+'ipt>');input('jAccent','#246a68');await wait();
-    test(mode+' '+theme+' unrelated colour edits retain comparison, reflection and lesson nodes',()=>d.querySelector('.spacing-lesson')===spacingNode && d.getElementById('spacingBeforeUnit').textContent==='4 px' && d.getElementById('spacingReflection').value.includes('My explanation') && !w.lessonInjected);
-    input('advGap',32);await wait();
-    test(mode+' '+theme+' grid gap is explained as a separate live decision',()=>d.getElementById('spacingGapNote').textContent.includes('32px') && d.getElementById('spacingGapNote').textContent.includes('comparison: 24px') && d.getElementById('spacingNow8').textContent==='48 px');
-    const beforeCompare=evaluate('projectJson()');d.getElementById('spacingCompare').click();
-    test(mode+' '+theme+' new comparison changes only session teaching state',()=>d.getElementById('spacingBeforeUnit').textContent==='6 px' && d.getElementById('spacingBefore8').textContent==='48 px' && evaluate('projectJson()')===beforeCompare);
-    d.getElementById('spacingInspectTokens').click();
-    test(mode+' '+theme+' Inspect spacing tokens opens complete current CSS',()=>d.getElementById('studioInspector').open && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockSection').value==='all' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').scrollTop>0);
-    d.getElementById('spacingInspectRule').click();
-    test(mode+' '+theme+' Inspect section CSS finds a real generated rule',()=>d.getElementById('dockCss').textContent.includes(exampleSelector+' {') && d.getElementById('dockCss').scrollTop>0);
-    d.getElementById('spacingInspectHtml').click();
-    test(mode+' '+theme+' Inspect section HTML selects complete HTML',()=>d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('dockCss').scrollTop>0);
-    d.getElementById('spacingExample').click();await wait();
-    test(mode+' '+theme+' preview observation opens the real section without changing project values',()=>previewDoc().activeElement===previewDoc().getElementById(exampleId) && d.getElementById('studio-section-4').open && evaluate('projectJson()')===beforeCompare);
-    d.getElementById('spacingExample').click();d.getElementById('spacingInspectTokens').click();await wait();
-    test(mode+' '+theme+' queued example focus cannot steal a subsequent code selection',()=>d.activeElement===d.getElementById('dockCss'));
-    test(mode+' '+theme+' comparison, reflection and tutorial controls stay out of saved/exported data',()=>!evaluate('projectJson()+htmlExport()+cssExport()').includes('My explanation') && !evaluate('projectJson()+htmlExport()+cssExport()').includes('spacingReflection'));
-    d.querySelector('[data-journey-step="9"]').click();d.querySelector('[data-journey-step="8"]').click();
-    test(mode+' '+theme+' revisiting the lesson retains the session comparison',()=>d.getElementById('spacingBeforeUnit').textContent==='6 px' && d.getElementById('spacingReflection').value.includes('My explanation'));
-  }
-  d.getElementById('dockModeBasic').click();await wait();
-  for (const [preset,token,multiplier] of [['mobile','--space-8',8],['tablet','--space-12',12],['desktop','--space-16',16]]) {
-    d.querySelector('button[data-width="'+preset+'"]').click();d.getElementById('previewPage').getBoundingClientRect();await wait();
-    test('Basic lesson follows actual responsive section padding at '+preset+' width',()=>{
-      const connection=d.getElementById('spacingConnection').textContent,padding=parseFloat(previewWindow().getComputedStyle(previewDoc().getElementById('lists')).paddingBlockStart);
-      if(connection.includes('padding-block uses '+token) && connection.includes((6*multiplier)+' px') && padding===6*multiplier && d.getElementById('spacingCss').textContent.includes('var('+token+')')) return true;
-      throw Error(JSON.stringify({preset,width:previewWindow().innerWidth,padding,connection,css:d.getElementById('spacingCss').textContent}));
-    });
-  }
-  d.querySelector('button[data-width="fluid"]').click();await wait();
-  const beforeLessonResize=evaluate('projectJson()');
-  d.getElementById('dockToggle').click();await wait();
-  test('Fluid lesson reacts to released inspector width without changing the comparison',()=>{
-    const connection=d.getElementById('spacingConnection').textContent;
-    if(connection.includes('padding-block uses --space-12') && d.getElementById('spacingBeforeUnit').textContent==='6 px' && evaluate('projectJson()')===beforeLessonResize) return true;
-    throw Error(JSON.stringify({width:previewWindow().innerWidth,connection,before:d.getElementById('spacingBeforeUnit').textContent,inspector:d.getElementById('studioInspector').open}));
-  });
-  d.getElementById('inspectorToggle').click();await wait();
-  test('Fluid lesson follows the narrower rule when inspector opens again',()=>d.getElementById('spacingConnection').textContent.includes('padding-block uses --space-8') && evaluate('projectJson()')===beforeLessonResize);
-  evaluate('importConfig({spacing:7.25})');await wait();
-  test('Imported spacing drives lesson arithmetic from settled generated declarations',()=>d.getElementById('spacingNowUnit').textContent==='7.25 px' && d.getElementById('spacingNow4').textContent==='29 px' && d.getElementById('spacingNow8').textContent==='58 px' && d.getElementById('spacingBeforeUnit').textContent==='7.25 px' && !d.getElementById('spacingReflection').value && d.getElementById('spacingGapNote').textContent.startsWith('Grid gap is 24px.'));
-  input('jSpacing',8);d.getElementById('spacingCompare').click();
-  test('Spacing experiment stays within the real control limits at the upper bound',()=>d.getElementById('spacingPrompt').textContent.includes('8 px to 6 px'));
-  input('spacingReflection','Clear after project reset');reset();await wait();
-  test('Reset starts a fresh comparison and clears optional reflection',()=>d.getElementById('spacingBeforeUnit').textContent==='4 px' && !d.getElementById('spacingReflection').value);
-  input('jProject','Spacing lesson test');d.getElementById('jSaveLocal').click();input('spacingReflection','Clear after local load');d.getElementById('jLoadLocal').click();await wait();
-  test('Loading even identical saved project values starts a fresh tutorial session comparison',()=>!d.getElementById('spacingReflection').value && d.getElementById('spacingBeforeUnit').textContent==='4 px');
-  const spacingPracticeWasOpen=d.getElementById('utilityPractice').open;
-  for (const theme of ['light','dark']) for (const width of [320,901,1440]) {
-    app.style.width=width+'px';input('jTheme',theme);await wait();d.querySelector('[data-journey-step="8"]').click();
-    // Measure displayed controls, not cached geometry inside a closed disclosure.
-    d.getElementById('utilityPractice').open=true;await wait();
-    test(theme+' spacing tutorial stays within its lesson at '+width+'px',()=>{
-      const lesson=d.querySelector('.spacing-lesson'),box=lesson.getBoundingClientRect();
-      const source=d.getElementById('jSpacing'),inline=source.closest('.spacing-lesson > section');
-      const buttons=[...lesson.querySelectorAll('.button-row > button')].map(button=>{const b=button.getBoundingClientRect();return {id:button.id,height:b.height,left:b.left,right:b.right,closedPractice:button.closest('#utilityPractice')?.open===false};});
-      const fits=d.documentElement.scrollWidth<=w.innerWidth+1 && lesson.scrollWidth<=lesson.clientWidth+1 && (width>900?source.closest('.studio-journey')!==null:inline?.querySelector('h4').textContent==='Try') && buttons.every(b=>b.height>=44 && b.left>=box.left-1 && b.right<=box.right+1);
-      if(!fits)throw Error(JSON.stringify({documentWidth:d.documentElement.scrollWidth,viewport:w.innerWidth,lessonWidth:lesson.clientWidth,lessonScroll:lesson.scrollWidth,left:box.left,right:box.right,inline:inline?.querySelector('h4').textContent,desktop:!!source.closest('.studio-journey'),buttons}));
-      return true;
-    });
-  }
-  d.getElementById('utilityPractice').open=spacingPracticeWasOpen;
-  app.style.width='1440px';reset();await wait();
-  // Collapsing code releases the complete column and safely restores focus.
-  d.getElementById('dockModeBasic').click();input('dockSection','footer','change');
-  d.querySelector('button[data-width="fluid"]').click();
-  w.DSStudio.inspector.show({language:'html',section:'footer'});await wait();
-  const collapseProject=evaluate('projectJson()'),collapseDocument=previewDoc();
-  for (const width of [320,901,1280,1440,2560]) {
-    app.style.width=width+'px';await wait();
-    const expandedWidth=d.getElementById('previewFrame').getBoundingClientRect().width;
-    d.getElementById('dockCss').focus();d.getElementById('dockToggle').click();await wait();
-    test('Collapse releases inspector space and restores opener focus at '+width+'px',()=>{
-      const layout=d.querySelector('.layout'),left=d.querySelector('.sidebar').getBoundingClientRect().width;
-      const openerBounds=d.getElementById('inspectorToggle').getBoundingClientRect();
-      if(openerBounds.top<d.querySelector('.topbar').getBoundingClientRect().bottom || openerBounds.bottom>w.innerHeight) throw Error(JSON.stringify({width,top:openerBounds.top,bottom:openerBounds.bottom,header:d.querySelector('.topbar').getBoundingClientRect().bottom,scroll:w.scrollY,active:d.activeElement.id}));
-      return !d.getElementById('studioInspector').open && d.getElementById('inspectorToggle').getBoundingClientRect().width>0 && d.getElementById('dockCss').getBoundingClientRect().height===0 && d.activeElement===d.getElementById('inspectorToggle') && (width<=900 || Math.abs(left-(layout.clientWidth-16)/4)<1) && (width<=1280 || d.getElementById('previewFrame').getBoundingClientRect().width>expandedWidth) && d.documentElement.scrollWidth<=w.innerWidth+1;
-    });
-    d.getElementById('inspectorToggle').click();await wait();
-    test('Native disclosure restores language, excerpt and live document at '+width+'px',()=>d.getElementById('studioInspector').open && d.getElementById('studioInspector').open && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockSection').value==='footer' && d.activeElement===d.getElementById('inspectorToggle') && previewDoc()===collapseDocument && evaluate('projectJson()')===collapseProject && d.documentElement.scrollWidth<=w.innerWidth+1);
-  }
-  d.getElementById('dockToggle').click();
-  test('Pane Collapse returns to its compact bar and releases the inspector column',()=>!d.getElementById('studioInspector').open && d.querySelector('.layout').classList.contains('is-inspector-collapsed'));
-  d.querySelector('[data-journey-step="7"]').click();d.querySelector('#buttonDesignLab [data-inspect="css"]').click();
-  test('Contextual Inspect CSS reopens the hidden column and selects its promised output',()=>d.getElementById('studioInspector').open && !d.querySelector('.layout').classList.contains('is-inspector-collapsed') && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && previewDoc()===collapseDocument);
-  test('Inspector visibility is absent from project JSON',()=>!Object.keys(JSON.parse(evaluate('projectJson()'))).some(key=>/inspector|collapsed/i.test(key)));
-  // Studio section returns never navigate or regenerate the sample website.
-  reset();app.style.width='1440px';await wait();
-  test('Every studio panel, wizard pane and inspector ends with one native return link',()=>[...d.querySelectorAll('.studio-section > .panel, [data-journey-pane], #studioInspector')].every(container=>{
-    const rows=container.querySelectorAll(':scope > .studio-home-return'),link=rows[0]?.querySelector('a');
-    return rows.length===1 && container.lastElementChild===rows[0] && link?.getAttribute('href')==='#studio-home' && link.tabIndex===0 && link.textContent.startsWith('Back to top') && link.querySelector('span').getAttribute('aria-hidden')==='true';
-  }));
-  for(const theme of ['light','dark']) for(const width of [320,901,1440]) {
-    input('jTheme',theme);app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    const controls=d.querySelector('[data-journey-pane="4"]'),panel=d.querySelector('#brandPalette > .panel');
-    test(theme+' section return links align right and fit '+width+'px',()=>[controls,panel].every(container=>{
-      const row=container.querySelector(':scope > .studio-home-return'),link=row.querySelector('a'),box=link.getBoundingClientRect(),rowBox=row.getBoundingClientRect();
-      return box.width>=44 && box.height>=44 && box.width<=container.clientWidth+1 && Math.abs(box.right-(rowBox.right-parseFloat(w.getComputedStyle(row).paddingRight)))<1;
-    }) && d.documentElement.scrollWidth<=w.innerWidth+1);
-    const beforeHome=evaluate('projectJson()'),beforeStage=w.DSStudio.activeStage,beforeDocument=previewDoc(),beforeLibrary=w.localStorage.getItem('dss-v27-projects');
-    const openState=[...d.querySelectorAll('#main > .studio-section')].map(el=>el.open).join(',');
-    const link=panel.querySelector(':scope > .studio-home-return a');link.scrollIntoView({block:'center',behavior:'instant'});link.focus();link.click();await wait();
-    test(theme+' return reaches the studio top with visible focus at '+width+'px',()=>w.scrollY<=1 && d.activeElement===d.getElementById('studio-home') && w.getComputedStyle(d.getElementById('studio-home')).outlineStyle==='solid' && d.getElementById('studio-home').getBoundingClientRect().top>=-1);
-    test(theme+' return preserves the current stage, project, library and preview at '+width+'px',()=>evaluate('projectJson()')===beforeHome && w.DSStudio.activeStage===beforeStage && previewDoc()===beforeDocument && w.localStorage.getItem('dss-v27-projects')===beforeLibrary && [...d.querySelectorAll('#main > .studio-section')].map(el=>el.open).join(',')===openState);
-  }
-  app.style.width='1440px';w.dssShowWizardStep(8);await wait();
-  const nativeReturn=d.querySelector('#studio-section-3 > .panel > .studio-home-return a');
-  nativeReturn.scrollIntoView({block:'center',behavior:'instant'});nativeReturn.focus();d.documentElement.style.scrollBehavior='smooth';
-  nativeReturn.dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true,button:0,detail:0}));await wait();
-  test('Keyboard-style link activation returns immediately despite smooth page scrolling',()=>w.scrollY<=1 && d.activeElement===d.getElementById('studio-home'));
-  d.documentElement.style.removeProperty('scroll-behavior');
-  for(const stage of w.DSStudio.orderedStages) {
-    w.dssShowWizardStep(stage.index,false);await wait();
-    test(stage.label+' retains one return link after stage routing',()=>d.querySelectorAll('#'+stage.lesson+' > .panel > .studio-home-return').length===1 && d.querySelectorAll('[data-journey-pane="'+stage.index+'"] > .studio-home-return').length===1);
-  }
-  w.DSStudio.inspector.show({language:'css',section:'all'});await wait();
-  const homeCode=d.getElementById('dockCss').textContent,homeMode=evaluate('state.sampleMode');
-  d.querySelector('#studioInspector > .studio-home-return a').click();await wait();
-  test('Inspector return retains its visibility, selected language and exact output',()=>d.getElementById('studioInspector').open && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===homeCode && evaluate('state.sampleMode')===homeMode && d.activeElement===d.getElementById('studio-home'));
-  for(const mode of ['basic','advanced']) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
-    test(mode+' preview and exported files contain no studio return controls',()=>!previewDoc().querySelector('.studio-home-return,.studio-home-link,#studio-home') && !evaluate('htmlExport()').includes('studio-home') && !evaluate('cssExport()').includes('studio-home'));
-  }
-  // End studio section return checks.
-
   // Tailwind is an optional source mapping; the website generators remain authoritative.
   reset();await wait();w.dssShowWizardStep(11);await wait();
   const bridgeSource=()=>w.DSStudio.tailwind.source();
@@ -3103,230 +611,8 @@ app.onload = async () => {
   }
   bridgeBaseline.remove();reset();await wait();
 
-  // Working plain-CSS utilities retain semantic HTML and component defaults.
-  reset();await wait();
-  w.dssShowWizardStep(8);await wait();
-  test('Local CSS starts with a linked stylesheet and utility practice stays optional',()=>d.getElementById('localCardHtml').textContent.includes('<link rel="stylesheet" href="tokens.css">') && d.getElementById('localCardHtml').textContent.includes('<article class="card">') && !d.getElementById('localCardHtml').querySelector('article,link') && !d.getElementById('utilityPractice').open && !d.getElementById('utilityVocabularyDetails').open && d.getElementById('localCardCss').getBoundingClientRect().height>0);
-  test('Optional utility examples are bounded native CSS and excluded from website CSS',()=>w.DSStudio.utilities.definitions.length===20 && new Set(w.DSStudio.utilities.definitions.map(item=>item.name)).size===20 && w.DSStudio.utilities.definitions.every(item=>w.CSS.supports(item.property,item.value) && w.DSStudio.utilities.css().includes(w.DSStudio.utilities.rule(item.name)) && !evaluate('cssExport()').includes(w.DSStudio.utilities.rule(item.name))) && w.DSStudio.utilities.rule('__proto__')==='');
-  const utilityParityFrame=d.createElement('iframe');utilityParityFrame.style.cssText='border:0;position:absolute;left:-10000px';d.body.append(utilityParityFrame);
-  const utilityNames=new Set(w.DSStudio.utilities.definitions.map(item=>item.name));
-  const utilityStyleKeys=['display','flexDirection','flexWrap','alignItems','justifyContent','gap','padding','backgroundColor','color','borderRadius','border','boxShadow','opacity','fontFamily','fontSize','lineHeight','width','height'];
-  const utilitySignature=(el,view)=>{const cs=view.getComputedStyle(el);return utilityStyleKeys.map(key=>cs[key]).join('|');};
-  const utilityTargets='.card,.media-object,.hero-layout,.skills-layout,.list-grid,.sample-flex-row,.sample-flex-media,.sample-flex-stack';
-  async function loadUtilityPractice() {
-    const parsed=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    parsed.getElementById(evaluate('state.sampleMode')==='basic'?'basic-structure':'lesson-brief').classList.add('p-6','bg-surface','text-content','rounded-card');
-    const utilityBlob=w.URL.createObjectURL(new w.Blob([evaluate('cssExport()')+w.DSStudio.utilities.css()],{type:'text/css'}));
-    parsed.querySelector('link[href="tokens.css"]').href=utilityBlob;
-    utilityParityFrame.style.width=previewWindow().innerWidth+'px';utilityParityFrame.style.height=previewWindow().innerHeight+'px';
-    await new Promise(resolve=>{utilityParityFrame.onload=resolve;utilityParityFrame.srcdoc='<!doctype html>'+parsed.documentElement.outerHTML;});
-    w.URL.revokeObjectURL(utilityBlob);
-  }
-  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
-    for(const custom of [false,true]) {
-      if(custom){input('jSpacing',8);input('jRadius',26);input('advGap',32);input('advOpacity',75);input('advShadow','medium','change');}
-      for(const width of [320,1440]) {
-        app.style.width=width+'px';d.querySelector('[data-width="fluid"]').click();await wait();
-        await loadUtilityPractice();
-        const actual=[...previewDoc().querySelectorAll(utilityTargets)],native=[...utilityParityFrame.contentDocument.querySelectorAll(utilityTargets)];
-        test(mode+' '+theme+' '+(custom?'custom':'default')+' separate utility practice matches component appearance at '+width+'px',()=>actual.length>0 && actual.length===native.length && actual.every((el,index)=>utilitySignature(el,previewWindow())===utilitySignature(native[index],utilityParityFrame.contentWindow)));
-        const article=previewDoc().getElementById(mode==='basic'?'basic-structure':'lesson-brief');
-        test(mode+' '+theme+' '+(custom?'custom':'default')+' website HTML keeps component classes without exercise utilities at '+width+'px',()=>![...previewDoc().querySelectorAll('[class]')].some(el=>[...el.classList].some(name=>utilityNames.has(name))) && !evaluate('cssExport()').includes('OPTIONAL PRACTICE'));
-        test(mode+' '+theme+' '+(custom?'custom':'default')+' semantic article uses its shared local card rule at '+width+'px',()=>article.tagName==='ARTICLE' && article.classList.contains('card') && Math.abs(parseFloat(previewWindow().getComputedStyle(article).paddingTop)-evaluate('state.spacing')*6)<.01 && !previewDoc().querySelector('script'));
-      }
-    }
-  }
+  // Authored website editing establishes its own model below.
   app.style.width='1440px';reset();await wait();
-  const beforeUtilityExercise=evaluate('htmlExport()+cssExport()+projectJson()'),beforeExerciseDoc=previewDoc();
-  await loadUtilityPractice();
-  const exerciseWindow=utilityParityFrame.contentWindow;
-  const utilityArticle=utilityParityFrame.contentDocument.getElementById('lesson-brief'),utilityOriginalClass=utilityArticle.className;
-  utilityArticle.classList.replace('p-6','p-4');
-  test('Practice-only p-4 changes padding and retains article meaning and component border',()=>exerciseWindow.getComputedStyle(utilityArticle).paddingTop==='16px' && utilityArticle.tagName==='ARTICLE' && utilityArticle.classList.contains('card') && parseFloat(exerciseWindow.getComputedStyle(utilityArticle).borderTopWidth)>0);
-  utilityArticle.className='p-6 p-4 card bg-surface text-content rounded-card';const utilityFirstOrder=exerciseWindow.getComputedStyle(utilityArticle).paddingTop;
-  utilityArticle.className='p-4 p-6 card bg-surface text-content rounded-card';
-  test('Conflicting practice utilities follow stylesheet order rather than HTML class order',()=>utilityFirstOrder==='24px' && exerciseWindow.getComputedStyle(utilityArticle).paddingTop===utilityFirstOrder);
-  utilityArticle.className=utilityOriginalClass;utilityArticle.classList.replace('bg-surface','bg-primary');utilityArticle.classList.replace('text-content','text-on-primary');
-  test('Practice colour utilities consume active project theme roles',()=>exerciseWindow.getComputedStyle(utilityArticle).backgroundColor===evaluate("'rgb('+hexRgb(palette().roles.primary).join(', ')+')'") && exerciseWindow.getComputedStyle(utilityArticle).color===evaluate("'rgb('+hexRgb(palette().roles['on-primary']).join(', ')+')'"));
-  test('Utility practice leaves website preview and all exports unchanged',()=>previewDoc()===beforeExerciseDoc && evaluate('htmlExport()+cssExport()+projectJson()')===beforeUtilityExercise && previewWindow().getComputedStyle(previewDoc().getElementById('lesson-brief')).paddingTop==='24px');
-  utilityParityFrame.remove();
-  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
-    d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);w.dssShowWizardStep(8);await wait();
-    const id=mode==='basic'?'basic-structure':'lesson-brief';
-    test(mode+' '+theme+' local CSS example reads the exported component rule',()=>evaluate('cssExport()').replace(/\s+/g,'').includes(d.getElementById('localCardCss').textContent.replace(/\s+/g,'')) && d.getElementById('localCardCss').textContent.startsWith('.card {\n  ') && d.getElementById('localCardCss').textContent.includes('padding: var(--space-6)'));
-    d.getElementById('utilityPractice').open=true;await wait();
-    test(mode+' '+theme+' lesson follows spacing reflection and reads the real article tag',()=>d.getElementById('utilityLesson').closest('.studio-lesson').classList.contains('spacing-lesson') && d.getElementById('utilityLesson').previousElementSibling.querySelector('h4').textContent==='Reflect' && d.getElementById('utilityHtml').textContent.includes('id="'+id+'"') && evaluate('htmlExport()').includes(d.getElementById('utilityHtml').textContent));
-    for(const name of ['p-6','p-4','bg-surface','text-content','rounded-card']) {
-      input('utilityClass',name,'change');await wait();const definition=w.DSStudio.utilities.definitions.find(item=>item.name===name);
-      test(mode+' '+theme+' lesson separates practice '+name+' from actual component output',()=>d.getElementById('utilityRule').textContent===w.DSStudio.utilities.rule(name) && !evaluate('cssExport()').includes(d.getElementById('utilityRule').textContent) && d.getElementById('utilityPracticeHtml').textContent.includes(' '+name+'"') && !evaluate('htmlExport()').includes(d.getElementById('utilityPracticeHtml').textContent) && !d.getElementById('utilityPracticeHtml').children.length && d.getElementById('utilityToken').textContent.includes(definition.token+':') && d.getElementById('utilityMeasured').textContent.includes('component preview measures '+definition.property+': '+previewWindow().getComputedStyle(previewDoc().getElementById(id)).getPropertyValue(definition.property)));
-    }
-  }
-  input('utilityClass','p-6','change');input('jSpacing',7);await wait();
-  test('Source edits refresh lesson and page padding',()=>d.getElementById('utilityToken').textContent.includes('--space-unit: 7px') && d.getElementById('utilityMeasured').textContent.includes('42px'));
-  d.getElementById('utilityConfigure').click();
-  test('Utility configuration focuses the existing spacing control',()=>d.activeElement===d.getElementById('jSpacing') && w.DSStudio.activeStage===8);
-  d.getElementById('utilityInspectCss').click();await wait();
-  test('Component CSS inspection keeps the complete local stylesheet',()=>d.getElementById('studioInspector').open && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockNote').textContent.includes('No framework needed') && !d.getElementById('dockCss').textContent.includes('.p-6 {'));
-  d.getElementById('dockTabHtml').click();d.getElementById('localInspectCss').click();await wait();
-  test('Local-first action opens component CSS from the HTML inspector',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.activeElement===d.getElementById('dockCss'));
-  d.getElementById('utilityInspectHtml').click();await wait();
-  test('Utility HTML inspection keeps the complete semantic page',()=>d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
-  const utilityProject=evaluate('projectJson()'),utilityDocument=previewDoc();d.getElementById('utilityPreview').click();await wait();
-  test('Showing the utility article retains project and preview document',()=>previewDoc()===utilityDocument && previewDoc().activeElement===previewDoc().getElementById('lesson-brief') && evaluate('projectJson()')===utilityProject);
-  test('Showing the utility article brings the preview into view',()=>d.getElementById('previewShell').getBoundingClientRect().top>=0 && d.getElementById('previewShell').getBoundingClientRect().top<w.innerHeight);
-  for(const width of [320,390,1440])for(const theme of ['light','dark']) {
-    app.style.width=width+'px';input('jTheme',theme);w.dssShowWizardStep(8);d.querySelectorAll('#utilityLesson details').forEach(details=>details.open=true);await wait();
-    test(theme+' utility lesson fits '+width+'px with usable controls',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['localInspectCss','utilityClass','utilityPreview','utilityInspectHtml','utilityInspectCss','utilityConfigure'].every(id=>{const r=d.getElementById(id).getBoundingClientRect();return r.height>=44 && r.left>=0 && r.right<=w.innerWidth+1;}) && (width>390 || d.querySelector('.utility-table-scroll').scrollWidth>d.querySelector('.utility-table-scroll').clientWidth));
-  }
-  app.style.width='1440px';reset();await wait();
-  w.dssShowWizardStep(8);await wait();
-  const beforeLearningPath=evaluate('projectJson()'),learningPathDoc=previewDoc();
-  d.getElementById('utilityToTailwind').click();await wait();
-  test('Optional next step reaches Tailwind without changing the local website',()=>w.DSStudio.activeStage===11 && !d.getElementById('studio-section-6').hidden && evaluate('projectJson()')===beforeLearningPath && previewDoc()===learningPathDoc && d.getElementById('tailwindBridge').textContent.includes('separate Tailwind v4 practice project'));
-  d.querySelector('#tailwindBridge a[href="#utilityLesson"]').click();await wait();
-  test('Tailwind exercise links back to the local CSS lesson',()=>w.DSStudio.activeStage===8 && !d.getElementById('studio-section-3').hidden && evaluate('projectJson()')===beforeLearningPath && previewDoc()===learningPathDoc);
-
-  // Full information architecture and independently selected visitor sitemap.
-  const iaNodes=()=>{revealDestinationPlan();return w.DSStudio.process.entries();};
-  const iaNode=label=>iaNodes().find(node=>node.label===label);
-  const iaChoice=label=>[...d.querySelectorAll('#sitemap-choices input')].find(input=>input.dataset.iaId===iaNode(label)?.id);
-  const iaSelect=label=>{const option=[...d.getElementById('sitemap-items').options].find(option=>option.textContent.replace(/^\s*—\s*/,'').trim()===label);input('sitemap-items',option.value,'change');};
-  const iaFooterHas=label=>[...previewDoc().querySelectorAll('#sitemap a, #sitemap span')].some(el=>el.firstChild?.textContent===label);
-  for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-    const parent=mode==='basic'?'Components':'Lessons',child=mode==='basic'?'Content card':'Brief lesson';
-    const target=mode==='basic'?'basic-structure':'lesson-brief';
-    test(mode+' IA shows every parent and child including sitemap exclusions',()=>d.querySelectorAll('#process-ia .process-map li').length===iaNodes().length && d.querySelector('#process-ia .process-map').textContent.includes('Footer') && d.querySelector('#process-ia .process-map').textContent.includes('Home') && d.querySelectorAll('#sitemap-choices input').length===iaNodes().length);
-    test(mode+' lesson distinguishes IA from the visitor sitemap and cites NN/g',()=>d.querySelector('#process-ia .process-ia-guidance a').href==='https://www.nngroup.com/articles/information-architecture-sitemaps/' && d.querySelector('#process-ia .process-ia-guidance').textContent.includes('not remove those hours') && JSON.stringify([...d.querySelectorAll('#process-ia .process-sitemap-preview a')].map(a=>[a.textContent,a.dataset.sitemapTarget]))===JSON.stringify([...previewDoc().querySelectorAll('#sitemap a')].map(a=>[a.textContent,a.hash.slice(1)])));
-    const previewLink=d.querySelector('#process-ia .process-sitemap-preview a'),linkedId=previewLink.dataset.sitemapTarget,linkedDoc=previewDoc(),beforePreviewLink=evaluate('projectJson()');
-    previewLink.click();await wait();
-    test(mode+' visitor sitemap preview links focus the real iframe destination safely',()=>previewLink.hash==='#previewShell' && previewDoc()===linkedDoc && previewDoc().activeElement.id===linkedId && w.DSStudio.activeStage===1 && evaluate('projectJson()')===beforePreviewLink);
-    const beforePages=evaluate('DSStudio.process.currentPlan().pages'),beforeCss=evaluate('cssExport()'),beforeBodySections=previewDoc().querySelectorAll('main > section').length;
-    const original=iaNode(child),control=iaChoice(child);control.focus();control.click();await wait();
-    test(mode+' child exclusion changes only sitemap navigation and retains checkbox focus',()=>!iaFooterHas(child) && iaNode(child).id===original.id && !iaNode(child).includeInSitemap && evaluate('DSStudio.process.currentPlan().pages')===beforePages && evaluate('cssExport()')===beforeCss && previewDoc().getElementById(target) && previewDoc().querySelectorAll('main > section').length===beforeBodySections && d.querySelector('#process-ia .process-map').textContent.includes(child) && d.activeElement===control);
-    iaChoice(parent).click();await wait();
-    test(mode+' excluded parent suppresses its branch without losing child choices',()=>!iaFooterHas(parent) && iaChoice(child).disabled && !iaChoice(child).checked && iaNodes().filter(node=>node.parentId===iaNode(parent).id).some(node=>node.includeInSitemap));
-    iaChoice(parent).click();await wait();
-    test(mode+' restoring parent respects individual child exclusions',()=>iaFooterHas(parent) && !iaChoice(child).disabled && !iaFooterHas(child) && !iaChoice(child).checked);
-    iaSelect(child);input('sitemap-label','Renamed information');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' renaming excluded information preserves identity and inclusion',()=>iaNode('Renamed information').id===original.id && !iaNode('Renamed information').includeInSitemap && !iaFooterHas('Renamed information') && d.querySelector('#process-ia .process-map').textContent.includes('Renamed information'));
-    const destinationParent=mode==='basic'?'Layouts':'Layout workshop';
-    input('sitemap-parent',String(w.DSStudio.process.hierarchy(w.DSStudio.process.currentPlan().pages).findIndex(([label])=>label===destinationParent)),'change');
-    input('sitemap-type','content','change');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' reparenting keeps stable identity, type and sitemap choice',()=>iaNode('Renamed information').id===original.id && iaNode('Renamed information').path[0]===destinationParent && iaNode('Renamed information').type==='content' && !iaNode('Renamed information').includeInSitemap);
-    d.getElementById('sitemap-undo').click();await wait();
-    test(mode+' undo restores the previous relationship and its inclusion',()=>iaNode('Renamed information').id===original.id && iaNode('Renamed information').path[0]===parent && !iaNode('Renamed information').includeInSitemap);
-    iaSelect('Renamed information');d.getElementById('sitemap-delete').click();await wait();d.getElementById('sitemap-undo').click();await wait();
-    test(mode+' delete and undo restore identity and exclusion',()=>iaNode('Renamed information').id===original.id && !iaNode('Renamed information').includeInSitemap);
-    const savedIa=evaluate('projectJson()');w.importConfig(JSON.parse(savedIa));await wait();
-    test(mode+' IA identities and inclusion survive project JSON round trip',()=>iaNode('Renamed information').id===original.id && !iaNode('Renamed information').includeInSitemap && !iaFooterHas('Renamed information'));
-    d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value;
-    iaChoice(parent).click();await wait();
-    test(mode+' sitemap inclusion autosaves with the active project',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectId].data.designProcess.iaEntries[mode].some(node=>node.id===iaNode(parent).id && node.includeInSitemap===false));
-    const exportDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    test(mode+' standalone HTML and inspector use the same selected sitemap',()=>exportDoc.querySelector('#sitemap').innerHTML===previewDoc().querySelector('#sitemap').innerHTML && ![...exportDoc.querySelectorAll('#sitemap a, #sitemap span')].some(el=>el.firstChild?.textContent===parent));
-  }
-  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-  iaChoice('Home').click();await wait();
-  test('Explicit Home inclusion overrides the former Basic fixed omission',()=>iaFooterHas('Home') && iaNode('Home').includeInSitemap);
-  iaChoice('Content card').click();await wait();d.getElementById('dockModeAdvanced').click();await wait();iaChoice('Brief lesson').click();await wait();d.getElementById('dockModeBasic').click();await wait();
-  test('Sample switches preserve each sample inclusion choices',()=>!iaChoice('Content card').checked && w.DSStudio.process.currentPlan().iaEntries.advanced.some(node=>node.includeInSitemap===false));
-  iaSelect('Components');input('sitemap-label','Teaching group');input('sitemap-type','group','change');d.getElementById('sitemap-form').requestSubmit();await wait();
-  test('Group type is a nonlinked heading with selected child destinations',()=>[...previewDoc().querySelectorAll('#sitemap .sitemap-list > li')].some(li=>li.querySelector(':scope > span')?.textContent==='Teaching group' && li.querySelector('ul a')) && iaNode('Teaching group').type==='group');
-  const groupId=iaNode('Teaching group').id;iaChoice('Teaching group').click();await wait();iaSelect('Teaching group');input('sitemap-label','Renamed group');d.getElementById('sitemap-form').requestSubmit();await wait();
-  test('Parent rename preserves its own identity and descendant exclusions',()=>iaNode('Renamed group').id===groupId && !iaNode('Renamed group').includeInSitemap && !iaNode('Content card').includeInSitemap && iaNode('Content card').path[0]==='Renamed group' && !iaFooterHas('Profile row'));
-  for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-    test('IA inclusion controls and both lesson views fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#sitemap-editor select:not([hidden]), #sitemap-editor input:not([type=checkbox]), #process-ia .process-sitemap-preview a')].every(el=>el.getBoundingClientRect().height>=44) && d.getElementById('sitemap-choices').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && [...d.querySelectorAll('#sitemap-choices label')].every(row=>row.getBoundingClientRect().height>=44) && ['.process-map','.process-sitemap-preview'].every(selector=>{const el=d.querySelector('#process-ia '+selector);return el.scrollWidth<=el.clientWidth+1;}));
-  }
-  app.style.width='1440px';reset();d.getElementById('dockModeBasic').click();
-  const bulkIa=Array.from({length:64},(_,i)=>'Group '+i+' > Item '+i).join('\n');
-  input('plan-pages',bulkIa);await wait();iaChoice('Item 63').click();await wait();
-  test('Inclusion works for bounded legacy outlines without rewriting or truncating their lines',()=>evaluate('state.designProcess.pages')===bulkIa && iaNodes().length===128 && !iaNode('Item 63').includeInSitemap && iaNode('Item 63').path[0]==='Group 63');
-  app.style.width='1440px';reset();await wait();
-  const invalidIa=w.DSStudio.process.normalize({iaEntries:{basic:[{id:'ia-1',path:['Safe'],type:'<script>',includeInSitemap:false},{id:'ia-1',path:['Duplicate']},{id:'<img>',path:['Bad']},{id:'ia-2',path:['Too','Many','Nested','Levels']},{id:'ia-3',path:[null]}]}});
-  test('Imported IA metadata validates identities, paths, types and duplicate IDs',()=>invalidIa.iaEntries.basic.length===1 && invalidIa.iaEntries.basic[0].type==='section' && invalidIa.iaEntries.basic[0].includeInSitemap===false);
-  w.importConfig({sampleMode:'basic',designProcess:{pages:'Research <img src=x onerror=alert(1)',showPlanned:true,iaEntries:{basic:[{id:'ia-1',path:['Research <img src=x onerror=alert(1)'],type:'page',includeInSitemap:true}]}}});w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-  test('Imported IA labels remain safe text in controls, full IA and sitemap',()=>!d.querySelector('#sitemap-choices img, #process-ia img, #process-ia script') && !previewDoc().querySelector('#sitemap img, #sitemap script') && d.getElementById('sitemap-choices').textContent.includes('<img') && previewDoc().querySelector('#sitemap').textContent.includes('<img'));
-  evaluate('resetStudio()');await wait();
-  test('Reset clears saved IA metadata and restores default sample inclusion',()=>!evaluate('state.designProcess.iaEntries.basic.length') && !evaluate('state.designProcess.iaEntries.advanced.length') && iaNodes().every(node=>node.includeInSitemap===(node.depth<3 && node.label!=='Home' && node.label!=='Footer')));
-
-  // Three information levels retain a separate visitor sitemap in both samples.
-  for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-    const parent=mode==='basic'?'Components':'Design process',branch=mode==='basic'?'Profile row':'Project brief';
-    const detail=mode==='basic'?'Availability status':'Purpose and audience';
-    const sibling=mode==='basic'?'Name and role':'Scope and delivery';
-    const target=mode==='basic'?'basic-layout':'brief-lab';
-    const original=iaNodes().filter(node=>node.path.includes(branch)).map(node=>({id:node.id,label:node.label,include:node.includeInSitemap}));
-    const sectionCount=previewDoc().querySelectorAll('main > section').length;
-    test(mode+' sample includes excluded third-level content planning without invented links',()=>iaNode(detail).depth===3 && iaNode(detail).type==='content' && !iaNode(detail).includeInSitemap && !iaFooterHas(detail) && !d.querySelector('#process-ia .process-map a') && d.querySelector('#process-ia .process-map ul ul ul').textContent.length>0 && d.querySelector('#process-ia a[href="https://www.nngroup.com/articles/flat-vs-deep-hierarchy/"]'));
-    iaChoice(detail).click();await wait();
-    test(mode+' selected unlinked detail stays out of the visitor sitemap by default',()=>iaNode(detail).includeInSitemap && !iaFooterHas(detail));
-    d.getElementById('sitemap-planned').click();await wait();
-    test(mode+' planned detail appears at the correct third sitemap level as text',()=>[...previewDoc().querySelectorAll('#sitemap ul ul ul > li > span')].some(el=>el.firstChild.textContent===detail+' ') && ![...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent===detail));
-    iaSelect(detail);input('sitemap-target',target,'change');d.getElementById('sitemap-form').requestSubmit();await wait();
-    const detailId=iaNode(detail).id;
-    test(mode+' third-level destination uses an existing safe anchor in preview and export',()=>[...previewDoc().querySelectorAll('#sitemap ul ul ul a')].some(a=>a.textContent===detail && a.hash==='#'+target) && new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap ul ul ul a[href="#'+target+'"]') && previewDoc().querySelectorAll('main > section').length===sectionCount);
-    iaChoice(parent).click();await wait();
-    test(mode+' excluded ancestor suppresses third-level links while retaining choices',()=>iaChoice(detail).disabled && iaChoice(detail).checked && !iaFooterHas(detail));
-    iaChoice(parent).click();await wait();iaChoice(branch).click();await wait();
-    test(mode+' excluded immediate parent also suppresses the third level',()=>iaChoice(detail).disabled && iaChoice(detail).checked && !iaFooterHas(detail));
-    iaChoice(branch).click();await wait();
-    iaSelect(branch);
-    test(mode+' branch parent options exclude descendants and fourth-level moves',()=>[...d.getElementById('sitemap-parent').options].every(option=>!option.textContent.includes(branch) && option.value.split(':').length<2));
-    input('sitemap-label','Renamed branch');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' branch rename preserves every descendant identity and inclusion',()=>original.every(old=>iaNode(old.label===branch?'Renamed branch':old.label)?.id===old.id) && iaNode(detail).path[1]==='Renamed branch' && iaNode(detail).includeInSitemap && !iaNode(sibling).includeInSitemap && iaFooterHas(detail));
-    const destination=mode==='basic'?'Layouts':'Lessons',dest=iaNode(destination);
-    input('sitemap-parent',dest.position.join(':'),'change');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' moving a two-level branch retains third-level relationships and identities',()=>iaNode(detail).id===detailId && iaNode(detail).path.join(' / ')===destination+' / Renamed branch / '+detail && iaFooterHas(detail));
-    iaSelect(detail);input('sitemap-label','Renamed detail');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' detail rename preserves its ID and explicit link mapping',()=>iaNode('Renamed detail').id===detailId && [...previewDoc().querySelectorAll('#sitemap a')].some(a=>a.textContent==='Renamed detail' && a.hash==='#'+target));
-    iaSelect('Renamed detail');const orderBefore=iaNodes().filter(node=>node.parentId===iaNode('Renamed detail').parentId).map(node=>node.id).join(',');
-    d.getElementById(mode==='basic'?'sitemap-up':'sitemap-down').click();await wait();
-    test(mode+' detail siblings reorder without losing their identities',()=>iaNodes().filter(node=>node.parentId===iaNode('Renamed detail').parentId).map(node=>node.id).join(',')!==orderBefore && iaNode('Renamed detail').id===detailId);
-    d.getElementById('sitemap-undo').click();await wait();
-    test(mode+' undo restores third-level sibling order',()=>iaNodes().filter(node=>node.parentId===iaNode('Renamed detail').parentId).map(node=>node.id).join(',')===orderBefore);
-    iaSelect('Renamed branch');const beforeDelete=evaluate('projectJson()');d.getElementById('sitemap-delete').click();await wait();
-    test(mode+' deleting a branch removes all descendants from the plan',()=>!iaNode('Renamed branch') && !iaNode('Renamed detail') && !iaNode(sibling));
-    d.getElementById('sitemap-undo').click();await wait();
-    test(mode+' undo restores the complete three-level branch and metadata',()=>evaluate('projectJson()')===beforeDelete && iaNode('Renamed detail').id===detailId);
-    const roundTrip=JSON.parse(evaluate('projectJson()'));w.importConfig(roundTrip);await wait();
-    test(mode+' third-level identities and choices survive JSON import',()=>iaNode('Renamed detail').id===detailId && iaNode('Renamed detail').includeInSitemap && !iaNode(sibling).includeInSitemap && iaFooterHas('Renamed detail'));
-    d.getElementById('jSaveLocal').click();const savedId=d.getElementById('jProjects').value;
-    test(mode+' third-level paths and IDs persist in local project storage',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[savedId].data.designProcess.iaEntries[mode].some(node=>node.id===detailId && node.path.length===3));
-    iaSelect('Renamed branch');const unchanged=evaluate('projectJson()');
-    const forged=new w.Option('Invalid descendant',iaNode('Renamed detail').position.join(':'));d.getElementById('sitemap-parent').add(forged);input('sitemap-parent',forged.value,'change');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' forged cycle or fourth-level parent is rejected without changing saved data',()=>evaluate('projectJson()')===unchanged && d.getElementById('sitemap-status').textContent.includes('at most three'));
-    d.getElementById('sitemap-discard').click();d.getElementById('sitemap-new').click();input('sitemap-label','New planning detail');const newParent=iaNode(mode==='basic'?'Content card':'Information architecture');input('sitemap-parent',newParent.position.join(':'),'change');d.getElementById('sitemap-form').requestSubmit();await wait();
-    test(mode+' adding a third-level item defaults to content excluded from the sitemap',()=>iaNode('New planning detail').depth===3 && iaNode('New planning detail').type==='content' && !iaNode('New planning detail').includeInSitemap);
-  }
-  reset();d.getElementById('dockModeBasic').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-  const oldTwoLevel=w.DSStudio.process.samplePages('basic').split('\n').filter(line=>line.split('>').length<=2).join('\n');
-  w.importConfig({sampleMode:'basic',designProcess:{pages:oldTwoLevel,iaEntries:{basic:[{id:'ia-88',path:['Components','Profile row'],type:'section',includeInSitemap:false}]}}});await wait();
-  test('Previous complete two-level samples gain planning details without losing saved IDs or exclusions',()=>iaNode('Profile row').id==='ia-88' && !iaNode('Profile row').includeInSitemap && iaNode('Availability status').depth===3 && iaChoice('Availability status').disabled && evaluate('state.designProcess.pages')===oldTwoLevel);
-  const customThree='Services\nServices > Consultation\nServices > Consultation > Duration\nServices > Consultation > Price\nAbout';input('plan-pages',customThree);await wait();
-  test('Raw third-level outlines share a single parent tree and remain custom across modes',()=>iaNodes().length===5 && w.DSStudio.process.tree(customThree)[0].children[0].children.length===2 && w.DSStudio.process.hierarchy(customThree)[0][1].length===1);
-  d.getElementById('dockModeAdvanced').click();await wait();
-  test('Sample switches preserve a custom three-level outline',()=>evaluate('DSStudio.process.currentPlan().pages')===customThree && iaNode('Duration').depth===3);
-  input('plan-pages','Root > Branch > Detail > Too deep');await wait();
-  test('Raw fourth-level lines are visibly flagged and excluded from rendered IA',()=>!d.getElementById('plan-pages').checkValidity() && d.getElementById('plan-sample-status').textContent.includes('three information levels') && iaNodes().length===0);
-  const bulkThree=Array.from({length:64},(_,i)=>'Group '+i+' > Item '+i+' > Detail '+i).join('\n');input('plan-pages',bulkThree);await wait();iaChoice('Detail 63').click();await wait();
-  test('Three-level legacy line limits retain all 192 derived entries and choices',()=>iaNodes().length===192 && evaluate('state.designProcess.pages')===bulkThree && iaNode('Detail 63').includeInSitemap && evaluate('state.designProcess.iaEntries.advanced.length')===192 && d.getElementById('plan-pages').checkValidity());
-  input('plan-pages','Root > Branch > <img src=x onerror=alert(1)');await wait();
-  test('Valid third-level hostile labels remain escaped text in the IA and editor',()=>iaNodes().length===3 && !d.querySelector('#process-ia img, #process-ia script, #sitemap-choices img') && d.querySelector('#process-ia .process-map').textContent.includes('<img src=x onerror=alert(1)') && d.getElementById('sitemap-choices').textContent.includes('<img') && !d.getElementById('plan-pages').validationMessage);
-  const bounded=w.DSStudio.process.normalize({iaEntries:{basic:Array.from({length:200},(_,i)=>({id:'ia-'+(i+1),path:['Root '+i,'Branch','Detail'],type:'content',includeInSitemap:false}))}});
-  test('Imported third-level metadata retains valid depth and a bounded 192-entry maximum',()=>bounded.iaEntries.basic.length===192 && bounded.iaEntries.basic.every(node=>node.path.length===3 && !node.includeInSitemap));
-  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);revealDestinationPlan();await wait();
-    for(const width of [320,390,1440]) {
-      app.style.width=width+'px';await wait();
-      test(mode+' '+theme+' third-level IA fits '+width+'px with usable controls',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && d.getElementById('sitemap-choices').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && d.getElementById('sitemap-choices').querySelector('ul').scrollWidth<=d.getElementById('sitemap-choices').clientWidth+1 && [...d.querySelectorAll('#sitemap-choices .is-grandchild')].every(el=>el.getBoundingClientRect().height>=44) && ['.process-map','.process-sitemap-preview'].every(selector=>{const el=d.querySelector('#process-ia '+selector);return el.scrollWidth<=el.clientWidth+1;}));
-    }
-  }
-  app.style.width='1440px';reset();await wait();
-
   // Authored website text is distinct from the content-planning proposal.
   {
     const service=w.DSStudio.websiteContent,rows=()=>w.DSStudio.contentArchitecture.nodes();
@@ -3408,578 +694,59 @@ app.onload = async () => {
     test('Website editing produces no captured JavaScript errors',()=>!w.__reviewErrors.length);
     reset();await wait();
   }
-  // Brief editing stays in the centre; project identity belongs to the local library.
+  // One Architecture-to-wireframe path stays in integration. The full mirror,
+  // geometry/paint/fidelity matrices live in wireframe_review.py.
   {
-    reset();w.dssShowWizardStep(0,false);await wait();const brief=d.getElementById('brief-editor'),name=d.getElementById('jProject'),goal=d.getElementById('plan-goal');
-    test('Project name is beside My local projects rather than inside Brief controls',()=>name.closest('.local-projects') && !name.closest('[data-journey-pane]') && d.querySelectorAll('#jProject').length===1);
-    test('The seven original Brief editors belong to the centre lesson',()=>brief.closest('.studio-section')?.id==='process-brief' && d.querySelectorAll('#brief-editor #plan-brief-fields [data-process-field]').length===7 && brief.contains(d.getElementById('jPreset')));
-    for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(0,false);await wait();test(theme+' Brief remains in the centre with usable editors at '+width+'px',()=>brief.closest('.studio-section')?.id==='process-brief' && !brief.hidden && d.getElementById('plan-goal')===goal && name.closest('.local-projects') && d.documentElement.scrollWidth<=w.innerWidth+1 && [...brief.querySelectorAll('textarea,select')].every(el=>{const b=el.getBoundingClientRect();return b.height>=44 && b.left>=0 && b.right<=w.innerWidth+1;}));}
-    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();w.dssShowWizardStep(7,false);await wait();name.focus();input('jProject','Brief centre verification');await wait();test('Project name remains editable from other steps without switching lessons',()=>w.DSStudio.activeStage===7 && d.activeElement===name && evaluate('state.project')==='Brief centre verification' && name.getBoundingClientRect().height>=44);
-    w.dssShowWizardStep(0,false);input('plan-goal','Help visitors find the right lesson.');input('plan-audience','Students and tutors.');d.getElementById('jSaveLocal').click();const id=d.getElementById('jProjects').value;input('plan-goal','Help visitors choose a lesson and practise.');await wait();
-    test('Centre Brief edits and the relocated name autosave through the existing local project',()=>{const item=JSON.parse(w.localStorage.getItem('dss-v27-projects'))[id];return item.data.project==='Brief centre verification' && item.data.designProcess.goal==='Help visitors choose a lesson and practise.' && item.data.designProcess.audience==='Students and tutors.';});
-    const snapshot=evaluate('projectJson()');d.getElementById('jNewLocal').click();d.getElementById('jProjects').value=id;d.getElementById('jLoadLocal').click();await wait();test('Loading a local project restores its name and centre Brief fields',()=>name.value==='Brief centre verification' && goal.value==='Help visitors choose a lesson and practise.' && d.getElementById('plan-audience').value==='Students and tutors.' && brief.closest('.studio-section')?.id==='process-brief');
-    w.importConfig(JSON.parse(snapshot));await wait();test('Project JSON retains the same Brief data and original editor nodes',()=>evaluate('state.designProcess.goal')===goal.value && d.getElementById('jProject')===name && d.getElementById('plan-goal')===goal && brief.closest('.studio-section')?.id==='process-brief');
-    const confirm=w.confirm;try{w.confirm=()=>true;d.getElementById('jProjects').value=id;d.getElementById('jDeleteLocal').click();}finally{w.confirm=confirm;}reset();await wait();
+    app.style.width='1440px';reset();w.importConfig({sampleMode:'basic',base:18});w.dssShowWizardStep(1,false);await wait();
+    const heading=w.DSStudio.contentArchitecture.nodes().find(node=>node.sourceKey==='id:hero-title');
+    const choice=d.querySelector('[data-content-id="'+heading.id+'"]');for(let parent=choice.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;choice.click();
+    input('ia-website-field-0','Wireframe journey <safe> heading');d.getElementById('ia-save').click();await wait();d.getElementById('jSaveLocal').click();
+    const project=evaluate('projectJson()'),library=w.localStorage.getItem('dss-v27-projects'),exports=evaluate('[htmlExport(),cssExport()]');
+    w.dssShowWizardStep(2,false);w.DSStudio.wireframeView.setFidelity('high');await wait();
+    const frame=d.getElementById('wf-page'),doc=frame.contentDocument;
+    test('Wireframe journey mirrors saved Architecture wording and current typography',()=>doc.getElementById('hero-title').textContent==='Wireframe journey <safe> heading' && !doc.getElementById('hero-title').querySelector('safe') && frame.contentWindow.getComputedStyle(doc.body).fontSize==='18px' && doc.getElementById('wf-source-styles').textContent.includes(evaluate('cssExport()')) && previewDoc().getElementById('hero-title').textContent===doc.getElementById('hero-title').textContent);
+    input('wf-width','390','change');d.getElementById('wf-tab-low').click();await wait();
+    test('Wireframe journey viewport and Low Fidelity change only the local view',()=>frame.contentWindow.innerWidth===390 && doc.documentElement.dataset.wfFidelity==='low' && doc.getElementById('wf-low-fidelity-styles') && evaluate('projectJson()')===project && w.localStorage.getItem('dss-v27-projects')===library && JSON.stringify(evaluate('[htmlExport(),cssExport()]'))===JSON.stringify(exports));
+    const files=[],oldDownload=w.download;
+    try{w.download=(name,content,mime)=>files.push({name,content,mime});d.getElementById('wf-download').click();d.getElementById('wf-tab-high').click();await wait();d.getElementById('wf-download').click();}
+    finally{w.download=oldDownload;}
+    test('Wireframe journey downloads the selected fidelities without changing website exports',()=>files.length===2 && files.every(file=>file.name==='wireframe.html' && file.mime==='text/html') && files[0].content===w.DSStudio.wireframeEngine.documentHtml({fidelity:'low'}) && files[1].content===w.DSStudio.wireframeEngine.documentHtml({fidelity:'high'}) && JSON.stringify(evaluate('[htmlExport(),cssExport()]'))===JSON.stringify(exports) && evaluate('projectJson()')===project && w.localStorage.getItem('dss-v27-projects')===library);
+    d.getElementById('wf-open-live').click();await wait();
+    test('Wireframe journey compares with the real website while retaining the read-only mirror',()=>d.activeElement===d.getElementById('previewShell') && d.getElementById('studio-section-4').open && d.getElementById('wf-page')===frame && frame.contentDocument===doc && frame.sandbox.value==='allow-same-origin' && [...doc.querySelectorAll('input,select,textarea,button')].every(el=>el.inert) && previewDoc().getElementById('hero-title').textContent==='Wireframe journey <safe> heading' && evaluate('projectJson()')===project);
+    w.DSStudio.wireframeView.setFidelity('high');app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();await wait();
   }
-  // End centre Brief checks.
-  // Guided Typography reuses the shared model and actual website wording.
-  {
-    reset();w.dssShowWizardStep(5,false);await wait();const ui=w.DSStudio.typographyWorkspace,keys=['content','fonts','body','hierarchy','rhythm','responsive','context','review'],sample=()=>d.getElementById('type-specimen-text');
-    test('Typography sidebar is a short process guide without saved-setting controls',()=>!d.querySelector('[data-journey-pane="5"] input,[data-journey-pane="5"] select') && d.querySelectorAll('[data-type-go]').length===8);
-    test('Eight typography stages use Architecture-style browse and properties columns',()=>d.querySelectorAll('[data-type-stage]').length===8 && keys.every(key=>d.querySelector('#type-stage-'+key+' .type-browser') && d.querySelector('#type-stage-'+key+' .type-properties')) && d.querySelectorAll('.type-specimen').length===1);
-    const original=evaluate('projectJson()');
-    for(const key of keys){ui.show(key,false);await wait();test('Typography '+key+' shows its shared specimen above selected properties in one explained stage',()=>d.querySelectorAll('[data-type-stage][open]').length===1 && d.getElementById('type-stage-'+key).open && keys.filter(other=>other!==key).every(other=>d.getElementById('type-properties-'+other).getBoundingClientRect().height===0) && d.getElementById('type-properties-'+key).firstElementChild===d.querySelector('.type-specimen') && d.querySelector('.type-specimen').nextElementSibling===d.getElementById('type-properties-title-'+key) && d.querySelector('#type-browse-'+key+' .type-observe').textContent.length>20 && d.querySelector('[data-type-go="'+key+'"]').getAttribute('aria-current')==='step' && evaluate('projectJson()')===original);}
-    ui.show('content',false);input('type-content-choice','headline','change');await wait();const site=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    test('Typography browses actual Architecture website wording rather than generic specimens',()=>sample().textContent===site.getElementById('hero-title').textContent && d.getElementById('type-content-text').value===sample().textContent && d.getElementById('type-content-text').readOnly && d.getElementById('type-content-tag').value==='h1' && parseFloat(sample().style.fontSize)===evaluate('fluidTypePx(4,Number(document.getElementById("clampViewport").value))'));
-    ui.show('fonts',false);input('jFont',"Georgia, 'Times New Roman', serif");input('type-font-role','heading','change');input('fontSystemHeading','verdana','change');await wait();
-    test('Selected font role exposes only its original editable family fields',()=>d.getElementById('jFont').closest('.field').hidden && !d.getElementById('fontSystemOptions').hidden && d.getElementById('type-properties-fonts').contains(d.getElementById('fontSystemHeading')) && evaluate('state.font').includes('Georgia') && evaluate('state.fontSettings.systemHeading')==='verdana');
-    d.getElementById('type-reset-fonts').click();await wait();test('Resetting the heading family preserves the chosen body font',()=>evaluate('state.fontSettings.systemHeading')==='same' && evaluate('state.font').includes('Georgia'));
-    input('jBase',20);input('jLeading',1.8);input('advMeasure',55);input('jPrimary','#246ABC');input('jHeadingTracking',.03);ui.show('body',false);d.getElementById('type-reset-body').click();await wait();
-    test('Body readability reset preserves fonts, palette and heading rhythm',()=>evaluate('state.base===DEFAULT.base && state.leading===DEFAULT.leading && adv.measure===ADV_DEFAULT.measure') && evaluate('state.font').includes('Georgia') && evaluate('state.primary').toUpperCase()==='#246ABC' && evaluate('state.headingTracking')===.03);
-    input('jBase',18);input('jScalePreset','major-third','change');input('clampRole','4','change');await wait();
-    test('Hierarchy uses one editable scale and generated read-only sizes',()=>evaluate('state.ratio')===1.25 && d.getElementById('type-role-size').readOnly && d.getElementById('type-role-size').value===evaluate('fluidTypePx(4,Number(document.getElementById("clampViewport").value))')+'px' && d.getElementById('type-properties-hierarchy').contains(d.getElementById('jRatio')) && d.getElementById('type-browse-hierarchy').contains(d.getElementById('clampRole')) && d.getElementById('clampRole').getBoundingClientRect().height>=44);
-    d.getElementById('type-reset-hierarchy').click();await wait();test('Scale reset preserves body size and the font family',()=>evaluate('state.ratio===DEFAULT.ratio && state.base===18') && evaluate('state.font').includes('Georgia'));
-    input('jBodyTracking',.025);await wait();test('Body rhythm owns one em editor while heading settings stay hidden',()=>!d.getElementById('jBodyTracking').closest('.field').hidden && d.getElementById('jHeadingTracking').closest('.field').hidden && d.getElementById('type-rhythm-role').value==='body');d.getElementById('type-reset-rhythm').click();await wait();test('Body rhythm reset preserves heading tracking',()=>evaluate('state.bodyTracking===DEFAULT.bodyTracking && state.headingTracking===.03'));
-    input('clampFactor',.7);input('clampViewport',390);await wait();test('Responsive stage keeps the original calculator and the shared specimen synchronized',()=>d.getElementById('type-stage-responsive').open && d.getElementById('clampComputed').textContent===sample().style.fontSize && d.getElementById('clampCss').textContent.includes('clamp(') && d.getElementById('type-properties-responsive').contains(d.getElementById('clampGraph')) && d.getElementById('type-browse-responsive').contains(d.getElementById('clampRole')) && ![...d.getElementById('clampGraph').parentElement.childNodes].some(node=>node.nodeType===w.Node.TEXT_NODE && node.textContent.trim()==='null'));
-    d.getElementById('clampReset').click();await wait();test('Responsive reset preserves the selected type scale and rhythm',()=>evaluate('clampConfig.minWidth===CLAMP_DEFAULTS.minWidth && clampConfig.mobileFactor===CLAMP_DEFAULTS.mobileFactor && state.base===18 && state.headingTracking===.03'));
-    ui.show('context',false);input('type-context-choice','button','change');await wait();
-    test('Component context uses real action text and resolved live typography',()=>sample().textContent===previewDoc().querySelector('.ds-button').textContent.trim() && d.getElementById('type-context-family').value===previewWindow().getComputedStyle(previewDoc().querySelector('.ds-button')).fontFamily && d.getElementById('type-context-family').readOnly);
-    ui.show('review',false);const beforeComparison=evaluate('projectJson()'),beforeSize=parseFloat(sample().style.fontSize);input('type-preview-enlarge','2','change');d.getElementById('type-preview-spacing').checked=true;d.getElementById('type-preview-spacing').dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-    test('Specimen enlargement and user-spacing overrides are comparison-only',()=>Math.abs(parseFloat(sample().style.fontSize)-beforeSize*2)<.1 && sample().style.letterSpacing==='0.12em' && sample().style.wordSpacing==='0.16em' && evaluate('projectJson()')===beforeComparison && d.querySelector('.type-specimen-scroll').tabIndex===0);
-    const saved=JSON.parse(evaluate('projectJson()'));w.importConfig(saved);await wait();test('Import restores saved typography and clears specimen-only comparisons',()=>evaluate('state.base')===18 && evaluate('state.font').includes('Georgia') && d.getElementById('type-preview-enlarge').value==='1' && !d.getElementById('type-preview-spacing').checked && d.getElementById('type-stage-content').open);
-    const beforeAlias=evaluate('projectJson()');input('clampBase',19);await wait();test('Hidden legacy aliases keep their existing model bindings and reveal the canonical editor',()=>evaluate('state.base')===19 && d.getElementById('jBase').value==='19' && d.getElementById('type-stage-body').open && d.getElementById('type-legacy-controls').contains(d.getElementById('clampBase')));
-    w.dssConfigureToken({name:'--heading-letter-spacing',scope:'Light / base'});await wait();test('Configure links reach the owning Typography stage and visible original field',()=>w.DSStudio.activeStage===5 && d.getElementById('type-stage-rhythm').open && d.activeElement===d.getElementById('jHeadingTracking') && !d.getElementById('jHeadingTracking').closest('.field').hidden);
-    const content=w.DSStudio.websiteContent,heading=w.DSStudio.contentArchitecture.nodes().find(node=>node.sourceKey==='id:hero-title'),mode=evaluate('state.sampleMode');const fields=content.describe(heading.sourceKey,mode).fields,next=content.merge(mode,fields.map(field=>({...field,value:'A safe <img src=x onerror=alert(1)> title'})));
-    evaluate('state.designProcess.websiteContent['+JSON.stringify(mode)+']='+JSON.stringify(next)+';apply()');ui.show('content',false);input('type-content-choice','headline','change');await wait();test('Website text edits update Typography specimens as safe text',()=>sample().textContent==='A safe <img src=x onerror=alert(1)> title' && !sample().querySelector('img,script') && d.getElementById('type-content-text').value===sample().textContent);
-    w.dssShowWizardStep(3,false);await wait();const opener=d.querySelector('#process-prototype > summary');opener.focus();const previewBefore=previewDoc();evaluate('state.base=20;apply()');await wait();test('Background typography changes preserve another lesson, preview document and focus',()=>w.DSStudio.activeStage===3 && d.activeElement===opener && previewDoc()===previewBefore && !d.getElementById('studio-section-2').open);
-    w.dssShowWizardStep(5,false);await wait();
-    for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();await wait();for(const key of keys){ui.show(key,false);await wait();test(theme+' '+key+' Typography browse/properties fit '+width+'px',()=>{const grid=d.querySelector('#type-stage-'+key+' .type-editor-columns'),left=grid.children[0].getBoundingClientRect(),right=grid.children[1].getBoundingClientRect();if(d.documentElement.scrollWidth>w.innerWidth+1)throw Error('Page width '+d.documentElement.scrollWidth+' exceeds '+w.innerWidth);if(!(grid.clientWidth>720?Math.abs(left.top-right.top)<=1:right.top>=left.bottom-1))throw Error('Columns do not align: '+JSON.stringify({width:grid.clientWidth,left:left.toJSON(),right:right.toJSON()}));return [...grid.querySelectorAll('button,select,textarea,input')].filter(el=>el.getBoundingClientRect().height>0).every(el=>{const box=el.getBoundingClientRect();if(!(box.left>=0 && box.right<=w.innerWidth+1 && (el.type==='checkbox' || box.height>=44)))throw Error('Control '+el.id+' '+JSON.stringify(box.toJSON())+' in '+w.innerWidth);return true;});});}}
-    for(const width of [320,1440]){app.style.width=width+'px';await wait();w.dispatchEvent(new w.Event('resize'));d.querySelector('[data-type-go="fonts"]').click();await wait();test(width+'px Typography stage navigation leaves its focused heading below the sticky header',()=>{const title=d.querySelector('#type-stage-fonts > summary'),header=d.querySelector('.topbar');return d.activeElement===title && title.getBoundingClientRect().top>=header.getBoundingClientRect().bottom-1;});}
-    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();await wait();
-  }
-  // End guided Typography checks.
-  // Native Typography headers must retain a visible destination after sibling collapse.
-  {
-    reset();w.dssShowWizardStep(5,false);await wait();const ui=w.DSStudio.typographyWorkspace,keys=['content','fonts','body','hierarchy','rhythm','responsive','context','review'];
-    for(const width of [320,1440]){app.style.width=width+'px';await wait();w.dispatchEvent(new w.Event('resize'));ui.show('content');await wait();const before=evaluate('projectJson()');
-      for(const key of keys.slice(1)){const summary=d.querySelector('#type-stage-'+key+' > summary');summary.scrollIntoView({block:'center',behavior:'instant'});summary.focus({preventScroll:true});summary.click();await wait();test(width+'px opening Typography '+key+' directly keeps its heading visible',()=>{const box=summary.getBoundingClientRect(),header=d.querySelector('.topbar').getBoundingClientRect();return d.activeElement===summary && d.getElementById('type-stage-'+key).open && d.querySelectorAll('[data-type-stage][open]').length===1 && box.top>=header.bottom-1 && box.bottom<=w.innerHeight && evaluate('projectJson()')===before;});}
-      const summary=d.querySelector('#type-stage-review > summary');summary.click();await wait();test(width+'px clicking an open Typography heading still collapses it',()=>!d.getElementById('type-stage-review').open);
-    }
-    app.style.width='1440px';reset();await wait();
-  }
-  // End native Typography header checks.
-
-  // Typography is established from content before inspecting wireframe sizes.
-  {
-    reset();await wait();const ordered=[0,1,5,2,4,6,7,8,9,10,11,3];
-    test('Course follows Brief, Architecture, Typography, Wireframe and Palette with stable route indices',()=>JSON.stringify(w.DSStudio.stageOrder)===JSON.stringify(ordered) && w.DSStudio.stages[5].id==='typography' && w.DSStudio.stages[2].id==='wireframe' && w.DSStudio.stages[4].id==='palette' && [5,2,4].every((index,position)=>w.DSStudio.stages[index].position===position+2));
-    test('Planning phase is contiguous and contains the working typography baseline',()=>w.DSStudio.orderedStages.slice(0,4).every(stage=>stage.phase==='Plan') && [...d.querySelectorAll('.journey-phase')].map(el=>el.textContent).join('|')==='Plan|Foundations|Apply|Review and deliver');
-    const original=evaluate('projectJson()');w.dssShowWizardStep(1,false);d.getElementById('jNext').click();await wait();
-    test('Architecture Next opens Typography as Step 3',()=>w.DSStudio.activeStage===5 && d.getElementById('jProgress').textContent.includes('Step 3 of 12') && d.getElementById('studio-section-2').open && !d.querySelector('[data-journey-pane="5"]').hidden && d.getElementById('jNext').textContent==='Next: Wireframe' && evaluate('projectJson()')===original);
-    d.getElementById('jBack').click();await wait();test('Typography Previous returns to Architecture',()=>w.DSStudio.activeStage===1 && d.getElementById('jNext').textContent==='Next: Typography' && evaluate('projectJson()')===original);
-    d.getElementById('jNext').click();await wait();
-    input('jFont',"Georgia, 'Times New Roman', serif",'input');input('jBase',18);input('jLeading',1.6);d.getElementById('advMeasure').closest('details').open=true;input('advMeasure',58);await wait();
-    const edited=evaluate('projectJson()'),fontControl=d.getElementById('jFont');
-    d.getElementById('jNext').click();await wait();
-    test('Typography Next opens Wireframe as Step 4 without changing typography',()=>w.DSStudio.activeStage===2 && d.getElementById('jProgress').textContent.includes('Step 4 of 12') && d.getElementById('process-wireframe').open && d.getElementById('jNext').textContent==='Next: Palette' && evaluate('projectJson()')===edited);
-    d.getElementById('jNext').click();await wait();test('Wireframe Next opens Palette as Step 5',()=>w.DSStudio.activeStage===4 && d.getElementById('jProgress').textContent.includes('Step 5 of 12') && d.getElementById('brandPalette').querySelector(':scope > summary h2').textContent==='Step 5 of 12: Palette' && evaluate('projectJson()')===edited);
-    d.getElementById('jBack').click();await wait();test('Palette Previous returns to Wireframe',()=>w.DSStudio.activeStage===2 && evaluate('projectJson()')===edited);
-    for(const mode of ['basic','advanced']){
-      d.getElementById(mode==='basic'?'wf-basic':'wf-advanced').click();await wait();
-      for(const theme of ['light','dark']){input('jTheme',theme);await wait();for(const fidelity of ['low','high']){
-        w.DSStudio.wireframeView.setFidelity(fidelity);await wait();const doc=d.getElementById('wf-page').contentDocument,style=doc.defaultView.getComputedStyle(doc.body);
-        test(mode+' '+theme+' '+fidelity+' wireframe uses the early typography baseline',()=>style.fontFamily.includes('Georgia') && style.fontSize==='18px' && Math.abs(parseFloat(style.lineHeight)-28.8)<.1 && doc.getElementById('wf-source-styles').textContent.includes('--reading-measure: 58ch') && evaluate('state.font').includes('Georgia') && evaluate('state.base')===18);
-      }}
-    }
-    const saved=JSON.parse(evaluate('projectJson()'));w.importConfig(saved);await wait();w.dssShowWizardStep(5,false);await wait();
-    test('Project round trip retains typography values and original control identity at the new visible step',()=>d.getElementById('jFont')===fontControl && fontControl.value.includes('Georgia') && d.getElementById('jBase').value==='18' && d.getElementById('jLeading').value==='1.6' && d.getElementById('advMeasure').value==='58' && d.getElementById('jProgress').textContent.includes('Step 3 of 12'));
-    input('tokenSearch','--font-size-base');await wait();test('Typography token source metadata uses visible Step 3',()=>[...d.querySelectorAll('#tokenTableBody tr')].find(row=>row.querySelector('td:nth-child(2) code')?.textContent==='--font-size-base').textContent.includes('wizard step 3'));
-    w.dssConfigureToken({name:'--font-size-base',scope:'Light / base'});await wait();test('Existing typography Configure route reaches its original control',()=>w.DSStudio.activeStage===5 && d.activeElement===d.getElementById('jBase'));
-    for(const width of [320,1440]){
-      app.style.width=width+'px';await wait();w.dssShowWizardStep(0,false);await wait();const before=evaluate('projectJson()');
-      for(const [position,index]of ordered.entries()){if(position)d.getElementById('jNext').click();await wait();test(width+'px Next follows reordered '+(position+1)+' '+w.DSStudio.stages[index].label,()=>w.DSStudio.activeStage===index && d.getElementById('jProgress').textContent.startsWith('Step '+(position+1)+' of 12') && evaluate('projectJson()')===before);}
-    }
-    app.style.width='1440px';w.DSStudio.wireframeView.setFidelity('high');reset();await wait();
-  }
-  // End early typography checks.
-  // Read-only wireframes use the actual website HTML and responsive CSS.
-  {
-    const engine=w.DSStudio.wireframeEngine;
-    const compareWireframePaint=(reference,mirror)=>{
-      const nodes=doc=>[doc.body,...doc.body.querySelectorAll('*')].filter(el=>!el.matches('script,iframe,object,embed,base'));
-      const original=nodes(reference),copied=nodes(mirror),properties=['backgroundColor','backgroundImage','color','borderTopColor','opacity'],differences=[];
-      if(original.length!==copied.length)throw Error('Paint comparison element count differs: '+original.length+' / '+copied.length);
-      original.forEach((el,index)=>{const other=copied[index],expected=reference.defaultView.getComputedStyle(el),actual=mirror.defaultView.getComputedStyle(other);for(const property of properties)if(expected[property]!==actual[property])differences.push({element:el.tagName+'.'+el.className,property,expected:expected[property],actual:actual[property]});});
-      if(differences.length)throw Error(JSON.stringify(differences.slice(0,5)));return true;
-    };
-
-    for(const mode of ['basic','advanced']) {
-      reset();await wait();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
-      w.dssShowWizardStep(2,false);w.dssRevealSection('process-wireframe',false);await wait();w.DSStudio.wireframeView.refresh();await wait();
-      const frame=d.getElementById('wf-page'),doc=frame.contentDocument;
-      const source=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-      test(mode+' wireframe retains actual website structure and wording',()=>doc.body.textContent===source.body.textContent && JSON.stringify([...doc.querySelectorAll('body [id]')].map(el=>el.id))===JSON.stringify([...source.querySelectorAll('body [id]')].map(el=>el.id)));
-      test(mode+' wireframe exposes page, content-width, layout and child containers',()=>['region','content','layout','item'].every(kind=>doc.querySelector('[data-wf-container="'+kind+'"]')) && doc.querySelector(mode==='basic'?'.hero-layout[data-wf-layout="grid"]':'.sample-hero[data-wf-layout="grid"]') && d.querySelector('.wf-container-key').textContent.includes('Grid/Flex'));
-      test(mode+' wireframe distinguishes container boundaries without adding layout borders',()=>['region','content','layout','item'].every(kind=>{const el=[...doc.querySelectorAll('[data-wf-container="'+kind+'"]')].find(node=>node.getBoundingClientRect().height>0);return el && frame.contentWindow.getComputedStyle(el).outlineStyle===({region:'solid',content:'dashed',layout:'dotted',item:'solid'})[kind];}));
-      test(mode+' wireframe reveals nested list, disclosure and normal-flow groups',()=>doc.querySelector('main li[data-wf-container="item"]') && doc.querySelector('main details[data-wf-container="item"]') && [...doc.querySelectorAll('main div[data-wf-container="item"]')].some(el=>!el.dataset.wfLayout) && [...doc.querySelectorAll('[data-wf-container]')].every(el=>(el.getAttribute('title')||'').length>0));
-      test(mode+' wireframe outlines text, inline links, controls and outer illustrations as page objects',()=>['h1','p','a','button','input','label','summary','td','th','svg'].every(selector=>[...doc.querySelectorAll(selector)].every(el=>el.hasAttribute('data-wf-container'))) && [...doc.querySelectorAll('svg *')].every(el=>!el.hasAttribute('data-wf-container')) && doc.querySelector('[aria-hidden="true"][data-wf-container="object"]'));
-      const folded=[...doc.querySelectorAll('details:not([open])')].find(el=>el.getBoundingClientRect().height>0);if(folded){folded.open=true;await wait();const object=[...folded.querySelectorAll('[data-wf-container="object"]')].find(el=>el.getBoundingClientRect().height>0);test(mode+' newly disclosed content already has page-object boundaries',()=>object && frame.contentWindow.getComputedStyle(object).outlineStyle!=='none');folded.open=false;await wait();}
-
-      test(mode+' wireframe identifies its selected sample without colour alone',()=>d.getElementById('wf-'+mode).getAttribute('aria-pressed')==='true' && w.getComputedStyle(d.getElementById('wf-'+mode),'::before').content.includes(String.fromCharCode(0x2713)));
-      test(mode+' wireframe has no layout or content authoring controls',()=>!d.querySelector('#wf-scope,#wf-layout,#wf-content,#wf-emphasis,#plan-layout,#plan-wireframeNotes') && frame.sandbox.value==='allow-same-origin');
-      test(mode+' wireframe makes website controls inert and removes executable or nested embeds',()=>[...doc.querySelectorAll('input,select,textarea,button')].every(el=>el.inert) && !doc.querySelector('script,iframe,object,embed,base,a[href]:not([href^="#"])'));
-      const before=JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess);
-      const reference=d.createElement('iframe');reference.style.cssText='height:768px;border:0';
-      reference.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+w.DSStudio.fonts.previewCss()+'</style>');
-      await new Promise(resolve=>{reference.onload=resolve;d.body.append(reference);});
-      for(const width of [320,390,768,1280]) {
-        input('wf-width',String(width),'change');reference.style.width=width+'px';await wait();
-        test(mode+' wireframe matches live responsive geometry at '+width+'px',()=>{
-          const rd=reference.contentDocument,differences=[];
-          const ids=[...rd.querySelectorAll('body [id]')].filter(el=>el.getBoundingClientRect().height>0).map(el=>el.id);
-          for(const id of ids){const a=rd.getElementById(id).getBoundingClientRect(),b=doc.getElementById(id).getBoundingClientRect();if(['x','y','width','height'].some(key=>Math.abs(a[key]-b[key])>1))differences.push({id,a:[a.x,a.y,a.width,a.height],b:[b.x,b.y,b.width,b.height]});}
-          // Include un-ID'd wrappers and their children, not just semantic IDs.
-          const original=[...rd.body.querySelectorAll('*')],mirrored=[...doc.body.querySelectorAll('*')];
-          for(const el of doc.querySelectorAll('[data-wf-container]')){const source=original[mirrored.indexOf(el)],a=source.getBoundingClientRect(),b=el.getBoundingClientRect();if(['x','y','width','height'].some(key=>Math.abs(a[key]-b[key])>1))differences.push({container:el.className,kind:el.dataset.wfContainer});}
-          if(differences.length)throw Error(JSON.stringify(differences.slice(0,4)));
-          return frame.contentWindow.innerWidth===width;
-        });
-        test(mode+' default wireframe component backgrounds and text match website at '+width+'px',()=>compareWireframePaint(reference.contentDocument,doc));
-        test(mode+' every rendered wireframe object has a visible boundary at '+width+'px',()=>{
-          const missing=[];for(const el of doc.body.querySelectorAll('*')){
-            if(el.matches('script,style,link,meta,title,base,template,source,track,br,wbr') || (el.namespaceURI==='http://www.w3.org/2000/svg' && (el.localName!=='svg' || el.parentElement?.closest('svg'))))continue;
-            const style=frame.contentWindow.getComputedStyle(el);if(style.visibility==='hidden' || ![...el.getClientRects()].some(rect=>rect.width>0 && rect.height>0))continue;
-            if(!el.dataset.wfContainer || style.outlineStyle==='none' || parseFloat(style.outlineWidth)<1)missing.push(el.tagName+'.'+el.className);
-          }if(missing.length)throw Error(JSON.stringify(missing.slice(0,10)));return true;
-        });
-      }
-      const focusLink=[...doc.querySelectorAll('a[href]:not(.ds-button)')].find(el=>el.getBoundingClientRect().height>0);
-      if(focusLink){focusLink.focus();const focusStyle=frame.contentWindow.getComputedStyle(focusLink);test(mode+' page-object borders preserve the distinct keyboard focus ring',()=>focusLink.matches(':focus-visible') && focusStyle.outlineWidth==='3px' && focusStyle.outlineOffset==='3px');focusLink.blur();}
-      reference.remove();
-      test(mode+' viewing widths does not alter saved Architecture or planning data',()=>JSON.stringify(JSON.parse(evaluate('projectJson()')).designProcess)===before);
-      const exported=engine.documentHtml(),parsed=new w.DOMParser().parseFromString(exported,'text/html');
-      test(mode+' wireframe download contains original CSS plus outlines and inert controls',()=>parsed.getElementById('wf-source-styles').textContent.includes(evaluate('cssExport()')) && parsed.getElementById('wf-outline-styles') && parsed.querySelector('[data-wf-container="layout"]') && parsed.body.textContent===source.body.textContent && !parsed.querySelector('script,iframe') && [...parsed.querySelectorAll('input,select,textarea,button')].every(el=>el.inert));
-      const files=[],original=w.download;w.download=(name,content,mime)=>files.push({name,content,mime});d.getElementById('wf-download').click();w.download=original;
-      test(mode+' wireframe button downloads the read-only mirror',()=>files.length===1 && files[0].name==='wireframe.html' && files[0].content===exported);
-      const legacy=JSON.parse(evaluate('projectJson()'));legacy.designProcess.wireframes[mode]={scope:'content-absent',content:'proposed',layout:'grid',blocks:[{id:'content-absent',layout:'split',emphasis:'primary'}]};w.importConfig(legacy);await wait();w.DSStudio.wireframeView.refresh();await wait();
-      test(mode+' old authoring settings round-trip without changing the mirrored website',()=>engine.documentHtml()===exported && JSON.parse(evaluate('projectJson()')).designProcess.wireframes[mode].layout==='grid');
-      const content=w.DSStudio.websiteContent,heading=w.DSStudio.contentArchitecture.nodes().find(node=>node.sourceKey==='id:hero-title');
-      const fields=content.describe(heading.sourceKey,mode).fields;
-      const edited=content.merge(mode,fields.map(field=>({...field,value:'Updated <safe> website heading'})));
-      evaluate('state.designProcess.websiteContent['+JSON.stringify(mode)+']='+JSON.stringify(edited)+';apply()');await wait();
-      test(mode+' saved Architecture website wording refreshes the active read-only view safely',()=>doc.getElementById('hero-title').textContent==='Updated <safe> website heading' && !doc.getElementById('hero-title').querySelector('safe') && engine.documentHtml().includes('Updated &lt;safe&gt; website heading'));
-      const disclosure=doc.querySelector('details');if(disclosure){disclosure.open=true;evaluate('apply()');await wait();test(mode+' unchanged refresh retains native disclosure state',()=>disclosure.isConnected && disclosure.open);}
-      const anchor=[...doc.querySelectorAll('a[href^="#"]')].find(el=>doc.getElementById(el.getAttribute('href').slice(1)));
-      if(anchor){const outerHash=w.location.hash;anchor.click();await wait();test(mode+' wireframe local navigation stays within its iframe',()=>w.location.hash===outerHash && doc.getElementById(anchor.getAttribute('href').slice(1)).getBoundingClientRect().top<frame.contentWindow.innerHeight);}
-      for(const width of ['mobile','tablet','desktop']){evaluate('updateResponsivePreview('+JSON.stringify(width)+')');input('wf-width','live','change');await wait();test(mode+' match live width follows '+width,()=>frame.contentWindow.innerWidth===({mobile:390,tablet:768,desktop:1280})[width]);}
-      for(const width of [320,390,1440]){app.style.width=width+'px';await wait();test(mode+' wireframe controls fit '+width+'px studio',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#wireframe-workspace select,#wireframe-workspace button')].every(el=>{const r=el.getBoundingClientRect();return r.height>=44 && r.right<=w.innerWidth+1;}));}
-      app.style.width='1440px';
-    }
-    // Region opacity, component surfaces and every button variant retain configured paint.
-    for(const mode of ['basic','advanced']){
-      reset();await wait();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
-      evaluate('state.semanticOverrides={light:{background:"#E9DFCA","header-background":"#C8E2DB","main-background":"#D6DFEE","footer-background":"#C9BADB",surface:"#E8F1DE","surface-muted":"#D8EAD0"},dark:{background:"#192D39","header-background":"#283B26","main-background":"#252C4B","footer-background":"#362B40",surface:"#243A3B","surface-muted":"#304D49"}};state.backgroundOpacity={light:{body:60,header:70,main:80,footer:50},dark:{body:80,header:60,main:70,footer:40}};apply()');
-      for(const [index,variant]of ['primary','secondary','accent','outline','text'].entries()){input('bdVariant',variant);input('bdDefaultBg',['#276B57','#74552E','#8B3261','#315B8D','#694181'][index]);input('bdText','#FFFFFF');}
-      for(const theme of ['light','dark']){
-        input('jTheme',theme);w.dssShowWizardStep(2,false);w.dssRevealSection('process-wireframe',false);await wait();w.DSStudio.wireframeView.refresh();await wait();
-        const sourceDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');sourceDoc.querySelectorAll('script').forEach(el=>el.remove());sourceDoc.querySelector('link[href="tokens.css"]').remove();const styles=sourceDoc.createElement('style');styles.textContent=evaluate('cssExport()')+w.DSStudio.fonts.previewCss()+'*{animation:none!important;transition:none!important}';sourceDoc.head.append(styles);
-        const reference=d.createElement('iframe');reference.style.cssText='height:768px;border:0';reference.srcdoc='<!doctype html>'+sourceDoc.documentElement.outerHTML;await new Promise(resolve=>{reference.onload=resolve;d.body.append(reference);});
-        const frame=d.getElementById('wf-page');
-        for(const width of [320,1280]){input('wf-width',String(width),'change');reference.style.width=width+'px';await wait();test(mode+' '+theme+' configured component and button backgrounds match website at '+width+'px',()=>compareWireframePaint(reference.contentDocument,frame.contentDocument));}
-        test(mode+' '+theme+' read-only controls preserve original disabled appearance',()=>[...frame.contentDocument.querySelectorAll('input,select,textarea,button')].every((el,index)=>el.inert && el.disabled===sourceDoc.querySelectorAll('input,select,textarea,button')[index].disabled));
-        const exported=d.createElement('iframe');exported.style.cssText='width:1280px;height:768px;border:0';exported.srcdoc=engine.documentHtml();await new Promise(resolve=>{exported.onload=resolve;d.body.append(exported);});
-        test(mode+' '+theme+' wireframe download preserves configured backgrounds and button colours',()=>compareWireframePaint(reference.contentDocument,exported.contentDocument));exported.remove();reference.remove();
-        const control=frame.contentDocument.querySelector('button:not([disabled]),input:not([disabled])');if(control){const prior=frame.contentDocument.activeElement;control.focus();test(mode+' '+theme+' inert website controls cannot receive user focus',()=>frame.contentDocument.activeElement===prior && frame.contentDocument.activeElement!==control);}
-      }
-    }
-    reset();await wait();
-  }
-  // Fidelity is a transient tab choice over the same annotated website.
-  {
-    reset();w.dssShowWizardStep(2,false);w.dssRevealSection('process-wireframe',false);await wait();
-    const ui=w.DSStudio.wireframeView,frame=d.getElementById('wf-page'),high=d.getElementById('wf-tab-high'),low=d.getElementById('wf-tab-low');
-    test('Wireframe offers labelled Low Fidelity and High Fidelity tabs with the existing high view selected',()=>d.querySelector('[role="tablist"][aria-label="Wireframe fidelity"]') && high.getAttribute('aria-selected')==='true' && high.tabIndex===0 && low.tabIndex===-1 && d.getElementById('wf-fidelity-panel').getAttribute('aria-labelledby')===high.id && d.getElementById('wf-fidelity-panel').contains(frame));
-    high.focus();high.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait();
-    test('Arrow keys activate and focus Low Fidelity without changing project data',()=>ui.fidelity==='low' && d.activeElement===low && low.getAttribute('aria-selected')==='true' && high.tabIndex===-1 && frame.title.includes('Low Fidelity'));
-    low.dispatchEvent(new w.KeyboardEvent('keydown',{key:'End',bubbles:true}));await wait();test('End activates High Fidelity and updates the shared panel label',()=>ui.fidelity==='high' && d.activeElement===high && d.getElementById('wf-fidelity-panel').getAttribute('aria-labelledby')===high.id);
-    high.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Home',bubbles:true}));await wait();test('Home activates Low Fidelity',()=>ui.fidelity==='low' && d.activeElement===low);
-    low.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await wait();test('ArrowRight returns to High Fidelity',()=>ui.fidelity==='high' && d.activeElement===high);
-    const neutral=value=>{const channels=value.match(/[\d.]+/g);return !channels || channels.length<3 || channels[0]===channels[1] && channels[1]===channels[2];};
-    for(const mode of ['basic','advanced']){
-      d.getElementById(mode==='basic'?'wf-basic':'wf-advanced').click();await wait();
-      for(const theme of ['light','dark']){
-        input('jTheme',theme);await wait();ui.setFidelity('high');await wait();
-        const doc=frame.contentDocument,source=doc.body.textContent,before=evaluate('projectJson()');
-        const disclosure=[...doc.querySelectorAll('details')].find(el=>el.getBoundingClientRect().height>0);if(disclosure)disclosure.open=true;
-        for(const width of [320,1280]){
-          input('wf-width',String(width),'change');await wait();
-          const highBoxes=[...doc.body.querySelectorAll('*')].map(el=>{const box=el.getBoundingClientRect();return [box.x,box.y,box.width,box.height];});
-          low.click();await wait();
-          test(mode+' '+theme+' Low Fidelity preserves every object and layout box at '+width+'px',()=>doc.body.textContent===source && [...doc.body.querySelectorAll('*')].every((el,index)=>{const box=el.getBoundingClientRect();return [box.x,box.y,box.width,box.height].every((value,key)=>Math.abs(value-highBoxes[index][key])<=1);}) && evaluate('projectJson()')===before);
-          test(mode+' '+theme+' Low Fidelity leaves non-button objects unfilled and keeps grey buttons at '+width+'px',()=>doc.documentElement.dataset.wfFidelity==='low' && frame.contentWindow.getComputedStyle(doc.documentElement).colorScheme==='light' && [...doc.querySelectorAll('input')].every(el=>frame.contentWindow.getComputedStyle(el).accentColor==='rgb(102, 102, 102)') && frame.contentWindow.getComputedStyle(doc.body).backgroundColor==='rgb(255, 255, 255)' && [...doc.body.querySelectorAll('*')].every(el=>{const style=frame.contentWindow.getComputedStyle(el);return neutral(style.color) && style.backgroundImage==='none' && style.backgroundColor===(el.matches('button,.button,.ds-button,[role="button"]')?'rgb(102, 102, 102)':'rgba(0, 0, 0, 0)');}) && [...doc.querySelectorAll('button,.button,.ds-button,[role="button"]')].every(el=>frame.contentWindow.getComputedStyle(el).backgroundColor==='rgb(102, 102, 102)') && [...doc.querySelectorAll('svg,img')].every(el=>frame.contentWindow.getComputedStyle(el).filter==='grayscale(1)'));
-          high.click();await wait();test(mode+' '+theme+' High Fidelity restores the configured website stylesheet at '+width+'px',()=>!doc.getElementById('wf-low-fidelity-styles') && doc.documentElement.dataset.wfFidelity==='high' && doc.getElementById('wf-source-styles').textContent.includes(evaluate('cssExport()')) && evaluate('projectJson()')===before);
-        }
-        test(mode+' '+theme+' tab changes preserve open disclosures',()=>!disclosure || [...doc.querySelectorAll('details')].find(el=>el.querySelector('summary')?.textContent===disclosure.querySelector('summary')?.textContent)?.open);
-        const files=[],download=w.download;w.download=(name,content)=>files.push({name,content});low.click();await wait();d.getElementById('wf-download').click();high.click();await wait();d.getElementById('wf-download').click();w.download=download;
-        test(mode+' '+theme+' download follows the selected fidelity tab',()=>files.length===2 && files[0].content===w.DSStudio.wireframeEngine.documentHtml({fidelity:'low'}) && files[1].content===w.DSStudio.wireframeEngine.documentHtml({fidelity:'high'}) && files[0].content.includes('wf-low-fidelity-styles') && !files[1].content.includes('wf-low-fidelity-styles'));
-      }
-    }
-    const saved=evaluate('projectJson()');ui.setFidelity('unexpected');test('Unknown fidelity values fall back to High Fidelity without saving view preferences',()=>ui.fidelity==='high' && evaluate('projectJson()')===saved && !w.DSStudio.wireframeEngine.createDocument({fidelity:'unexpected'}).getElementById('wf-low-fidelity-styles'));
-    for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();await wait();for(const fidelity of ['low','high']){ui.setFidelity(fidelity);await wait();test(theme+' '+fidelity+' fidelity tabs and controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...d.querySelectorAll('#wireframe-workspace button,#wireframe-workspace select')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.left>=0 && box.right<=w.innerWidth+1;}));}}
-    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();ui.setFidelity('high');reset();await wait();
-  }
-  // End fidelity tab checks.
 
 
-  // Complete content inventory, independent destination references and deep editing.
+  // Keep one content-planning journey here; content_tree_review.py owns the
+  // complete inventory, branch operations, validation and dirty-form matrices.
   {
-  await w.DSStudio.ready;
-  d.getElementById('sitemap-destination-editor').open=false;
-  const model=w.DSStudio.contentArchitecture;
-  const contentNodes=()=>model.nodes();
-  const contentNode=(label,value)=>contentNodes().find(node=>node.type!=='link' && node.label===label && (value===undefined || node.value===value))||contentNodes().find(node=>node.label===label && (value===undefined || node.value===value));
-  const selectContent=id=>{const button=d.querySelector('[data-content-id="'+id+'"]');let ancestor=button.parentElement;while(ancestor){if(ancestor.tagName==='DETAILS')ancestor.open=true;ancestor=ancestor.parentElement;}button.click();};
-  const saveContent=async()=>{d.getElementById('ia-form').requestSubmit();await wait();};
-  test('Content outline starts without runtime errors and keeps Restore with Save without the footer inspection shortcut',()=>!w.__reviewErrors.length && d.getElementById('ia-content-editor') && !d.getElementById('sitemap-destination-editor').open && d.getElementById('ia-restore').closest('.ia-save-area') && d.getElementById('ia-restore').parentElement===d.getElementById('ia-save').parentElement && !d.querySelector('#architecture-advanced #ia-restore, #process-ia [data-inspect="html"]') && d.getElementById('ia-restore').getAttribute('aria-describedby')==='ia-restore-help');
-  for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
-    const nodes=contentNodes(),header=contentNode('Header'),home=contentNode('Home'),hero=nodes.find(node=>node.parentId===home.id && node.label==='Hero');
-    test(mode+' inventories actual shared header, hero, footer and deep content',()=>nodes.length>100 && nodes.length<=1000 && header.type==='region' && contentNode('Footer').type==='region' && hero && nodes.some(node=>model.path(nodes,node).length>3));
-    test(mode+' inventory contains actual heading, logo, wordmark, image alternative text and CTA wording',()=>contentNode('Wordmark').value===evaluate('state.project') && contentNode('Logo') && nodes.some(node=>node.label==='Heading' && node.value===(mode==='basic'?'Start with the essentials.':'A better web starts with one good decision.')) && contentNode('Alternative text') && nodes.some(node=>node.label==='Primary CTA' && node.value===(mode==='basic'?'Explore components':'Find your first lesson')));
-    if(mode==='advanced')test('Numeric progress controls are captured as safe text values',()=>nodes.some(node=>node.type==='field' && node.value==='3' && node.label.includes('Practice checklist')));
-    const nav=nodes.find(node=>node.label==='Main navigation' && node.parentId===header.id);
-    const homeRef=nodes.find(node=>node.parentId===nav.id && node.label==='Home');
-    test(mode+' navigation references canonical destinations without duplicating their content',()=>homeRef.type==='link' && homeRef.target==='home' && homeRef.reference==='#home' && nodes.filter(node=>node.target==='home' && node.type!=='link').length===1 && !nodes.some(node=>node.parentId===homeRef.id));
-    test(mode+' every authored sitemap destination has exactly one canonical content entry',()=>w.DSStudio.process.inventory(mode).every(([,id])=>nodes.filter(node=>node.target===id && node.type!=='link').length===1));
-    test(mode+' native outline starts collapsed and center/export content roles remain safe text',()=>[...d.querySelectorAll('#ia-outline details')].every(el=>!el.open) && d.querySelectorAll('#process-ia .ia-content-map details').length>10 && !d.querySelector('#process-ia .ia-content-map img, #process-ia .ia-content-map script'));
-    input('ia-search','alternative text');await wait();
-    test(mode+' search reveals matching deep content and ancestor context',()=>d.getElementById('ia-count').textContent.includes('matching') && [...d.querySelectorAll('#ia-outline details')].some(el=>el.open) && d.getElementById('ia-outline').textContent.includes('Alternative text'));
-    input('ia-search','');d.getElementById('ia-collapse').click();
-    const heading=nodes.find(node=>node.type==='text' && node.label==='Heading' && model.path(nodes,node).includes('Hero'));
-    const beforeBody=previewDoc().getElementById('hero-title').textContent,beforeFooter=previewDoc().querySelector('#sitemap').innerHTML;
-    selectContent(heading.id);input('ia-draft','A proposed new heading');input('ia-notes','Confirm with the project owner');input('ia-status','planned','change');await saveContent();
-    test(mode+' planned content saves alongside current source content without rewriting the sample',()=>contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && contentNodes().find(node=>node.id===heading.id).value===beforeBody && previewDoc().getElementById('hero-title').textContent===beforeBody && previewDoc().querySelector('#sitemap').innerHTML===beforeFooter && d.getElementById('ia-actual').value===beforeBody);
-    input('ia-draft','');await saveContent();
-    test(mode+' an explicitly empty draft is retained',()=>contentNodes().find(node=>node.id===heading.id).draft==='');
+    app.style.width='1440px';reset();w.importConfig({sampleMode:'basic'});w.dssShowWizardStep(1,false);await wait();
+    const contentModel=w.DSStudio.contentArchitecture;
+    const heading=contentModel.nodes().find(node=>node.sourceKey==='id:hero-title');
+    const choose=()=>{const button=d.querySelector('[data-content-id="'+heading.id+'"]');for(let parent=button.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;button.click();};
+    choose();input('jProject','Content-tree integration fixture');d.getElementById('jSaveLocal').click();
+    const id=d.getElementById('jProjects').value,before=evaluate('projectJson()'),beforeStorage=w.localStorage.getItem('dss-v27-projects'),website=evaluate('htmlExport()');
+    input('ia-draft','A clearer introduction for learners.');input('ia-notes','Owner: course tutor. Next action: review.');input('ia-status','needs-content','change');
+    test('Content-tree journey keeps unsaved proposals outside the model and local save',()=>evaluate('projectJson()')===before && w.localStorage.getItem('dss-v27-projects')===beforeStorage && !d.getElementById('ia-discard').disabled && previewDoc().getElementById('hero-title').textContent===heading.value);
+    d.getElementById('ia-save').click();await wait();
+    const saved=evaluate('projectJson()');
+    test('Content-tree journey saves proposal data locally without rewriting the actual website',()=>{
+      const node=contentModel.nodes().find(row=>row.id===heading.id),stored=JSON.parse(w.localStorage.getItem('dss-v27-projects'))[id].data.designProcess.contentPlan.basic.find(row=>row.id===heading.id);
+      return node.draft==='A clearer introduction for learners.' && node.status==='needs-content' && stored.draft===node.draft && stored.notes===node.notes && previewDoc().getElementById('hero-title').textContent===heading.value && evaluate('htmlExport()')===website;
+    });
+    const files=[],oldDownload=w.download;
+    try{w.download=(name,content,type)=>files.push({name,content,type});d.getElementById('jExportJson').click();}
+    finally{w.download=oldDownload;}
+    input('ia-draft','Discard this temporary wording');d.getElementById('ia-discard').click();
+    const discarded=evaluate('projectJson()')===saved && d.getElementById('ia-draft').value==='A clearer introduction for learners.';
     d.getElementById('ia-undo').click();await wait();
-    test(mode+' undo restores planned wording',()=>contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading');
-    const project=JSON.parse(evaluate('projectJson()'));w.importConfig(project);await wait();
-    test(mode+' JSON round trip retains content identities, notes and draft separately from actual content',()=>contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && contentNodes().find(node=>node.id===heading.id).notes==='Confirm with the project owner' && contentNodes().find(node=>node.id===heading.id).value===beforeBody);
-    d.getElementById('jSaveLocal').click();const projectId=d.getElementById('jProjects').value;
-    test(mode+' local save contains full content planning data',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[projectId].data.designProcess.contentPlan[mode].some(node=>node.id===heading.id && node.draft==='A proposed new heading'));
-    const fileJson=evaluate('projectJson()'),fileTransfer=new w.DataTransfer(),fileAlerts=[],previousAlert=w.alert;
-    w.alert=message=>fileAlerts.push(message);fileTransfer.items.add(new w.File([fileJson],'content-plan.json',{type:'application/json'}));d.getElementById('loadFile').files=fileTransfer.files;
-    // The file contains the current plan: equality alone cannot prove the file read
-    // finished. Await import completion before deleting any planning branches.
-    const fileImportCompleted=await loadSelectedProjectFile();await wait();w.alert=previousAlert;
-    test(mode+' actual exported JSON file reimports through Load JSON with the complete content plan',()=>fileImportCompleted && !fileAlerts.length && contentNodes().find(node=>node.id===heading.id).draft==='A proposed new heading' && evaluate('projectJson()')===fileJson);
-    selectContent(header.id);d.getElementById('ia-delete').click();await wait();
-    test(mode+' removing the header planning branch does not remove Home from sitemap or page',()=>!contentNode('Header') && previewDoc().querySelector('#sitemap').innerHTML===beforeFooter && previewDoc().getElementById('home'));
-    d.getElementById('ia-undo').click();await wait();
-    test(mode+' branch deletion undo restores all descendant identities',()=>contentNode('Header').id===header.id && contentNodes().some(node=>node.id===homeRef.id));
-    selectContent(homeRef.id);
-    test(mode+' navigation references do not offer separate sitemap membership',()=>d.getElementById('ia-manage-sitemap').disabled && d.getElementById('ia-sitemap-summary').textContent.includes('do not have separate sitemap membership'));
-    selectContent(home.id);d.getElementById('ia-manage-sitemap').click();await wait();
-    test(mode+' canonical section reaches its matching eyebrow sitemap inclusion control',()=>d.activeElement.dataset.sectionId==='home' && d.getElementById('sitemap-destination-editor').hidden);
-    selectContent(hero.id);addContent('inside');input('ia-label','New content group');input('ia-type','group','change');await saveContent();
-    const newGroup=contentNode('New content group');
-    test(mode+' add child retains the selected container relationship',()=>newGroup.parentId===hero.id && newGroup.status==='planned');
-    addContent('inside');input('ia-label','New text');input('ia-draft','Actual planned copy');await saveContent();const child=contentNode('New text');
-    selectContent(newGroup.id);input('ia-label','Renamed content group');input('ia-parent',header.id,'change');await saveContent();
-    test(mode+' rename and reparent preserve descendant identities and planned copy',()=>contentNode('Renamed content group').id===newGroup.id && contentNode('Renamed content group').parentId===header.id && contentNode('New text').id===child.id && contentNode('New text').parentId===newGroup.id && contentNode('New text').draft==='Actual planned copy');
-    const unchanged=evaluate('projectJson()'),forged=new w.Option('Cycle',child.id);d.getElementById('ia-parent').add(forged);input('ia-parent',child.id,'change');await saveContent();
-    test(mode+' forged cyclic reparent does not mutate saved content',()=>evaluate('projectJson()')===unchanged && d.getElementById('ia-status-message').textContent.includes('outside this branch'));
-    d.getElementById('ia-discard').click();selectContent(child.id);addContent('beside');input('ia-label','Second text');await saveContent();
-    const siblingsBefore=contentNodes().filter(node=>node.parentId===newGroup.id).map(node=>node.id).join(',');d.getElementById('ia-up').click();await wait();
-    test(mode+' sibling reorder preserves the whole branch and changes order',()=>contentNodes().filter(node=>node.parentId===newGroup.id).map(node=>node.id).join(',')!==siblingsBefore && contentNode('New text').id===child.id);
-    const footerBeforeRestore=previewDoc().querySelector('#sitemap').innerHTML;d.getElementById('ia-restore').click();await wait();
-    test(mode+' restoring sample inventory clears only that sample content edits and retains sitemap',()=>!contentNode('Renamed content group') && previewDoc().querySelector('#sitemap').innerHTML===footerBeforeRestore && evaluate('state.designProcess.contentPlan.'+mode)===null);
-    d.getElementById('ia-undo').click();await wait();
-    test(mode+' restore can be undone',()=>contentNode('Renamed content group').id===newGroup.id);
-    const paragraphs=contentNodes().filter(node=>node.label==='Paragraph');
-    selectContent(paragraphs[0].id);input('ia-notes','Repeated role labels use separate identities');await saveContent();
-    test(mode+' repeated paragraph role labels remain independently editable',()=>contentNodes().find(node=>node.id===paragraphs[0].id).notes==='Repeated role labels use separate identities' && contentNodes().find(node=>node.id===paragraphs[1].id).notes!== 'Repeated role labels use separate identities');
-  }
-  reset();d.getElementById('dockModeBasic').click();await wait();
-  selectContent(contentNode('Wordmark').id);input('ia-notes','Basic only');await saveContent();d.getElementById('dockModeAdvanced').click();await wait();
-  test('Sample switches retain independent content plans',()=>contentNode('Wordmark').notes!=='Basic only' && contentNode('Wordmark').notes.includes('Advanced Web Design Field Guide'));d.getElementById('dockModeBasic').click();await wait();
-  test('Switching back restores the saved content plan',()=>contentNode('Wordmark').notes==='Basic only');
-  input('jProject','Renamed live project');await wait();
-  test('Current content refreshes from authored source while preserving planned notes and IDs',()=>contentNode('Wordmark').value==='Renamed live project' && contentNode('Wordmark').notes==='Basic only');
-  reset();await wait();const invalidContentConfig=JSON.parse(evaluate('projectJson()'));invalidContentConfig.advanced.state='invalid';w.importConfig(invalidContentConfig);await wait();
-  test('Advanced-only state changes refresh actual source feedback rather than reusing stale cached text',()=>contentNodes().some(node=>node.value==='Enter an email address in the format name@example.com.'));
-  w.importConfig({sampleMode:'basic',designProcess:{pages:'Home\nHome > Future content\nFuture destination',iaEntries:{basic:[{id:'ia-77',path:['Home'],type:'section',includeInSitemap:false}]}}});await wait();
-  test('Previous custom plans migrate into the content structure without losing destination choices',()=>contentNode('Future content') && contentNode('Future destination') && contentNode('Home').id==='content-legacy-ia-77' && contentNodes().filter(node=>node.target==='home' && node.type!=='link').length===1 && !w.DSStudio.process.entries().find(node=>node.label==='Home').includeInSitemap);
-  const deep=Array.from({length:12},(_,i)=>({id:'content-depth-'+i,parentId:i?'content-depth-'+(i-1):null,label:'Level '+(i+1),type:i===11?'text':'group',draft:i===11?'Twelve levels of useful content':null,status:'planned'}));
-  w.importConfig({sampleMode:'basic',designProcess:{contentPlan:{basic:deep}}});w.dssShowWizardStep(1);await wait();
-  test('Content structures support twelve levels independently from the destination outline',()=>contentNodes().length===12 && model.path(contentNodes(),contentNode('Level 12')).length===12 && d.querySelectorAll('#ia-outline details').length===11);
-  selectContent(contentNode('Level 12').id);test('Depth limit disables adding a child at the boundary',()=>d.getElementById('ia-add-placement').options[0].disabled);
-  const unsafe=[{id:'content-safe',parentId:null,label:'<img src=x onerror=alert(1)>',type:'text',draft:'<script>alert(1)<\/script>',notes:'<svg onload=alert(1)>',status:'planned',target:'javascript:alert(1)'},{id:'content-cycle-a',parentId:'content-cycle-b',label:'Cycle A'},{id:'content-cycle-b',parentId:'content-cycle-a',label:'Cycle B'},{id:'content-safe',label:'Duplicate'}];
-  const sanitized=model.normalizeNodes(unsafe,'basic');
-  test('Content imports validate identities, targets and cycles',()=>sanitized.length===1 && !sanitized[0].target && sanitized[0].label.includes('<img'));
-  w.importConfig({sampleMode:'advanced',designProcess:{contentPlan:{advanced:unsafe}}});await wait();
-  test('Hostile content labels, drafts and notes stay inert in controls and exported artifacts',()=>!d.querySelector('#ia-content-editor img, #ia-content-editor script, #process-ia .ia-content-map img, #process-ia .ia-content-map svg') && d.getElementById('ia-outline').textContent.includes('<script>') && !new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#ia-lab .ia-content-map img, #ia-lab .ia-content-map script'));
-  const oversized=Array.from({length:1010},(_,i)=>({id:'content-bound-'+i,label:'Node '+i,parentId:null,type:'text'}));test('Content imports bound inventory size',()=>model.normalizeNodes(oversized,'basic').length===1000);
-  const textHeavy=model.normalizeNodes(Array.from({length:1000},(_,i)=>({id:'content-heavy-'+i,label:'Large '+i,value:'x'.repeat(2400),draft:'y'.repeat(2400),notes:'z'.repeat(1200)})),'basic');
-  test('Content imports bound aggregate plan data as well as individual values',()=>textHeavy.length>0 && textHeavy.length<1000 && JSON.stringify(textHeavy).length<=model.MAX_PLAN_CHARS);
-  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();w.dssShowWizardStep(1);await wait();d.getElementById('ia-expand').click();const heading=model.nodes().find(node=>node.sourceKey==='id:hero-title');selectContent(heading.id);d.querySelectorAll('.ia-editor-disclosure, .ia-add-menu, .ia-branch-tools > details').forEach(el=>el.open=true);
-    for(const width of [320,390,1440]) {app.style.width=width+'px';await wait();
-      test(mode+' '+theme+' deep outline and content controls fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && d.getElementById('ia-outline').scrollWidth<=d.getElementById('ia-outline').clientWidth+1 && [...d.querySelectorAll('#ia-content-editor input:not([type=checkbox]), #ia-content-editor select, #ia-content-editor textarea, #ia-content-editor button')].filter(el=>!el.hidden).every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.right<=d.getElementById('ia-content-editor').getBoundingClientRect().right+1;}) && !w.__reviewErrors.length);
-    }
-  }
-  app.style.width='1440px';reset();await wait();
-  }
-
-  // Eyebrow sitemap: shared visible labels, real destinations and saved configuration.
-  {
-    const sectionModel=w.DSStudio.sectionSitemap;
-    const changeSource=value=>{revealArchitecture();const control=d.getElementById('sitemap-source');control.value=value;control.dispatchEvent(new w.Event('change',{bubbles:true}));};
-    const chooseSection=(id,checked)=>{const control=[...d.querySelectorAll('#section-sitemap-choices input')].find(el=>el.dataset.sectionId===id);control.checked=checked;control.dispatchEvent(new w.Event('change',{bubbles:true}));};
-    const mapLinks=()=>[...previewDoc().querySelectorAll('#sitemap a')];
-    for(const mode of ['basic','advanced']) {
-      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
-      const rows=sectionModel.nodes(),body=previewDoc(),beforeContent=JSON.stringify(w.DSStudio.contentArchitecture.nodes());
-      test(mode+' defaults to page labels with source selection first and advanced text tools hidden',()=>d.getElementById('section-sitemap-editor').firstElementChild.id==='sitemap-source-field' && d.getElementById('sitemap-source-field').contains(d.getElementById('sitemap-source')) && d.getElementById('architecture-sitemap-advanced').hidden && sectionModel.source()==='sections' && d.getElementById('sitemap-source').value==='sections' && d.getElementById('sitemap-destination-editor').hidden && d.getElementById('sitemap-outline-editor').hidden && w.DSStudio.contentArchitecture.nodes().length>100);
-      test(mode+' every sitemap label and destination matches a visible eyebrow or heading',()=>rows.length>10 && rows.every(node=>{const target=body.getElementById(node.id);return target && [...target.querySelectorAll('.eyebrow,.sample-eyebrow,h1,h2,h3,h4,h5,h6,legend'),target].some(el=>el.textContent.replace(/\s+/g,' ').trim()===node.label);}) && mapLinks().map(a=>a.hash.slice(1)).join(',')===rows.map(node=>node.id).join(',') && mapLinks().every((a,i)=>a.textContent===rows[i].label));
-      test(mode+' sitemap follows container ancestry and keeps slash labels whole',()=>rows.some(node=>node.id==='home' && !node.parentId) && rows.every(node=>!node.parentId || body.getElementById(node.parentId).contains(body.getElementById(node.id))) && !rows.some(node=>node.id==='footer'));
-      test(mode+' preview proxies and exported fragment links share the same labels',()=>{const exported=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html'),proxies=[...d.querySelectorAll('.process-sitemap-preview a[data-sitemap-target]')];return proxies.length===rows.length && proxies.every((a,i)=>a.hash==='#previewShell' && a.dataset.sitemapTarget===rows[i].id && a.textContent===rows[i].label) && [...exported.querySelectorAll('#sitemap a')].every((a,i)=>a.hash==='#'+rows[i].id && a.textContent===rows[i].label && exported.querySelectorAll('[id="'+rows[i].id+'"]').length===1);});
-      if(mode==='basic') {
-        test('Basic sitemap root labels match the four section eyebrows',()=>rows.filter(node=>!node.parentId).map(node=>node.label).join('|')==='HTML & CSS essentials|Components / Flexbox|Layouts / CSS Grid|Forms / Labels & controls');
-        test('Basic component eyebrows and list heading fallbacks remain correctly nested',()=>rows.find(node=>node.id==='basic-structure').label==='Article / Content card' && rows.find(node=>node.id==='basic-structure').parentId==='features' && rows.find(node=>node.id==='list-collection').label==='Unordered list' && rows.find(node=>node.id==='list-collection').parentId==='lists');
-      }
-      const parent=mode==='basic'?'features':'components',child=mode==='basic'?'basic-structure':'component-actions';
-      chooseSection(child,false);chooseSection(parent,false);await wait();
-      test(mode+' excluding a parent suppresses its branch without changing content',()=>!mapLinks().some(a=>a.hash==='#'+parent || a.hash==='#'+child) && [...d.querySelectorAll('#section-sitemap-choices input')].find(el=>el.dataset.sectionId===child).disabled && JSON.stringify(w.DSStudio.contentArchitecture.nodes())===beforeContent);
-      const canonical=w.DSStudio.contentArchitecture.nodes().find(node=>node.target===child && node.type!=='link'),select=d.querySelector('[data-content-id="'+canonical.id+'"]');
-      for(let ancestor=select.parentElement;ancestor;ancestor=ancestor.parentElement)if(ancestor.tagName==='DETAILS')ancestor.open=true;
-      select.click();d.getElementById('ia-manage-sitemap').click();
-      test(mode+' configuring an excluded child focuses the parent that must be enabled first',()=>d.activeElement.dataset.sectionId===parent);
-      chooseSection(parent,true);await wait();
-      test(mode+' re-including a parent retains independent child exclusions',()=>mapLinks().some(a=>a.hash==='#'+parent) && !mapLinks().some(a=>a.hash==='#'+child));
-      d.getElementById('jSaveLocal').click();const sectionProjectId=d.getElementById('jProjects').value;
-      chooseSection('home',false);await wait();
-      test(mode+' section inclusion autosaves to the active project',()=>JSON.parse(w.localStorage.getItem('dss-v27-projects'))[sectionProjectId].data.designProcess.sitemapExcluded[mode].includes('home'));
-      chooseSection('home',true);await wait();
-      const config=evaluate('projectJson()');evaluate('importConfig('+config+')');await wait();
-      test(mode+' section choices round trip through project JSON',()=>evaluate('state.designProcess.sitemapExcluded.'+mode).join(',')===child && !mapLinks().some(a=>a.hash==='#'+child));
-      d.getElementById('section-sitemap-restore').click();await wait();
-      test(mode+' Include all sections restores the current sample',()=>mapLinks().length===rows.length);
-      evaluate('state.designProcess.goal="Keep this unrelated brief edit";apply()');
-      d.getElementById('section-sitemap-undo').click();await wait();
-      test(mode+' sitemap undo retains later brief changes',()=>evaluate('state.designProcess.goal')==='Keep this unrelated brief edit');
-      test(mode+' section configuration undo restores exclusions',()=>!mapLinks().some(a=>a.hash==='#'+child));
-      changeSource('custom');await wait();
-      test(mode+' custom source reveals compatible destination controls',()=>!d.getElementById('sitemap-destination-editor').hidden && !d.getElementById('sitemap-outline-editor').hidden && d.getElementById('section-sitemap-settings').hidden);
-      changeSource('sections');d.getElementById('section-sitemap-restore').click();await wait();
-      const proxy=d.querySelector('.process-sitemap-preview [data-sitemap-target="'+parent+'"]');proxy.click();await wait();
-      test(mode+' eyebrow sitemap preview link focuses the actual page section',()=>previewDoc().activeElement.id===parent);
-      for(const theme of ['light','dark']) {
-        if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();
-        for(const width of [320,390,1440]) {
-          app.style.width=width+'px';w.dssShowWizardStep(1);await wait();
-          revealArchitecture();test(mode+' '+theme+' eyebrow sitemap controls fit '+width+'px',()=>{const editor=d.getElementById('section-sitemap-editor'),box=editor.getBoundingClientRect();return d.documentElement.scrollWidth<=w.innerWidth+1 && [...editor.querySelectorAll('select,button,#section-sitemap-choices label')].filter(el=>el.getBoundingClientRect().width>0).every(el=>{const b=el.getBoundingClientRect();return b.height>=44 && b.right<=box.right+1;});});
-        }
-      }
-    }
-    app.style.width='1440px';reset();await wait();
-    w.importConfig({sampleMode:'basic',designProcess:{sitemapSource:{basic:'sections',advanced:'sections'},sitemapExcluded:{basic:['home','features','lists','signup'],advanced:['about']}}});await wait();
-    test('An empty section sitemap explains its selection state and retains website content',()=>!mapLinks().length && previewDoc().querySelector('#sitemap').textContent.includes('No sections selected') && previewDoc().querySelectorAll('main > section').length===4);
-    d.getElementById('section-sitemap-restore').click();await wait();
-    test('Restoring Basic section choices retains Advanced choices',()=>evaluate('state.designProcess.sitemapExcluded.basic').length===0 && evaluate('state.designProcess.sitemapExcluded.advanced').join(',')==='about');
-    d.getElementById('dockModeAdvanced').click();await wait();
-    test('Mode switches apply the matching saved section choices',()=>!mapLinks().some(a=>a.hash==='#about') && mapLinks().some(a=>a.hash==='#home'));
-    d.getElementById('dockModeBasic').click();await wait();
-    test('Returning to Basic restores its complete section sitemap',()=>mapLinks().length===12);
-    const fixture='<main><section id="features"><p class="eyebrow">Components / Flexbox</p><article id="basic-structure"><p class="eyebrow">Repeated &amp; safe</p></article><article id="basic-layout"><h3>Repeated &amp; safe</h3></article></section><section id="lists"><article id="list-collection"><p class="eyebrow">Child only</p></article></section></main>';
-    const collected=sectionModel.collect(fixture,'basic');
-    test('Section collector preserves duplicate label identities and does not borrow child eyebrows',()=>collected.length===4 && collected[1].label===collected[2].label && collected[1].id!==collected[2].id && !collected.some(node=>node.id==='lists') && collected.find(node=>node.id==='list-collection').parentId===null);
-    w.importConfig({sampleMode:'basic',designProcess:{sitemapSource:{basic:'malicious'},sitemapExcluded:{basic:['features','features','javascript:alert(1)','missing']}}});await wait();
-    test('Imported sitemap source and exclusions use bounded fixed values',()=>evaluate('state.designProcess.sitemapSource.basic')==='auto' && evaluate('state.designProcess.sitemapExcluded.basic').join(',')==='features');
-    w.importConfig({sampleMode:'basic',designProcess:{pages:'Home\nCustom > Content card',pageLinks:{basic:{Custom:'features'}}}});await wait();
-    test('Older custom outlines retain their navigation until switched explicitly',()=>sectionModel.source()==='custom' && mapLinks().some(a=>a.textContent==='Custom'));
-    const customBefore=evaluate('JSON.stringify([state.designProcess.pages,state.designProcess.pageLinks,state.designProcess.contentPlan])');changeSource('sections');await wait();
-    test('Switching an old plan to page labels preserves its saved plan and content',()=>mapLinks().some(a=>a.textContent==='Components / Flexbox') && evaluate('JSON.stringify([state.designProcess.pages,state.designProcess.pageLinks,state.designProcess.contentPlan])')===customBefore);
-    evaluate('state.project="<img src=x onerror=alert(1)> & Safe";state.sampleMode="advanced";state.designProcess.sitemapSource.advanced="sections";apply()');await wait();
-    test('Dynamic eyebrow text stays escaped in sitemap controls, preview and exports',()=>mapLinks().some(a=>a.textContent.includes('<img')) && !previewDoc().querySelector('#sitemap img') && !d.querySelector('#section-sitemap-choices img') && !new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('#sitemap img'));
-    reset();await wait();
-  }
-
-  // Student content planning: understand the item, propose content, save and review.
-  {
-    const model=w.DSStudio.contentArchitecture,rows=()=>model.nodes();
-    const select=id=>{const button=d.querySelector('[data-content-id="'+id+'"]');for(let parent=button.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;button.click();};
-    for(const mode of ['basic','advanced']) {
-      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
-      const heading=rows().find(node=>node.label==='Heading'),home=rows().find(node=>node.label==='Home' && node.type!=='link');select(heading.id);
-      test(mode+' selected content identifies the item and teaches its properties',()=>d.getElementById('ia-selected-name').textContent===heading.label && d.getElementById('ia-current-path').textContent.startsWith('Location: ') && d.getElementById('ia-origin').textContent==='From the sample website' && d.getElementById('ia-actual-label').textContent==='Saved website content (read only)' && d.getElementById('ia-type-help').textContent.includes('words') && d.getElementById('ia-actual').readOnly && d.getElementById('ia-actual').value===heading.value);
-      test(mode+' content planning uses descriptive unnumbered headings and an explicit sample boundary',()=>[...d.querySelectorAll('#ia-properties > fieldset > legend')].map(el=>el.textContent).join('|')==='Website content|Understand this item' && d.getElementById('ia-plan-heading').textContent==='Develop the content plan' && d.getElementById('ia-save-heading').textContent==='Save and review' && d.getElementById('ia-plan-boundary').textContent.includes('does not replace') && d.getElementById('ia-draft-label').textContent==='Proposed wording');
-      const before=evaluate('projectJson()');input('ia-draft','A clear introduction for our learners');input('ia-notes','Purpose: introduce the course. Owner: course tutor. Next action: review with a beginner.');input('ia-status','needs-content','change');
-      test(mode+' content edits stay in the form until saved and are clearly marked',()=>evaluate('projectJson()')===before && d.getElementById('ia-has-draft').checked && d.getElementById('ia-edit-state').textContent.includes('Unsaved edits') && !d.getElementById('ia-discard').disabled);
-      d.getElementById('architecture-saved-review').open=false;d.getElementById('ia-form').requestSubmit();await wait();
-      test(mode+' save retains the proposed wording, readiness and next action separately from the sample',()=>{const node=rows().find(node=>node.id===heading.id);return node.draft==='A clear introduction for our learners' && node.notes.includes('Owner: course tutor') && node.status==='needs-content' && node.value===heading.value && d.getElementById('ia-actual').value===heading.value && d.getElementById('ia-edit-state').textContent.includes('saved plan') && d.getElementById('ia-discard').disabled && d.getElementById('architecture-saved-review').open && d.activeElement===d.getElementById('ia-save') && d.getElementById('ia-outline').textContent.includes(node.draft) && d.getElementById('ia-outline').textContent.includes('Needs content or revision') && d.querySelector('#process-ia .ia-content-map').textContent.includes('Needs content or revision');});
-      const savedPlan=evaluate('projectJson()');input('ia-label','Unsaved name');input('ia-type','image','change');input('ia-draft','Unsaved image brief');
-      test(mode+' changing content kind explains the matching planning task',()=>d.getElementById('ia-draft-label').textContent==='Image brief' && !d.getElementById('ia-example') && d.getElementById('ia-draft-help').textContent.includes('alternative text') && d.getElementById('ia-type-help').textContent.includes('visual asset'));
-      d.getElementById('ia-discard').click();
-      test(mode+' discarding form edits restores saved properties and proposal without changing the project',()=>evaluate('projectJson()')===savedPlan && d.getElementById('ia-label').value===heading.label && d.getElementById('ia-type').value===heading.type && d.getElementById('ia-draft').value==='A clear introduction for our learners' && d.getElementById('ia-draft-label').textContent==='Proposed wording' && d.getElementById('ia-discard').disabled && d.getElementById('architecture-saved-review').open && d.activeElement===d.getElementById('ia-save'));
-      input('ia-draft','');d.getElementById('ia-form').requestSubmit();await wait();
-      test(mode+' deliberately blank proposals are explained and saved distinctly',()=>rows().find(node=>node.id===heading.id).draft==='' && d.getElementById('ia-proposal-state').textContent.includes('intentionally blank'));
-      d.getElementById('ia-has-draft').click();d.getElementById('ia-form').requestSubmit();await wait();
-      test(mode+' no proposal retains notes and uses the original sample as the starting point',()=>rows().find(node=>node.id===heading.id).draft===null && rows().find(node=>node.id===heading.id).notes.includes('Owner: course tutor') && d.getElementById('ia-proposal-state').textContent.includes('No proposed replacement'));
-      for(const [kind,label]of [['image','Image brief'],['link','Proposed link wording'],['field','Proposed label or instructions'],['group','What this area needs']]) {
-        const node=rows().find(node=>node.type===kind);select(node.id);
-        test(mode+' '+kind+' items show a relevant planning prompt without an example panel',()=>d.getElementById('ia-draft-label').textContent===label && !d.getElementById('ia-example') && d.getElementById('ia-draft-help').textContent.length>30 && d.getElementById('ia-type-help').textContent.length>40);
-      }
-      select(home.id);addContent('inside');
-      test(mode+' adding inside explains a new planning item and retains the chosen parent',()=>d.getElementById('ia-selected-name').textContent==='New planning item' && d.getElementById('ia-origin').textContent.includes('not added to the sample') && d.getElementById('ia-parent').value===home.id && d.getElementById('ia-edit-state').textContent.includes('New item'));
-      input('ia-label','Audience introduction');input('ia-draft','Explain who this course is for.');d.getElementById('ia-form').requestSubmit();await wait();
-      test(mode+' a new item saves within its chosen container and stays explicitly planned',()=>rows().some(node=>node.label==='Audience introduction' && node.parentId===home.id && node.status==='planned' && node.draft==='Explain who this course is for.') && d.getElementById('ia-origin').textContent.includes('not added to the sample') && d.getElementById('ia-actual-label').textContent==='Recorded content (read only)');
-    }
-    w.importConfig({sampleMode:'basic',designProcess:{contentPlan:{basic:[{id:'content-unsafe-name',label:'<img src=x onerror=alert(1)>',type:'text',draft:'<svg onload=alert(1)>',notes:'<script>unsafe<\/script>'}]}}});w.dssShowWizardStep(1);await wait();
-    test('Student item summaries render imported names and proposals as inert text',()=>d.getElementById('ia-selected-name').textContent.includes('<img') && d.getElementById('ia-draft').value.includes('<svg') && !d.querySelector('#ia-form img, #ia-form svg, #ia-form script'));
+    test('Content-tree journey Discard and Undo restore the correct saved state',()=>discarded && evaluate('projectJson()')===before && contentModel.nodes().find(row=>row.id===heading.id).draft===null && evaluate('htmlExport()')===website);
+    const libraryBeforeFile=w.localStorage.getItem('dss-v27-projects');
+    await importFile(files[0].content);await wait();choose();
+    test('Content-tree journey downloaded JSON restores the proposal and editor without overwriting saved projects',()=>files[0].name==='design-system-studio.json' && files[0].type==='application/json' && files[0].content===saved && evaluate('projectJson()')===saved && contentModel.nodes().find(row=>row.id===heading.id).draft==='A clearer introduction for learners.' && d.getElementById('ia-draft').value==='A clearer introduction for learners.' && w.localStorage.getItem('dss-v27-projects')===libraryBeforeFile && previewDoc().getElementById('hero-title').textContent===heading.value);
     app.style.width='1440px';reset();await wait();
   }
 
-  // Architecture uses the current site as its working content, with visible status.
-  {
-    for(const mode of ['basic','advanced']) {
-      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1,false);await wait();
-      const model=w.DSStudio.contentArchitecture,rows=()=>model.nodes(),heading=rows().find(node=>node.sourceKey==='id:hero-title');
-      const choose=node=>{const button=d.querySelector('[data-content-id="'+node.id+'"]');for(let p=button.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;button.click();};
-      const before=evaluate('projectJson()'),html=evaluate('htmlExport()');choose(heading);
-      test(mode+' proposed wording starts from actual site content without creating a saved proposal',()=>d.getElementById('ia-draft').value===previewDoc().getElementById('hero-title').textContent && !d.getElementById('ia-has-draft').checked && rows().find(node=>node.id===heading.id).draft===null && evaluate('projectJson()')===before && evaluate('htmlExport()')===html);
-      test(mode+' fresh notes relate to this site and selected item without inventing an owner',()=>d.getElementById('ia-notes').value.includes(evaluate('state.project')) && d.getElementById('ia-notes').value.includes('Home / Hero / Heading') && d.getElementById('ia-notes').value.includes('Owner: Unassigned.') && d.getElementById('ia-notes').value.includes(mode==='basic'?'Basic HTML and CSS':'Advanced Web Design Field Guide'));
-      test(mode+' planning has no example panel and review is named for its current role',()=>!d.getElementById('ia-example') && !d.querySelector('.ia-plan-example') && d.querySelector('#architecture-saved-review > summary').textContent==='Review the Content Plan');
-      for(const kind of model.types){input('ia-type',kind,'change');test(mode+' '+kind+' keeps readiness visible as an item property',()=>d.getElementById('ia-status').closest('#ia-properties') && !d.getElementById('ia-content-plan').contains(d.getElementById('ia-status')) && d.getElementById('ia-status').form===d.getElementById('ia-form') && d.getElementById('ia-status').getBoundingClientRect().height>=44 && d.getElementById('ia-status').value==='present');}
-      d.getElementById('ia-discard').click();input('ia-status','needs-content','change');input('ia-notes','Purpose: our site introduction. Owner: site team. Next action: review.');d.getElementById('ia-form').requestSubmit();await wait();
-      test(mode+' readiness and site notes save while seeded wording remains an uncommitted proposal',()=>rows().find(node=>node.id===heading.id).status==='needs-content' && rows().find(node=>node.id===heading.id).draft===null && d.getElementById('ia-draft').value===heading.value);
-      const project=JSON.parse(evaluate('projectJson()'));project.designProcess.contentPlan[mode].find(node=>node.id===heading.id).notes='';project.designProcess.contentPlan[mode].find(node=>node.id===heading.id).draft='';w.importConfig(project);await wait();choose(rows().find(node=>node.id===heading.id));
-      test(mode+' explicit empty saved notes and wording survive imports instead of being replaced by defaults',()=>d.getElementById('ia-notes').value==='' && d.getElementById('ia-draft').value==='' && d.getElementById('ia-has-draft').checked && d.getElementById('ia-status').value==='needs-content' && d.getElementById('ia-notes').placeholder.includes(evaluate('state.project')));
-      for(const width of [320,390,1440]){app.style.width=width+'px';await wait();const browser=d.querySelector('.ia-browser'),form=d.getElementById('ia-form'),intro=browser.querySelector(':scope > .ia-browser-heading'),b=browser.getBoundingClientRect(),f=form.getBoundingClientRect(),status=d.getElementById('ia-status').getBoundingClientRect();test(mode+' browser owns its introduction and properties start at the column top at '+width+'px',()=>intro===browser.firstElementChild && intro.querySelector('h3').textContent==='Content structure' && intro.querySelector('p').textContent.includes('Choose an item') && (d.getElementById('architecture-workspace').clientWidth<736?f.top>=b.bottom-1:Math.abs(f.top-b.top)<=1) && status.top<d.getElementById('ia-website-content').getBoundingClientRect().top && d.documentElement.scrollWidth<=w.innerWidth+1);}
-      app.style.width='1440px';reset();await wait();
-    }
-  }
-  // Properties stay visible; tree actions and the external Save control share the selection.
-  {
-    for(const mode of ['basic','advanced']) {
-      reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
-      const properties=d.getElementById('ia-properties'),plan=d.getElementById('ia-content-plan'),planSummary=plan.querySelector('summary'),form=d.getElementById('ia-form'),save=d.querySelector('.ia-save-area'),browser=d.querySelector('.ia-browser');
-      test(mode+' selected content properties are visible without a disclosure or local step number',()=>properties.tagName==='SECTION' && !properties.querySelector(':scope > summary') && d.getElementById('ia-editor-heading').textContent==='Selected content properties' && d.getElementById('ia-label').getBoundingClientRect().height>=44 && !plan.open && planSummary.textContent==='Develop the content plan');
-      test(mode+' planning leads the workspace and its external fields belong to the selected content form',()=>plan.parentElement===d.getElementById('architecture-workspace') && plan.previousElementSibling.tagName==='HEADER' && plan.nextElementSibling===d.getElementById('ia-content-editor') && !form.contains(plan) && [...plan.querySelectorAll('input,textarea,select,button')].every(control=>control.form===form) && d.getElementById('ia-plan-selection').textContent.includes(d.getElementById('ia-selected-name').textContent));
-      const before=evaluate('projectJson()');
-      d.querySelector('[data-content-id]').click();
-      test(mode+' selecting content focuses the visible name field and identifies the branch action target',()=>d.activeElement===d.getElementById('ia-label') && d.getElementById('ia-branch-selection').textContent==='Selected: '+d.getElementById('ia-selected-name').textContent && browser.contains(d.querySelector('.ia-branch-tools')));
-      planSummary.click();
-      test(mode+' expanding content planning keeps properties visible and does not change project data',()=>plan.open && d.getElementById('ia-label').getBoundingClientRect().height>=44 && evaluate('projectJson()')===before);
-      input('ia-draft','A proposal retained while collapsed');planSummary.click();
-      test(mode+' collapsing planning retains unsaved values with external Save and Discard available',()=>!plan.open && d.getElementById('ia-draft').value==='A proposal retained while collapsed' && !d.getElementById('ia-discard').disabled && !form.contains(save) && d.getElementById('ia-save').form===form && evaluate('projectJson()')===before);
-      d.getElementById('ia-save').click();await wait();
-      test(mode+' external Save submits the selected form and retains the saved proposal',()=>!plan.open && w.DSStudio.contentArchitecture.nodes().some(node=>node.draft==='A proposal retained while collapsed') && d.getElementById('ia-discard').disabled && d.getElementById('architecture-saved-review').open && d.activeElement===d.getElementById('ia-save'));
-      d.getElementById('architecture-saved-review').open=false;d.getElementById('ia-undo').click();await wait();
-      test(mode+' content Undo reveals feedback in the collapsed Review the Content Plan section',()=>d.getElementById('architecture-saved-review').open && d.getElementById('ia-status-message').textContent.includes('undone'));
-      addContent('top');
-      test(mode+' adding an item focuses its always-visible required name',()=>!plan.open && d.activeElement===d.getElementById('ia-label'));
-      d.getElementById('ia-save').click();
-      test(mode+' external Save validates and focuses an empty required name',()=>d.activeElement===d.getElementById('ia-label') && !d.getElementById('ia-label').validity.valid);
-      d.dispatchEvent(new w.Event('dss:imported'));await wait();
-      test(mode+' importing retains visible properties and resets only the planning disclosure',()=>!plan.open && properties.tagName==='SECTION' && d.getElementById('ia-label').getBoundingClientRect().height>=44);
-      for(const width of [320,390,1440]) {
-        app.style.width=width+'px';await wait();
-        const review=d.getElementById('architecture-saved-review');review.open=true;plan.open=true;const s=save.getBoundingClientRect(),b=browser.getBoundingClientRect(),branch=browser.querySelector('.ia-branch-tools').getBoundingClientRect();
-        test(mode+' Save and review sits below the left content browser at '+width+'px',()=>review.querySelector(':scope > summary').textContent==='Review the Content Plan' && !review.contains(save) && browser.lastElementChild===save && review.lastElementChild.matches('[data-process-artifact="ia"]') && review.lastElementChild.previousElementSibling===d.getElementById('architecture-review-guidance') && d.querySelectorAll('#process-ia .process-ia-guidance').length===1 && d.getElementById('architecture-review-guidance').querySelector('h4').textContent==='Information architecture and sitemap: different jobs' && d.getElementById('ia-content-editor').contains(save) && s.top>=branch.bottom-1 && s.left>=b.left && s.right<=b.right+1 && d.documentElement.scrollWidth<=w.innerWidth+1 && [...save.querySelectorAll('button')].every(el=>el.getBoundingClientRect().height>=44) && plan.getBoundingClientRect().top<d.getElementById('ia-content-editor').getBoundingClientRect().top && [...plan.querySelectorAll('textarea,select,input:not([type=checkbox])')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.left>=0 && box.right<=w.innerWidth+1;}));
-      }
-    }
-    app.style.width='1440px';reset();await wait();
-  }
-
-  // Architecture uses one centre editor, with draft protection across navigation.
-  for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
-    const workspace=d.getElementById('architecture-workspace'),form=d.getElementById('ia-form'),outline=d.getElementById('ia-outline');
-    test(mode+' Architecture has one centre editor and a concise wizard step',()=>workspace.closest('#process-ia') && workspace.contains(form) && workspace.contains(outline) && workspace.contains(d.getElementById('section-sitemap-editor')) && !d.querySelector('[data-journey-pane="1"] input, [data-journey-pane="1"] select, [data-journey-pane="1"] textarea') && d.querySelectorAll('#ia-form').length===1);
-    d.getElementById('open-architecture-workspace').click();
-    test(mode+' workspace shortcut opens its lesson and focuses the workspace heading',()=>d.getElementById('process-ia').open && d.activeElement.id==='architecture-workspace-title');
-    const selected=d.getElementById('ia-selected-name').textContent,before=evaluate('projectJson()');
-    input('ia-notes','Keep this unsaved planning note');d.getElementById('architecture-saved-review').open=false;
-    const other=[...d.querySelectorAll('[data-content-id]')].find(el=>el.getAttribute('aria-pressed')==='false');other.click();
-    test(mode+' selecting another item preserves unsaved content and saved project data',()=>d.getElementById('ia-selected-name').textContent===selected && d.getElementById('ia-notes').value==='Keep this unsaved planning note' && d.activeElement.id==='ia-save' && d.getElementById('architecture-saved-review').open && evaluate('projectJson()')===before && d.getElementById('ia-status-message').textContent.includes('Save or discard'));
-    for(const id of ['ia-add','ia-delete','ia-up','ia-undo','ia-restore'])d.getElementById(id).click();
-    test(mode+' branch actions and creation cannot replace an unsaved form',()=>d.getElementById('ia-selected-name').textContent===selected && d.getElementById('ia-notes').value==='Keep this unsaved planning note' && evaluate('projectJson()')===before);
-    d.querySelector('#section-sitemap-choices input:not(:disabled)').click();await wait();
-    test(mode+' sitemap changes preserve unsaved content form values',()=>d.getElementById('ia-notes').value==='Keep this unsaved planning note' && !d.getElementById('ia-discard').disabled);
-    w.dssShowWizardStep(2);w.dssShowWizardStep(1);evaluate('apply()');
-    test(mode+' returning to Architecture preserves unsaved edits',()=>d.getElementById('ia-notes').value==='Keep this unsaved planning note' && !d.getElementById('ia-discard').disabled);
-    d.getElementById('ia-discard').click();d.querySelector('[data-content-id="'+other.dataset.contentId+'"]').click();
-    test(mode+' discarding allows selection to continue',()=>d.getElementById('ia-selected-name').textContent!==selected && d.getElementById('ia-notes').value!=='Keep this unsaved planning note');
-    for(const width of [320,390,1440]) {
-      app.style.width=width+'px';await wait();
-      const browser=d.querySelector('.ia-browser').getBoundingClientRect(),editor=form.getBoundingClientRect();
-      test(mode+' Architecture workspace stacks or splits to fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && (workspace.clientWidth<736?editor.top>=browser.bottom-1:editor.left>=browser.right-1) && workspace.contains(form) && d.querySelectorAll('#ia-form').length===1);
-    }
-    app.style.width='1440px';
-  }
-  reset();await wait();
-  for(const mode of ['basic','advanced']) {
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();
-    const before=evaluate('projectJson()'),exported=evaluate('htmlExport()'),sitemap=d.getElementById('architecture-sitemap'),review=d.getElementById('architecture-saved-review');
-    sitemap.open=false;review.open=false;
-    test(mode+' tree creation has one Add action with three placement choices',()=>d.querySelectorAll('.ia-add-controls button').length===1 && [...d.getElementById('ia-add-placement').options].map(option=>option.value).join(',')==='inside,beside,top' && d.querySelector('.ia-branch-tools').contains(d.getElementById('ia-expand')) && d.querySelector('.ia-branch-tools').contains(d.getElementById('ia-collapse')));
-    test(mode+' optional section reference keeps the essential properties visible',()=>!d.getElementById('ia-related-section').open && ['ia-actual','ia-label','ia-type','ia-parent'].every(id=>d.getElementById(id).getBoundingClientRect().height>=44));
-    input('ia-notes','Unsaved note while reviewing navigation');
-    d.getElementById('architecture-view-sitemap').click();
-    test(mode+' visitor sitemap shortcut opens the sole live map without discarding content edits',()=>sitemap.open && d.activeElement===sitemap.querySelector(':scope > summary') && d.getElementById('ia-notes').value==='Unsaved note while reviewing navigation' && evaluate('projectJson()')===before && evaluate('htmlExport()')===exported && d.querySelectorAll('#process-ia .process-sitemap-preview').length===1);
-    review.open=true;evaluate('apply()');
-    test(mode+' saved review remains optional and stable across unrelated rendering',()=>review.open && review.contains(d.querySelector('#process-ia .ia-content-map')) && d.getElementById('ia-notes').value==='Unsaved note while reviewing navigation' && evaluate('projectJson()')===before);
-    d.getElementById('ia-discard').click();
-    const link=w.DSStudio.contentArchitecture.nodes().find(node=>node.type==='link');
-    const button=d.querySelector('[data-content-id="'+link.id+'"]');for(let parent=button.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;button.click();
-    test(mode+' selecting a link reveals its destination reference',()=>d.getElementById('ia-related-section').open && d.getElementById('ia-type').value==='link');
-  }
-  reset();await wait();
-  // Sitemap uses the same native outline / selected-properties pattern in both sources.
-  for(const mode of ['basic','advanced']) {
-    if(d.getElementById('studioInspector').open)d.getElementById('inspectorToggle').click();
-    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1);await wait();d.getElementById('architecture-sitemap').open=true;
-    const sectionNodes=w.DSStudio.sectionSitemap.nodes(),child=sectionNodes.find(node=>node.parentId),automatic=d.getElementById('section-sitemap-settings'),before=evaluate('projectJson()');
-    test(mode+' page sitemap provides a searchable native outline and selected destination properties',()=>automatic.querySelector('.sitemap-browser input[type="search"]') && automatic.querySelector('.sitemap-properties') && automatic.querySelectorAll('button[data-sitemap-node-id]').length===sectionNodes.length && automatic.querySelectorAll('.sitemap-outline details').length>0);
-    const choose=id=>{const button=[...d.querySelectorAll('#section-sitemap-choices button')].find(el=>el.dataset.sitemapNodeId===id);for(let parent=button.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;button.click();};
-    input('section-sitemap-search',child.label);
-    test(mode+' sitemap search reveals matching descendants and their containing branches without editing data',()=>[...d.querySelectorAll('#section-sitemap-choices button')].find(el=>el.dataset.sitemapNodeId===child.id).closest('li').hidden===false && d.querySelector('#section-sitemap-choices details').open && evaluate('projectJson()')===before);
-    choose(child.id);
-    test(mode+' page destination selection exposes its label, location and native inclusion choice',()=>d.getElementById('section-sitemap-name').textContent===child.label && d.getElementById('section-sitemap-path').textContent.includes(' / ') && d.activeElement.id==='section-sitemap-heading' && d.getElementById('section-sitemap-preview-link').dataset.sitemapTarget===child.id);
-    d.getElementById('section-sitemap-included').click();await wait();
-    test(mode+' selected inclusion changes the same saved sitemap as outline checkboxes',()=>!d.getElementById('section-sitemap-included').checked && ![...d.querySelectorAll('#section-sitemap-choices input')].find(el=>el.dataset.sectionId===child.id).checked && !previewDoc().querySelector('#sitemap a[href="#'+child.id+'"]'));
-    d.getElementById('section-sitemap-undo').click();await wait();input('section-sitemap-search','');
-    const focusedCheckbox=[...d.querySelectorAll('#section-sitemap-choices input')].find(el=>el.dataset.sectionId===child.id);for(let parent=focusedCheckbox.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;focusedCheckbox.focus();focusedCheckbox.click();await wait();
-    test(mode+' outline inclusion retains native checkbox focus through reconciliation',()=>d.activeElement===focusedCheckbox);
-    d.getElementById('section-sitemap-undo').click();await wait();
-    for(const source of ['sections','custom']) {
-      const control=d.getElementById('sitemap-source');control.value=source;control.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-      if(source==='custom')d.getElementById('architecture-sitemap-advanced').open=false;
-      const editor=source==='sections'?automatic:d.getElementById('sitemap-editor');
-      test(mode+' '+source+' sitemap editing is available outside Advanced sitemap options',()=>!d.getElementById('architecture-sitemap-advanced').contains(editor) && (editor.matches('.sitemap-workspace') || editor.querySelector('.sitemap-workspace')) && editor.querySelector('.sitemap-properties'));
-      for(const width of [320,390,1440]) {
-        app.style.width=width+'px';await wait();editor.querySelectorAll('details').forEach(el=>el.open=true);
-        const grid=editor.matches('.sitemap-workspace')?editor:editor.querySelector('.sitemap-workspace'),preview=d.getElementById('architecture-sitemap-preview'),b=grid.querySelector('.sitemap-browser').getBoundingClientRect(),p=grid.querySelector('.sitemap-properties').getBoundingClientRect(),m=preview.getBoundingClientRect(),available=d.getElementById('architecture-workspace').clientWidth;
-        test(mode+' '+source+' Find, Selected and Preview use the available columns at '+width+'px',()=>preview.parentElement===grid && preview.querySelector('.process-sitemap-preview').tabIndex===0 && (available>=928?Math.abs(b.top-p.top)<1 && Math.abs(p.top-m.top)<1 && b.right<=p.left+1 && p.right<=m.left+1:available>=736?b.right<=p.left+1 && m.top>=Math.max(b.bottom,p.bottom)-1:p.top>=b.bottom-1 && m.top>=p.bottom-1));
-        test(mode+' '+source+' outline and properties fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && [...editor.querySelectorAll('.sitemap-workspace input:not([type="checkbox"]),.sitemap-workspace select:not([hidden]),.sitemap-workspace button')].filter(el=>el.getBoundingClientRect().width>0).every(el=>{const r=el.getBoundingClientRect();return r.height>=44 && r.left>=0 && r.right<=w.innerWidth+1;}));
-        test(mode+' '+source+' destination labels retain readable width without horizontal outline scrolling at '+width+'px',()=>editor.querySelector('.sitemap-outline').scrollWidth<=editor.querySelector('.sitemap-outline').clientWidth+1 && [...editor.querySelectorAll('.sitemap-select')].filter(el=>el.getBoundingClientRect().width>0).every(el=>el.getBoundingClientRect().width>=Math.min(80,el.closest('li').getBoundingClientRect().width-20)));
-      }
-      app.style.width='1440px';await wait();
-    }
-    const savedCustom=evaluate('projectJson()'),original=d.getElementById('sitemap-label').value;
-    input('sitemap-label','Unsaved navigation label');
-    const other=[...d.querySelectorAll('#sitemap-choices button')].find(el=>el.getAttribute('aria-pressed')==='false');other.click();
-    test(mode+' custom outline selection protects unsaved properties',()=>d.getElementById('sitemap-label').value==='Unsaved navigation label' && evaluate('projectJson()')===savedCustom && d.activeElement.id==='sitemap-save');
-    const control=d.getElementById('sitemap-source');control.value='sections';control.dispatchEvent(new w.Event('change',{bubbles:true}));
-    test(mode+' switching sitemap source cannot discard unsaved custom properties',()=>control.value==='custom' && w.DSStudio.sectionSitemap.source()==='custom' && evaluate('projectJson()')===savedCustom);
-    d.getElementById('sitemap-discard').click();
-    test(mode+' custom Discard restores the saved label and releases the selection guard',()=>d.getElementById('sitemap-label').value===original && d.getElementById('sitemap-discard').disabled);
-    input('sitemap-label','Navigation label '+mode);d.getElementById('sitemap-save').click();await wait();
-    test(mode+' selected properties save through the original custom destination model',()=>w.DSStudio.process.entries().some(node=>node.label==='Navigation label '+mode) && d.getElementById('sitemap-discard').disabled);
-    d.getElementById('sitemap-undo').click();await wait();
-    test(mode+' custom destination Undo retains the existing model and source',()=>!w.DSStudio.process.entries().some(node=>node.label==='Navigation label '+mode) && w.DSStudio.sectionSitemap.source()==='custom');
-  }
   reset();await wait();
   test('No interaction JavaScript errors', () => !w.__reviewErrors.length);
   document.getElementById('results').textContent=JSON.stringify({results, errors:w.__reviewErrors});
@@ -3987,102 +754,8 @@ app.onload = async () => {
 </script>'''
 
 
-class Handler(SimpleHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_GET(self):
-        path = self.path.split('?', 1)[0]
-        if path == '/__review_tick__':
-            # Test-only real-time synchronization for browser File.text().
-            threading.Event().wait(0.02)
-            self.send_response(204)
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            return
-        if path == '/__font_fixture__':
-            query = parse_qs(urlsplit(self.path).query)
-            if query.get('mode') == ['error']:
-                self.send_error(503, 'Font loading failure fixture')
-                return
-            rules = []
-            for spec in query.get('family', []):
-                family = spec.split(':', 1)[0]
-                if family not in ['Inter', 'Source Sans 3', 'Literata']:
-                    self.send_error(400, 'Unknown font fixture')
-                    return
-                local = 'local("Times New Roman"), local("Liberation Serif"), local("DejaVu Serif")' if family == 'Literata' else 'local("Arial"), local("Liberation Sans"), local("DejaVu Sans")'
-                for style in ['normal', 'italic']:
-                    rules.append(f'@font-face {{ font-family: "{family}"; font-style: {style}; font-weight: 100 900; font-display: swap; src: {local}; }}')
-            data = '\n'.join(rules).encode('utf-8')
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/css; charset=utf-8')
-            self.send_header('Cache-Control', 'no-store')
-            self.send_header('Content-Length', str(len(data)))
-            self.end_headers()
-            self.wfile.write(data)
-            return
-        if path == '/__review__':
-            body = HARNESS
-        elif path == '/index.html':
-            body = (ROOT / 'index.html').read_text(encoding='utf-8')
-            body = body.replace('<head>', '''<head><script>
-window.__reviewErrors=[];
-addEventListener('error',e=>{
-  const resource=e.target.src || e.target.href || '';
-  if (!e.message && resource.includes('/__font_fixture__?') && resource.includes('mode=error')) return;
-  window.__reviewErrors.push(e.message || 'Failed resource: '+resource);
-},true);
-addEventListener('unhandledrejection',e=>window.__reviewErrors.push(String(e.reason)));
-const reviewConsoleError=console.error.bind(console);
-console.error=(...args)=>{ window.__reviewErrors.push(args.map(String).join(' ')); reviewConsoleError(...args); };
-</script>''', 1)
-        else:
-            return super().do_GET()
-        data = body.encode('utf-8')
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/html; charset=utf-8')
-        self.send_header('Content-Length', str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
-
-
 def main():
-    browser = os.environ.get('CHROME_BIN') or shutil.which('google-chrome') or shutil.which('chromium')
-    if not browser:
-        for location in ['C:/Program Files/Google/Chrome/Application/chrome.exe',
-                         'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe']:
-            if Path(location).is_file():
-                browser = location
-                break
-    if not browser:
-        raise SystemExit('Chrome/Chromium not found. Set CHROME_BIN to its executable.')
-    server = ReviewServer(('127.0.0.1', 0), partial(Handler, directory=str(ROOT)))
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    try:
-        with tempfile.TemporaryDirectory(prefix='studio-review-') as profile:
-            run = subprocess.run([browser, '--headless', '--disable-gpu', '--no-first-run',
-                                  '--no-default-browser-check', '--disable-background-networking',
-                                  # Real file reads can complete after Chrome advances virtual timers;
-                                  # allow the content/file and sitemap matrices to finish.
-                                  '--user-data-dir=' + profile, '--virtual-time-budget=225000',
-                                  '--dump-dom', f'http://127.0.0.1:{server.server_port}/__review__'],
-                                 # Allow the expanded matrix to finish on Windows.
-                                 capture_output=True, encoding='utf-8', errors='replace', timeout=660)
-            match = re.search(r'<pre id="results">(.*?)</pre>', run.stdout, re.S)
-            if not match or match[1] == 'RUNNING':
-                progress = re.search(r'<title>(.*?)</title>', run.stdout, re.S)
-                raise SystemExit('Browser review did not complete.\n' +
-                                 (unescape(progress[1]) + '\n' if progress else '') + run.stderr[-2000:])
-            report = json.loads(unescape(match[1]))
-            for item in report['results']:
-                print(('PASS' if item['pass'] else 'FAIL') + ': ' + item['name'] +
-                      (': ' + item.get('error', '') if not item['pass'] else ''))
-            print(f"{sum(item['pass'] for item in report['results'])}/{len(report['results'])} browser checks passed")
-            print(json.dumps(report['errors']))
-            return int(any(not item['pass'] for item in report['results']))
-    finally:
-        server.shutdown()
+    return run_review(HARNESS)
 
 
 if __name__ == '__main__':

@@ -144,7 +144,8 @@ DSStudio.register({
     const beforeReveal=window.dssRevealSection;window.dssRevealSection=function(id,scroll=true){const control=canonical(get(id));revealControl(control);return beforeReveal(control?.id||id,scroll);};
     function revealAlias(){let id;try{id=decodeURIComponent(location.hash.slice(1));}catch{return;}if(aliases.has(id))go(aliases.get(id));}
     window.addEventListener('hashchange',revealAlias);DSStudio.on('ready',revealAlias);
-    const beforeApply=apply;apply=function(){beforeApply();sync();};const beforeType=renderType;renderType=function(){beforeType();sync();};const beforeCode=renderCode;renderCode=function(){beforeCode();sync();};
+    DSStudio.views.subscribe({id:'typography-specimen',phase:'lesson',events:['foundation:updated','type:updated','output:updated','preview:change'],run:sync});
+    DSStudio.on('project:sync',sync);
     section.addEventListener('toggle',()=>{if(section.open)sync();});DSStudio.on('stage:change',({stage})=>{if(stage.index===5)sync();});
     DSStudio.typographyWorkspace={show,revealControl,sync};show('content',false);DSStudio.emit('lesson:content');
   }

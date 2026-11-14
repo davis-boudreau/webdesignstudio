@@ -49,12 +49,8 @@
       $(id).tabIndex = selected ? 0 : -1;
     });
   }
-  // The existing studio calls renderCode() whenever any foundation value changes.
-  const originalRenderCode = renderCode;
-  renderCode = function() {
-    originalRenderCode();
-    refreshDock();
-  };
+  // Explicit inspector actions and compatibility readouts remain synchronous.
+  DSStudio.on('output:updated', refreshDock);
   DSStudio.inspector = {
     show({ section: requestedSection = section(), language: requestedLanguage = language, find = '' } = {}) {
       language = languages.includes(requestedLanguage) ? requestedLanguage : 'css';

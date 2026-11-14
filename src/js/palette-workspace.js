@@ -129,8 +129,8 @@ DSStudio.register({
     const previousReveal=window.dssRevealSection;window.dssRevealSection=function(id,scroll=true){revealControl(get(id));return previousReveal(id,scroll);};
     get('brandPalette').addEventListener('toggle',()=>{if(get('brandPalette').open)syncComponents();});
     DSStudio.on('stage:change',({stage})=>{if(stage.index===4)syncComponents();});
-    const previous=apply;apply=function(){previous();sync();};
-    const beforeRender=renderCode;renderCode=function(){beforeRender();syncComponents();};
+    DSStudio.on('foundation:updated',sync);
+    DSStudio.on('output:updated',syncComponents);
     for(const event of ['dss:reset','dss:imported'])document.addEventListener(event,()=>{selected='';brandSignature='';show('brand',false);sync();get('palette-workspace-status').textContent='';});
     DSStudio.paletteWorkspace={show,selectBrand,selectRegion,revealControl};show('brand',false);sync();DSStudio.emit('lesson:content');
   }

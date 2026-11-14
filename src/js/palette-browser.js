@@ -107,8 +107,8 @@ DSStudio.register({
     const beforeControl=ui.revealControl;ui.revealControl=function(control){prepare(control);beforeControl(control);sync();};
     const beforeShow=ui.show;ui.show=function(key,focus=true){beforeShow(key,focus);sync();};
     const beforeBrand=ui.selectBrand;ui.selectBrand=function(id){beforeBrand(id);sync();};
-    const beforeApply=apply;apply=function(){beforeApply();sync();};
-    const beforeRender=renderCode;renderCode=function(){beforeRender();sync();};
+    DSStudio.on('foundation:updated',sync);
+    DSStudio.on('output:updated',sync);
     root.addEventListener('toggle',()=>queueMicrotask(sync),true);
     get('brandPalette').addEventListener('toggle',()=>{if(get('brandPalette').open)sync();});
     DSStudio.on('stage:change',({stage})=>{if(stage.index===4)sync();});

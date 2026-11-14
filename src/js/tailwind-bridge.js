@@ -175,16 +175,10 @@ ${mappings.map(([from, to]) => `  ${to}: var(${from});`).join('\n')}
         get('tailwindStatus').textContent = 'Clipboard unavailable. Select the theme source below and copy it manually.';
       }
     });
-    let queued = false;
-    const schedule = () => {
-      if (queued) return;
-      queued = true;
-      queueMicrotask(() => { queued = false; sync(); });
-    };
-    const previousRender = renderCode;
-    renderCode = function() { previousRender(); schedule(); };
+    DSStudio.views.subscribe({
+      id: 'tailwind-lesson', phase: 'lesson', events: ['output:updated','stage:change'], run: sync
+    });
     deliver.addEventListener('toggle', () => { if (deliver.open) sync(true); });
-    DSStudio.on('stage:change', schedule);
     sync(true);
   }
 });

@@ -93,10 +93,6 @@
       copyStatus.textContent = 'Clipboard unavailable. Select the CSS above and copy it manually.';
     }
   });
-  const original = renderType;
-  renderType = function() {
-    original();
-    update();
-  };
+  DSStudio.on('type:updated', update);
   update();
 })();

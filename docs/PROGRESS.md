@@ -1,6 +1,808 @@
 # Project progress
 
-Updated: 12 November 2026 (America/Halifax).
+Updated: 14 November 2026 (America/Halifax).
+
+## Refactor committed and hosted validation passed (14 November 2026)
+
+- Reviewed accumulated runtime changes, project normalization/replacement,
+  synchronous save protection, view subscriptions, ordered export contributors,
+  script order/cache versions and the complete CI/deployment gate. No blocking
+  findings were identified. No runtime edits were made in this review.
+- git fetch origin succeeded; local HEAD and origin/main were aligned at
+  02eb7ec before creating refactor/project-lifecycle-test-suites. Main pushes
+  trigger Pages publication, so the work uses a review branch and draft PR for
+  hosted CI before any merge/publication.
+- Fresh checks this session: python scripts/check_structure.py passes (71
+  assets), python scripts/browser_runner_review.py 12/12,
+  python scripts/project_model_review.py 14/14 and
+  python scripts/export_pipeline_review.py 98/98; browser suites capture no JS
+  errors (.commit-<suite>.log). Fresh python scripts/browser_review.py passes
+  279/279, no captured JS errors. git diff --check passes.
+  The full 20-command/3,105-assertion run below is the 13 November baseline,
+  not a new full run in this session.
+- Reviewed staged scope: 64 source/test/documentation/CI files, no diagnostic
+  logs or detected credential patterns. git diff --cached --check passes.
+- Committed as cb7a956 (Refactor project lifecycle, exports, and browser
+  validation) and pushed refactor/project-lifecycle-test-suites. Created
+  [draft PR #1](https://github.com/davis-boudreau/webdesignstudio/pull/1).
+- [Hosted CI run 43592435409](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43592435409)
+  completed successfully for cb7a9567b68eeb99e4ac329c62577f98131d61db on its first
+  attempt: all 20 jobs succeeded, including checks, all 18 offline browser suites
+  and the final structure gate. This verifies hosted execution of the refactor;
+  the earlier 13 November hosted-CI gaps below remain historical.
+- This handoff update changes documentation only; runtime and test files remain
+  identical to the successfully validated refactor commit. The PR shows the
+  current revision's required status. No merge or Pages deployment was performed.
+- Next: human review of the draft PR, then authorize merge/publication separately.
+  Manual accessibility, additional-browser and optional live-font reviews remain
+  outstanding as documented in TEST_COVERAGE.md.
+
+## Architecture and test-suite refactor complete (13 November 2026)
+
+- Added scripts/review_suites.py as the shared catalogue for 18 offline browser
+  suites, local full-check execution and CI matrix output. Live font downloads
+  remain optional. Runner contracts cover discovery/registration, import safety,
+  matrix generation without launching checks, complete local execution and
+  failure propagation; initial python scripts/browser_runner_review.py passes
+  12/12 (.final-browser_runner_review.log).
+- Replaced the sequential ten-minute CI job with structure/runner validation and
+  a dependent browser matrix. It runs at most three jobs, keeps remaining suites
+  running after a failure, allows 25 minutes per job (two 660-second launches in
+  the media suite) and uploads failure logs for seven days. Pages still depends
+  on the complete reusable validation workflow. Hosted Actions have not run here.
+- Removed 84 lines of unused copied helpers across nine harnesses. Strengthened
+  the existing 320px assertion to actually set/verify that viewport, and replaced
+  a duplicate Spacing-pane condition with a visible, enabled source-control check.
+  The first strengthened integration run passed 278/279. Corrected the Spacing
+  fixture to await stage placement and measure visible/enabled range-control
+  geometry; its initial 44px height requirement exceeded that assertion's scope.
+  The completed full catalogue run includes these corrected assertions.
+- Current python scripts/review_suites.py passes 20/20 commands
+  (.final-all-checks.log): 71 structure assets, 12 runner/catalogue contract tests
+  and 3,105 browser assertions across all 18 offline suites/19 browser launches.
+  All 19 captured browser-error reports are empty. Integration passes 279/279;
+  actual reduced-motion passes 7/7 and forced-colour passes 9/9. The export suite
+  passes its reviewed byte-parity checks; export fixtures were not refreshed.
+- A Python Counter audit of the completed current run accounts for all 2,793
+  original architecture-review monolith assertion occurrences, including duplicate
+  names, with zero missing (.final-coverage.log). This is check-name transfer
+  evidence, not line/branch coverage or proof of accessibility.
+- python scripts/check_structure.py passes (71 assets). No runtime asset changes
+  were made in this cleanup, so no additional cache-version update is required.
+- Both .github/workflows/ci.yml and .github/workflows/pages.yml pass actionlint
+  1.7.7 using the official Windows ZIP release in a temporary directory, after
+  verifying its published SHA256. Ran with -shellcheck= -pyflakes= because those
+  optional external linters are not installed; no dependency was added to the
+  project. Hosted Actions and deployment remain untested in this session.
+- Preserved the existing structure check name as a final always-running gate over
+  checks and the complete browser matrix. Local Git Bash execution verifies all
+  16 prerequisite status combinations: only success/success passes; failure,
+  cancellation and skips fail the gate. A failing command piped through tee
+  retains its exit status and writes its log under pipefail (.final-ci-shell.log).
+- Added docs/TEST_COVERAGE.md with suite ownership, reviewed baseline counts,
+  original-monolith reconciliation method and manual/hosted-review limits.
+  README, CONTRIBUTING and architecture notes now use the catalogue workflow.
+- Final git diff --check passes. The architecture/test-suite refactor sequence is
+  complete: project codec/atomic replacement, ordered view scheduling, explicit
+  export pipeline, independent feature suites and final coverage/CI cleanup.
+  No planned refactor steps remain. Changes remain uncommitted; nothing was
+  pushed or deployed. A normal hosted CI run and code review are still needed
+  before publishing. Manual keyboard/screen-reader/zoom/reflow, additional-browser
+  reviews, browser/OS file/clipboard permissions and the optional live-font check
+  were not repeated. These reviews remain outside this refactor's completion.
+
+## Independent responsive-preview and standalone-export suites (13 November 2026)
+
+- Extracted scripts/responsive_preview_review.py and
+  scripts/standalone_exports_review.py. Moved assertion expressions are preserved;
+  fixtures explicitly establish model, viewport, Studio appearance, lesson,
+  inspector and preview width. The Advanced markup fixture selects its own large,
+  mobile-full button settings instead of inheriting them from inspector checks.
+- Responsive owns viewport sizing/workspace reflow, browsing/form/disclosure state,
+  theme synchronization, safe rendering and responsive validation/persistence/
+  breakpoint matrices. Standalone owns sample markup, switching, linked downloads,
+  inspector/file parity, native interactions, rendered layouts and system parity.
+- Added six combined Basic/Advanced integration checks across responsive edits,
+  local autosave, retained mobile browsing state, separate HTML/CSS downloads at
+  configured widths, and JSON-file restore with saved-library protection.
+  Both suites are registered in CI, import-safety checks and development commands.
+- Initial focused runs pass 137/137 responsive and 465/465 standalone, no captured
+  JS errors (.responsive-<suite>-initial.log). A source comparison confirms all
+  192 removed assertion source lines are retained unchanged in the new suites.
+- Initial integration passed 278/279 with no captured JS errors. A source-derived
+  isolated journey narrowed the failure to retained Advanced form input after
+  project replacement; model, local saves, HTML/CSS and inspector checks passed
+  (.responsive-journey-before.log). Added 12 Basic/Advanced regression checks:
+  ordinary edits retain browsing, while identical imports, local loads, file
+  replacement, reset and New start fresh. Before the fix, 10 replacement checks
+  failed (139/149 overall, .responsive-replacement-before.log).
+- Fixed src/js/responsive-preview.js to invalidate cached output and sample-mode
+  identity on project:install. The next scheduled render clears form/disclosure/
+  scroll state even for identical output or coalesced sample changes, while
+  ordinary edits still preserve browsing and the preview document remains stable.
+  Refreshed its index.html query version to 20261113-preview-replacement.
+  Export fixtures and generated output were not intentionally changed.
+- Final/current runs pass: python scripts/responsive_preview_review.py 149/149,
+  python scripts/standalone_exports_review.py 465/465 and
+  python scripts/browser_review.py 279/279, no captured JS errors
+  (.responsive-<suite>-final.log). All ten reproduced replacement cases pass.
+- A Python Counter comparison accounts for all 871 prior check occurrences:
+  598 transferred, 273 retained, zero missing (.responsive-coverage.log). New
+  coverage adds 12 replacement/ordinary-edit regressions and four focused-suite
+  error checks, plus six integration journey checks.
+- Current supporting checks after the fix: python scripts/check_structure.py
+  (71 assets), python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/view_updates_review.py 16/16,
+  python scripts/project_library_review.py 49/49,
+  python scripts/navigation_review.py 158/158,
+  python scripts/planning_review.py 76/76,
+  python scripts/content_tree_review.py 201/201,
+  python scripts/sitemap_review.py 305/305,
+  python scripts/wireframe_review.py 152/152,
+  python scripts/palette_review.py 575/575,
+  python scripts/contrast_review.py 87/87,
+  python scripts/components_review.py 57/57,
+  python scripts/typography_review.py 185/185,
+  python scripts/spacing_review.py 223/223 and
+  python scripts/export_pipeline_review.py 98/98 (.responsive-<suite>-final.log).
+  The export suite confirms reviewed output byte parity. Actual preference checks
+  via python scripts/button_states_review.py pass 7/7 reduced-motion and 9/9
+  forced-colour. All final suites passed with no captured browser JS errors.
+  Pre-fix results above are distinguished from these post-fix runs.
+  Earlier sections below remain historical.
+- git diff --check passes. Interactive file-chooser/download/clipboard permissions,
+  manual keyboard/screen-reader/zoom/reflow, optional live Google Fonts downloads
+  and additional-browser reviews were not repeated; this suite does not establish
+  full accessibility. No retries or skips were introduced.
+- This extraction and its confirmed preview fix are complete. Changes remain
+  uncommitted; nothing was pushed or deployed. One planned step remains: final
+  coverage and CI cleanup. Manual accessibility/cross-browser reviews remain
+  separate from the refactor sequence.
+
+## Independent typography and spacing suites (13 November 2026)
+
+- Extracted scripts/typography_review.py and scripts/spacing_review.py with
+  original assertion bodies preserved. Each owns its app/profile, fresh model,
+  viewport, Studio appearance, inspector, fluid preview and lesson setup.
+  Typography includes local font fixtures, scales/rhythm/specimens, guided stages
+  and early course/wireframe checks. Spacing includes region padding, token charts,
+  lesson comparisons and optional plain-CSS practice. Shared responsive layout
+  and standalone-export matrices remain in integration for the next extraction.
+- Added four integration checks joining font/spacing edits, local autosave,
+  session comparison/inspection, website downloads, JSON-file restore and
+  Basic/Advanced switching. Added both suites to CI, import-safety checks,
+  contribution commands, README and architecture guidance.
+- Current focused checks pass: python scripts/typography_review.py 185/185 and
+  python scripts/spacing_review.py 223/223, no captured JS errors
+  (.type-<suite>-initial.log). A source comparison also confirms the 146 removed
+  assertion source lines remain unchanged in the new suites.
+- The first integration run passed 869/871 with no captured JS errors; two new
+  assertions incorrectly compared compact local-library data (including preset
+  metadata) directly with pretty-printed export JSON. Corrected the expected
+  library format while comparing the complete saved snapshot. An isolated
+  source-derived journey probe passes 5/5 (.type-journey.log). The full corrected
+  python scripts/browser_review.py run passes 871/871, no captured JS errors
+  (.type-browser_review-final.log). No runtime defect was found in this comparison.
+- A Python Counter comparison accounts for all 1,271 prior check occurrences:
+  404 transferred, 867 retained, zero missing (.type-coverage.log). The two new
+  suites add four startup/final error checks; integration adds four combined
+  journey checks. Totals are 185 Typography, 223 Spacing and 871 integration.
+- python scripts/check_structure.py passes (71 assets);
+  python scripts/browser_runner_review.py passes 9/9;
+  python scripts/project_model_review.py passes 14/14;
+  python scripts/view_updates_review.py passes 16/16;
+  python scripts/project_library_review.py passes 49/49;
+  python scripts/export_pipeline_review.py passes 98/98;
+  python scripts/navigation_review.py passes 158/158;
+  python scripts/planning_review.py passes 76/76;
+  python scripts/content_tree_review.py passes 201/201;
+  python scripts/sitemap_review.py passes 305/305;
+  python scripts/wireframe_review.py passes 152/152;
+  python scripts/palette_review.py passes 575/575;
+  python scripts/contrast_review.py passes 87/87;
+  python scripts/components_review.py passes 57/57 (.type-<suite>.log).
+  The first sandboxed runner
+  contract command hit Windows temp-folder cleanup permission errors; rerunning
+  outside the sandbox passed. Browser runs use isolated profiles outside the
+  sandbox in small batches. All supporting suites passed with no captured browser
+  JS errors. python scripts/button_states_review.py also passes 7/7 reduced-motion
+  and 9/9 forced-colour checks (.type-button_states_review.log). Previous sections
+  remain historical. No retry or skip logic was introduced.
+- No runtime assets or export fixtures changed in this step; no cache bump needed.
+- git diff --check passes. Interactive file-chooser/download/clipboard permissions,
+  manual keyboard/screen-reader/zoom/reflow, real optional Google Fonts downloads
+  and additional-browser reviews were not repeated; automated checks do not
+  establish full accessibility.
+- This extraction is complete. Changes remain uncommitted; nothing was pushed
+  or deployed. Two planned groups remain: responsive/standalone exports next,
+  then final coverage and CI cleanup. Manual accessibility/cross-browser reviews
+  remain separate from that sequence.
+
+## Independent palette, contrast and component suites (13 November 2026)
+
+- Extracted three independently initialized suites: scripts/palette_review.py
+  owns brand/UI anchors, colour methods/OKLCH, shade/state families, semantic and
+  component-token properties, neutral paint, backgrounds and opacity;
+  scripts/contrast_review.py owns inventory, filters/CSV, reviewed semantic/button
+  repair and guided contrast results; scripts/components_review.py owns component
+  state semantics/non-colour cues, reduced-demo motion, configuration round trips
+  and secondary-action colour propagation. Original assertion bodies are retained.
+- Initial/current focused runs pass 575/575 palette, 87/87 contrast and 57/57
+  components, with no JS errors (.colour-<suite>-initial.log). Each suite owns its
+  model, lesson, viewport and inspector setup. Palette calls the read-only contrast
+  API for candidate checks without importing the contrast test harness. No runtime
+  bug or fix was needed. Shared standalone/system comparisons and spacing/padding
+  fixtures stay in integration for subsequent extractions.
+- Retained four combined integration checks across anchor editing/autosave,
+  contrast preview/Cancel/Apply, component overrides/button CSS download and a
+  complete JSON download/file restore with preview/inspector/export agreement.
+  The Studio-appearance persistence helper now selects the chosen project ID
+  instead of assuming the first stored entry, preserving the active-project
+  assertion when fixture/library ordering changes.
+- Full python scripts/browser_review.py passes 1,271/1,271 with no captured JS
+  errors (.colour-browser_review.log): previous 1,980 minus 713 transferred checks
+  plus four combined journey checks. A Python Counter comparison accounts for
+  all 1,980 prior check occurrences: 713 moved into the three suites, 1,267 retained,
+  zero missing (.colour-coverage.log). New suites include six startup/final error
+  checks in addition to their 713 moved checks.
+- Current supporting checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/view_updates_review.py 16/16,
+  python scripts/project_library_review.py 49/49,
+  python scripts/export_pipeline_review.py 98/98,
+  python scripts/planning_review.py 76/76 and
+  python scripts/navigation_review.py 158/158,
+  python scripts/content_tree_review.py 201/201,
+  python scripts/sitemap_review.py 305/305 and
+  python scripts/wireframe_review.py 152/152. Actual preference validation via
+  python scripts/button_states_review.py passes 7/7 reduced-motion and 9/9
+  forced-colour, no JS errors (.colour-button_states_review.log). All supporting
+  suites passed, with no captured browser JS errors (.colour-<suite>.log). Chrome
+  runs use small batches, with no retry/skip logic added.
+- Added all three suites to CI, import-safety checks and README/architecture/
+  contribution guidance. Reformatted the now-long contribution command list into
+  a readable command block. Runtime assets, schema and reviewed export fixture
+  files were not changed, so no asset cache refresh was required.
+- python scripts/check_structure.py passes (71 assets), and whitespace checks
+  pass. Previous phase results below remain historical. Interactive file-chooser/
+  download/clipboard permissions, manual keyboard/screen-reader/zoom/reflow,
+  optional live-font downloads and additional-browser reviews were not repeated.
+- This extraction is complete. Changes remain uncommitted; nothing was pushed
+  or deployed. Next: extract typography/spacing.
+  Three planned groups remain after this step: typography/spacing;
+  responsive/standalone exports; final coverage and CI cleanup. Manual
+  accessibility/cross-browser review remains separate from this sequence.
+
+## Independent wireframe preview and fidelity suite (13 November 2026)
+
+- Extracted read-only mirror structure, container annotations, geometry/paint
+  parity, inert controls, local navigation/disclosures, viewport choices,
+  legacy-setting compatibility, fidelity tabs and downloads into
+  scripts/wireframe_review.py. Original assertion bodies are preserved. A Python
+  Counter comparison with the previous integration log confirms 140 moved check
+  occurrences. Initial independent run passes 142/142, no JS errors
+  (.wireframe-focused.log; includes startup/final error checks).
+- Fixtures initialize their own sample, viewport and High Fidelity state, without
+  inheriting earlier Typography controls or view preferences. The existing
+  Typography/course-order bridge stays in integration for its later extraction.
+  Four new integration assertions retain Architecture website-text editing through
+  wireframe rendering, local viewport/fidelity changes, both fidelity downloads
+  and live comparison, checking model/storage/export isolation and read-only UI.
+- Added ten Basic/Advanced cases for local view preferences staying outside JSON/
+  autosave, inactive file replacement refreshing latest text/type on lesson entry,
+  frame/document identity, live comparison, current low/high downloads and loading
+  the original saved project while retaining local view preferences. Final
+  python scripts/wireframe_review.py passes 152/152, no captured JS errors
+  (.wireframe-final.log). No application bug or runtime fix was needed.
+- Added the suite to CI, runner import-safety coverage and README/contribution/
+  architecture guidance. No runtime assets, schema or reviewed export hashes
+  changed; no asset cache refresh was required.
+- Current checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/view_updates_review.py 16/16,
+  python scripts/project_library_review.py 49/49,
+  python scripts/navigation_review.py 158/158,
+  python scripts/planning_review.py 76/76,
+  python scripts/content_tree_review.py 201/201,
+  python scripts/sitemap_review.py 305/305 and
+  python scripts/export_pipeline_review.py 98/98 (.wireframe-<suite>.log).
+  Captured JS errors are empty. Full
+  python scripts/browser_review.py passes 1,980/1,980, no captured JS errors
+  (.wireframe-browser_review.log): previous 2,116 minus 140 moved plus four journey
+  checks. A Python Counter comparison of prior/current integration and final
+  focused PASS names accounts for all 2,116 prior check occurrences: 140 moved,
+  1,976 retained, zero missing (.wireframe-coverage.log). Chrome runs use small
+  batches; no retries/skips were added.
+- python scripts/check_structure.py passes (71 assets); git diff --check passes
+  including this final handoff update. Earlier phase results remain historical.
+  Interactive file-chooser/download
+  permission checks, manual keyboard/screen-reader/zoom/reflow, optional live-font/
+  media-mode and additional-browser reviews were not repeated.
+- Completed this wireframe extraction. Next: extract palette/contrast/component
+  checks. Four planned groups remain: palette/contrast/
+  components; typography/spacing; responsive/standalone exports; final coverage
+  and CI cleanup. Manual accessibility/cross-browser review is separate. No
+  commits, pushes or deployments were made in this phase.
+
+## Independent sitemap editor suite (13 November 2026)
+
+- Moved default/custom outline compatibility, CRUD/planned visibility, per-sample
+  restoration scope, two/three-level identities/inclusion, page-derived labels,
+  source switching and responsive editor properties into scripts/sitemap_review.py.
+  Original assertion bodies are preserved. A Python Counter comparison against
+  the previous integration log confirms 293 transferred check occurrences.
+  Initial independent run passes 295/295, no JS errors (.sitemap-focused.log;
+  includes new startup/final error checks).
+- Fixtures explicitly establish sample, stage, viewport, Studio appearance and
+  inspector state. Shared footer styling, native disclosures and standalone-page
+  layout remain in integration for the later preview/export extraction. Following
+  list-layout/background/website-editing groups explicitly establish their own
+  model rather than inheriting removed sitemap fixtures.
+- Added ten Basic/Advanced replacement checks: identical-file import clears dirty
+  destination edits and stale Undo while retaining the editor node; source Undo
+  preserves custom data and later Brief edits; imported destination edits preserve
+  identities and avoid the previous autosave target; Undo returns to the imported
+  model; New clears custom/configuration histories without changing saved designs.
+  Final python scripts/sitemap_review.py passes 305/305, no captured JS errors
+  (.sitemap-final.log). No application bug or runtime fix was needed.
+- Retained four integration assertions for rename/Save, dirty-form isolation,
+  Discard/Undo and real JSON download/file reimport, checking local persistence,
+  preview/inspector/export agreement and unchanged actual Basic main content/CSS.
+  Added the focused suite to CI, runner import-safety checks and README/
+  contribution/architecture guidance. No runtime assets, schema or reviewed export
+  hashes changed; no asset cache refresh was required.
+- Current checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/view_updates_review.py 16/16,
+  python scripts/project_library_review.py 49/49,
+  python scripts/navigation_review.py 158/158,
+  python scripts/planning_review.py 76/76,
+  python scripts/content_tree_review.py 201/201 and
+  python scripts/export_pipeline_review.py 98/98 (.sitemap-<suite>.log).
+  Captured JS errors are empty. Full python scripts/browser_review.py passes
+  2,116/2,116, no captured JS errors (.sitemap-browser_review.log): previous 2,405
+  minus 293 moved plus four journey checks. A Python Counter comparison of prior/
+  current integration and final focused PASS names accounts for all 2,405 prior
+  check occurrences: 293 moved, 2,112 retained, zero missing (.sitemap-coverage.log).
+  Chrome runs use small batches; no retries/skips were added.
+- python scripts/check_structure.py passes (71 assets); git diff --check passes
+  including this final handoff update. Previous phase results below remain
+  historical. Interactive file-chooser/
+  download permissions, manual keyboard/screen-reader/zoom/reflow, optional
+  live-font/media-mode and additional-browser reviews were not repeated.
+- Completed this sitemap extraction. Next: extract wireframe preview/fidelity
+  checks. Five planned groups remain: wireframe;
+  palette/contrast/components; typography/spacing; responsive/standalone exports;
+  final coverage and CI cleanup. Manual accessibility/cross-browser review remains
+  separate from this sequence. No commits, pushes or deployments were made in
+  this phase.
+
+## Independent content-tree editor suite (13 November 2026)
+
+- Moved content-tree startup, inventory/identity, branch CRUD/reparent/reorder,
+  Save/Discard/Undo, restoration, proposal/actual-content separation, import bounds,
+  responsive properties and dirty-form protection groups into
+  scripts/content_tree_review.py. Original assertion bodies are preserved.
+  A Python Counter comparison with the previous integration log confirms 189
+  transferred check occurrences. Initial independent run passes 191/191, no JS
+  errors (.content-tree-focused.log; includes two new startup/final error checks).
+- Fixtures own sample, stage, viewport, local project entries and real File import
+  setup. Content-to-sitemap non-mutation/shortcut checks stay with the content
+  fixtures; sitemap CRUD and wireframe authoring remain separate. Following
+  sitemap fixtures explicitly establish a clean desktop model.
+- Added ten Basic/Advanced replacement-boundary checks: identical JSON imported
+  over a dirty form clears edits and incompatible Undo; original editor nodes and
+  actual website wording survive; editing an imported plan does not autosave into
+  the old local project; Undo returns to the imported snapshot; New clears dirty
+  proposals/history while preserving saved projects. Final
+  python scripts/content_tree_review.py passes 201/201 with no captured JS errors
+  (.content-tree-final.log). No application bug or runtime fix was needed.
+- Retained four integration assertions across unsaved edits, local Save, Discard,
+  Undo and downloaded JSON/file reimport, checking editor/model/storage agreement
+  and unchanged actual Basic website content. Added the focused suite to CI,
+  runner import-safety coverage and README/contribution/architecture guidance.
+  Runtime assets, project schema and reviewed export hashes did not change;
+  no asset cache refresh was needed.
+- Current checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/view_updates_review.py 16/16,
+  python scripts/project_library_review.py 49/49,
+  python scripts/navigation_review.py 158/158,
+  python scripts/planning_review.py 76/76 and
+  python scripts/export_pipeline_review.py 98/98 (.content-tree-<suite>.log).
+  Captured JS errors are empty. Chrome runs used smaller batches after the
+  previous phase's startup crash; no retries or skipped assertions were added.
+  Full python scripts/browser_review.py passes 2,405/2,405 with no captured JS
+  errors (.content-tree-browser_review.log): previous 2,590 minus 189 moved plus
+  four journey checks. A Python Counter comparison of prior/current integration
+  and final focused PASS names accounts for all 2,590 prior check occurrences:
+  189 moved, 2,401 retained, zero missing (.content-tree-coverage.log).
+- python scripts/check_structure.py passes (71 assets); git diff --check passes
+  including this final handoff update.
+  Previous phase results below remain historical. Interactive file-chooser/
+  download permissions, manual keyboard/screen-reader/zoom/reflow, optional
+  live-font/media-mode and additional-browser reviews were not repeated.
+- Completed this content-tree extraction. Next: extract sitemap fixtures.
+  Remaining planned groups: sitemap; wireframe;
+  palette/contrast/components; typography/spacing; responsive/standalone exports;
+  final coverage and CI cleanup. Manual accessibility/cross-browser review is
+  separate from this refactor sequence. No commits, pushes or deployments were
+  made in this phase.
+
+## Independent shared planning and Brief suite (13 November 2026)
+
+- Moved shared planning workflow, validation/escaping, supporting prototype links,
+  planning-artifact layout, seven-field Brief guidance and centre-editor groups
+  into scripts/planning_review.py. Original assertion bodies are preserved.
+  Comparing named results with the previous integration log confirms 60 moved
+  check occurrences. The first independent run passes 62/62 (60 moved plus two
+  startup/final error checks), no JS errors (.planning-focused.log).
+- Fixtures initialize their own sample, stage, viewport, storage entries and
+  local File import helper. Following Typography checks in integration now
+  explicitly establish desktop/light Studio rather than inheriting Brief's last
+  viewport/theme. Content-tree/sitemap CRUD and wireframe-authoring groups retain
+  their existing fixtures for subsequent separate extractions.
+- Added 14 checks: distinct placeholders remain outside saved answers; each of
+  seven fields preserves its original node/focus and escaped text in Studio,
+  preview and exported drafts; Basic/Advanced restore all Brief/prototype data
+  through local saves and downloaded JSON while preserving sample boundaries.
+  Final python scripts/planning_review.py passes 76/76 with no captured JS errors
+  (.planning-final.log). No application bug or runtime fix was needed.
+- Retained three integration checks covering a planning edit/autosave/Advanced
+  preview, real JSON download/File import and Basic/Advanced switching with
+  complete planning data and matching website output. Added the focused suite
+  to CI, runner import-safety coverage and README/contribution/architecture docs.
+  No runtime assets, schema or reviewed export hashes changed; no cache refresh.
+- Current checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/navigation_review.py 158/158,
+  python scripts/view_updates_review.py 16/16 and
+  python scripts/export_pipeline_review.py 98/98 (.planning-<suite>.log).
+  The first persistence-suite launch ended before tests with Chrome network-service
+  crash / ERR_ABORTED diagnostics (.planning-project_library_review.log). With the
+  other focused runs finished, python scripts/project_library_review.py passes
+  49/49, no JS errors (.planning-library-rerun.log). No retry logic or relaxed gate
+  was added. All completed Chrome assertion runs have empty captured JS errors.
+- python scripts/check_structure.py passes (71 assets). Full
+  python scripts/browser_review.py passes 2,590/2,590 with no captured JS errors
+  (.planning-browser_review.log): previous 2,647 minus 60 moved plus three journey
+  checks. A Python Counter comparison of prior/current integration and focused
+  PASS names accounts for all 2,647 prior check occurrences: 60 moved, 2,587
+  retained, zero missing (.planning-coverage.log). git diff --check passes including
+  the final handoff update. Previous phase results remain historical.
+- Manual keyboard-only, screen-reader, zoom/reflow, optional live-font/media-mode
+  and additional-browser reviews were not repeated for this test-only extraction.
+- Completed the shared planning/Brief extraction. Next: extract content-tree
+  editor save/discard/undo/import fixtures independently of sitemap and wireframe
+  work. No commits, pushes or deployments were made in this phase.
+
+## Independent navigation and workspace suite (13 November 2026)
+
+- Extracted startup/step selection, section-fragment reloads, lesson/controls
+  routing and focus, sticky-header/inspector placement, collapsed-preview updates,
+  native inspector collapse and Studio return-link groups into
+  scripts/navigation_review.py. The original assertion bodies are retained.
+  Counting named results including loop cases against the previous integration
+  log confirms 133 transferred checks. Feature-specific routes remain alongside
+  their own planning, palette, typography, sample and preview fixtures.
+- The suite owns a fresh app and reload iframe, with explicit preview/inspector
+  setup instead of inheriting appearance tests or earlier editor fixtures. The
+  first extracted run passed 135/135 (133 moved plus startup/final error checks),
+  with no JS errors (.navigation-focused.log).
+- Added 23 checks for repeated 900/901 px crossings in both directions, original
+  control identity/listeners, native lesson collapse/reopen, all live stage hash
+  routes and malformed/missing fragments. The return-link fixture explicitly
+  creates a real saved design so library preservation is tested against populated
+  storage with an active autosave target. Final python scripts/navigation_review.py
+  passes 158/158, no captured JS errors (.navigation-final.log); the earlier
+  expanded run also passed 158/158 (.navigation-verified.log).
+- Retained four integration assertions for a Brief-to-Typography-to-Deliver
+  journey: edited planning/type data, focus, unchanged preview document, matching
+  CSS inspection and actual website download handlers. Following readiness
+  fixtures now explicitly establish their own Spacing stage. Removed references
+  to transferred fixture variables; no assertion skips or relaxed expectations.
+- Added the suite to CI and runner import-safety tests, and updated README,
+  contribution and architecture guidance. No application runtime asset, project
+  schema or reviewed export baseline changed; no asset cache refresh was needed.
+- Current checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/project_library_review.py 49/49,
+  python scripts/view_updates_review.py 16/16 and
+  python scripts/export_pipeline_review.py 98/98. Captured JS errors are empty
+  (.navigation-<suite>.log). python scripts/check_structure.py passes (71 assets).
+  Full python scripts/browser_review.py passes 2,647/2,647 with no captured JS
+  errors (.navigation-browser_review.log): 2,776 minus 133 moved plus four journey
+  checks. A Python Counter comparison of previous/current integration and final
+  navigation PASS names accounts for all 2,776 previous check occurrences: 133
+  moved, 2,643 retained, zero missing (.navigation-coverage.log). git diff --check
+  passes including this final handoff update.
+  Previous phase results below remain historical.
+- Manual keyboard-only, screen-reader, zoom/reflow, optional live-font/media-mode
+  and additional-browser reviews were not repeated. These scripted focus/layout
+  checks do not establish full accessibility or measure user-visible latency.
+- Completed this extraction. Next: extract planning-editor fixtures with
+  independent setup while retaining end-to-end coverage. No commits, pushes or
+  deployments were made in this phase.
+
+## Independent project-library and JSON suite (13 November 2026)
+
+- Moved 21 existing validation, round-trip, autosave, project-switch/delete,
+  damaged-library recovery and JSON file-picker checks from browser_review.py
+  into scripts/project_library_review.py. Verified each moved named assertion
+  appears once in the focused suite and is absent from integration. Fixtures own
+  their setup and use the shared runner; no integration import or global patch.
+- Retained four integration assertions covering edited foundations/buttons/Brief,
+  local autosave, New, local load, JSON download and real File-picker reimport,
+  checking editor/preview/export agreement. Moved the integration file helper into
+  setup because later planning fixtures also use it. It now waits on the existing
+  real-I/O tick/import event rather than virtual timers.
+- Expanded the focused suite to 49 checks: independent Basic/Advanced fixtures,
+  fresh-document recovery, complete snapshots, identical generated exports and
+  live CSS, exact JSON download content, invalid-file autosave retention,
+  successful-file detachment, reset cancellation/confirmation and legacy-file
+  migration. Explicitly covers New's omitted optional maps becoming empty maps
+  on import with unchanged CSS/HTML. Other feature-specific persistence checks
+  remain with their feature fixtures until those groups are extracted.
+- Initial expanded run passed 42/48: new fixtures assumed a 17px slider value
+  (it rounds to 18px) and byte-identical optional-map shape after importing New
+  (the existing codec adds empty maps). Corrected fixture assumptions; 48/48
+  passed. A syntax error in the final added normalization assertion prevented
+  startup on two runs; corrected. Final python scripts/project_library_review.py
+  passes 49/49, no JS errors (.library-project_library_review-final.log).
+- Current checks: python scripts/browser_runner_review.py 9/9,
+  python scripts/project_model_review.py 14/14,
+  python scripts/view_updates_review.py 16/16,
+  python scripts/export_pipeline_review.py 98/98. Captured JS errors are empty;
+  logs are .library-<suite>.log. python scripts/check_structure.py passes (71
+  assets). Full python scripts/browser_review.py passes 2,776/2,776 with no
+  captured JS errors (.library-browser_review.log): previous 2,793 minus 21 moved
+  checks plus four end-to-end assertions. git diff --check passes including the
+  final handoff update. Previous phase results below remain historical.
+- Added the new suite to CI, import-safety coverage and contribution/architecture/
+  README guidance. Application runtime assets, schema and reviewed export hashes
+  were not changed in this phase; no cache-version refresh was needed.
+- Optional live-font, button-media, manual accessibility, zoom/reflow and
+  additional-browser checks were not repeated for this test-only extraction.
+- Completed this extraction. Next: extract navigation/workspace checks with their
+  own setup while retaining end-to-end coverage. No commits, pushes or deployments
+  were made in this phase.
+
+## Independent shared browser runner (13 November 2026)
+
+- Extracted Chrome discovery, loopback server, local font/File-I/O fixtures,
+  error instrumentation, temporary profile and report handling into
+  scripts/browser_runner.py. Suites pass their own HTML to run_review, with
+  explicit per-run flags and optional budgets. Preserved default integration
+  budgets, fixtures and instrumentation; server sockets now close in finally.
+- Migrated project-model, view-update, export-pipeline, button-media and optional
+  live-font suites. They no longer import the full integration harness or mutate
+  its HARNESS/subprocess globals. browser_review.py keeps its full end-to-end HTML
+  and command entry point. Export hashes and application runtime assets were not
+  changed in this phase; no asset query-version refresh was required.
+- Report handling now rejects captured errors and nonzero Chrome exits even if
+  assertions pass, and rejects malformed/empty reports. Added nine runner contract
+  tests covering diagnostics, isolation, per-run flags/budgets, import safety,
+  loopback fixtures and profile/socket cleanup on timeout. Added them to CI and
+  updated contribution, README and architecture guidance.
+- Initial contract run exposed an unforwarded timeout option, corrected before
+  Chrome validation. The sandbox also denied temporary-profile access/cleanup;
+  approved runs outside the sandbox use the same isolated profiles. Current
+  python scripts/browser_runner_review.py passes 9/9. Focused Chrome runs pass:
+  python scripts/project_model_review.py 14/14, python scripts/view_updates_review.py
+  16/16, python scripts/export_pipeline_review.py 98/98, and
+  python scripts/button_states_review.py 7/7 reduced-motion and 9/9 forced-colour.
+  All captured JavaScript error lists are empty. Logs: .runner-<suite>.log.
+- python scripts/check_structure.py passes (71 assets). Full
+  python scripts/browser_review.py passes 2,793/2,793 with no captured JavaScript
+  errors (.runner-browser_review.log). git diff --check passes including the final
+  handoff update. Previous phase results below remain historical.
+- Optional live Google Fonts downloads, manual accessibility, zoom/reflow and
+  additional-browser checks were not run. The runner contract test imports the
+  optional live-font suite without executing it. No performance claim is implied.
+- Completed this runner extraction. Next: extract individual integration feature
+  assertion groups with independent fixtures while retaining end-to-end coverage.
+  No commits, pushes or deployments were made in this phase.
+
+## Explicit CSS/HTML export pipeline (13 November 2026)
+
+- Continued the approved architecture work. Added export-pipeline.js after the
+  registry and before core/features. Core now owns stable cssExport/htmlExport
+  delegates. Removed every feature replacement/capture of those entry points;
+  shared contributors declare a stage and order, and each sample supplies CSS
+  and edited HTML renderers. Sorting no longer depends on registration order.
+- Preserved the exact shared order: core foundations; advanced component rules;
+  buttons; state ramps; planning styles; shared region/navigation/focus layout.
+  Basic adds its readable page/footer CSS, while Advanced adds its page CSS then
+  footer. Raw separators and all generated rules remain intact. The historical
+  samples.foundationCss name now aliases sharedCss and excludes selected-page CSS;
+  actual-content source/edited HTML helpers retain their direct generator APIs.
+- Pipeline registration validates ids, stages, ordering and callbacks. Rendering
+  checks string results, propagates errors, guards recursion and recovers in
+  finally. Safe removal handles and detached metadata support independent module
+  lifecycle/testing. The old registry collectCss helper remains compatible but
+  is explicitly separate from website generation; no automatic second CSS path.
+- Before refactoring, captured scripts/fixtures/export_baseline.json from the
+  wrapper implementation: 16 scenarios spanning both samples/themes, defaults,
+  custom foundations/components/layout, Google font markup and hostile edited
+  text. Capture passed 34/34 checks, no JS errors
+  (.export-pipeline-baseline.log). The fixture holds byte counts and SHA-256 hashes
+  for CSS, HTML and shared CSS; it was not refreshed after migration.
+- Added scripts/export_pipeline_review.py to CI and development guidance.
+  Post-migration parity/contract checks pass 98/98, no JS errors
+  (.export-pipeline-focused.log), including every reviewed hash, pure exports,
+  deterministic stage ordering, mode/fallback dispatch, late contributors,
+  invalid registrations, return types, recursion recovery and stale removals.
+  --capture is reserved for intentionally accepting reviewed output changes.
+- Existing focused suites pass: python scripts/project_model_review.py 14/14
+  (.export-pipeline-model.log), python scripts/view_updates_review.py 16/16
+  (.export-pipeline-views.log), both with no JS errors. Current structure check
+  passes (71 assets) and now rejects CSS/HTML entry-point reassignment and bad
+  pipeline load order. Refreshed affected runtime asset URLs. Updated architecture
+  and feature-extension guidance without adding a build/runtime dependency.
+- python scripts/button_states_review.py passes 7/7 reduced-motion and 9/9
+  forced-colour, no JS errors (.export-pipeline-buttons.log). Full
+  python scripts/browser_review.py passes 2,793/2,793 with no captured JavaScript
+  errors (.export-pipeline-browser.log). git diff --check passes including this
+  final handoff update. Previous phase results below remain historical.
+- No manual keyboard/screen-reader, zoom/reflow or additional-browser review was
+  performed. This phase preserves output bytes; overlapping component rules,
+  cascade-layer adoption, eager-render profiling and navigation adapters remain
+  separate work. No accessibility or performance certification is implied.
+- Completed this phase. Next: separate the shared Chrome test runner from feature
+  suites so focused checks stop importing the full integration harness and
+  replacing its global HARNESS string. Keep the full end-to-end path.
+
+## Explicit view lifecycle and shared scheduling (13 November 2026)
+
+- Continued the approved architecture work. Core now owns stable apply,
+  renderCode and renderType entry points. Removed feature reassignment of all
+  three and introduced synchronous events for foundation preparation/completion,
+  type completion, inventory preparation, control sync, planning artifacts and
+  output completion. Critical control/editor/inspector/autosave bindings remain
+  synchronous; imported state and raw export APIs retain the previous contracts.
+- Added view-updates.js after the registry. Authored tasks declare event
+  dependencies and a preview or lesson phase. Pending tasks coalesce in one
+  microtask; preview documents update before lessons read computed styles.
+  Later-phase work invalidated during preview rendering joins that flush;
+  earlier/already-run work is deferred rather than recursively rendered. Handles
+  support disposal, and errors are reported without blocking unrelated tasks.
+- Migrated responsive and wireframe previews plus Typography, Spacing, utility
+  and Tailwind background views. Removed the Spacing lesson's nested-microtask
+  ordering workaround and independent coalescers for the migrated views.
+  Explicit navigation/project control sync stays immediate; inactive/closed-view
+  guards remain. This batches a turn, not separate input events/animation frames.
+  Storage is still synchronous and protected during project replacement.
+- Confirmed a Typography ordering bug after letting disclosure events settle:
+  editing button weight in the background updated the live page to 700 while
+  the context specimen remained 600. The initial focused suite passed 2/3 with
+  no JS errors (.view-updates-before.log). The lesson now also listens to preview
+  changes and runs after the preview; the expanded suite passes 16/16, no JS
+  errors (.view-updates-focused.log), preserving the active lesson and focus.
+- Added scripts/view_updates_review.py to CI and contribution/verification
+  guidance. It covers batching, phase order and invalidation, cancellation/id
+  reuse, failure isolation, synchronous state/exports, lifecycle identity and
+  replacement during pending work. Structure validation now rejects lifecycle
+  function reassignment and checks registry/scheduler/core order. Refreshed
+  affected asset URLs and architecture notes. No build/runtime dependency added.
+- Current commands/results: python scripts/check_structure.py passes (70 assets);
+  python scripts/view_updates_review.py passes 16/16;
+  python scripts/project_model_review.py passes 14/14 (.view-updates-model.log);
+  python scripts/button_states_review.py passes 7/7 reduced-motion and 9/9
+  forced-colour, no JS errors (.view-updates-buttons.log). Full
+  python scripts/browser_review.py passes 2,793/2,793 with no captured JavaScript
+  errors (.view-updates-browser.log). git diff --check passes including the final
+  handoff update. Previous phase results below remain historical.
+- No manual keyboard/screen-reader, zoom/reflow or additional-browser review was
+  performed. No latency profiling or accessibility certification is implied.
+  Export/navigation wrappers, eager core/inspector work, Contrast's coalescer and
+  field-specific/frame-level optimization remain separate work.
+- Completed this phase. Next: migrate CSS/HTML export wrappers into an explicitly
+  ordered pipeline while preserving Basic foundation reuse, cascade order and
+  preview/inspector/download parity.
+
+## Project codec and complete model replacement (13 November 2026)
+
+- Started the approved architecture recommendations with a pure project codec
+  and an explicit replacement lifecycle. Added project-model.js before core state,
+  preserving the relative order of existing scripts. It owns fresh defaults,
+  foundation/advanced/button validation, legacy field migration and shared
+  snapshots/JSON serialization. Existing feature data normalizers remain in use;
+  no runtime dependency, build step, storage-key or schema-version change.
+- Advanced range/enum validation no longer reads live controls. Numeric UI bounds
+  consume the same rules; the focused suite checks authored select compatibility.
+  Advanced/button editor variables now reference their canonical objects in shared
+  state. Button render no longer copies private settings into saved project data.
+- Import validates all data before changing the active model. Replacement installs
+  foundation/clamp settings and all editor references before synchronizing views.
+  Autosave checks a core replacement guard that clears in finally, replacing its
+  import wrapper. Font fallback also clears during model installation. Removed
+  advanced/button/font import wrappers and the advanced serializer replacement.
+  Local projects consume detached snapshots from the same codec as JSON output.
+- Added scripts/project_model_review.py with independent setup through the existing
+  isolated Chrome runner and added it to CI. The initial four-check regression
+  reproduced three failures: partial models during import/reset renders and button
+  state identity changing during rendering (1/4 passed, no JS errors,
+  .project-model-before.log). After implementation the expanded suite passes
+  14/14 with no JS errors (.project-model-focused.log), covering DOM-free data
+  handling, legacy/malformed values, detached defaults/snapshots, failed validation,
+  JSON round trips, optional reset-map absence, and autosave suppression/resumption.
+- Refreshed affected asset query versions and updated architecture/contribution/
+  verification guidance. Current commands: python scripts/check_structure.py
+  passes (69 assets); python scripts/project_model_review.py passes (14/14);
+  python scripts/button_states_review.py passes 7/7 reduced-motion and 9/9
+  forced-colour, no JS errors (.project-model-buttons.log). First full
+  python scripts/browser_review.py run passed 2,788/2,793 with no JS errors
+  (.project-model-browser.log). Its five failures exposed a reset compatibility
+  difference: defaults created empty semantic/opacity/padding override maps
+  instead of omitting them. Corrected the default factory to preserve historical
+  New/reset behavior, added the focused regression and refreshed the codec URL.
+  Serialization writes JSON directly; only object snapshots require cloning.
+  The next full run passed 2,792/2,793 with no JS errors
+  (.project-model-verified-browser.log): all reset failures cleared, but the
+  existing brand-add focus assertion failed. A temporary isolated replay passed
+  24/24 repetitions, no JS errors (.brand-focus-probe.log; helper removed).
+  That fixture inherited a manually expanded Palette while another lesson was
+  active. It now explicitly opens its own lesson before editing, retaining the
+  same focus assertion and adding failure diagnostics. No brand runtime change.
+  Final python scripts/browser_review.py passes 2,793/2,793 with no captured
+  JavaScript errors (.project-model-final-browser.log), including the unchanged
+  brand-add focus assertion. This supersedes the earlier full-run failures above.
+  git diff --check passes including the final documentation update.
+- Manual keyboard, screen-reader, zoom/reflow and additional-browser checks were
+  not performed. This phase retains existing render/export wrappers; shared view
+  scheduling and export-pipeline migration are subsequent work. Legacy migrations
+  still use field presence, rather than introducing a new version-dispatch policy.
+- Completed this first refactor. Next: migrate view refresh wrappers to explicit
+  subscriptions and dependency-aware scheduling against the codec boundary.
+
+## Code architecture review (13 November 2026)
+
+- Reviewed CONTRIBUTING, architecture notes, historical project/recovery/export
+  audits, the asset manifest and current state, registry, persistence, export,
+  preview and workspace code. This is analysis; no runtime refactor or asset
+  query-version change was made. Historical audit results remain historical.
+- Highest priority: introduce a DOM-independent project normalizer and explicit
+  replace/update transaction. Foundation import currently calls apply before
+  advanced and private button settings finish restoring; autosave suppression
+  protects persistence but does not make observer/render updates atomic.
+  Advanced validation also reads bounds/options from live controls. Centralize
+  serialization and schema migration; schemaVersion is emitted but not dispatched
+  through a versioned migration path. Button render() copies its private settings
+  into state.buttonDesign; move this synchronization into model updates so
+  rendering is a read-only consumer of project data.
+- Replace apply/renderCode/import/export function wrappers incrementally with
+  explicit subscriptions and one ordered update scheduler. Preserve synchronous
+  model updates and current export APIs; batch expensive views, use dependency
+  flags and defer storage writes while ensuring flush on project switches.
+  Typography sync is reached through apply, renderType and renderCode; Spacing
+  uses nested microtasks to wait for preview updates. These are coupling evidence,
+  not measurements of user-visible latency.
+- Establish an ordered export pipeline (foundations, semantic/component styles,
+  shared sample layout, selected sample). collectCss exists but has no runtime
+  caller; simply enabling it would not replace existing wrappers safely. Preserve
+  cascade order and Basic's foundation-only reuse, and keep preview/inspector/
+  downloads on the same generators. Consolidate component ownership separately.
+- Longer term: make workspace DOM placement/routes explicit, retiring hidden
+  editor aliases only with compatibility coverage; split core domain functions
+  from DOM/storage adapters; split the 4,089-line browser harness into feature
+  suites with independent setup while retaining an end-to-end integration path.
+  Add pure normalization/export tests and load-order/dependency checks. Registry
+  startup currently logs module failures and still emits ready.
+- Retain dependency-free classic scripts during migration, validated imported
+  data, Studio/project separation and the isolated generated-page iframe. A
+  framework, bundler or ES-module conversion is not needed for these changes.
+- Current checks: python scripts/check_structure.py passes (68 assets), and
+  git diff --check passes including this documentation update. Initial python
+  scripts/browser_review.py could not start Chrome because the sandbox denied
+  temporary-profile lock creation/cleanup. The approved rerun outside the sandbox
+  passes 2,793/2,793 checks with no captured JavaScript errors
+  (.architecture-review-browser.log). This baseline does not prove the proposed
+  refactor or measure latency. No manual accessibility or cross-browser testing
+  was performed for this analysis.
+- Next: extract pure project normalization/serialization behind existing APIs,
+  then implement atomic replacement and verify legacy JSON/local save/load,
+  reset, button/advanced settings and preview/export parity before migrating views.
 
 ## Site-specific Brief placeholders (12 November 2026)
 

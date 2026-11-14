@@ -171,11 +171,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
     const button = event.target.closest('[data-token-name]');
     if (button) window.dssConfigureToken?.({ name: button.dataset.tokenName, scope: button.dataset.tokenScope });
   });
-  const originalRenderCode = renderCode;
-  renderCode = function() {
-    originalRenderCode();
-    update();
-  };
+  DSStudio.on('output:updated', update);
   search.addEventListener('input', update);
   document.getElementById('tokenDownload').addEventListener('click', () => {
     const csv = [

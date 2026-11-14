@@ -173,6 +173,6 @@ DSStudio.register({
     get('sitemap-planned').addEventListener('change',()=>commit(records(),{...plan().pageLinks[mode()]},'Footer visibility updated.',{showPlanned:get('sitemap-planned').checked}));
     get('sitemap-undo').addEventListener('click',()=>{if(!previous)return;state.designProcess=previous;previous=null;signature='';apply();get('sitemap-undo').disabled=true;get('sitemap-status').textContent='Last architecture or sitemap change undone.';});
     for(const event of ['dss:reset','dss:imported'])document.addEventListener(event,()=>{previous=null;dirty=false;outline.reset();get('sitemap-undo').disabled=true;get('sitemap-status').textContent='';signature='';sync();});
-    const previousRender=renderCode;renderCode=function(){previousRender();sync();};sync();
+    DSStudio.on('output:updated',sync);sync();
   }
 });
