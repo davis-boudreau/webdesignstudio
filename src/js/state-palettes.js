@@ -48,8 +48,7 @@
     }).join('\n');
     signature=next;return generated;
   }
-  const previousCss=cssExport;
-  cssExport=function(){return previousCss()+css();};
+  DSStudio.exports.registerCss({id:'state-palettes',stage:'states',generate:css});
   DSStudio.register({
     id:'state-palettes',title:'All interaction state palette steps',
     init() {
@@ -153,7 +152,7 @@
           }
         }
       }
-      const previousRender=renderCode;renderCode=function(){previousRender();sync();};
+      DSStudio.on('output:updated',sync);
       renderCode();DSStudio.emit('lesson:content');
     }
   });

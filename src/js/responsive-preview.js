@@ -8,7 +8,13 @@
       const frame = document.getElementById('previewPage');
       const theme = document.getElementById('previewTheme');
       const wired = new WeakSet();
-      let queued = false, renderedDocument = null, previousHtml = '', previousCss = '', previousMode = '';
+      let renderedDocument = null, previousHtml = '', previousCss = '', previousMode = '';
+
+      // Imported/loaded/reset projects own a fresh browsing session, even when
+      // their output is identical or intermediate sample changes are coalesced.
+      DSStudio.on('project:install', () => {
+        previousHtml = previousCss = previousMode = '';
+      });
 
       function wire(doc) {
         if (wired.has(doc)) return;
@@ -86,7 +92,6 @@
       }
 
       function render() {
-        queued = false;
         theme.value = state.theme;
         frame.title = `Live generated home page — ${state.theme} theme`;
         const doc = frame.contentDocument;
@@ -127,16 +132,9 @@
         syncResponsivePreview();
       }
 
-      function schedule() {
-        if (queued) return;
-        queued = true;
-        queueMicrotask(render);
-      }
-      const originalRenderCode = renderCode;
-      renderCode = function() {
-        originalRenderCode();
-        schedule();
-      };
+      const { schedule } = DSStudio.views.subscribe({
+        id: 'responsive-preview', phase: 'preview', events: ['output:updated'], run: render
+      });
       theme.addEventListener('change', event => {
         state.theme = event.target.value;
         apply();

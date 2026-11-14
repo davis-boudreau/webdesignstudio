@@ -5,13 +5,59 @@ on:
 permissions:
   contents: read
 jobs:
-  structure:
+  checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.suites.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - run: python scripts/check_structure.py
-      - run: python scripts/browser_review.py
+      - run: python scripts/browser_runner_review.py
+      - id: suites
+        shell: bash
+        run: echo "matrix=$(python scripts/review_suites.py --matrix)" >> "$GITHUB_OUTPUT"
+  browser:
+    needs: checks
+    name: Browser (${{ matrix.suite }})
+    runs-on: ubuntu-latest
+    # The media suite launches two browsers, each with a 660-second limit.
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.checks.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run isolated browser suite
+        shell: bash
+        run: python -u "scripts/${{ matrix.suite }}.py" 2>&1 | tee "$RUNNER_TEMP/${{ matrix.suite }}.log"
+      - name: Preserve failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-${{ matrix.suite }}
+          path: ${{ runner.temp }}/${{ matrix.suite }}.log
+          if-no-files-found: warn
+          retention-days: 7
+  # Preserve the existing required-check name as a gate over the complete suite.
+  structure:
+    if: ${{ always() }}
+    needs: [checks, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all validation jobs
+        shell: bash
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: |
+          test "$CHECKS_RESULT" = success
+          test "$BROWSER_RESULT" = success

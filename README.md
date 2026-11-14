@@ -711,11 +711,31 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how to add a feature module
 ## Development
 
 ```bash
-python scripts/check_structure.py   # verifies index.html <-> src/ consistency
-python scripts/browser_review.py    # Chrome smoke tests using an isolated temporary profile
-python scripts/button_states_review.py # optional: actual reduced-motion and forced-colour modes
-python scripts/font_cdn_review.py   # optional: actual Google Fonts downloads and exported-page check
+python scripts/review_suites.py      # All offline checks, each in its own process
+python scripts/review_suites.py --list # List individual commands without running them
+python scripts/browser_review.py    # Combined integration journeys
+python scripts/palette_review.py    # Example focused feature suite
+python scripts/font_cdn_review.py   # Optional live Google Fonts smoke check
+git diff --check
 ```
+
+The full command covers structure, runner contracts and all 18 offline browser
+suites, including actual reduced-motion and forced-colour checks. It reports every
+failure and exits nonzero if any command fails. CI uses the same catalogue for its
+browser matrix, with up to three jobs running concurrently and failure logs saved
+as artifacts. See [Test coverage](docs/TEST_COVERAGE.md) for suite ownership and
+verification limits.
+
+The export suite compares reviewed CSS/HTML hashes in
+`scripts/fixtures/export_baseline.json`. Use its `--capture` option only when
+intentionally accepting reviewed export changes; normal test runs never update it.
+
+Browser suites share `scripts/browser_runner.py`, passing their own harness HTML
+and optional browser flags. Focused suites initialize the app independently and
+do not import or modify the full integration harness. The integration suite keeps
+combined editor/save/preview/download/file-restore journeys and shared teaching,
+inspector, token-routing, website-editing and Tailwind bridge checks. Each Chrome run uses its own local server and fresh
+temporary profile; `CHROME_BIN` can select Chrome/Chromium or Edge.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 

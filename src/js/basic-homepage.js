@@ -150,7 +150,7 @@ ${DSStudio.fonts.htmlLinks()}  <link rel="stylesheet" href="tokens.css">
   }
 
   function basicCss() {
-    return DSStudio.samples.foundationCss() + readableCss(`
+    return readableCss(`
 /* SECTION: basics */
 /* BASIC WEBSITE: the same system tokens and components as Advanced.
    Normal flow, Flexbox navigation and responsive Grid keep the markup simple. */
@@ -310,11 +310,9 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
     id: 'basic-homepage',
     title: 'Basic and Advanced website samples',
     init() {
-      const advancedHtml = htmlExport, advancedCss = cssExport;
       DSStudio.samples.basicSourceHtml = basicHtml;
       DSStudio.samples.basicHtml = () => DSStudio.websiteContent.apply(basicHtml(),'basic');
-      htmlExport = () => state.sampleMode === 'basic' ? DSStudio.samples.basicHtml() : advancedHtml();
-      cssExport = () => state.sampleMode === 'basic' ? basicCss() : advancedCss();
+      DSStudio.exports.registerSample('basic',{css:basicCss,html:DSStudio.samples.basicHtml});
       const tabs = ['dockModeBasic', 'dockModeAdvanced'];
       function sync() {
         const basic = state.sampleMode === 'basic';
@@ -337,8 +335,7 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
           event.preventDefault(); document.getElementById(tabs[next]).click(); document.getElementById(tabs[next]).focus();
         });
       });
-      const previousRender = renderCode;
-      renderCode = function() { sync(); previousRender(); };
+      DSStudio.on('output:controls', sync);
       renderCode();
     }
   });

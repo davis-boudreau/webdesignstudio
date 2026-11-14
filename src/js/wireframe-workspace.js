@@ -14,7 +14,7 @@ DSStudio.register({
     const pane=document.querySelector('[data-journey-pane="2"]');pane.querySelector('p.help').textContent='After Typography, check content fit and reading order in Low Fidelity. Revisit High Fidelity after palette and component choices. Both views follow the same live website layout.';
     const open=document.createElement('button');open.id='open-wireframe-workspace';open.type='button';open.className='ghost';open.textContent='Open Wireframe view';pane.querySelector('p.help').after(open);
     open.addEventListener('click',()=>{window.dssRevealSection('process-wireframe',false);get('wireframe-workspace-title').focus();get('wireframe-workspace-title').scrollIntoView({block:'start',behavior:'instant'});});
-    const frame=get('wf-page'),wired=new WeakSet();let queued=false,previous='',previousMode='',liveWidth=0,fidelity='high';
+    const frame=get('wf-page'),wired=new WeakSet();let previous='',previousMode='',liveWidth=0,fidelity='high';
     const fidelityLabel=()=>fidelity==='low'?'Low Fidelity':'High Fidelity';
     function size() {
       const choice=get('wf-width').value,live=get('previewFrame').dataset.width;
@@ -43,7 +43,7 @@ DSStudio.register({
       });
     }
     function refresh(force=false) {
-      queued=false;if(!force && DSStudio.activeStage!==2)return;
+      if(!force && DSStudio.activeStage!==2)return;
       const doc=frame.contentDocument;if(!doc?.head || !doc.body)return;
       const parsed=engine.createDocument({preview:true,fidelity}),signature=parsed.documentElement.outerHTML;
       if(signature!==previous || previousMode!==mode()) {
@@ -56,7 +56,7 @@ DSStudio.register({
       }
       wire(doc);DSStudio.fonts.syncPreview(doc);size();
     }
-    function schedule() {if(queued || DSStudio.activeStage!==2)return;queued=true;queueMicrotask(()=>refresh());}
+    function schedule() {if(DSStudio.activeStage===2)viewTask.schedule();}
     function selectFidelity(value,focus=false){fidelity=value==='low'?'low':'high';size();refresh(true);if(focus)get('wf-tab-'+fidelity).focus();}
     for(const key of ['low','high']){
       get('wf-tab-'+key).addEventListener('click',()=>selectFidelity(key,true));
@@ -71,7 +71,7 @@ DSStudio.register({
     DSStudio.on('preview:change',({width})=>{if(width>0)liveWidth=width;if(get('wf-width').value==='live')size();});
     DSStudio.on('stage:change',({stage})=>{if(stage.index===2)schedule();});
     for(const event of ['dss:reset','dss:imported'])document.addEventListener(event,()=>{previous='';get('wf-status').textContent='';schedule();});
-    const before=renderCode;renderCode=function(){before();schedule();};
+    const viewTask=DSStudio.views.subscribe({id:'wireframe-preview',phase:'preview',events:['output:updated'],run:()=>refresh()});
     DSStudio.wireframeView={refresh:()=>refresh(true),frame,get fidelity(){return fidelity;},setFidelity:value=>selectFidelity(value)};size();schedule();
   }
 });

@@ -2,8 +2,137 @@
 
 ## Validation and publishing
 
+`scripts/browser_runner.py` owns Chrome discovery, the loopback HTTP server,
+test-only error instrumentation, local font/File-I/O fixtures, temporary profile,
+DOM report parsing and cleanup. Suites call `run_review(harness, chrome_flags=(),
+virtual_time_budget=225000, timeout=660)` with explicit inputs; there is no shared
+mutable harness or subprocess replacement. Each call creates a separate server
+and profile. Failed assertions, captured JavaScript errors, nonzero browser exit
+codes, malformed/empty reports and incomplete harnesses fail validation.
+
+`browser_review.py` retains combined integration journeys and its command entry point.
+Project-model, project-library, navigation, planning, content-tree, sitemap,
+wireframe, palette, contrast, components, typography, spacing, responsive-preview,
+standalone-export, view-update, export-pipeline,
+button-media and optional live-font suites own their HTML and initialize the app
+independently through the same runner.
+`browser_runner_review.py` tests the runner contract with standard-library mocks
+and real loopback requests, without launching Chrome. CI runs it before the Chrome
+suites. `project_library_review.py` owns the detailed local-library and JSON
+validation/file-picker checks formerly embedded in the integration harness. It
+adds independent Basic/Advanced fixtures for fresh-document recovery, complete
+snapshots, exports, invalid-file autosave retention, successful-file detachment
+and reset confirmation. The integration suite retains a save/edit/New/load/JSON
+download/file-import path across editors, preview and exports. Feature-specific
+persistence checks stay with their owning focused suites. Shared teaching,
+inspector, token-routing, website-editing and Tailwind bridge contracts remain
+in integration alongside the combined journeys.
+
+`navigation_review.py` owns startup/step selection, fragment reloads, native
+disclosures, lesson/control focus, responsive placement, inspector collapse and
+Studio return-link checks. It initializes its own app and reload document; it
+does not inherit Studio appearance, feature editor values or inspector setup
+from another suite. It also exercises repeated 900/901 px breakpoint crossings,
+original editor nodes/listeners, live hash routes and malformed/missing fragments.
+The integration suite keeps a Brief-to-Typography-to-Deliver learner journey
+covering edits, focus, preview identity, inspector output and website downloads.
+Feature-specific routing remains alongside its owning feature checks.
+
+`planning_review.py` owns shared planning-field persistence/validation/escaping,
+the seven-field Brief guide and centre editors, supporting paper-prototype links
+and planning-artifact layout checks. Its own fixtures start with explicit sample,
+stage and viewport state. It also checks placeholder guidance stays outside saved
+answers, original editor nodes/focus during escaped field edits, and Basic/Advanced
+local-load/JSON-file round trips. Basic retains planning in Studio/project data;
+Advanced renders the planning artifacts in its website. Integration retains one
+shared-planning save/download/file-import/sample-switch path through editors,
+preview and exports.
+
+`content_tree_review.py` owns content inventory identities, branch operations,
+Save/Discard/Undo, proposal-versus-website boundaries, normalization limits,
+restoration and dirty-form protections. Its fixtures own sample, stage, viewport,
+real local saves and JSON-file import setup; content-to-sitemap boundary checks
+remain with these fixtures, while sitemap CRUD stays separate. Additional checks
+cover identical-file replacement with a dirty editor, clearing incompatible Undo,
+editor identity, protecting the previous local save after import, and New with
+unsaved proposals. Integration retains a content-edit/save/Discard/Undo/JSON-file
+journey across the editor, persistence and unchanged actual website content.
+
+`sitemap_review.py` owns custom-destination CRUD and hierarchy, inclusion and
+planned-entry visibility, legacy compatibility/validation, page-derived labels,
+source switching, restore/Undo and responsive editor-layout checks. Its fixtures
+explicitly establish sample, stage, viewport, Studio appearance and inspector
+state. Additional Basic/Advanced cases exercise file import over dirty edits,
+source Undo with later Brief changes, saved-project protection and New. Integration
+retains a rename/save/Discard/Undo/download/file-import path across editor,
+storage, preview and inspector. Shared footer styling, native disclosures and
+standalone-page layout checks remain with preview/export fixtures.
+
+`wireframe_review.py` owns read-only mirror structure, geometry/paint parity,
+container annotations, inert controls, navigation/disclosures, viewport choices,
+legacy compatibility, fidelity tabs and downloads. Its fixtures initialize sample,
+stage, viewport and High Fidelity independently. Additional Basic/Advanced cases
+cover inactive JSON-file replacement, current text/type on lesson entry, original
+frame/document identity, view preferences staying outside JSON/autosave, live
+comparison, downloaded fidelities and loading the previous local project.
+Integration retains Architecture editing through wireframe rendering, local-view
+changes, both fidelity downloads and live comparison. The early Typography and
+course-order matrices now live in the independent Typography suite.
+
+`palette_review.py`, `contrast_review.py` and `components_review.py` own the
+colour-source/background, contrast inventory/repair and component-state matrices.
+Each initializes its own model, viewport, inspector and lesson, with real local
+projects wherever persistence is asserted. Palette's candidate checks call the
+read-only contrast API without importing the contrast suite. Shared standalone
+system comparisons now live in the standalone-export suite.
+Integration retains an anchor/edit/autosave, reviewed semantic fix, component
+override/button export and combined JSON-file restore journey. Its Studio
+appearance persistence helper selects the actual chosen saved project, rather
+than relying on the first entry in storage.
+
+`typography_review.py` owns system/local-fixture fonts, font validation and retry,
+scales, tracking, leading, specimen rendering, guided stages, comparison-only
+controls and the early Typography/course-order/wireframe bridge. Font requests
+use the runner's local fixtures; real CDN validation remains optional and separate.
+`spacing_review.py` owns region padding, token chart arithmetic, spacing lesson
+comparisons, reflection/session boundaries and optional plain-CSS practice.
+Both initialize their own sample, viewport, Studio appearance, lesson, inspector
+and fluid preview. Integration keeps a combined font/spacing edit, local autosave,
+comparison/inspection, website download, JSON-file restore and sample-switch
+journey. Shared responsive layout and standalone export matrices now have their
+own focused suites.
+
+`responsive_preview_review.py` owns fixed/fluid viewport sizing, workspace reflow,
+live browsing/form/disclosure state, page-theme synchronization, safe preview
+rendering and responsive control validation, persistence and breakpoint matrices.
+`standalone_exports_review.py` owns Basic/Advanced markup and sample switching,
+linked HTML/CSS downloads, inspector/file parity, rendered layout, system-style
+parity and native navigation, forms and disclosures. Each suite starts its groups
+with explicit model, viewport, Studio appearance, lesson and inspector settings;
+the Advanced markup fixture explicitly selects its tested button size and width.
+Integration retains Basic/Advanced source edits through local autosave, a mobile
+preview with entered form data, separate HTML/CSS downloads rendered at configured
+cutoffs and JSON-file restoration protecting the saved project library.
+
 `.github/workflows/ci.yml` runs the dependency-free structure and isolated-profile
 Chrome browser checks on pull requests and exposes the same job via `workflow_call`.
+`scripts/review_suites.py` is the single offline browser catalogue for CI, local
+full-check execution and import-safety checks. Runner contracts ensure every
+review file is registered exactly once, with live-font validation classified
+separately. `--matrix` prints JSON without importing or starting any browser suite;
+the default command runs all local checks in independent sequential processes,
+continues after failures and returns a failing status if any command failed.
+CI runs structure and runner checks first, then a matrix of all 18 offline browser
+suites, including actual reduced-motion/forced-colour modes. It keeps at most
+three jobs active, does not cancel remaining jobs after a failure and retains
+failed-suite logs for seven days. Each browser job has a 25-minute limit so the
+two-launch media suite can use both 660-second runner budgets. This replaces the
+old ten-minute limit shared by all suites. Live Google Fonts downloads remain an
+optional external-service check. [Test coverage](TEST_COVERAGE.md) records suite
+ownership, baseline reconciliation and explicit manual/hosted-CI gaps.
+The existing `structure` job name is retained as an unconditional final gate over
+the checks job and complete browser matrix. A failed or skipped prerequisite
+fails that gate, preserving the meaning of the existing required-check context.
 `.github/workflows/pages.yml` calls it for main pushes and manual publishing, with
 the deployment job requiring successful validation through `needs: validate`.
 Both checkouts use the triggering revision. Validation receives only read access
@@ -141,7 +270,7 @@ Font files/links remain the consuming project's responsibility. Copy failure
 opens the source for manual selection; delayed feedback identifies an earlier
 snapshot if settings changed during the clipboard request.
 
-Display refreshes coalesce through a microtask after renderCode and run while
+Display refreshes use the shared lesson-phase scheduler after output updates and run while
 Deliver is open; opening it and explicit source actions refresh immediately.
 Parsing is cached by unchanged exported CSS. Table rows and unchanged source
 text nodes survive updates. Project values use textContent, with no CSS evaluation
@@ -170,9 +299,9 @@ bounded reader for the authored samples, not a general CSS cascade interpreter.
 Its before/now comparison starts on lesson entry, can be rebased explicitly, and
 remains private session UI state with optional reflection text. Replacing the
 core state object on import/local load/reset invalidates both; explicit reset/
-import events also cover identical values. Updates coalesce through two microtasks
-so legacy import wrappers and the queued preview renderer settle before reading
-new values. Unchanged text nodes stay intact, preserving selection and focus.
+import events also cover identical values. Updates use the shared lesson phase,
+after pending preview jobs, rather than nested microtasks to guess when the
+preview has settled. Unchanged text nodes stay intact, preserving selection and focus.
 
 `syncResponsivePreview()` emits `preview:change` after measurement/readout updates;
 inspector layout changes call that same measurement function. The lesson listens
@@ -332,10 +461,10 @@ the existing default. No arbitrary imported CSS overrides were introduced.
 |---|---|---|
 | Markup | `index.html` | Sections, landmarks, asset manifest |
 | Tokens & base | `src/css/base-tokens.css`, `layout.css` | `:root` custom properties, themes, page layout |
-| Core | `src/js/studio-registry.js`, `core-state.js` | Registry/events, state, CSS and HTML export |
+| Core | `src/js/studio-registry.js`, `export-pipeline.js`, `view-updates.js`, `project-model.js`, `core-state.js` | Registry/events, export assembly, view scheduling, pure project codec, state/DOM adapters |
 | Features | `responsive-design`, `design-process`, `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `sample-homepage`, `basic-homepage`, `responsive-preview`, `website-export`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
 
-Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`.
+Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`. Export and view services load after the registry and before core/features.
 
 ## Adding a feature module
 
@@ -349,16 +478,176 @@ Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start
      title: 'My feature',
      init({ studio }) {
        // bind to DOM, subscribe: studio.on('ready', ...)
-     },
-     exportCss() { return '/* contributed to Export CSS */'; }
+       // Optional website styles, separate from the Studio UI stylesheet:
+       studio.exports.registerCss({
+         id: 'my-feature', stage: 'components', order: 30,
+         generate() { return '\n/* website component styles */\n'; }
+       });
+     }
    });
    ```
-3. Add the `<link>` / `<script defer>` tags to `index.html` and the markup section. The current export generator does not yet call `DSStudio.collectCss()`; exporting a registered module's CSS requires integrating that hook first.
-4. Run `python scripts/check_structure.py` and `python scripts/browser_review.py`.
+3. Add the `<link>` / `<script defer>` tags to `index.html` and the markup section. Register website CSS explicitly in the appropriate export stage; Studio-only styles do not belong in website exports.
+4. Run the checks listed in CONTRIBUTING, including focused export checks for generated-output changes.
 
 ## Known debt (migration path)
 
-Feature scripts still share globals (notably `cssExport` is wrapped by advanced and button modules). Migrating each to `DSStudio.register` and replacing wrappers with `exportCss()` contributions remains a roadmap item. Converting to native ES modules (`<script type="module">`) is the natural next step once globals are gone; a bundler such as Vite can be added then without changing the module shape.
+Feature scripts still share model/calculation globals and some navigation/palette
+adapters. Core view and export entry points are now stable; features use lifecycle
+subscriptions and explicit export contributors. Further module isolation, finer
+view dependencies and CSS rule ownership remain work. Native ES modules are a
+later option once globals are isolated; no bundler or runtime library is required.
+
+## Ordered website export pipeline
+
+`export-pipeline.js` provides `DSStudio.exports` before core state evaluates.
+Core retains the stable public `cssExport()` and `htmlExport()` functions, which
+delegate using the current validated sample mode. No feature captures or replaces
+either function. The structure checker rejects reassignment and checks the
+registry/pipeline/core script order.
+
+Shared CSS contributors have an authored `id`, `stage`, numeric `order` and
+`generate()` callback. The pipeline sorts by the following stages, then order,
+then lexical id (without locale collation); registration order does not define the cascade.
+
+| Stage | Current contributors |
+| --- | --- |
+| `foundation` | Core ramps, semantic roles, typography, spacing and base components |
+| `components` | Advanced component rules (10), then button rules (20) |
+| `states` | General and button state shade ramps |
+| `planning` | Shared planning artifact styles |
+| `layout` | Shared region padding, navigation and focus rules |
+
+`sharedCss()` assembles exactly those fragments. `DSStudio.samples.foundationCss`
+remains its compatibility alias: the historical name includes shared component,
+state, planning and layout CSS as well as raw foundations. Selected page CSS is
+excluded, so Basic never captures an Advanced page stylesheet. Each sample
+registers its own CSS and edited HTML renderers through `registerSample()`.
+Basic keeps its readable page/footer formatting; Advanced keeps its own page
+CSS followed by the shared footer generator. The pipeline concatenates raw
+fragments without inserting, removing or reformatting separators.
+
+The tiny core fallback sample is for initialization only. Until Basic registers,
+Advanced supplies the same intermediate startup fallback as before. Only Basic
+and Advanced are accepted as output modes; fallback is not a saved/user choice.
+The actual-content inventory continues to use `advancedSourceHtml/basicSourceHtml`
+and `advancedHtml/basicHtml` directly. Website text validation/escaping and the
+same raw export APIs remain shared by previews, inspectors and downloads.
+
+Registration rejects invalid/duplicate contributors and samples. Generation
+checks string results and propagates errors instead of returning a partial file.
+Recursion guards recover in `finally`. Removal handles cannot remove a later
+registration that reused an id. `describe()` returns detached metadata;
+`create()` provides an independent pipeline for focused tests or future targets.
+Callbacks are authored code only; imported JSON supplies no registrations,
+selectors, ordering rules or executable content.
+
+The legacy `DSStudio.collectCss()` helper is retained for compatibility as a
+standalone module-fragment collector. It is not called by the website pipeline;
+an `exportCss` property on a UI module does not append website styles. Use explicit
+contributors to avoid a second, implicit assembly path.
+
+`scripts/fixtures/export_baseline.json` contains SHA-256/byte-count snapshots
+captured from the wrapper implementation before migration. The export suite
+checks CSS, HTML and shared CSS across 16 cases (both samples/themes, custom
+tokens/components, Google font markup and edited text), plus pipeline contracts.
+Only intentionally reviewed output changes should use
+`python scripts/export_pipeline_review.py --capture` to replace that baseline.
+This phase preserves generated bytes and cascade behavior; it does not
+consolidate overlapping component selectors or introduce cascade layers.
+
+## View lifecycle and scheduled updates
+
+Core owns the stable `apply`, `renderType` and `renderCode` functions. Features
+subscribe to explicit events instead of replacing those functions. The structure
+checker rejects reassignment of these three entry points and checks that the
+registry, scheduler and core appear in the required order.
+
+| Event | Synchronous contract |
+| --- | --- |
+| `foundation:before` | Synchronize legacy tracking before foundation/export reads. |
+| `type:updated` | Core type specimens are updated; synchronize clamp controls. |
+| `output:prepare` | Prepare the actual-content inventory before artifact/export reads. |
+| `output:controls` | Synchronize font, sample-mode and responsive controls. |
+| `output:artifacts` | Refresh cached planning artifacts before code/inspector reads. |
+| `output:updated` | Core code is current; refresh inspectors/editors and invalidate background views. |
+| `foundation:updated` | Foundation apply is complete; synchronize guided fields, buttons and local autosave. |
+
+These events preserve immediate control bindings, editor dirty/undo guards and
+local save behavior. A callback must not call the same lifecycle entry point it
+observes. Export generation remains synchronous and reads the current model;
+copy/download actions do not wait for a rendered preview.
+
+`DSStudio.views.subscribe({id, phase, events, run})` registers an authored task and
+returns `{schedule, dispose}`. Repeated invalidations of a pending task coalesce
+into one microtask update. The `preview` phase runs the responsive document and
+active wireframe first; the `lesson` phase then refreshes Typography, Spacing,
+utility and Tailwind views. Each task keeps its existing visibility guards.
+Typography listens to preview measurements as well as type/output/foundation
+changes, so component specimens read the latest computed styles. Project-sync
+and explicit local navigation still refresh its controls immediately.
+
+Tasks read the current model when they run; pending work never retains a project
+snapshot that could outlive import/reset. Preview-triggered lesson invalidation
+joins the same flush. Invalidating an earlier/already-run task defers it to a new
+flush rather than recursively rendering. Disposal cancels pending work and event
+subscriptions, and errors are reported without blocking unrelated views.
+`DSStudio.views.flush()` provides a synchronous drain of the current phases when
+a caller specifically needs it; it does not recursively drain new earlier-phase
+work. Normal interaction uses the queued scheduler.
+
+This batches work within a JavaScript turn, not across separate slider events or
+animation frames. Inspectors, control synchronization and persistence remain
+synchronous. Contrast's existing coalescer and focus/navigation continuations
+remain separate. Export assembly uses the pipeline above; navigation adapters
+remain separate work.
+No performance or full accessibility claim follows from batching alone.
+
+`python scripts/view_updates_review.py` independently checks phase ordering,
+coalescing, disposal, error isolation, current-state reads, synchronous exports
+and the Typography component-context regression. CI runs it before the full
+browser integration suite.
+
+## Project codec and replacement lifecycle
+
+`project-model.js` loads after the data services and before core state. Its
+`DSStudio.project` API creates fresh defaults, normalizes imported data and
+produces detached snapshots or project JSON without touching the DOM, storage,
+active state or render functions. Feature data normalizers remain the owners of
+their bounded planning, font, brand and responsive structures. Advanced control
+ranges and enums now have data definitions; imports no longer read live controls.
+Numeric UI bounds consume those definitions and regression checks compare the
+authored enum choices with the same rules.
+
+`core-state.js` retains `importConfig`, `resetStudio`, `projectJson` and the new
+`projectSnapshot` adapters. Import validates the complete project before replacing
+`state` and `clampConfig`. The `project:install` event is exclusively for installing
+model references or clearing session flags: it must not render, save or navigate.
+Advanced and button editors retain their familiar local variables as references
+to `state.advanced` and `state.buttonDesign`. Font fallback comparison clears in
+this phase. Only after all references are installed does `project:sync` refresh
+controls/views, followed by reset notifications when applicable and `apply()`.
+Button rendering no longer copies settings into saved state.
+
+`DSStudio.isReplacingProject()` stays true throughout synchronous replacement,
+including observers, and clears in `finally`. Local autosave checks this guard
+instead of wrapping import. Browser-local saves consume detached snapshots
+directly; JSON inspector/downloads use the same codec. The library still owns
+active-project identity and detaches it on New/reset and file-import completion.
+Existing `dss:reset`/`dss:imported` UI notifications retain their meanings.
+
+The JSON schema remains 2.9 and the storage key is unchanged. Legacy sample-mode
+and tracking migration remains based on field presence, preserving historical
+files whose schema labels did not track every added field. This is not a new
+version-dispatch policy. Background views and export assembly use the services
+above; finer update dependencies and remaining render-time legacy tracking
+synchronization are subsequent work.
+
+`python scripts/project_model_review.py` runs a short, independent scenario through
+the existing isolated Chrome runner. It checks complete models during every
+import/reset render, rendering purity for button settings, DOM-free data handling,
+legacy/malformed data, detached objects, failed normalization and autosave guards.
+CI runs it alongside the full integration suite; no Node or runtime library is
+required.
 
 ## Project planning workflow
 
@@ -794,8 +1083,8 @@ is an agreed IA and selected visitor sitemap ready to guide Wireframe. Studio
 learning combines the overview and content-planning exercise in one optional
 learning disclosure after a concise introduction; it adds no planning fields or
 automated validation of the learner's decisions.
-The planning module wraps the CSS generator for shared artifact
-styles and the renderer for synchronized controls/lessons. Markup caches preserve
+The planning module registers shared artifact styles in the planning export
+stage and subscribes to `output:artifacts` for synchronized controls/lessons. Markup caches preserve
 unchanged artifact nodes and focus through unrelated palette changes. Editing
 replaces the planning object rather than mutating defaults. Existing JSON, local
 project save/load/import/reset and New flows include this optional data; the JSON
@@ -928,7 +1217,7 @@ The local visibility helper never changes the global lesson during background
 updates; explicit Reveal/Configure handles navigation, preserving other lesson
 nodes and focus.
 
-The module wraps apply after the existing modules so visible selection, theme
+The module subscribes to foundation updates so visible selection, theme
 and source summaries stay synchronized. State identity replacement resets the
 local process to brand references for direct importConfig, local load and reset,
 not only file-import events. Stage/region/brand choices are transient; no schema
@@ -956,8 +1245,8 @@ theme/method/override updates. Configure actions and catalogue source routes rea
 the matching theme's semantic editor. Existing feedback continues to use its
 semantic colour, with non-colour interaction cues and native behaviour unchanged.
 
-`state-palettes.js` loads after `palette-process.js` and wraps the complete CSS
-generator. It derives ten General controls state ramps from resolved semantic
+`state-palettes.js` loads after `palette-process.js` and contributes to the shared
+states export stage. It derives ten General controls state ramps from resolved semantic
 roles, plus seven state ramps for each of the five button variants from
 `dssGetButtonContrastData()`. Sources follow the actual component rules: e.g.
 hover/pressed use their specific backgrounds, focus/selected use the ring colour,
@@ -1048,7 +1337,7 @@ workspace. These rules do not affect generated website container widths.
 `css-dock.js` selects `cssExport()`, `htmlExport()` or `projectJson()` for its code panel,
 copy action and download. Its language tabs use arrow/Home/End keys, managed tab
 stops and panel labelling; selection is independent of the centre export tabs.
-Settings changes refresh the active language through the existing `renderCode` hook.
+Settings changes refresh the active language through `output:updated`.
 Its Page theme selector and the preview's selector share `state.theme` with the
 guided builder/global toggle, autosave and JSON import. Both theme blocks remain
 in CSS; HTML uses the chosen initial theme and matching illustrations.
@@ -1139,8 +1428,8 @@ has no delivery backend. Fixed reference palette values now export as `--brand-*
 the catalogue and CSV use the same names. Existing consumers of `--example-*` must
 update their references when adopting the new CSS export.
 
-`responsive-preview.js` initializes after the sample generator and batches
-`renderCode` updates into one microtask. It renders the same generated HTML and CSS
+`responsive-preview.js` initializes after the sample generator and subscribes to
+output updates through the shared preview phase. It renders the same generated HTML and CSS
 inside `previewPage`, a sandboxed iframe with scripts/top navigation disabled and
 same-origin DOM access/native form validation enabled. The exported CSS is inserted
 as a style text node; the external tokens.css link is removed in the preview only.
@@ -1333,9 +1622,9 @@ through the existing JSON and local save/load flows. Legacy imports without a mo
 retain Advanced, while invalid explicit modes fall back to Basic. No separate
 palette or project state is introduced for Basic.
 
-`sample-system.js` registers before both sample generators. It captures the
-shared foundation/component CSS generator after planning styles initialize and
-provides common button classes, header navigation text/state styles, footer HTML
+`sample-system.js` registers before both sample generators. It contributes shared
+layout CSS, exposes the shared pipeline through the foundationCss compatibility
+alias and provides common button classes, header navigation text/state styles, footer HTML
 and footer CSS. Header links use Advanced's semibold/plain-at-rest treatment in
 both modes, independently of general link underlining. Both modes therefore
 export the same foundation ramps, semantic roles, typography, spacing, responsive
@@ -1345,9 +1634,9 @@ a partial set of tokens or hard-codes body/heading sizes, spacing, measure,
 control dimensions, border widths or card effects. Global link focus follows the
 saved focus width, while buttons retain their component focus settings.
 
-`basic-homepage.js` registers after the Advanced generator and before the preview.
-It wraps the public HTML/CSS functions to select the current mode; all inspector,
-copy, preview and download paths continue through those functions. Basic renders
+`basic-homepage.js` registers its CSS and edited HTML renderers after the Advanced
+sample and before the preview. The stable public HTML/CSS entry points select
+the current sample; inspector, copy, preview and download paths use those same functions. Basic renders
 a four-section component showcase: an illustrated hero, Flexbox content cards
 with a profile row and native FAQ, Grid cards with semantic lists and an
 article/aside supporting layout, and a centred form with grouped choices.
@@ -1390,9 +1679,12 @@ surfaces continue to call the same generators, including the explicit website
 file actions. Inspector copy feedback verifies both mode and language after an
 asynchronous clipboard result, avoiding feedback for a subsequently selected mode.
 
-The responsive renderer preserves forms/disclosures/focus/scroll through same-mode
-updates and starts a fresh browsing session when mode changes, so unrelated form
-values do not cross between samples. Both modes remain static, script-free exports
+The responsive renderer preserves forms/disclosures/focus/scroll through ordinary
+same-mode edits. A sample change or project installation starts a fresh browsing
+session, including identical JSON imports, local loads, reset and New. The
+project-install listener invalidates the prior output and mode before scheduled
+rendering, so coalesced sample changes cannot retain another project's form values.
+The iframe document remains in place. Both modes remain static, script-free exports
 and share the existing optional font-link and preview-only fallback behaviour.
 
 ## Standalone website download actions
@@ -1476,7 +1768,7 @@ calculations. Each state/theme result aggregates required text and indicator
 pairs; conditional boundaries and inactive exemptions stay separate. Selected
 details show the lowest ratio for each text/indicator category across audited
 contexts and open the existing colour-repair dialog for that exact pair.
-`dssSelectButtonState()` synchronizes the private button editor settings, controls,
+`dssSelectButtonState()` synchronizes the shared button settings, controls,
 previews and autosave. Review DOM nodes remain stable across refreshes to preserve
 disclosures and keyboard focus. The repair dialog returns focus to its opener,
 falling back to the full-report summary if that element is no longer available.
@@ -1509,8 +1801,9 @@ Direct stage-summary activation handles the accordion transition before focusing
 without implicit browser scrolling and explicitly revealing the new heading.
 Closing an open summary retains native collapse behavior. Programmatic toggle
 synchronization remains local and silent, so background edits do not navigate.
-Scoped resets dispatch the original controls. Shared apply/render wrappers retain
-existing state, preview, font-loading, export and project contracts.
+Scoped resets dispatch the original controls. Explicit lifecycle subscriptions
+and a lesson-phase specimen task retain existing state, preview, font-loading,
+export and project contracts while avoiding repeated background synchronization.
 
 Specimens parse generated HTML with DOMParser and insert wording through
 textContent/value. Component context reads computed styles from the existing live
@@ -1529,7 +1822,7 @@ mode. Google mode uses curated Inter, Source Sans 3 and Literata IDs with known
 weight choices, never imported URLs or CSS. Heading and body font tokens export
 separately; `--font-ui` aliases the body token for existing components.
 
-The source module updates controls and specimen variables through `renderCode`,
+The source module updates controls and specimen variables through `output:controls`,
 which also catches advanced/button-weight changes. Required page weights remain
 included alongside selected additional weights; italic body 400 covers the sample
 cite. A shared family is requested once. Managed links are keyed by URL/document,

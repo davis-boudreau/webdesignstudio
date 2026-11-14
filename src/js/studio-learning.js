@@ -38,8 +38,7 @@ DSStudio.register({
       get('jHeadingLeading').value = state.headingLeading;
       get('jHeadingLeadingOut').textContent = String(round(state.headingLeading, 2));
     };
-    const previousApply = apply;
-    apply = function() { previousApply(); sync(); };
+    DSStudio.on('foundation:updated', sync);
     sync();
 
     // The old parameter groups already validate, save and synchronize themselves.

@@ -31,7 +31,7 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
       ['deliver', 'Deliver', 'studio-section-6', 'Review and deliver', '', 'Download index.html and tokens.css together and reopen the page. Save project JSON separately so you can resume editing in the studio.']
     ].map(([id, label, lesson, phase, find, task], index) => Object.freeze({ id, label, lesson, phase, find, task, index, position: stageOrder.indexOf(index) })),
 
-    /** Register a feature module: { id, title, init(ctx), exportCss?(), exportTokens?() } */
+    /** Register a UI module: { id, title, init(ctx) }. Export contributors use DSStudio.exports. */
     register(mod) {
       if (!mod || typeof mod.id !== 'string' || typeof mod.init !== 'function') {
         throw new TypeError('DSStudio.register: module needs a string "id" and an "init" function');
@@ -61,7 +61,7 @@ Load this file before any module; see docs/ARCHITECTURE.md. */
       });
     },
 
-    /** Collect CSS fragments contributed by registered modules (used by export). */
+    /** Legacy standalone fragment collector; website generation uses DSStudio.exports. */
     collectCss() {
       return [...modules.values()]
         .map(m => (typeof m.exportCss === 'function' ? m.exportCss() : ''))

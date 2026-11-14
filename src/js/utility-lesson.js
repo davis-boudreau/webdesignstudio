@@ -101,15 +101,9 @@ DSStudio.register({
         article.tabIndex = -1; article.focus({ preventScroll: true });
       }
     });
-    let queued = false;
-    const schedule = () => {
-      if (queued) return;
-      queued = true;
-      queueMicrotask(() => { queued = false; sync(); });
-    };
-    // Existing preview events run after imports, font changes and rendering settle.
-    DSStudio.on('preview:change', schedule);
-    DSStudio.on('stage:change', schedule);
+    DSStudio.views.subscribe({
+      id: 'utility-lesson', phase: 'lesson', events: ['preview:change','stage:change'], run: sync
+    });
     section.addEventListener('toggle', () => { if (section.open) sync(true); });
     get('utilityPractice').addEventListener('toggle', () => { if (get('utilityPractice').open) sync(true); });
     sync(true);

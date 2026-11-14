@@ -60,8 +60,7 @@
    Grid card wrapping follows card minimum + gap, not these cutoffs. */`;
         viewport();
       }
-      const previousRender = renderCode;
-      renderCode = function() { sync(); previousRender(); };
+      DSStudio.on('output:controls', sync);
       const observer = new ResizeObserver(viewport);
       observer.observe(document.getElementById('previewFrame'));
       document.getElementById('previewPage').addEventListener('load', viewport);

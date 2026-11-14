@@ -24,31 +24,8 @@ const EXAMPLE_PALETTE = {
 function renderBrand() {
   DSStudio.brandPalette.render();
 }
-const DEFAULT = {
-  project: 'My Project',
-  theme: 'light',
-  sampleMode: 'basic',
-  method: 'oklch',
-  primary: '#004780',
-  secondary: '#495965',
-  accent: '#cbdb2a',
-  brandPalette: DSStudio.brandPalette.defaults(),
-  designProcess: DSStudio.process.defaults(),
-  responsiveDesign: DSStudio.responsive.defaults(),
-  font: 'Arial, Helvetica, sans-serif',
-  fontSettings: DSStudio.fonts.defaults(),
-  base: 16,
-  ratio: 1.2,
-  leading: 1.55,
-  headingLeading: 1.18,
-  headingTracking: -.02,
-  bodyTracking: 0,
-  spacing: 4,
-  radius: 12
-};
-let state = {
-    ...DEFAULT
-  },
+const DEFAULT = DSStudio.project.defaults().state;
+let state = DSStudio.project.defaults().state,
   codeTab = 'css';
 const $ = id => document.getElementById(id);
 const SPACING_STEPS = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24];
@@ -153,11 +130,11 @@ function onColor(hex) {
   return contrast(hex, '#FFFFFF') >= contrast(hex, '#14253A') ? '#FFFFFF' : '#14253A';
 }
 
-const SEMANTIC_COLOUR_KEYS = ['background', 'header-background', 'main-background', 'footer-background', 'surface', 'surface-muted', 'text', 'text-muted', 'border', 'control-border', 'primary', 'on-primary', 'primary-hover', 'secondary', 'on-secondary', 'accent', 'on-accent', 'success', 'warning', 'danger', 'focus'];
+const SEMANTIC_COLOUR_KEYS = DSStudio.project.semanticColourKeys;
 const STATUS_PALETTE_ROLES = ['success', 'warning', 'danger'];
-const BACKGROUND_REGIONS = ['body', 'header', 'main', 'footer'];
-const PADDING_REGIONS = ['header', 'main', 'footer'];
-const PADDING_SIDES = ['top', 'right', 'bottom', 'left'];
+const BACKGROUND_REGIONS = DSStudio.project.backgroundRegions;
+const PADDING_REGIONS = DSStudio.project.paddingRegions;
+const PADDING_SIDES = DSStudio.project.paddingSides;
 
 function regionPadding(region, side, foundation = state) {
   const value = foundation.regionPadding?.[region]?.[side];
@@ -240,6 +217,7 @@ function palette(theme = state.theme, foundation = state) {
 }
 
 function apply() {
+  DSStudio.emit('foundation:before');
   const {
     p,
     s,
@@ -274,6 +252,7 @@ function apply() {
   renderContrast(roles);
   renderInspector(roles);
   renderCode();
+  DSStudio.emit('foundation:updated');
 }
 
 function renderRamps(all) {
@@ -291,11 +270,7 @@ function sizes() {
     size: state.base * state.ratio ** n
   }));
 }
-const CLAMP_DEFAULTS = {
-  minWidth: 375,
-  maxWidth: 1280,
-  mobileFactor: .82
-};
+const CLAMP_DEFAULTS = DSStudio.project.clampDefaults();
 let clampConfig = {
   ...CLAMP_DEFAULTS
 };
@@ -374,6 +349,7 @@ function renderType() {
   spec('desktopType', 1280);
   $('typeLadder').innerHTML = sz.map(o => `<div class="type-row"><small>${o.name}<br>${round(o.size,2)}px<br>${round(o.size/16,4)}rem</small><div class="sample" data-font-role="${o.step>0?'heading':'body'}" style="font-size:${o.size}px;letter-spacing:${o.step>0?state.headingTracking:state.bodyTracking}em;line-height:${o.step>0?state.headingLeading:state.leading};font-weight:${o.step>0?'var(--demo-heading-weight, 700)':400}">Aa Bb Cc — Typography</div></div>`).join('');
   syncFluidTypography();
+  DSStudio.emit('type:updated');
 }
 
 function renderSpacing() {
@@ -399,7 +375,7 @@ function renderInspector(roles) {
   $('tokenInspector').innerHTML = names.map(k => `<div class="token-item"><strong>--${k}</strong><code>${roles[k]}</code><span class="help">${k==='primary'?'Foundation ramp → semantic primary → button':k==='surface'?'Semantic surface → card background':k==='text'?'Semantic text → body and headings':'Semantic role → multiple components'}</span></div>`).join('');
 }
 
-function cssExport() {
+function foundationCss() {
   const {
     p,
     s,
@@ -436,23 +412,25 @@ function cssExport() {
 .small-text { font-size: var(--text-small); }\n.card-grid { display: grid; }\n.card { padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;
 }
 
-function htmlExport() {
+function fallbackHtml() {
   return `<!doctype html>\n<html lang="en" data-theme="${state.theme}">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${escapeHtml(state.project)}<\/title>\n  <!-- Save the exported CSS alongside this file. -->\n  <link rel="stylesheet" href="tokens.css">\n<\/head>\n<body>\n  <main class="container">\n    <h1 class="page-title">${escapeHtml(state.project)}</h1>\n    <p>A responsive example using semantic design tokens.</p>\n    <div class="card-grid">\n      <article class="card"><h2>Colour</h2><p>Primary, surface, and text roles.</p><button class="button">Explore</button></article>\n      <article class="card"><h2>Typography</h2><p>Responsive type and readable leading.</p></article>\n      <article class="card"><h2>Layout</h2><p>CSS Grid automatically adapts to space.</p></article>\n    </div>\n  <\/main>\n<\/body>\n<\/html>\n`;
 }
+
+// Stable public entry points; features register contributors rather than wrap them.
+function cssExport() { return DSStudio.exports.css(state.sampleMode); }
+function htmlExport() { return DSStudio.exports.html(state.sampleMode); }
+DSStudio.exports.registerCss({id:'foundation',stage:'foundation',generate:foundationCss});
+DSStudio.exports.registerSample('fallback',{css:()=>'',html:fallbackHtml});
 
 function escapeHtml(s) {
   return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
-/* FIX: one function produces the project JSON, so Save JSON, the JSON tab and
-"Download visible code" always agree. Later scripts extend it instead of
-hijacking button clicks. */
+/* One serializer serves the inspector, downloads and browser-local projects. */
+function projectSnapshot() {
+  return DSStudio.project.snapshot(state, clampConfig);
+}
 function projectJson() {
-  return JSON.stringify({
-    schemaVersion: 2,
-    brandReference: "Project Brand Palette",
-    clampConfig: { ...clampConfig },
-    ...state
-  }, null, 2);
+  return DSStudio.project.serialize(state, clampConfig);
 }
 
 function codeContent() {
@@ -460,6 +438,9 @@ function codeContent() {
 }
 
 function renderCode() {
+  DSStudio.emit('output:prepare');
+  DSStudio.emit('output:controls');
+  DSStudio.emit('output:artifacts');
   const content = codeContent();
   if ($('codeView').textContent !== content) $('codeView').textContent = content;
   [
@@ -471,6 +452,7 @@ function renderCode() {
     $(id).tabIndex = codeTab === t ? 0 : -1;
     if (codeTab === t) $('codeView').setAttribute('aria-labelledby', id);
   });
+  DSStudio.emit('output:updated');
 }
 
 function download(name, content, type) {
@@ -494,83 +476,35 @@ function announce(msg) {
 function syncControls() {
   Object.keys(DEFAULT).filter(k => $(k)).forEach(k => $(k).value = state[k]);
 }
-/* FIX: a single reset path. Other modules listen for "dss:reset" so they only reset
-when a reset actually happens (previously they reset even when the confirm box was cancelled). */
+/* Replacement has two phases: install all model references before any view sync.
+   Autosave stays suspended until synchronous replacement observers finish. */
+let projectReplacementDepth = 0;
+DSStudio.isReplacingProject = () => projectReplacementDepth > 0;
+function replaceProject(next, reason) {
+  projectReplacementDepth++;
+  try {
+    state = next.state;
+    clampConfig = next.clampConfig;
+    DSStudio.emit('project:install', { reason });
+    syncControls();
+    DSStudio.emit('project:sync', { reason });
+    if (reason === 'reset') document.dispatchEvent(new Event('dss:reset'));
+    apply();
+  } finally {
+    projectReplacementDepth--;
+  }
+}
 function resetStudio(msg) {
-  clampConfig = { ...CLAMP_DEFAULTS };
-  state = {
-    ...DEFAULT
-  };
-  syncControls();
-  document.dispatchEvent(new Event('dss:reset'));
-  apply();
+  replaceProject(DSStudio.project.defaults(), 'reset');
   if (msg) announce(msg);
 }
 const validHex = s => typeof s === 'string' && /^#[0-9a-f]{6}$/i.test(s);
 
 function importConfig(obj) {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw Error('Not a valid project configuration');
-  const n = {
-    ...DEFAULT
-  };
-  for (const k of ['primary', 'secondary', 'accent'])
-    if (validHex(obj[k])) n[k] = obj[k].toLowerCase();
-  if (['light', 'dark'].includes(obj.theme)) n.theme = obj.theme;
-  if (['basic', 'advanced'].includes(obj.sampleMode)) n.sampleMode = obj.sampleMode;
-  // Projects predating sample selection used the Advanced page.
-  if (!Object.hasOwn(obj, 'sampleMode')) n.sampleMode = 'advanced';
-  if (['mix', 'oklch'].includes(obj.method)) n.method = obj.method;
-  if (['Arial, Helvetica, sans-serif', "Georgia, 'Times New Roman', serif", 'Verdana, Geneva, sans-serif', 'system-ui, sans-serif'].includes(obj.font)) n.font = obj.font;
-  n.fontSettings = DSStudio.fonts.normalize(obj.fontSettings);
-  n.brandPalette = DSStudio.brandPalette.normalize(obj.brandPalette);
-  n.designProcess = DSStudio.process.normalize(obj.designProcess);
-  n.responsiveDesign = DSStudio.responsive.normalize(obj.responsiveDesign);
-  for (const [k, min, max] of [
-      ['base', 14, 22],
-      ['ratio', 1.05, 1.5],
-      ['leading', 1.3, 1.9],
-      ['headingLeading', 1, 1.6],
-      ['headingTracking', -.05, .1],
-      ['bodyTracking', -.02, .12],
-      ['spacing', 3, 8],
-      ['radius', 0, 28]
-    ])
-    if (typeof obj[k] === 'number' && Number.isFinite(obj[k])) n[k] = clamp(obj[k], min, max);
-  if (typeof obj.project === 'string') n.project = obj.project.slice(0, 90);
-  // Older projects stored heading tracking in hundredths of an em.
-  if (typeof obj.headingTracking !== 'number' && typeof obj.advanced?.tracking === 'number' && Number.isFinite(obj.advanced.tracking))
-    n.headingTracking = clamp(obj.advanced.tracking / 100, -.05, .1);
-  clampConfig = { ...CLAMP_DEFAULTS };
-  for (const [key, min, max] of [
-      ['minWidth', 320, 600],
-      ['maxWidth', 900, 1600],
-      ['mobileFactor', .7, 1]
-    ]) {
-    const value = obj.clampConfig?.[key];
-    if (typeof value === 'number' && Number.isFinite(value)) clampConfig[key] = clamp(value, min, max);
-  }
-  n.semanticOverrides = { light: {}, dark: {} };
-  n.regionPadding = {};
-  for (const region of PADDING_REGIONS) {
-    const sides = {};
-    for (const side of PADDING_SIDES) {
-      const value = obj.regionPadding?.[region]?.[side];
-      if (typeof value === 'number' && Number.isFinite(value)) sides[side] = Math.round(clamp(value, 0, 64));
-    }
-    if (Object.keys(sides).length) n.regionPadding[region] = sides;
-  }
-  n.backgroundOpacity = { light: {}, dark: {} };
-  for (const theme of ['light', 'dark']) for (const region of BACKGROUND_REGIONS) {
-    const value = obj.backgroundOpacity?.[theme]?.[region];
-    if (typeof value === 'number' && Number.isFinite(value)) n.backgroundOpacity[theme][region] = Math.round(clamp(value, 0, 100));
-  }
-  for (const theme of ['light', 'dark'])
-    for (const key of SEMANTIC_COLOUR_KEYS)
-      if (validHex(obj.semanticOverrides?.[theme]?.[key])) n.semanticOverrides[theme][key] = obj.semanticOverrides[theme][key].toUpperCase();
-  state = n;
-  syncControls();
-  apply();
+  // Validation finishes before the active project or any editor references change.
+  replaceProject(DSStudio.project.normalize(obj), 'import');
 }
+
 ['project', 'method', 'primary', 'secondary', 'accent', 'font', 'base', 'ratio', 'leading', 'headingTracking', 'bodyTracking', 'spacing', 'radius'].forEach(k => $(k).addEventListener('input', e => {
   state[k] = ['base', 'ratio', 'leading', 'headingTracking', 'bodyTracking', 'spacing', 'radius'].includes(k) ? Number(e.target.value) : e.target.value;
   apply();

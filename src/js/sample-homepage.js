@@ -517,9 +517,9 @@ ${flexRecipe}
       DSStudio.samples.illustration = illustration;
       DSStudio.samples.advancedSourceHtml = homepageHtml;
       DSStudio.samples.advancedHtml = () => DSStudio.websiteContent.apply(homepageHtml(),'advanced');
-      const previousCss = cssExport;
-      cssExport = () => previousCss() + '\n' + homepageCss() + DSStudio.samples.footerCss();
-      htmlExport = DSStudio.samples.advancedHtml;
+      DSStudio.exports.registerSample('advanced',{
+        css:()=> '\n' + homepageCss() + DSStudio.samples.footerCss(), html:DSStudio.samples.advancedHtml
+      });
       renderCode();
     }
   });

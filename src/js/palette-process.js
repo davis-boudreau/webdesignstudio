@@ -90,7 +90,7 @@ DSStudio.register({
         view.chain.textContent=descriptions.join(' · ')+'. Exported declarations contain resolved hex values.';
       }
     }
-    const previousApply=apply;apply=function(){previousApply();sync();};sync();
+    DSStudio.on('foundation:updated',sync);sync();
     DSStudio.emit('lesson:content');
   }
 });

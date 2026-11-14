@@ -157,17 +157,10 @@ DSStudio.register({
       DSStudio.inspector.show({ language, section: 'all', find: find() });
     });
     DSStudio.on('stage:change', () => { focusVersion++; sync(); });
-    // Imports can refresh several legacy generators in one call. Read after the
-    // stack settles so a fresh comparison never captures intermediate settings.
-    let queued = false;
-    const schedule = () => {
-      if (queued) return;
-      queued = true;
-      // Preview rendering is queued by another listener in the same turn.
-      queueMicrotask(() => queueMicrotask(() => { queued = false; sync(); }));
-    };
-    DSStudio.on('inspector:change', schedule);
-    DSStudio.on('preview:change', schedule);
+    // Lesson measurements run after pending preview jobs, without timer guesses.
+    const { schedule } = DSStudio.views.subscribe({
+      id: 'spacing-lesson', phase: 'lesson', events: ['inspector:change','preview:change'], run: sync
+    });
     get('previewPage').addEventListener('load', schedule);
     section.addEventListener('toggle', () => { if (section.open) sync(); });
     // Also clear comparison when a reset/import reloads identical project values.

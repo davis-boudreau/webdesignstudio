@@ -3,7 +3,7 @@
 Run: python scripts/button_states_review.py. Uses the existing isolated-profile
 runner and local server; no additional dependencies or live network services.
 """
-import browser_review as review
+from browser_runner import run_review
 
 HARNESS = r'''<!doctype html>
 <iframe id="app" src="/index.html" style="width:1280px;height:1000px"></iframe>
@@ -54,22 +54,11 @@ app.onload=async()=>{
 
 
 def main():
-    original_run = review.subprocess.run
-    original_harness = review.HARNESS
     status = 0
-    try:
-        for mode, flag in [('reduce', '--force-prefers-reduced-motion'),
-                           ('forced', '--force-high-contrast')]:
-            review.HARNESS = HARNESS.replace('MODE', repr(mode))
-
-            def run_with_flags(command, flag=flag, **kwargs):
-                return original_run([command[0], flag, *command[1:]], **kwargs)
-
-            review.subprocess.run = run_with_flags
-            status = max(status, review.main())
-    finally:
-        review.subprocess.run = original_run
-        review.HARNESS = original_harness
+    for mode, flag in [('reduce', '--force-prefers-reduced-motion'),
+                       ('forced', '--force-high-contrast')]:
+        status = max(status, run_review(HARNESS.replace('MODE', repr(mode)),
+                                        chrome_flags=(flag,)))
     return status
 
 

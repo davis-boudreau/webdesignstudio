@@ -187,8 +187,7 @@
       document.addEventListener('dss:reset', () => {
         targetRole = 'primary'; get('brandFeedback').textContent = 'Choose a role, then click a swatch below.';
       });
-      const priorApply = apply;
-      apply = function() { priorApply(); sync(); };
+      DSStudio.on('foundation:updated', sync);
       sync();
     }
   });
