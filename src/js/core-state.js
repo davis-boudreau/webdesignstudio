@@ -263,11 +263,11 @@ function renderRoles(roles) {
   $('semanticSwatches').innerHTML = Object.entries(roles).map(([k, v]) => `<div class="swatch"><div class="paint" style="background:${v}"></div><div class="swatch-text"><strong>--${k}</strong><code>${v}</code></div></div>`).join('');
 }
 
-function sizes() {
+function sizes(foundation = state) {
   return [-2, -1, 0, 1, 2, 3, 4, 5].map(n => ({
     name: n < 0 ? 'xs' + Math.abs(n) : n === 0 ? 'base' : 'step ' + n,
     step: n,
-    size: state.base * state.ratio ** n
+    size: foundation.base * foundation.ratio ** n
   }));
 }
 const CLAMP_DEFAULTS = DSStudio.project.clampDefaults();
@@ -275,33 +275,33 @@ let clampConfig = {
   ...CLAMP_DEFAULTS
 };
 
-function fluidTypeBounds(step) {
-  const full = state.base * Math.pow(state.ratio, step);
+function fluidTypeBounds(step, foundation = state, config = clampConfig) {
+  const full = foundation.base * Math.pow(foundation.ratio, step);
   return {
     full,
-    min: full * (step >= 3 ? clampConfig.mobileFactor : 1)
+    min: full * (step >= 3 ? config.mobileFactor : 1)
   };
 }
 
-function fluidTypePx(step, viewport) {
+function fluidTypePx(step, viewport, foundation = state, config = clampConfig) {
   const {
     full,
     min
-  } = fluidTypeBounds(step), {
+  } = fluidTypeBounds(step, foundation, config), {
     minWidth,
     maxWidth
-  } = clampConfig;
+  } = config;
   return round(Math.max(min, Math.min(full, min + (full - min) * (viewport - minWidth) / (maxWidth - minWidth))), 1);
 }
 
-function fluidTypeCss(step, unit = 'vw', viewportInset = 0) {
+function fluidTypeCss(step, unit = 'vw', viewportInset = 0, foundation = state, config = clampConfig) {
   const {
     full,
     min
-  } = fluidTypeBounds(step), {
+  } = fluidTypeBounds(step, foundation, config), {
     minWidth,
     maxWidth
-  } = clampConfig;
+  } = config;
   const slope = (full - min) / (maxWidth - minWidth) * 100;
   const offset = min - slope * minWidth / 100;
   // rem offsets scale with user root font preferences; 16px is the nominal root.

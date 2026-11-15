@@ -5,11 +5,11 @@ DSStudio.register({
   init() {
     const get=id=>document.getElementById(id),pane=document.querySelector('[data-journey-pane="4"]'),panel=get('brandPalette').querySelector(':scope > .panel');
     const old=[...panel.children],workspace=document.createElement('section');workspace.id='palette-workspace';workspace.className='palette-workspace';workspace.setAttribute('aria-labelledby','palette-workspace-title');
-    workspace.innerHTML='<header><h3 id="palette-workspace-title" tabindex="-1">Palette workspace</h3><p>Give each colour a purpose, then check it in the website. Work through the colour-token process or reopen a stage to revise a decision. Changes update your project, live preview and exported CSS immediately.</p><label for="palette-theme">Website theme to edit and review</label><select id="palette-theme"><option value="light">Light</option><option value="dark">Dark</option></select><p class="help">Brand colours and UI anchors are shared. Background and semantic overrides apply to the selected theme.</p></header><p id="palette-workspace-status" class="help" role="status"></p>';
+    workspace.innerHTML='<header><h3 id="palette-workspace-title" tabindex="-1">Palette workspace</h3><p>Give each colour a purpose, then check it in the website. Work through the colour-token process or reopen a stage to revise a decision. Save applies property changes to the project, live preview and exported CSS.</p><label for="palette-theme">Website theme to edit and review</label><select id="palette-theme"><option value="light">Light</option><option value="dark">Dark</option></select><p class="help">Brand colours and UI anchors are shared. Background and semantic overrides apply to the selected theme.</p></header><p id="palette-workspace-status" class="help" role="status"></p>';
     workspace.querySelector('header').setAttribute('data-stage-controls','');
     panel.prepend(workspace);
     const definitions=[
-      ['brand','Brand colours','Record the colours that identify your site. Add a colour, choose it from the list, then change its name, token suffix or value. Remove references you do not need; keep at least one, with a limit of 24. Editing a reference keeps the UI roles that already copied its colour.'],
+      ['brand','Brand colours','Record the colours that identify your site. Add a colour, choose it from the list, then change its name, token suffix or value. Save to apply property edits, or Discard to restore them. Adding and removing colours take effect immediately; keep 1 to 24 references. UI anchors keep colours already copied from a reference.'],
       ['roles','Choose UI anchors','Select Primary, Secondary or Accent on the left, then set its brand reference or custom colour in the properties on the right. These three source colour families are shared by both website themes and generate the shade ramps used by semantic roles. Reset restores only the selected starter assignment. Required anchors cannot be deleted.'],
       ['shades','Generate and understand shades','RGB mix blends toward white or black; OKLCH adjusts perceptual lightness and chroma. Choose a method and inspect the eleven steps for each family. Step 500 preserves the UI anchor. Neutral derives from Primary. These are generated outputs: change their source instead of adding or deleting individual steps. Shade numbers do not guarantee contrast.'],
       ['semantics','Assign semantic colours','Turn shades into purpose-based roles: text, surfaces, borders, actions, focus and feedback. Review each role in the selected website theme. Preview contrast effects before applying a custom override; Use generated removes it and reconnects the role to the palette.'],
@@ -30,7 +30,7 @@ DSStudio.register({
     const open=document.createElement('button');open.id='open-palette-workspace';open.type='button';open.className='ghost';open.textContent='Open Palette workspace';open.addEventListener('click',()=>{window.dssRevealSection('brandPalette',false);get('palette-workspace-title').focus();get('palette-workspace-title').scrollIntoView({block:'start',behavior:'instant'});});
     const progress=document.createElement('p');progress.id='palette-progress';progress.className='help';const nav=document.createElement('ol');nav.className='palette-stage-nav';nav.setAttribute('aria-label','Palette process');
     for(const [key,title]of definitions){const li=document.createElement('li'),button=document.createElement('button');button.type='button';button.className='ghost';button.dataset.paletteGo=key;button.textContent=title;button.addEventListener('click',()=>{window.dssRevealSection('brandPalette',false);show(key);});li.append(button);nav.append(li);}
-    const note=document.createElement('p');note.className='help';note.textContent='Changes apply immediately. Save JSON or save your local project to keep a portable copy.';
+    const note=document.createElement('p');note.className='help';note.textContent='Property areas use Save and Discard; semantic Save opens contrast review before Apply. Save JSON or your local project for a portable copy.';
     // Move every existing editor before clearing the compact wizard pane.
     const editor=get('jBrandEditor'),oldEditor=editor.closest('details'),editDetails=document.createElement('section');editDetails.id='palette-brand-properties';editDetails.setAttribute('aria-labelledby','palette-brand-properties-title');
     const propertiesTitle=document.createElement('h4');propertiesTitle.id='palette-brand-properties-title';propertiesTitle.textContent='Selected colour properties';editDetails.append(propertiesTitle,...[...oldEditor.children].filter(node=>node.tagName!=='SUMMARY'));oldEditor.remove();
@@ -132,6 +132,9 @@ DSStudio.register({
     DSStudio.on('foundation:updated',sync);
     DSStudio.on('output:updated',syncComponents);
     for(const event of ['dss:reset','dss:imported'])document.addEventListener(event,()=>{selected='';brandSignature='';show('brand',false);sync();get('palette-workspace-status').textContent='';});
-    DSStudio.paletteWorkspace={show,selectBrand,selectRegion,revealControl};show('brand',false);sync();DSStudio.emit('lesson:content');
+    function previewBrand(source){
+      DSStudio.propertyActions.preview(source);
+    }
+    DSStudio.paletteWorkspace={show,selectBrand,selectRegion,revealControl,previewBrand};show('brand',false);sync();DSStudio.emit('lesson:content');
   }
 });

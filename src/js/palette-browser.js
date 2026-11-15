@@ -4,7 +4,7 @@ DSStudio.register({
   id:'palette-browser',title:'Palette lists and selected properties',
   init() {
     const get=id=>document.getElementById(id),ui=DSStudio.paletteWorkspace,root=get('palette-workspace');
-    root.querySelector(':scope > header > p').textContent='Choose an item on the left and edit its properties on the right. Work through the colour-token stages. Most changes update the preview immediately; proposed semantic colours use Preview and Apply.';
+    root.querySelector(':scope > header > p').textContent='Choose an item on the left and edit its properties on the right. Use Save to apply property changes or Discard to restore saved values. Semantic Save opens contrast review before Apply. Responsive page preview shows saved values and preserves drafts.';
     const layouts=new Map(),brandButtons=new Map(),readouts=new WeakMap();let anchor='primary',shade='primary',readoutId=0,identity,draftKey='',draftBase='',draft='';
     function element(tag,cls,text){const node=document.createElement(tag);if(cls)node.className=cls;if(text)node.textContent=text;return node;}
     function button(text,action){const node=element('button','ghost',text);node.type='button';node.addEventListener('click',action);return node;}
@@ -41,20 +41,55 @@ DSStudio.register({
     semantics.title.textContent='Selected semantic role properties';get('jSemanticTitle').hidden=true;
     const semanticSection=get('jSemanticTitle').closest('section'),form=element('div','palette-semantic-fields');
     function field(id,label,type='text',readonly=false){const wrap=element('div','field'),caption=element('label',null,label),input=element('input');caption.htmlFor=id;input.id=id;input.type=type;input.readOnly=readonly;wrap.append(caption,input);form.append(wrap);return input;}
-    const semanticName=field('palette-semantic-name','Role name','text',true),semanticToken=field('palette-semantic-token','CSS token','text',true),semanticHex=field('palette-semantic-hex','Proposed HEX colour'),semanticPicker=field('palette-semantic-picker','Proposed colour','color');
+    const semanticName=field('palette-semantic-name','Role name','text',true),semanticToken=field('palette-semantic-token','CSS token','text',true),semanticHex=field('palette-semantic-hex','Proposed HEX colour'),semanticPicker=field('palette-semantic-picker','Colour picker','color');
+    const choiceField=element('div','field'),choiceLabel=element('label',null,'Proposed colour'),colourChoice=element('select'),choiceHelp=element('p','help');
+    colourChoice.id='palette-semantic-colour';choiceLabel.htmlFor=colourChoice.id;
+    choiceHelp.id='palette-semantic-colour-help';choiceHelp.textContent='Choose a brand colour or generated shade for the current theme, or enter a custom colour below. Preview before applying; applied custom colours stay fixed when the palette changes.';
+    colourChoice.setAttribute('aria-describedby',choiceHelp.id);choiceField.append(choiceLabel,colourChoice,choiceHelp);semanticHex.closest('.field').before(choiceField);
+    let choiceSignature='',preferredChoice=null;
+    function syncColourChoices(){
+      const signature=JSON.stringify([state.brandPalette,state.primary,state.secondary,state.accent,state.method,state.theme,state.semanticOverrides,state.buttonDesign,state.advanced?.colors]);
+      if(signature!==choiceSignature){
+        choiceSignature=signature;
+        const colours=new Map(),groups=new Map(),brandNames=new Map(state.brandPalette.map(item=>['--brand-'+item.id,item.name]));
+        for(const row of window.dssReadTokens()){
+          if(!validHex(row.value) || !(row.name.startsWith('--brand-') || /-(50|100|200|300|400|500|600|700|800|900|950)$/.test(row.name)))continue;
+          if(row.scope==='Dark'){if(state.theme==='dark')colours.set(row.name,row);}
+          else if(!colours.has(row.name))colours.set(row.name,row);
+        }
+        for(const row of colours.values()){
+          const brand=row.name.startsWith('--brand-'),family=row.name.slice(2).replace(/-\d+$/,'');
+          const label=brand?'Brand colours':family.split('-').map(word=>word[0].toUpperCase()+word.slice(1)).join(' ')+' shades';
+          if(!groups.has(label)){const group=element('optgroup');group.label=label;groups.set(label,group);}
+          const option=new Option((brand?brandNames.get(row.name)+' · ':'')+row.name+' · '+row.value.toUpperCase(),row.name);
+          option.dataset.hex=row.value.toUpperCase();groups.get(label).append(option);
+        }
+        colourChoice.replaceChildren(new Option('Custom colour','custom'),...groups.values());
+      }
+      const options=[...colourChoice.options],hex=draft.toUpperCase(),selected=options.find(option=>option.value===preferredChoice);
+      if(preferredChoice!=='custom' && (!selected || selected.dataset.hex!==hex))preferredChoice=null;
+      colourChoice.value=preferredChoice||options.find(option=>option.dataset.hex===hex)?.value||'custom';
+    }
     semanticHex.maxLength=7;semanticHex.pattern='#[0-9A-Fa-f]{6}';semanticHex.placeholder='#14253A';
     const proposalStatus=element('p','help');proposalStatus.id='palette-semantic-proposal-status';semanticHex.setAttribute('aria-describedby',proposalStatus.id);
-    const discard=button('Discard proposed colour',()=>{draft=draftBase;semanticHex.setCustomValidity('');syncSemantic();});discard.id='palette-semantic-discard';form.append(proposalStatus,discard);semanticSection.insertBefore(form,get('jSemanticHelp'));
+    const discard=button('Discard proposed colour',()=>{draft=draftBase;preferredChoice=null;semanticHex.setCustomValidity('');syncSemantic();});discard.id='palette-semantic-discard';form.append(proposalStatus,discard);semanticSection.insertBefore(form,get('jSemanticHelp'));
     function syncSemantic(){
       const key=state.theme+':'+semanticSelect.value,value=palette().roles[semanticSelect.value];
+      if(key!==draftKey)preferredChoice=null;
       if(key!==draftKey || value!==draftBase){draftKey=key;draftBase=value;draft=value;semanticHex.setCustomValidity('');}
       semanticName.value=(semanticSelect.selectedOptions[0]?.textContent||'').replace(/\s*\(--[^)]+\)$/,'');semanticToken.value='--'+semanticSelect.value;
       if(document.activeElement!==semanticHex)semanticHex.value=draft;if(validHex(draft))semanticPicker.value=draft;
+      syncColourChoices();
       const changed=draft.toUpperCase()!==draftBase.toUpperCase();discard.disabled=!changed;
       proposalStatus.textContent=changed?'Proposed change is not applied. Preview its contrast effects, then Apply or cancel.':'Current website value. Edit a proposal, then preview before applying.';
     }
-    semanticHex.addEventListener('input',()=>{draft=semanticHex.value;semanticHex.setCustomValidity('');syncSemantic();});
-    semanticPicker.addEventListener('input',()=>{draft=semanticPicker.value;semanticHex.value=draft;semanticHex.setCustomValidity('');syncSemantic();});
+    colourChoice.addEventListener('change',()=>{
+      if(colourChoice.value==='custom'){preferredChoice='custom';syncSemantic();return;}
+      const option=colourChoice.selectedOptions[0];if(!validHex(option?.dataset.hex))return;
+      preferredChoice=option.value;draft=option.dataset.hex;semanticHex.value=draft;semanticHex.setCustomValidity('');syncSemantic();
+    });
+    semanticHex.addEventListener('input',()=>{draft=semanticHex.value;preferredChoice=null;semanticHex.setCustomValidity('');syncSemantic();});
+    semanticPicker.addEventListener('input',()=>{draft=semanticPicker.value;preferredChoice=null;semanticHex.value=draft;semanticHex.setCustomValidity('');syncSemantic();});
     semanticHex.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();get('jSemanticEdit').click();}});
     get('jSemanticEdit').addEventListener('click',event=>{syncSemantic();if(!validHex(draft)){semanticHex.setCustomValidity('Enter a six-digit HEX colour, such as #14253A.');semanticHex.reportValidity();event.preventDefault();event.stopImmediatePropagation();}},true);
     get('jSemanticEdit').addEventListener('click',()=>{if(get('colourRepair').open && validHex(draft) && draft.toUpperCase()!==draftBase.toUpperCase()){get('repairHex').value=draft;get('repairHex').dispatchEvent(new Event('input',{bubbles:true}));}});

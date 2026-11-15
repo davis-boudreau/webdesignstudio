@@ -17,22 +17,20 @@ app.onload = async () => {
   };
   try {
     evaluate('resetStudio()');await wait();
-    w.dssShowWizardStep(5,false);w.DSStudio.typographyWorkspace.show('context',false);
-    d.getElementById('type-context-choice').value='button';
-    d.getElementById('type-context-choice').dispatchEvent(new w.Event('change',{bubbles:true}));
-    d.getElementById('type-context-choice').focus();
+    w.dssShowWizardStep(5,false);w.DSStudio.typographyWorkspace.show('review',false);
+    const sampleButton=d.querySelector('.type-sample-cta');sampleButton.click();sampleButton.focus();
     await wait();
     const weight=d.getElementById('bdWeight');weight.value='700';
-    weight.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
+    weight.dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(weight);await wait();
     test('Typography component context refreshes after the live preview changes',()=>{
       const frame=d.getElementById('previewPage'),button=frame.contentDocument.querySelector('.ds-button');
       const actual=frame.contentWindow.getComputedStyle(button).fontWeight;
       const specimen=w.getComputedStyle(d.getElementById('type-specimen-text')).fontWeight;
-      if(actual!=='700'||specimen!==actual)throw Error(JSON.stringify({actual,specimen}));
+      if(actual!=='700'||specimen!==actual || !d.getElementById('type-context-size').value.endsWith(' / '+actual))throw Error(JSON.stringify({actual,specimen}));
       return true;
     });
     test('Background component refresh preserves the active Typography lesson and focus',()=>
-      w.DSStudio.activeStage===5 && d.activeElement===d.getElementById('type-context-choice'));
+      w.DSStudio.activeStage===5 && d.activeElement===sampleButton);
     const views=w.DSStudio.views,emit=event=>w.DSStudio.emit(event);
     views.flush();
     {
@@ -106,7 +104,7 @@ app.onload = async () => {
         runs++;base=JSON.parse(evaluate('projectJson()')).base;
       }});
       for(const value of [18,19,20]){
-        const input=d.getElementById('jBase');input.value=value;input.dispatchEvent(new w.Event('input',{bubbles:true}));
+        const input=d.getElementById('jBase');input.value=value;input.dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(input);
       }
       test('Model changes and exports stay synchronous while views are pending',()=>runs===0&&JSON.parse(evaluate('projectJson()')).base===20&&evaluate('cssExport()').includes('--font-size-base: 20px'));
       await Promise.resolve();

@@ -31,7 +31,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   try {
   test('Independent contrast startup has no JavaScript errors',()=>!w.__reviewErrors.length);

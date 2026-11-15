@@ -19,6 +19,7 @@
 .palette-properties .palette-step-list li { flex-wrap: wrap; }
 .palette-value-label { flex: 1; min-width: 0; overflow-wrap: anywhere; font-family: monospace; font-size: .85rem; }
 .palette-semantic-fields input { box-sizing: border-box; }
+.palette-semantic-fields select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; }
 .palette-browser select[size] { min-width: 0; max-width: 100%; }
 @media (max-width: 1100px) { .palette-editor-columns { grid-template-columns: minmax(0,1fr); } }
 

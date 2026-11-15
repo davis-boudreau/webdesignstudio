@@ -31,7 +31,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   // Blob/File reads use real I/O. A pending local request prevents Chrome's
   // virtual clock from expiring an artificial timer before that I/O completes.
@@ -39,7 +39,7 @@ app.onload=async()=>{
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -235,8 +235,8 @@ app.onload=async()=>{
       test(mode+' importing retains visible properties and resets only the planning disclosure',()=>!plan.open && properties.tagName==='SECTION' && d.getElementById('ia-label').getBoundingClientRect().height>=44);
       for(const width of [320,390,1440]) {
         app.style.width=width+'px';await wait();
-        const review=d.getElementById('architecture-saved-review');review.open=true;plan.open=true;const s=save.getBoundingClientRect(),b=browser.getBoundingClientRect(),branch=browser.querySelector('.ia-branch-tools').getBoundingClientRect();
-        test(mode+' Save and review sits below the left content browser at '+width+'px',()=>review.querySelector(':scope > summary').textContent==='Review the Content Plan' && !review.contains(save) && browser.lastElementChild===save && review.lastElementChild.matches('[data-process-artifact="ia"]') && review.lastElementChild.previousElementSibling===d.getElementById('architecture-review-guidance') && d.querySelectorAll('#process-ia .process-ia-guidance').length===1 && d.getElementById('architecture-review-guidance').querySelector('h4').textContent==='Information architecture and sitemap: different jobs' && d.getElementById('ia-content-editor').contains(save) && s.top>=branch.bottom-1 && s.left>=b.left && s.right<=b.right+1 && d.documentElement.scrollWidth<=w.innerWidth+1 && [...save.querySelectorAll('button')].every(el=>el.getBoundingClientRect().height>=44) && plan.getBoundingClientRect().top<d.getElementById('ia-content-editor').getBoundingClientRect().top && [...plan.querySelectorAll('textarea,select,input:not([type=checkbox])')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.left>=0 && box.right<=w.innerWidth+1;}));
+        const review=d.getElementById('architecture-saved-review');review.open=true;plan.open=true;const workspace=d.getElementById('architecture-workspace'),sitemap=d.getElementById('architecture-sitemap'),s=save.getBoundingClientRect(),box=workspace.getBoundingClientRect(),editor=d.getElementById('ia-content-editor').getBoundingClientRect();
+        test(mode+' Save and review sits below Content structure and above Visitor sitemap at '+width+'px',()=>review.querySelector(':scope > summary').textContent==='Review the Content Plan' && !review.contains(save) && save.previousElementSibling===d.getElementById('ia-content-editor') && save.nextElementSibling===sitemap && save.parentElement===workspace && review.lastElementChild.matches('[data-process-artifact="ia"]') && review.lastElementChild.previousElementSibling===d.getElementById('architecture-review-guidance') && d.querySelectorAll('#process-ia .process-ia-guidance').length===1 && d.getElementById('architecture-review-guidance').querySelector('h4').textContent==='Information architecture and sitemap: different jobs' && workspace.contains(save) && !d.getElementById('ia-content-editor').contains(save) && s.top>=editor.bottom-1 && s.bottom<=sitemap.getBoundingClientRect().top+1 && Math.abs(s.left-box.left)<=1 && Math.abs(s.right-box.right)<=1 && d.getElementById('ia-save').form===form && d.querySelectorAll('.ia-save-area').length===1 && d.documentElement.scrollWidth<=w.innerWidth+1 && [...save.querySelectorAll('button')].every(el=>el.getBoundingClientRect().height>=44) && plan.getBoundingClientRect().top<d.getElementById('ia-content-editor').getBoundingClientRect().top && [...plan.querySelectorAll('textarea,select,input:not([type=checkbox])')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.left>=0 && box.right<=w.innerWidth+1;}));
       }
     }
     app.style.width='1440px';reset();await wait();

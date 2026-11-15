@@ -30,7 +30,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   // Most historical feature fixtures exercise the complete Advanced sample.
   // Default/reset behavior is checked separately through resetStudio directly.
@@ -45,7 +45,7 @@ app.onload=async()=>{
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;

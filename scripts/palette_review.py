@@ -31,7 +31,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   try {
   test('Independent palette startup has no JavaScript errors',()=>!w.__reviewErrors.length);
@@ -132,7 +132,7 @@ app.onload=async()=>{
     }
     const snapshot=JSON.parse(evaluate('projectJson()'));w.importConfig(snapshot);await wait();ui.show('roles',false);await wait();
     test('All three custom anchors survive project JSON loading',()=>keys.every(key=>evaluate('state.'+key)===snapshot[key]) && selector.value==='primary');
-    input('palette-anchor-selection','accent','change');d.getElementById('palette-reset-accent').click();await wait();
+    input('palette-anchor-selection','accent','change');d.getElementById('palette-reset-accent').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('palette-reset-accent'));await wait();
     test('Selected Accent reset preserves Primary and Secondary',()=>evaluate('state.accent===DEFAULT.accent') && evaluate('state.primary')===snapshot.primary && evaluate('state.secondary')===snapshot.secondary && selector.value==='accent');
     reset();w.dssShowWizardStep(4,false);await wait();
   }
@@ -150,17 +150,17 @@ app.onload=async()=>{
     const added=evaluate('state.brandPalette.at(-1).id'),selectedRow=()=>d.querySelector('#jBrandEditor [data-brand-id]:not([hidden])');
     test('Adding a brand colour selects its single visible editable row',()=>d.getElementById('palette-brand-selection').value===added && d.querySelectorAll('#jBrandEditor [data-brand-id]:not([hidden])').length===1 && selectedRow().contains(d.activeElement));
     const name=selectedRow().querySelector('[data-brand-field="name"]');name.value='Harbour <safe> teal';name.dispatchEvent(new w.Event('change',{bubbles:true}));
-    const colour=selectedRow().querySelector('[data-brand-field="hex"]');colour.value='#246a68';colour.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
+    const colour=selectedRow().querySelector('[data-brand-field="hex"]');colour.value='#246a68';colour.dispatchEvent(new w.Event('input',{bubbles:true}));colour.closest('[data-brand-id]').querySelector('[data-brand-save]').click();await wait();
     test('Selected brand edits update names and tokens safely without duplicating controls',()=>d.getElementById('palette-brand-selection').selectedOptions[0].textContent.includes('Harbour <safe> teal') && !d.querySelector('#palette-workspace safe') && evaluate('cssExport()').includes('--brand-'+added+': #246A68') && d.querySelectorAll('#jBrandEditor').length===1);
     input('jPrimaryBrand','#246A68','change');const secondary=evaluate('state.secondary');
     ui.show('brand',false);ui.selectBrand(added);selectedRow().querySelector('[data-remove-brand]').click();await wait();
     test('Removing a selected reference preserves its copied UI colour and selects an available row',()=>evaluate('state.primary')==='#246a68' && !evaluate('state.brandPalette').some(row=>row.id===added) && selectedRow() && d.activeElement===d.getElementById('jBrandAdd'));
-    ui.show('roles',false);d.getElementById('palette-reset-primary').click();await wait();
+    ui.show('roles',false);d.getElementById('palette-reset-primary').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('palette-reset-primary'));await wait();
     test('Reset UI assignment changes only that required role',()=>evaluate('state.primary===DEFAULT.primary') && evaluate('state.secondary')===secondary);
     input('palette-theme','light','change');ui.show('review',false);input('palette-status-role','warning','change');input('palette-status-colour','#654321');await wait();
     input('palette-theme','dark','change');input('palette-status-colour','#aabbcc');await wait();
     test('Feedback colour creates independent overrides in both themes',()=>evaluate('state.semanticOverrides.light.warning')==='#654321' && evaluate('state.semanticOverrides.dark.warning').toUpperCase()==='#AABBCC' && d.getElementById('palette-status-source').textContent.includes('custom override'));
-    d.getElementById('palette-status-reset').click();await wait();
+    d.getElementById('palette-status-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('palette-status-reset'));await wait();
     test('Clearing feedback colour removes only the current theme override',()=>!evaluate('state.semanticOverrides.dark.warning') && evaluate('state.semanticOverrides.light.warning')==='#654321');
     for(const region of ['body','header','main','footer']){ui.show('backgrounds',false);input('palette-region-selection',region,'change');test('Background '+region+' exposes just the selected region',()=>[...d.querySelectorAll('.page-background-editor fieldset')].filter(el=>!el.hidden).length===1 && !d.getElementById(region==='body'?'body-background-controls':region+'-background-hex').closest('fieldset').hidden);}
     w.dssConfigureToken({name:'--header-background',scope:'Dark'});await wait();
@@ -191,9 +191,9 @@ app.onload=async()=>{
     input('palette-button-variant','secondary','change');input('bdSource','primary');input('bdText','#102030');await wait();
     test('Palette button source and overrides update the existing button settings',()=>evaluate('state.buttonDesign.variant')==='secondary' && evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.secondary.text').toUpperCase()==='#102030' && ['light','dark'].every(theme=>w.dssGetButtonContrastData().themes[theme].secondary.fg.toUpperCase()==='#102030'));
     input('palette-button-variant','primary','change');input('bdText','#aabbcc');input('bdFocus','#445566');input('palette-button-variant','secondary','change');await wait();
-    d.getElementById('palette-button-clear').click();await wait();
+    d.getElementById('palette-button-clear').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('palette-button-clear'));await wait();
     test('Clearing component overrides preserves its source, other variants and shared focus',()=>!evaluate('state.buttonDesign.overrides.secondary') && evaluate('state.buttonDesign.sources.secondary')==='primary' && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC' && evaluate('state.buttonDesign.focus').toUpperCase()==='#445566');
-    d.getElementById('palette-button-focus-reset').click();await wait();
+    d.getElementById('palette-button-focus-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('palette-button-focus-reset'));await wait();
     test('Shared button focus resets separately from variant overrides',()=>evaluate('state.buttonDesign.focus').toUpperCase()===w.dssGetButtonDefaultContrastColour('secondary','focus').toUpperCase() && evaluate('state.buttonDesign.overrides.primary.text').toUpperCase()==='#AABBCC');
     input('palette-component-family','cards','change');d.querySelector('#palette-component-values button').click();await wait();
     test('Component semantic source opens Palette role editing with focus',()=>w.DSStudio.activeStage===4 && d.getElementById('palette-stage-semantics').open && d.getElementById('jSemanticRole').value==='surface' && d.activeElement===d.getElementById('jSemanticRole'));
@@ -226,7 +226,7 @@ app.onload=async()=>{
   w.dssRevealSection('jBrandEditor',false); await wait();
   const brandSelect=role=>d.getElementById('j'+role[0].toUpperCase()+role.slice(1)+'Brand');
   const brandField=(id,field)=>d.querySelector(`[data-brand-id="${id}"] [data-brand-field="${field}"]`);
-  const editBrand=(id,field,value)=>{const el=brandField(id,field);w.DSStudio.paletteWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(field==='name'?'change':'input',{bubbles:true}));};
+  const editBrand=(id,field,value)=>{const el=brandField(id,field);w.DSStudio.paletteWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(field==='name'?'change':'input',{bubbles:true}));el.closest('[data-brand-id]').querySelector('[data-brand-save]').click();};
   test('Guided Brand Palette lists all starter colours and all three role dropdowns', () => d.querySelectorAll('#jBrandSwatches li').length===11 && ['primary','secondary','accent'].every(role=>brandSelect(role).options.length===12 && [...brandSelect(role).options].slice(1).every(option=>/^#[0-9A-F]{6}$/.test(option.value) && option.textContent.includes(option.value))));
   for (const [role,hex] of [['primary','#00BADC'],['secondary','#F37327'],['accent','#004780']]) {
     input(brandSelect(role).id,hex,'change'); await wait();
@@ -295,7 +295,7 @@ app.onload=async()=>{
     const beforeSwatchPalette=evaluate('JSON.stringify(state.brandPalette)');
     const action=swatch(id).querySelector('button'); action.focus();
     // Click the colour block itself, rather than only the text label.
-    swatch(id).querySelector('.brand-swatch-color').click(); await wait();
+    swatch(id).querySelector('.brand-swatch-color').click();d.querySelector('[data-property-actions="palette-roles"] button').click(); await wait();
     test('Any swatch can set '+role+' and visibly confirm its assignment', () => evaluate(`state.${role}`)===hex.toLowerCase() && swatch(id).querySelector('[data-brand-usage]').textContent.includes(roleLabels[role]) && swatch(id).dataset.current==='true' && d.getElementById('brandFeedback').textContent.includes(roleLabels[role]+' set to') && d.getElementById('brandFeedback').textContent.includes(hex));
     test(role+' swatch updates preserve other roles, brand references and keyboard focus', () => {
       const prior=JSON.parse(priorRoles),after=JSON.parse(evaluate('JSON.stringify([state.primary,state.secondary,state.accent])'));
@@ -303,7 +303,7 @@ app.onload=async()=>{
     });
     test(role+' swatch stays synchronized with summary, guided controls, preview and local save', () => d.getElementById('brandCurrent'+role[0].toUpperCase()+role.slice(1)).textContent.includes(hex) && brandSelect(role).value===hex && previewWindow().getComputedStyle(previewDoc().documentElement).getPropertyValue('--button-'+role+'-bg').trim().toUpperCase()===hex && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[swatchProjectId].data[role]===hex.toLowerCase());
   }
-  input('brandApplyRole','secondary','change'); d.getElementById('brandFeedback').textContent=''; swatch('blue').querySelector('[data-brand-usage]').click(); await wait();
+  input('brandApplyRole','secondary','change'); d.getElementById('brandFeedback').textContent=''; swatch('blue').querySelector('[data-brand-usage]').click();d.querySelector('[data-property-actions="palette-roles"] button').click(); await wait();
   test('Clicking the usage footer applies the swatch just like its colour and label', () => evaluate('state.secondary')==='#004780' && d.getElementById('brandFeedback').textContent.includes('Supporting colour set to Deep blue'));
   const beforeEditShortcut=evaluate('projectJson()'); d.getElementById('brandEditPalette').click(); await wait();
   test('Edit Brand Palette opens the guided editor, focuses its name control and preserves the project', () => !d.querySelector('[data-journey-pane="4"]').hidden && d.getElementById('jBrandEditor').closest('details').open && d.activeElement===d.getElementById('jBrandEditor').querySelector('input') && evaluate('projectJson()')===beforeEditShortcut);
@@ -326,7 +326,7 @@ app.onload=async()=>{
   d.getElementById('jSaveLocal').click();const inlineSavedId=d.getElementById('jProjects').value;
   const hoverColour=stateColour('lesson','hover'),hoverCard=hoverColour.closest('details');w.DSStudio.paletteWorkspace.revealControl(hoverColour);hoverCard.open=true;hoverColour.focus();
   const originalDarkHover=evaluate('palette("dark").roles["primary-hover"]');
-  hoverColour.value='#00BADC';hoverColour.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  hoverColour.value='#00BADC';hoverColour.dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(hoverColour);await wait();
   test('Inline semantic state colour keeps focus/disclosure, mirrors controls, autosaves and edits only its theme',()=>d.activeElement===hoverColour && hoverCard.open && stateColour('controls','hover').value==='#00BADC' && evaluate('state.semanticOverrides.light["primary-hover"]')==='#00BADC' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[inlineSavedId].data.semanticOverrides.light['primary-hover']==='#00BADC' && evaluate('palette("dark").roles["primary-hover"]')===originalDarkHover && d.querySelector('#interaction-palette-lesson [data-interaction-state="hover"] [data-shade="500"]').textContent.includes('#00BADC'));
   input(hoverColour.id,'default','change');await wait();
   test('Inline Default removes a semantic override and restores its generated source colour',()=>!evaluate('state.semanticOverrides.light["primary-hover"]') && stateColour('lesson','hover').value==='default' && stateColour('lesson','hover').options[0].textContent.includes(evaluate('palette().roles["primary-hover"]').toUpperCase()));
@@ -442,12 +442,12 @@ app.onload=async()=>{
   const tokenField=()=>d.querySelector('[data-brand-id="blue"] [data-brand-field="id"]');
   const beforeTokenRoles=evaluate('JSON.stringify([state.primary,state.secondary,state.accent])');
   const displayName=d.querySelector('[data-brand-id="blue"] [data-brand-field="name"]');
-  displayName.value='Ocean blue';displayName.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  displayName.value='Ocean blue';displayName.dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('#jBrandEditor [data-brand-id]:not([hidden]) [data-brand-save]').click();await wait();
   test('Colour display names remain independent of brand token names',()=>tokenField().value==='blue' && evaluate('cssExport()').includes('--brand-blue: #004780'));
-  const stableTokenInput=tokenField();w.DSStudio.paletteWorkspace.revealControl(stableTokenInput);stableTokenInput.focus();stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  const stableTokenInput=tokenField();w.DSStudio.paletteWorkspace.revealControl(stableTokenInput);stableTokenInput.focus();stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('#jBrandEditor [data-brand-id]:not([hidden]) [data-brand-save]').click();await wait();
   test('Token rename updates exports, teaching surfaces and catalogue while retaining focus and copied roles',()=>d.activeElement===stableTokenInput && d.querySelector('[data-brand-id="ocean-blue"] [data-brand-field="id"]')===stableTokenInput && evaluate('cssExport()').includes('--brand-ocean-blue: #004780') && !evaluate('cssExport()').includes('--brand-blue:') && d.getElementById('palette-brand-token-list').textContent.includes('--brand-ocean-blue: #004780;') && w.dssReadTokens().some(row=>row.name==='--brand-ocean-blue') && evaluate('JSON.stringify([state.primary,state.secondary,state.accent])')===beforeTokenRoles);
   for(const invalid of ['white','Bad name','x;--evil','']) {
-    stableTokenInput.value=invalid;stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+    stableTokenInput.value=invalid;stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('#jBrandEditor [data-brand-id]:not([hidden]) [data-brand-save]').click();await wait();
     test('Token suffix rejects '+JSON.stringify(invalid)+' without changing saved data',()=>!stableTokenInput.validity.valid && evaluate('state.brandPalette.some(item=>item.id==="ocean-blue")') && evaluate('cssExport()').includes('--brand-ocean-blue: #004780'));
   }
   stableTokenInput.value='ocean-blue';stableTokenInput.dispatchEvent(new w.Event('change',{bubbles:true}));
@@ -590,7 +590,7 @@ app.onload=async()=>{
   test('JSON round trip restores both themes and all opacity sliders',()=>evaluate('state.backgroundOpacity.light.header')===50 && evaluate('state.backgroundOpacity.dark.header')===100 && d.getElementById('header-background-opacity').value==='50');
   const previousOpacity=evaluate('state.backgroundOpacity.light.header');input('header-background-brand',evaluate('palette().n[100]'),'change');await wait();
   test('Brand or Neutral background selection preserves its opacity choice',()=>evaluate('state.backgroundOpacity.light.header')===previousOpacity);
-  input('jTheme','dark');input('header-background-opacity',25);input('main-background-opacity',35);d.getElementById('header-background-reset').click();await wait();
+  input('jTheme','dark');input('header-background-opacity',25);input('main-background-opacity',35);d.getElementById('header-background-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('header-background-reset'));await wait();
   test('Background reset clears current-region colour and alpha only',()=>!evaluate('state.backgroundOpacity.dark.header') && !evaluate('state.semanticOverrides.dark["header-background"]') && evaluate('backgroundOpacity("header")')===1 && evaluate('state.backgroundOpacity.dark.main')===35 && evaluate('state.backgroundOpacity.light.header')===50);
   const alphaToken=w.dssReadTokens().find(row=>row.name==='--header-background-opacity'&&row.scope==='Light / base');w.dssConfigureToken(alphaToken);await wait();
   test('Opacity catalogue source selects its theme and focuses its range',()=>evaluate('state.theme')==='light' && w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('header-background-opacity'));
@@ -602,7 +602,7 @@ app.onload=async()=>{
   test('Non-finite opacity imports remain fully opaque',()=>opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1));
   for(const width of [320,390,1440]) {
     app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
-    test('Opacity controls and centre model fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && opacityRegions.every(region=>{const el=d.getElementById(opacityId(region)+'-opacity');w.DSStudio.paletteWorkspace.revealControl(el);return el.getBoundingClientRect().height>=44 && el.getBoundingClientRect().width>0 && el.getAttribute('aria-describedby')==='background-opacity-help';}) && d.getElementById('webpage-background-lesson').scrollWidth<=d.getElementById('webpage-background-lesson').clientWidth+1);
+    test('Opacity controls and centre model fit '+width+'px',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && opacityRegions.every(region=>{const el=d.getElementById(opacityId(region)+'-opacity');w.DSStudio.paletteWorkspace.revealControl(el);return el.getBoundingClientRect().height>=44 && el.getBoundingClientRect().width>0 && el.getAttribute('aria-describedby').split(' ').includes('background-opacity-help');}) && d.getElementById('webpage-background-lesson').scrollWidth<=d.getElementById('webpage-background-lesson').clientWidth+1);
   }
   app.style.width='1440px';input('page-background-opacity',0);evaluate('resetStudio()');await wait();
   test('Reset removes custom opacity data and restores opaque defaults',()=>!evaluate('state.backgroundOpacity') && opacityRegions.every(region=>evaluate('backgroundOpacity('+JSON.stringify(region)+')')===1 && d.getElementById(opacityId(region)+'-opacity').value==='100'));
@@ -634,9 +634,9 @@ app.onload=async()=>{
   evaluate("state.theme='dark';apply()");await wait();
   input('page-background-colour','#172635');await wait();
   test('Page background is independently editable per theme',()=>evaluate('state.semanticOverrides.dark.background')==='#172635' && evaluate('state.semanticOverrides.light.background')==='#E1E9F0' && previewWindow().getComputedStyle(previewDoc().body).backgroundColor==='rgb(23, 38, 53)');
-  d.getElementById('page-background-reset').click();await wait();
+  d.getElementById('page-background-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('page-background-reset'));await wait();
   test('Page background reset restores only the current theme',()=>!evaluate('state.semanticOverrides.dark.background') && evaluate('state.semanticOverrides.light.background')==='#E1E9F0');
-  evaluate("state.theme='light';apply()");d.getElementById('page-background-reset').click();await wait();
+  evaluate("state.theme='light';apply()");d.getElementById('page-background-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('page-background-reset'));await wait();
   test('Page background reset restores the default canvas',()=>evaluate('palette().roles.background')===defaultCanvas);
   reset();await wait();
   w.dssShowWizardStep(4);
@@ -690,11 +690,11 @@ app.onload=async()=>{
   input('main-background-hex','#123ABC');await wait();
   input('main-background-hex','red;/*');await wait();
   test('Invalid region hex cannot change state or generated output',()=>evaluate('state.semanticOverrides.dark["main-background"]')==='#123ABC' && !evaluate('cssExport()').includes('red;/*') && d.getElementById('main-background-hex').getAttribute('aria-invalid')==='true');
-  for (const region of regions) {d.getElementById(region+'-background-reset').click();await wait();}
+  for (const region of regions) {d.getElementById(region+'-background-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById(region+'-background-reset'));await wait();}
   test('Region reset restores current-theme defaults and retains other-theme choices',()=>regions.every((region,i)=>!evaluate('state.semanticOverrides.dark')[region+'-background'] && evaluate('state.semanticOverrides.light')[region+'-background']===regionColours.light[i]) && evaluate("palette().roles['main-background']===palette().roles.background && palette().roles['header-background']===palette().roles.surface && palette().roles['footer-background']===palette().roles.surface"));
   input('page-background-hex','#234567');await wait();
   test('Default Main background follows subsequent canvas changes',()=>evaluate("palette().roles['main-background']==='#234567'"));
-  d.getElementById('page-background-reset').click();await wait();
+  d.getElementById('page-background-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('page-background-reset'));await wait();
   test('Body reset restores only its theme and updates default Main',()=>!evaluate('state.semanticOverrides.dark.background') && evaluate('state.semanticOverrides.light.background')===bodyColours.light && evaluate('palette().roles.background===palette().roles["main-background"]'));
   input('header-background-brand','#FFFFFF','change');await wait();
   evaluate("state.brandPalette=state.brandPalette.map(item=>item.hex==='#FFFFFF'?{...item,name:'<img onerror=alert(1)>',hex:'#EEEEEE'}:item);apply()");await wait();
@@ -707,6 +707,81 @@ app.onload=async()=>{
   }
   app.style.width='1440px';reset();await wait();
   test('Reset clears all region overrides and restores selectors',()=>!evaluate('state.semanticOverrides') && regions.every(region=>d.getElementById(region+'-background-reset').disabled));
+
+  // Semantic colour choices use the real exported colours and remain proposals.
+  app.style.width='1440px';reset();w.importConfig({sampleMode:'advanced'});w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('semantics',false);await wait();
+  const choices=d.getElementById('palette-semantic-colour'),choiceHex=()=>d.getElementById('palette-semantic-hex').value.toUpperCase();
+  // Derive expected colours from the palette generators, independently of the
+  // dropdown's exported-token parser and scope-selection implementation.
+  const expectedChoices=()=>new Map(evaluate(`(()=>{
+    const values=state.brandPalette.map(item=>['--brand-'+item.id,item.hex.toUpperCase()]),current=palette(),cache=new Map();
+    const ramp=hex=>{if(!cache.has(hex))cache.set(hex,makeRamp(hex,state.method));return cache.get(hex);};
+    for(const [family,key] of [['primary','p'],['secondary','s'],['accent','a'],['neutral','n']])for(const step of steps)values.push(['--'+family+'-'+step,current[key][step].toUpperCase()]);
+    for(const family of ['success','warning','danger'])for(const step of steps)values.push(['--'+family+'-'+step,ramp(current.roles[family])[step].toUpperCase()]);
+    const buttons=dssGetButtonContrastData();
+    for(const group of ['general',...DSStudio.statePalettes.variants])for(const source of DSStudio.statePalettes.entries(state.theme,group,buttons,current.roles))for(const step of steps)values.push([source.prefix+'-'+step,ramp(source.anchor)[step].toUpperCase()]);
+    return values;
+  })()`));
+  const choicesAgree=()=>{const expected=expectedChoices(),actual=[...choices.options].filter(option=>option.value!=='custom');return actual.length===expected.size && actual.every(option=>option.dataset.hex===expected.get(option.value) && option.textContent.includes(option.value) && option.textContent.includes(option.dataset.hex));};
+  test('Semantic proposed colour is a labelled grouped dropdown of exported brand colours and every generated shade',()=>choices.tagName==='SELECT' && choices.labels[0].textContent==='Proposed colour' && choices.querySelectorAll('optgroup').length>7 && choicesAgree() && ['--primary-50','--secondary-950','--accent-500','--neutral-700','--success-500','--state-hover-700','--button-primary-state-focus-900'].every(name=>[...choices.options].some(option=>option.value===name)));
+  d.getElementById('jSaveLocal').click();const sourceProject=d.getElementById('jProjects').value,beforeChoice=evaluate('projectJson()'),beforeChoiceCss=evaluate('cssExport()'),beforeChoiceHtml=evaluate('htmlExport()'),beforeChoiceLibrary=w.localStorage.getItem('dss-v27-projects');
+  input('jSemanticRole','control-border','change');choices.focus();input('palette-semantic-colour','--primary-700','change');const proposed=choices.selectedOptions[0].dataset.hex;
+  test('Choosing a generated semantic shade synchronizes HEX and swatch while preserving focus and saved output',()=>choiceHex()===proposed && d.getElementById('palette-semantic-picker').value.toUpperCase()===proposed && d.activeElement===choices && evaluate('projectJson()')===beforeChoice && evaluate('cssExport()')===beforeChoiceCss && evaluate('htmlExport()')===beforeChoiceHtml && w.localStorage.getItem('dss-v27-projects')===beforeChoiceLibrary);
+  d.getElementById('jSemanticEdit').focus();d.getElementById('jSemanticEdit').click();await wait();
+  test('Generated colour proposal enters the existing contrast preview before Apply',()=>d.getElementById('colourRepair').open && d.getElementById('repairHex').value.toUpperCase()===proposed && evaluate('projectJson()')===beforeChoice);
+  d.getElementById('repairCancel').click();await wait();d.getElementById('palette-semantic-discard').click();await wait();
+  test('Cancel and Discard preserve saved semantic colour and restore the dropdown draft',()=>evaluate('projectJson()')===beforeChoice && choiceHex()===evaluate('palette().roles["control-border"]').toUpperCase() && d.getElementById('palette-semantic-discard').disabled);
+  input('palette-semantic-colour','--primary-700','change');d.getElementById('jSemanticEdit').click();await wait();d.getElementById('repairApply').click();await wait();
+  test('Applying a dropdown shade updates only the chosen theme role and autosaves its HEX value',()=>evaluate('state.semanticOverrides.light["control-border"]')===proposed && !evaluate('state.semanticOverrides.dark["control-border"]') && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[sourceProject].data.semanticOverrides.light['control-border']===proposed && choices.value==='--primary-700' && !evaluate('projectJson()').includes('palette-semantic-colour'));
+  const appliedChoice=evaluate('projectJson()');reset();w.importConfig(JSON.parse(appliedChoice));w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('semantics',false);input('jSemanticRole','control-border','change');await wait();
+  test('Dropdown-applied semantic colours round trip through existing JSON without schema changes',()=>evaluate('projectJson()')===appliedChoice && choiceHex()===proposed && choicesAgree());
+  input('palette-semantic-colour','--accent-300','change');const unrelatedOption=choices.querySelector('option[value="--accent-300"]');choices.focus();input('jBase',18);await wait();
+  test('Unrelated edits preserve dropdown option identity, focus and the staged proposal',()=>choices.querySelector('option[value="--accent-300"]')===unrelatedOption && d.activeElement===choices && choices.value==='--accent-300' && choiceHex()===unrelatedOption.dataset.hex);
+  input('palette-semantic-colour','custom','change');await wait();
+  test('Custom choice remains available alongside generated colours',()=>choices.value==='custom' && !d.getElementById('palette-semantic-hex').readOnly);
+  input('palette-semantic-hex','#123ABC');await wait();
+  test('Manual HEX edits update the swatch and choose Custom for colours outside the generated palette',()=>choices.value==='custom' && d.getElementById('palette-semantic-picker').value==='#123abc');
+  input('palette-semantic-hex',proposed);await wait();
+  test('Manual HEX matching a generated colour synchronizes the dropdown',()=>choices.selectedOptions[0].dataset.hex===proposed);
+  input('jPrimary','#235678');await wait();
+  test('Anchor edits refresh generated choices while applied semantic colours remain fixed',()=>choicesAgree() && evaluate('state.semanticOverrides.light["control-border"]')===proposed && choices.querySelector('option[value="--primary-500"]').dataset.hex==='#235678');
+  input('jRamp','mix');await wait();
+  test('Colour generation method changes refresh all proposed shade options',()=>choicesAgree());
+  for(const theme of ['light','dark']){input('jTheme',theme);await wait();test(theme+' semantic dropdown uses current-theme status and state shade colours',()=>choicesAgree() && choices.querySelector('option[value="--success-500"]').dataset.hex===evaluate('palette().roles.success').toUpperCase());}
+  const brandProject=JSON.parse(evaluate('projectJson()'));brandProject.brandPalette[0].name='Safe <img src=x onerror=alert(1)> colour';w.importConfig(brandProject);w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('semantics',false);await wait();
+  test('Imported brand labels stay plain text in semantic colour choices',()=>choices.querySelector('optgroup[label="Brand colours"] option').textContent.includes('<img') && !choices.querySelector('img,script'));
+  for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';input('jTheme',theme);w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('semantics',false);await wait();test(theme+' semantic colour dropdown fits '+width+'px with a labelled keyboard-focusable control',()=>{const box=choices.getBoundingClientRect();return d.documentElement.scrollWidth<=w.innerWidth+1 && box.height>=44 && box.width>0 && box.left>=0 && box.right<=w.innerWidth+1 && choices.tabIndex===0 && !!d.getElementById(choices.getAttribute('aria-describedby'));});}
+  app.style.width='1440px';reset();await wait();
+
+  // Brand properties are drafts; explicit preview keeps just its source and result open.
+  reset();w.importConfig({sampleMode:'advanced'});app.style.width='1440px';w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('brand',false);await wait();
+  const brandRow=()=>d.querySelector('#jBrandEditor [data-brand-id]:not([hidden])'),brandEdit=(key,value)=>{const input=brandRow().querySelector('[data-brand-field="'+key+'"]');input.value=value;input.dispatchEvent(new w.Event('input',{bubbles:true}));};
+  d.getElementById('jSaveLocal').click();const draftProject=d.getElementById('jProjects').value,brandBefore=evaluate('projectJson()'),brandCss=evaluate('cssExport()'),brandHtml=evaluate('htmlExport()'),brandLibrary=w.localStorage.getItem('dss-v27-projects'),brandId=brandRow().dataset.brandId,originalBrand=evaluate('state.brandPalette[0]');
+  brandEdit('name','New <safe> brand');brandEdit('hex','#345678');brandEdit('id','preview-brand');await wait();
+  test('Brand Save and Discard sit beside properties and property edits stay outside model, exports and local saves',()=>brandRow().querySelector('[data-brand-save]').textContent==='Save' && brandRow().querySelector('[data-brand-discard]').textContent==='Discard' && brandRow().querySelector('[data-brand-preview]').textContent==='Responsive page preview' && evaluate('projectJson()')===brandBefore && evaluate('cssExport()')===brandCss && evaluate('htmlExport()')===brandHtml && w.localStorage.getItem('dss-v27-projects')===brandLibrary && !brandRow().querySelector('[data-brand-discard]').disabled);
+  input('jBase',18);await wait();
+  test('Unrelated updates preserve unsaved Brand property values',()=>brandRow().querySelector('[data-brand-field="name"]').value==='New <safe> brand' && brandRow().querySelector('[data-brand-field="id"]').value==='preview-brand' && evaluate('state.brandPalette[0].id')===brandId);
+  const beforeDiscard=evaluate('projectJson()'),beforeDiscardLibrary=w.localStorage.getItem('dss-v27-projects');brandRow().querySelector('[data-brand-discard]').click();await wait();
+  test('Brand Discard restores saved fields without reverting unrelated design edits or overwriting storage',()=>brandRow().querySelector('[data-brand-field="id"]').value===brandId && brandRow().querySelector('[data-brand-field="hex"]').value===originalBrand.hex.toLowerCase() && evaluate('projectJson()')===beforeDiscard && w.localStorage.getItem('dss-v27-projects')===beforeDiscardLibrary && brandRow().querySelector('[data-brand-discard]').disabled && d.activeElement===brandRow().querySelector('[data-brand-field="name"]'));
+  brandEdit('name','Saved <safe> brand');brandEdit('hex','#345678');brandEdit('id','preview-brand');brandRow().querySelector('[data-brand-save]').click();await wait();
+  test('Brand Save commits all properties together, refreshes tokens and autosaves the active project',()=>brandRow().dataset.brandId==='preview-brand' && evaluate('state.brandPalette[0].name')==='Saved <safe> brand' && evaluate('cssExport()').includes('--brand-preview-brand: #345678;') && !d.querySelector('#jBrandEditor safe') && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[draftProject].data.brandPalette[0].id==='preview-brand' && brandRow().querySelector('[data-brand-discard]').disabled);
+  brandEdit('id','blue');const invalidBrand=evaluate('projectJson()');brandRow().querySelector('[data-brand-save]').click();await wait();
+  test('Brand Save rejects a duplicate token without changing committed properties',()=>evaluate('projectJson()')===invalidBrand && !brandRow().querySelector('[data-brand-field="id"]').validity.valid);
+  brandRow().querySelector('[data-brand-discard]').click();brandEdit('name','Draft kept while viewing');await wait();
+  for(const theme of ['light','dark'])for(const width of [320,390,1440]){
+    app.style.width=width+'px';input('jTheme',theme);w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('brand',false);await wait();
+    const beforePreview=evaluate('projectJson()'),previewDocBefore=previewDoc(),beforePreviewStore=w.localStorage.getItem('dss-v27-projects');
+    // Open extra references to verify this action closes existing disclosures.
+    d.getElementById('studio-section-5').open=true;d.getElementById('studio-section-3').open=true;
+    const button=brandRow().querySelector('[data-brand-preview]');button.focus();button.click();await wait();
+    test(theme+' Brand preview closes other sections, retains Brand stage and focuses the result at '+width+'px',()=>{const opened=[...d.querySelectorAll('#main > .studio-section[open]')].map(el=>el.id).sort(),section=d.getElementById('studio-section-4').getBoundingClientRect(),header=d.querySelector('.topbar').getBoundingClientRect(),region=d.getElementById('previewShell').getBoundingClientRect();const checks={sections:opened.join('|')===['brandPalette','studio-section-4'].sort().join('|'),stage:d.querySelectorAll('[data-palette-stage][open]').length===1 && d.getElementById('palette-stage-brand').open,focus:d.activeElement===d.getElementById('previewShell'),route:w.DSStudio.activeStage===4,heading:section.top>=header.bottom-1,visible:region.top<w.innerHeight};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({checks,opened,active:d.activeElement.id,sectionTop:section.top,headerBottom:header.bottom,regionTop:region.top}));return true;});
+    test(theme+' Brand preview preserves unsaved properties, project, storage and the live document at '+width+'px',()=>brandRow().querySelector('[data-brand-field="name"]').value==='Draft kept while viewing' && evaluate('projectJson()')===beforePreview && w.localStorage.getItem('dss-v27-projects')===beforePreviewStore && previewDoc()===previewDocBefore);
+    w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('brand',false);await wait();
+    test(theme+' nearby Brand actions fit '+width+'px',()=>[...brandRow().querySelectorAll('.brand-palette-actions button')].every(el=>{const box=el.getBoundingClientRect();return box.height>=44 && box.width>0 && box.left>=0 && box.right<=w.innerWidth+1;}));
+  }
+  const brandSaved=evaluate('projectJson()');w.importConfig(JSON.parse(brandSaved));w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('brand',false);await wait();
+  test('Project replacement clears unsaved Brand properties and restores saved colour identity',()=>brandRow().querySelector('[data-brand-field="name"]').value==='Saved <safe> brand' && brandRow().querySelector('[data-brand-discard]').disabled && brandRow().dataset.brandId==='preview-brand');
+  app.style.width='1440px';reset();await wait();
 
   test('No palette JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Palette harness completed',pass:false,error:String(error.stack||error)});}

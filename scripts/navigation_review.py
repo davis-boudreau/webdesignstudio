@@ -20,7 +20,7 @@ app.onload=async()=>{
   const wait=(ms=100)=>new Promise(resolve=>setTimeout(resolve,ms));
   const input=(id,value,type='input')=>{
     const el=d.getElementById(id);w.DSStudio.typographyWorkspace?.revealControl(el);
-    el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   const reset=()=>{evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const previewDoc=()=>d.getElementById('previewPage').contentDocument;

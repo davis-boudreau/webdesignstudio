@@ -14,7 +14,7 @@ codes, malformed/empty reports and incomplete harnesses fail validation.
 Project-model, project-library, navigation, planning, content-tree, sitemap,
 wireframe, palette, contrast, components, typography, spacing, responsive-preview,
 standalone-export, view-update, export-pipeline,
-button-media and optional live-font suites own their HTML and initialize the app
+button-media, shared-property-action and optional live-font suites own their HTML and initialize the app
 independently through the same runner.
 `browser_runner_review.py` tests the runner contract with standard-library mocks
 and real loopback requests, without launching Chrome. CI runs it before the Chrome
@@ -724,8 +724,9 @@ Longer Architecture guidance, Add item choices and branch actions use native
 disclosures. Save, Discard and content Undo remain outside those action disclosures.
 The property editor stays visible without a disclosure or local step numbers.
 Move/remove controls and Undo live with the content tree. The content grid contains
-the tree/browser with Save and review beneath its branch tools, beside the
-property form. Develop the content plan leads the Architecture workspace directly
+the tree/browser beside the property form. Save and review spans the workspace
+below Content structure and immediately above Visitor sitemap, outside the grid.
+Develop the content plan leads the Architecture workspace directly
 after its header and before Content structure. Its controls explicitly associate
 with ia-form; both editing surfaces handle dirty state and invalid fields.
 A selected-item path keeps the top planning disclosure's context clear. Review
@@ -814,7 +815,7 @@ reset/import and external planning changes clear incompatible Undo history.
 
 The selected-item form shows Website content and Understand this item beside the
 browser. Develop the content plan is above Content structure; Save and review is
-below the left browser. They share native form ownership. The editor identifies
+below Content structure and above Visitor sitemap. They share native form ownership. The editor identifies
 the selected name, path and origin, presents a saved-content summary before
 editable properties, and explains each kind of content. Type-specific prompts and
 prompts guide proposed wording, image briefs, link text, control instructions or
@@ -947,8 +948,9 @@ than embedding the mirror inside itself. It remains one generated inventory entr
 wireframe artifact with the read-only iframe and Basic/Advanced, viewport, compare
 and download controls. Low Fidelity / High Fidelity use a labelled tablist and a
 shared labelled tabpanel/iframe, with selected state, roving tabindex and automatic
-activation on Left/Right/Home/End. High Fidelity starts selected to retain the
-existing view. Fidelity is local view state, shared across Basic/Advanced and
+activation on Left/Right/Home/End. Low Fidelity starts selected and is used for
+the initial website view/download. High Fidelity remains an explicit tab choice.
+Fidelity is local view state, shared across Basic/Advanced and
 theme changes; it is not a second saved website model. The download uses the
 selected fidelity, and frame titles, guidance and summary identify it. The wizard
 opens this view. Render changes refresh the
@@ -1165,12 +1167,51 @@ and delegates to their existing listeners; it adds no persisted model. Brand
 search and selection preserve the selected editor, and Add/Remove use the existing
 validated CRUD. Fixed anchors, semantic roles, regions and component families can
 be selected and reset where supported rather than created or deleted.
+Brand property inputs keep transient drafts keyed by the committed colour ID.
+Save validates and commits name, suffix and HEX together through the existing
+update/autosave path; Discard restores only that colour's saved fields. Unrelated
+updates preserve drafts; project replacement or a changed/removed source clears
+them. Add/remove remain immediate collection actions. Responsive page preview
+preserves drafts and committed project data, keeps the Brand source and preview
+sections open, closes other centre/Palette disclosures and focuses the preview.
+Its scroll position uses the current sticky-header height, including immediately
+after a viewport resize before the shared resize observer has run.
 Generated shade/component values appear in labelled read-only input fields.
 Semantic name/token fields are read-only; proposed HEX and picker fields keep a
 local draft until the existing contrast dialog previews and applies it. Cancel
-keeps the saved value, and Discard restores the current value. Other edits retain
-their existing immediate-update behavior. Native disclosure reopening refreshes
+keeps the saved value, and Discard restores the current value. Other editable
+property areas use the shared draft controls described below. Native disclosure reopening refreshes
 generated fields after the original workspace's toggle handlers finish.
+
+### Shared property actions and draft scopes
+
+See [PROPERTY_CONTROLS_AUDIT.md](PROPERTY_CONTROLS_AUDIT.md) for the audited editor
+catalogue and the boundary between properties, read-only views and direct commands.
+`property-actions.js` loads after the registry/view scheduler and before Brand.
+It builds the common Save/Discard/Responsive page preview bar. Existing Content,
+Sitemap and semantic forms retain their own save/discard handlers and validation;
+semantic Save still opens the reviewed contrast dialog before Apply.
+
+`property-editors.js` initializes after the feature workspaces and before section
+return links. Its explicit control-to-model-path bindings intercept property input
+events before legacy immediate-update listeners. Navigation and view-only events
+remain direct. Drafts are transient, scoped by area and by theme/region/variant
+where needed. Source conflicts invalidate affected drafts; project replacement
+clears them. Existing derived display values, including legacy outline upgrades,
+remain authoritative for clean fields without rewriting stored data.
+
+Save validates the edited controls, normalizes a detached candidate through the
+project codec and merges only edited paths into the current model. It preserves
+shared object identities used by advanced/button modules and unrelated decisions.
+The existing render/autosave lifecycle then refreshes outputs. Discard restores
+only the scope's fields; no whole-project snapshot is restored. Property drafts
+never enter project JSON, saved-project storage, exported CSS or HTML. The final
+lesson view phase restores staged field values after feature refreshes.
+
+Preview navigation keeps the source lesson and ancestor disclosures open, closes
+other centre/workspace disclosures and focuses the existing preview region. It
+uses the current sticky-header measurement and preserves the preview document,
+project values and pending drafts. Read-only panels expose preview alone.
 
 The anchor stage uses one labelled native three-option list, Primary / Secondary /
 Accent, rather than the previous role buttons that called Secondary "Supporting".
@@ -1757,6 +1798,14 @@ Semantic overrides live in `state.semanticOverrides.light/dark`, accept only
 known HEX-valued roles on import, and flow through preview and export via
 `resolvedSemanticRoles()`. `--control-border` follows `--border` until explicitly
 overridden, allowing input boundaries to differ from decorative separators.
+Palette's selected semantic role properties include a native Proposed colour
+dropdown populated from actual exported brand references and generated HEX shade
+tokens. Families are grouped with token names and HEX values; dark declarations
+replace base values for the active theme. Custom HEX and colour-picker entry stay
+available. Selection changes only the transient proposal until reviewed Apply
+stores its HEX override, so no token binding or new project schema is introduced.
+Choice nodes are rebuilt only when their colour sources change, preserving focus
+and option identity during unrelated updates. Imported labels remain plain text.
 The step-7 guided semantic editor uses the active preview theme and the same
 role list, colour-repair dialog and reset operation as the centre editor.
 `dssSyncSemanticEditor()` refreshes both entry points after contrast updates,
@@ -1784,37 +1833,61 @@ styles need matching report coverage and browser regression checks.
 
 ## Typography and section navigation
 
-`typography-workspace.js` initializes after palette-browser. It relocates original
-controls into eight local native disclosures with browse/properties columns and
-moves a single real-content specimen to the top of the active stage's right
-column, before the properties heading and editable fields. Preview controls,
-comparison scope and current website/size metadata travel with that specimen
-across all eight stages.
-`typography-workspace.css` stacks columns on narrow containers, keeps code/specimen
-overflow local and gives controls 44 px targets. Closed local disclosures explicitly
-hide non-summary children to keep deferred content out of layout. The original bare
-clamp-role select receives a dedicated field shared by Hierarchy and Responsive.
-The sidebar holds navigation.
-Generated scale roles are fixed; no new saved type schema is introduced.
+`typography-workspace.js` moves original controls into one left pane with five
+independent native disclosures: content, families, body readability, hierarchy,
+and responsive limits. The right pane always holds a realistic sample
+using saved Architecture wording and the complete eight-role size ladder. Narrow
+containers stack the panes and contain the fixed-width sample's scrolling.
+The realistic sample labels all eight roles at their actual draft sizes: Display
+wordmark, H1/body introduction, H2-H4 card and small/extra-small supporting copy.
+H3/H4 share a compact row. Roles keep independent sizes during selection, which
+highlights the exact example. Header width is independent of reading measure.
+Selected-text family, size, line height and weight appear directly below the
+sample. The button-edit shortcut sits beside the sample button. Enlargement and
+user-spacing comparisons remain above the preview; broader accessibility review
+belongs to its dedicated journey step. There is no separate Typography review
+group or duplicate component selector. Legacy review/context routes reveal the
+inline details or the original content selector.
 
-Original control nodes and listeners remain authoritative. Hidden legacy aliases
-retain import/binding compatibility; Configure and fragment routes reveal the
-canonical visible editor and its selected family. `revealControl()` only opens
-local disclosures; background synchronization never activates another lesson.
-Direct stage-summary activation handles the accordion transition before focusing
-without implicit browser scrolling and explicitly revealing the new heading.
-Closing an open summary retains native collapse behavior. Programmatic toggle
-synchronization remains local and silent, so background edits do not navigate.
-Scoped resets dispatch the original controls. Explicit lifecycle subscriptions
-and a lesson-phase specimen task retain existing state, preview, font-loading,
-export and project contracts while avoiding repeated background synchronization.
+Learning preview is a native disclosure, initially open. Collapsing it hides
+its sample, comparisons and selected-text details without changing project data
+or draft settings. The Generated CSS and the calculation panel is global to
+Typography, immediately after that disclosure and before the full size ladder.
+CSS and the ladder remain visible when the preview is collapsed; draft changes
+continue updating the common CSS/calculation renderer. Legacy inline-properties
+routes reopen Learning preview. Responsive typography retains Explore the
+viewport with its comparison-width slider, graph, endpoints and explanation.
+The original Copy CSS control copies the currently displayed rule. `DSStudio.clampExplorer.render(foundation, config)`
+updates size CSS, calculation, endpoints and graph from the detached learning
+draft. The shared `fluidTypeCss` helper accepts optional foundation/config inputs;
+its default saved-project output remains unchanged. Viewport input preserves
+proposed responsive controls. Snippets use actual exported size-token names,
+including fixed modular-step tokens for H3/H4/extra small. Status text distinguishes
+proposed CSS from saved output and excludes enlargement/user-spacing comparisons.
 
-Specimens parse generated HTML with DOMParser and insert wording through
-textContent/value. Component context reads computed styles from the existing live
-preview iframe. No additional font-loading document is created. Enlargement and
-user-spacing comparisons are memory-only and clear on state replacement. Expensive
-specimen rendering runs only while its lesson and local disclosure are open.
 
+One Typography Save/Discard/Responsive page preview bar owns all editable fields.
+`propertyEditors.draftSnapshot('typography')` supplies a detached normalized
+candidate to pure size, fluid and font helpers. Both learning previews show
+proposed values immediately. Project JSON, autosave, the full website preview and
+exports retain committed values. Save validates and merges edited paths only;
+Discard clears this scope. Concurrent decisions in other scopes survive either
+action. Project replacement and source conflicts invalidate obsolete drafts.
+
+The level selector highlights one ladder row with outline, side marker, Selected
+level text and aria-current. Pointer/keyboard row activation and sample picking
+open the relevant settings group. Viewport, enlargement and user-spacing
+comparisons remain transient; labels retain true PX and nominal-16px REM.
+DOMParser and textContent/value keep imported Architecture wording inert.
+Original control identities and Configure/legacy routes reveal their owners.
+Resets stage only owned defaults; heading reset preserves scale ratio. Font reset
+uses the selected family and proposed source. Rendering runs while the main
+Typography section is open. No saved-schema or script-order change is required.
+
+Proposed curated Google families use separate learning font links. Saved Studio
+and full-page links remain independent. Discard/replacement removes proposed
+connections; record identity guards ignore stale callbacks. Failures show system
+fallbacks and offer retry. System mode remains free of network dependencies.
 
 `font-sources.js` loads after the registry and before core state. Its registered
 module initializes after all deferred scripts have evaluated. The shared

@@ -2,6 +2,531 @@
 
 Updated: 14 November 2026 (America/Halifax).
 
+## Low Fidelity default for Wireframe (14 November 2026)
+
+- Wireframe now initializes in Low Fidelity, with matching selected tab,
+  keyboard tab stop and panel label. The initial view and its download use low
+  fidelity. Explicit High Fidelity selection remains available and transient.
+- Kept the saved project/schema and wireframe engine's programmatic defaults
+  unchanged. Refreshed the workspace script cache version and architecture docs.
+- Added fresh-start, first-view and default-download regressions; paint fixtures
+  continue explicitly choosing High Fidelity. Structure (74 assets) and whitespace
+  checks pass. python scripts/wireframe_review.py passes 155/155 with no captured
+  errors (.wireframe-default-low-wireframe_review.log). python scripts/browser_review.py
+  passes 279/279 (.wireframe-default-low-browser_review.log). Both isolated suites
+  pass 434 assertions with empty captured-error reports. This is a focused run;
+  earlier full-catalogue results remain historical.
+- No manual keyboard/screen-reader, other-browser/live-CDN testing, commit, push
+  or publication. Next: user review of Wireframe's Low Fidelity starting view.
+
+## Global Typography CSS and collapsible preview (14 November 2026)
+
+- Made Generated CSS and the calculation global to Typography, directly below
+  Learning preview and above the full size ladder. Explore the viewport remains
+  in Responsive typography, with its width slider and graph together.
+- Learning preview is now an initially open native details/summary disclosure.
+  Collapsing it leaves the CSS panel and ladder visible; proposed settings keep
+  updating CSS without saving. Legacy inline-properties routes reopen the preview.
+- Refreshed both changed runtime asset versions and updated architecture/control
+  audit. python scripts/check_structure.py passes (74 assets) and git diff --check
+  passes. Typography 172/172 and view-update checks 16/16 pass without captured
+  errors. python scripts/browser_review.py passes 279/279: 467 assertions across
+  all three isolated suites, with empty error reports (.collapsible-type-*.log).
+  New regressions cover native
+  collapse, global CSS placement/visibility, live drafts while collapsed,
+  project/export isolation, reopening and legacy routes.
+- Inspected work/reviews/typography-collapsed-preview.png. This is a focused run;
+  earlier full-catalogue results remain historical. No manual keyboard/screen-
+  reader, other-browser/live-CDN checks, commit, push or publication.
+  Next: user review of the global CSS panel and collapsible Learning preview.
+
+## Responsive Typography section order (14 November 2026)
+
+- Moved Explore the viewport into Responsive typography, keeping the viewport
+  comparison slider, graph, endpoints and explanation together. Generated CSS
+  and the calculation is now the last section there, after exploration.
+- Retained live draft calculations, Copy CSS and the saved project/export boundary.
+  Refreshed the affected script version and updated architecture/control audit.
+- python scripts/check_structure.py passes (74 assets); git diff --check passes.
+  python scripts/typography_review.py passes 167/167 without captured errors,
+  including last-section order, viewport slider/graph ownership and existing
+  draft/copy/selection/layout behavior. python scripts/browser_review.py passes
+  279/279 without captured errors: 446 assertions across both isolated suites
+  (.responsive-type-order-*.log). This is a focused run, not a full catalogue.
+- Inspected work/reviews/typography-responsive-order.png. No manual keyboard/
+  screen-reader, other-browser/live-CDN testing, commit, push or publication.
+  Prior results below remain historical. Next: user review of Responsive typography.
+
+## Shared live Typography CSS teaching panel (14 November 2026)
+
+- Removed numeric prefixes from Explore the viewport and Generated CSS and the
+  calculation. Moved the existing CSS/calculation/Copy CSS section from Responsive
+  settings to one always-visible panel directly below the learning sample's
+  selected-text properties. Its optional viewport exploration contains the graph,
+  endpoints and explanation. It is shared across all five control groups.
+- The common renderer now accepts a detached Typography draft; generated size CSS,
+  calculation and graph match proposed values without committing the project.
+  Viewport exploration preserves proposed responsive controls. Enlargement and
+  user-spacing comparisons remain explicitly separate from the generated rule.
+- Size snippets use actual exported token names, including fixed modular-step
+  tokens for H3/H4/extra small. Default CSS generation remains the saved project;
+  refreshed all four changed runtime asset query versions.
+- Current commands: python scripts/check_structure.py passes (74 assets),
+  git diff --check passes; python scripts/typography_review.py passes 166/166,
+  browser_review.py 279/279, property_actions_review.py 231/231 and
+  export_pipeline_review.py 98/98. All four isolated suites pass 774 assertions
+  with empty captured-error reports (.shared-type-css-*.log). Export byte fixtures
+  remain unchanged. Initial heading assertions caught an incomplete text edit;
+  corrected both prefixes and reran Typography successfully.
+- New regressions cover shared placement/unnumbered headings, raw-draft CSS/math,
+  viewport edits retaining proposed limits, Copy CSS without commit, Discard,
+  all eight exported size-token declarations and shared-panel visibility.
+  Inspected work/reviews/typography-shared-css.png. Earlier full-catalogue results
+  remain historical. No manual keyboard/screen-reader, other-browser/live-CDN
+  testing, commit, push or publication. Next: user review of the common CSS
+  teaching panel.
+
+## Fluid calculation label (14 November 2026)
+
+- Renamed the Typography disclosure to Fluid rule and calculation and refreshed
+  its script cache version. Label-only change; no functional behavior changed.
+- Verification: structure check passes (74 assets); git diff --check passes.
+  Browser suites were not repeated for this text-only edit.
+
+## Inline Typography inspection (14 November 2026)
+
+- Removed Test and review and its redundant component picker, checklist and
+  continuation links. Five independent control groups remain. Kept selected-text
+  computed family/size/line-height/weight directly beneath the realistic sample;
+  placed Edit button typography beside the sample button. Enlargement and spacing
+  comparisons stay above the preview; broader review stays in Accessibility.
+- Preserved original content selection, shared draft/Save/Discard, full ladder,
+  and saved page/export behavior. Legacy review/context routes now reveal inline
+  details or the original content picker. Refreshed both affected asset versions.
+- Current checks: python scripts/check_structure.py passes (74 assets) and
+  git diff --check passes. Typography 152/152, navigation 158/158 and view-update
+  checks 16/16 pass without captured errors. Fixed the inline shortcut to activate
+  Buttons before focusing its sidebar control. Updated the view fixture to focus
+  the visible sample button instead of the removed review selector. Added route,
+  exact readout, five-topic and shortcut regression coverage.
+- python scripts/browser_review.py rerun passes 279/279 with no captured errors.
+  All four focused suites pass 605 assertions (.inline-type-*-final.log and
+  .inline-type-navigation.log). The initial integration run had one preview-example
+  selection assertion failure; added per-condition diagnostics without changing
+  expectations. It did not reproduce on rerun; no preview-selection runtime change
+  was made. This was a focused run, not a repeated full catalogue.
+- Inspected work/reviews/typography-inline-details.png. No manual keyboard/screen-
+  reader, other-browser/live-CDN testing, commit, push or publication. Earlier
+  full-suite results below remain historical. Next: user review of Typography's
+  five control groups and inline inspection.
+
+## Compact complete-level learning sample (14 November 2026)
+
+- Expanded the sample header across the paper's content width independently of
+  reading measure. Added all eight labelled typography levels inside the realistic
+  sample: Display header, H1/body introduction, H2-H4 card and small/extra-small
+  supporting text. H3/H4 share a compact row; draft values retain actual sizes.
+- Each level now stays visible and keeps its own scale size while selection
+  highlights the exact example. Picking sample text reveals its matching role.
+  Preserved the separate complete ladder and shared Save/Discard boundary.
+- Refreshed the two affected asset versions. Current commands: python
+  scripts/check_structure.py passes (74 assets), git diff --check passes;
+  python scripts/typography_review.py passes 138/138, browser_review.py 279/279,
+  property_actions_review.py 231/231 and view_updates_review.py 16/16. These four
+  isolated browser suites pass 664 assertions with empty captured-error reports
+  (.compact-type-*.log).
+  New regressions cover width at 40/85ch, all eight live sizes/labels, exact
+  highlight/selection and compact default height. The H1 picker now always
+  selects H1 instead of reusing a previously selected heading role.
+- Inspected desktop screenshot work/reviews/typography-compact-sample.png.
+  Automated checks cover light/dark layouts at 320/390/768/1440px. No manual
+  keyboard/screen-reader, other-browser or live-CDN testing, commit, push or
+  publication. Earlier full-catalogue results below remain historical.
+  Next: user review of the expanded learning preview.
+
+## Unified Typography learning workspace (14 November 2026)
+
+- Implemented the approved single control pane with six independently collapsible
+  topics, a persistent realistic website sample and the full eight-role ladder.
+  Both learning previews update immediately from one normalized Typography draft.
+  One Save commits all edited Typography paths; Discard restores the whole draft.
+  Actual-page preview, JSON, autosave and exports retain saved values until Save.
+- Added detached draft snapshots and optional pure calculation/font inputs;
+  preserved the saved schema, original control identities and Configure/legacy
+  routes. Selection highlights the matching ladder/sample and opens its settings.
+  Existing enlargement, spacing, viewport and scoped resets remain available.
+- Proposed curated fonts use separate learning links with fallback/retry and
+  stale-callback guards. Discard/replacement removes them. Saved page font links
+  remain independent. Default system-font mode has no network dependency.
+- Fixed the obsolete narrow-navigation anchor and restored original inspector
+  actions after replacing the old lesson. Preserved intentionally blank/inert
+  Architecture wording; sample copy prioritizes real introductions/card paragraphs
+  instead of earlier category labels. Updated asset query versions and docs.
+- Replaced superseded sequential-layout assertions with unified-workspace
+  regressions while retaining core scale/codec/font coverage. Typography passes
+  118/118; shared controls 231/231; navigation 158/158; integration 279/279.
+- Current verification: ran all 19 offline browser suite commands in isolated
+  profiles (remaining catalogue entries through a two-worker wrapper), with
+  targeted reruns after fixes. Final per-suite reports pass 3,317 assertions with
+  20 empty captured-error reports. See .unified-type-validation-summary.log and
+  .unified-type-*-catalogue.log; final Typography/navigation reports are
+  .unified-type-typography-complete.log / .unified-type-navigation-final.log.
+  The first navigation run failed on the removed inspector/lesson; its final
+  rerun passes. Export byte fixtures remain unchanged (98/98 export checks).
+- python scripts/check_structure.py passes (74 assets); git diff --check passes.
+  python scripts/browser_runner_review.py passes all 12 contracts with temporary-
+  profile access. Its initial sandboxed run hit cleanup permissions; the elevated
+  rerun passed. Initial isolated feature smoke passed 6/6.
+- Inspected a desktop Chrome capture: work/reviews/typography-desktop.png.
+  Automated layout/control checks cover light/dark at 320/390/768/1440px.
+  No manual keyboard/screen-reader, other-browser or live-CDN review, commit,
+  push or publication. Historical counts below describe their earlier revisions.
+  Next: user review of the local unified Typography workspace.
+
+## Unified Typography Lab wireframe (14 November 2026, concept only)
+
+- Created work/visualizations/typography-lab-wireframe.html as a conversation
+  concept: one left control pane, a live draft sample and complete size ladder
+  together on the right, with shared Save/Discard/saved-page preview actions.
+  Four isolated browser smoke checks pass for slider updates, Discard, matching
+  selection highlights and the local saved-preview dialog. This is a mockup, not
+  the application implementation; no runtime assets or project model changed.
+- Next: obtain the user's feedback on the wireframe before replacing the current
+  six-stage application workflow. No commit, push or publication was performed.
+
+## Adopted six-stage Typography workflow (14 November 2026)
+
+- Implemented the approved sequence: Start with content, Choose font families,
+  Establish readable body text, Build visual hierarchy, Make typography responsive,
+  Test and review. Navigation, numbering, progress and Previous/Next use six stages.
+- Moved body tracking into the existing body property accordion and its Save /
+  Discard / Reset scope. Moved heading weight/leading/tracking into hierarchy's
+  property accordion and save scope, with a dedicated heading-emphasis reset that
+  retains body values and the scale ratio. Preserved ladder/highlight/comparisons.
+- Combined component inspection, computed-style readouts, edit-source links,
+  checklist and continuation actions in Test and review. Content/final review
+  remain preview-only; four editing stages keep the shared three-button control.
+- Retained existing model fields, control identities, exports and saved-project
+  compatibility. Old rhythm/context API and fragment routes resolve to their new
+  owners. The body-baseline shortcut also reveals its property accordion before
+  focusing the input. Refreshed JS cache versions and updated current audit/docs.
+- Updated generated eight-stage fixtures for six stages (42 obsolete stage cases
+  retired); preserved property, specimen, contrast/font and other behavior checks.
+  Added 22 cases for exact order/numbering, merged review, independent body/heading
+  save/discard/reset and new/legacy routing. A typo in one new assertion initially
+  prevented harness parsing; corrected it before browser verification.
+- Current checks: python scripts/check_structure.py passes (74 assets) and git
+  diff --check passes. Ran python scripts/typography_review.py (397/397),
+  property_actions_review.py (231/231), browser_review.py (279/279),
+  navigation_review.py (158/158), view_updates_review.py (16/16),
+  wireframe_review.py (152/152) and export_pipeline_review.py (98/98).
+  All seven isolated browser suites pass, 1,331 assertions, with empty captured-
+  error reports (.six-type-stages-<suite>.log; Typography's completed report is
+  .six-type-stages-typography-recheck.log). Reviewed export byte parity is unchanged.
+  This is a focused seven-suite run, not a repeated full catalogue.
+- No manual keyboard/screen-reader, other-browser or live-font checks, commit,
+  push or publication were performed. Earlier full-catalogue/Counter results below
+  remain historical. Next: review the local six-stage Typography workflow.
+
+## Typography workflow recommendations (14 November 2026, proposal only)
+
+- Reviewed the eight current stages and property ownership at the user's request
+  for recommendations. Recommend six stages: Content, Font families, Readable body
+  text, Visual hierarchy, Responsive typography, Test and review.
+- Propose merging Refine emphasis and rhythm into its owning decisions: body
+  tracking into Readable body text; heading weight, leading and tracking into
+  Visual hierarchy. Preserve the hierarchy ladder and selected-level highlight.
+  Propose combining component-context inspection with the final review/checklist.
+- Keep responsive project settings distinct from specimen comparison controls.
+  Retain the existing selected-properties disclosures and shared Save/Discard/
+  Responsive page preview behavior; editable stages save only their owned fields.
+  Content and combined review remain inspection/navigation views.
+- This is a recommendation, not an implemented change. No runtime assets, model,
+  stage ordering, tests or exports were changed; no browser tests were run for this
+  review. Prior validation counts above/below remain historical. Next: await the
+  user's direction on the proposed six-stage workflow before implementation.
+
+## Typography level preview highlight (14 November 2026)
+
+- Typography level selection in Build visual hierarchy now marks its matching
+  ladder row with an inset outline, side marker, visible Selected level label and
+  aria-current. A polite status message identifies the highlighted role. Exactly
+  one row is selected; leaving hierarchy removes its highlight/status and return
+  restores the current choice. The reused selector's aria-controls points to the
+  ladder in Hierarchy and the graph in Responsive.
+- Browsing levels keeps focus on the select and preserves project JSON, exports,
+  browser saves and the preview document. No autosave or automatic scrolling is
+  added. Source styles use existing design variables, with a text cue independent
+  of colour. Refreshed affected JS/CSS cache versions.
+- Added per-option focus/isolation/highlight cases in both themes at 320/390/1440px,
+  plus leave/return coverage: 62 new Typography cases. Current checks: python
+  scripts/check_structure.py passes (74 assets), python scripts/typography_review.py
+  passes 417/417, python scripts/browser_review.py passes 279/279 and python
+  scripts/property_actions_review.py passes 231/231, all with empty captured-error
+  reports (.type-level-highlight-<suite>.log). git diff --check passes. These 927
+  focused browser checks do not represent a repeated full catalogue.
+- No manual accessibility, other-browser or live-font checks, commit, push or
+  publication were performed. Next: review selection highlighting in the local
+  hierarchy ladder.
+
+## Typography steps 1-3 property accordions (14 November 2026)
+
+- Applied the hierarchy Selected properties disclosure pattern to Start with
+  content, Choose font families and Establish readable body text. Each native
+  collapsed panel follows Specimen text enlargement and contains its existing
+  property controls/references. Existing single preview specimens are retained;
+  only hierarchy uses the complete ladder.
+- Reused original headings, fields, IDs and listeners. Inactive panels return to
+  their owning stages; Configure opens the relevant accordion. Shared actions
+  remain available outside the collapsed fields. Generalized the existing CSS
+  and refreshed affected JS/CSS cache versions.
+- Added coverage for default collapse, order, unchanged specimen text/styles,
+  project/document preservation, draft retention and Discard while collapsed,
+  Configure focus and both themes at 320/390/1440px. Structure passes (74 assets)
+  and git diff --check passes. Current browser checks: python
+  scripts/typography_review.py passes 355/355, python scripts/browser_review.py
+  passes 279/279 and python scripts/property_actions_review.py passes 231/231,
+  all with empty captured-error reports (.type-accordions-<suite>.log). Added 31
+  focused cases and updated the existing first-four-stage heading expectation.
+  These 865 focused checks do not represent a repeated full catalogue; previous
+  run counts below remain historical.
+- No manual accessibility, other-browser or live-font checks, commit, push or
+  publication were performed. Next: review the local first-three-stage accordions.
+
+## Visual hierarchy ladder preview (14 November 2026)
+
+- Reorganized Typography / Build visual hierarchy: Specimen text enlargement is
+  followed by a native Selected properties accordion containing the original
+  named-scale, ratio and generated PX/REM fields, then the preview controls and
+  complete ladder. The former separate Complete generated size ladder disclosure
+  is removed; its existing typeLadder node is the visible hierarchy preview.
+- The hierarchy preview shows eight labelled roles, saved PX/nominal-16px REM and
+  current website wording. Viewport, enlargement and user-spacing comparisons
+  apply to the ladder; enlargement leaves true size labels and project settings
+  unchanged. Other stages retain their existing single specimen. Shared Save,
+  Discard and responsive page preview stay with the owning hierarchy stage.
+- Reused controls, IDs and the saved model; no schema or export changes. Updated
+  cache versions and coverage for control order, accordion behavior, one ladder,
+  saved/draft boundaries, size arithmetic, comparison-only controls, responsive
+  layout, stage return and Configure routing. Structure passes (74 assets) and
+  git diff --check passes. The first Typography run passed 322/324: two new
+  comparison fixtures used the Configure helper, which routed the viewport input
+  to Responsive rather than exercising its native Hierarchy interaction. Corrected
+  those fixtures to dispatch native comparison events within Hierarchy.
+- Current checks: python scripts/typography_review.py passes 324/324
+  (.hierarchy-ladder-typography-final.log), python scripts/browser_review.py passes
+  279/279 and python scripts/property_actions_review.py passes 231/231
+  (.hierarchy-ladder-<suite>.log), all with empty captured-error reports. Structure
+  passes (74 assets) and git diff --check passes. Added 15 focused hierarchy cases;
+  updated the existing hierarchy heading expectation for its new accordion.
+  These 834 focused browser checks do not represent a repeated full catalogue.
+- No manual screen-reader/keyboard, other-browser or live-font checks, commit,
+  push or publication were performed. Next: review the local hierarchy arrangement.
+
+## Typography property-process review (14 November 2026)
+
+- Reviewed all eight Typography stages against the shared Save/Discard/Responsive
+  page preview component. Five editable stages own draft controls; content,
+  component context and review provide preview only. Recorded the workflow and
+  family/shared-source save scopes in PROPERTY_CONTROLS_AUDIT.md.
+- Added raw draft-level regressions without the existing committed-edit helper.
+  Before runtime fixes, Typography passed 209/212 checks; failures reproduced a
+  blank proposed scale selection (including after navigation) and selected-family
+  reset using the committed font source rather than the proposed source
+  (.typography-process-before.log). The prior 185 checks all passed in that run.
+- Fixed ratio-to-option formatting for pending and saved values; selected-family
+  reset now reads the visible source proposal. Clarified that the specimen shows
+  saved typography and property Save refreshes it. Refreshed affected JS cache
+  versions. No schema/export-format changes or action-bar placement changes.
+- A further isolated check reproduced stale fallback-comparison state after saving
+  a different source: 0/1 (.typography-fallback-before.log). Font synchronization
+  now clears fallback comparison on committed source changes, retaining it for
+  unrelated updates. Added a regression to the existing local-font fixture flow.
+- Expanded checks cover each editable stage's draft/save/discard/autosave boundary
+  and all eight stages' shared actions, draft preservation, source-stage retention,
+  focus and layout in both themes at 320/390/1440px. Added 124 Typography assertions
+  to its prior 185, without removing existing cases.
+- Current checks: python scripts/check_structure.py passes (74 assets), python
+  scripts/typography_review.py passes 309/309, python scripts/browser_review.py
+  passes 279/279 (.typography-process-final-<suite>.log), and python
+  scripts/property_actions_review.py passes 231/231
+  (.typography-process-property_actions_review.log). All three captured-error
+  reports are empty; git diff --check passes. The focused total is 819 checks;
+  the earlier full-catalogue results below remain historical, not a new full run.
+- No manual keyboard/screen-reader, other-browser or live-font checks were run.
+  Local font fixtures exercise the source/comparison regression without Google
+  network dependencies. No commit, push or publication was performed. Next:
+  review the local Typography workflow; no action-bar placement was changed.
+
+## Save and review above Visitor sitemap (14 November 2026)
+
+- Moved the existing full-width Save and review section immediately after Content
+  structure and before Visitor sitemap within the Architecture workspace. It
+  remains outside the content browser/property grid, with original form ownership,
+  controls, status messages and listeners preserved. This supersedes the preceding
+  placement below the entire workspace.
+- Updated the six Basic/Advanced placement cases at 320/390/1440px to check the
+  requested order and full width. Refreshed affected runtime asset query versions.
+  Current checks: python scripts/check_structure.py passes (74 assets), python
+  scripts/content_tree_review.py passes 201/201, python scripts/browser_review.py
+  passes 279/279 and python scripts/property_actions_review.py passes 231/231.
+  All three isolated Chrome runs have empty captured-error reports
+  (.save-before-sitemap-<suite>.log); git diff --check passes. Earlier full-catalogue
+  results remain historical. No manual accessibility or other-browser checks,
+  commit, push or publication were performed. Next: review the local ordering.
+
+## Architecture Save and review placement (14 November 2026)
+
+- Moved the existing Save and review section outside Content structure and the
+  Architecture workspace, as a full-width sibling immediately below the workspace.
+  Save/Discard/Restore, feedback and the shared responsive-preview action retain
+  their original nodes/listeners and native ia-form association.
+- Updated the existing Basic/Advanced placement checks at 320/390/1440px for the
+  requested position, full width, form ownership and one save area. Refreshed
+  studio-learning.js and content-architecture.css cache versions.
+- Current checks: python scripts/check_structure.py passes (74 assets), python
+  scripts/content_tree_review.py passes 201/201, python scripts/browser_review.py
+  passes 279/279 and python scripts/property_actions_review.py passes 231/231.
+  All three isolated Chrome runs have empty captured-error reports
+  (.external-save-<suite>.log). git diff --check passes. The six previous placement
+  case names now describe the requested external location; total counts are
+  unchanged. The earlier full-catalogue and Counter results below are historical;
+  this placement change was checked with these three affected browser suites.
+- No commit, push or publication has been performed. Manual screen-reader,
+  other-browser and live-font checks were not performed. Next: review the new
+  full-width position in the local Architecture workflow.
+
+## Shared property controls (14 November 2026)
+
+- Audited property editors throughout the studio; see
+  [PROPERTY_CONTROLS_AUDIT.md](PROPERTY_CONTROLS_AUDIT.md) for the scope catalogue,
+  existing reviewed forms, read-only panels and deliberately direct operations.
+- Added shared action-bar/preview navigation and scoped model-path draft services.
+  Palette, Brief, type, Buttons, spacing, responsive, accessibility and Prototype
+  property inputs now stage edits. Content, Sitemap and semantic contrast saves
+  reuse their existing feature validation/review flows. Read-only panels offer
+  preview only. Brand's existing drafts now use the shared action bar.
+- Added property_actions_review.py to the shared local/CI catalogue (19 offline
+  suites). Its 231 cases cover draft isolation, scoped Save/Discard/autosave,
+  unrelated edits, source conflicts, replacement, rejected values, legacy outline
+  displays, deferred font requests, semantic contrast review and preview focus /
+  layout at 320/390/1440px in both themes. Preview checks preserve an outstanding
+  type draft, project/storage and the existing preview document.
+- Existing committed-edit helpers now explicitly Save reset/swatch/checkbox edits.
+  Kept all original assertion names/occurrences. Updated two invalid-outline
+  assertions to require that rejected drafts preserve the saved structure/HTML,
+  rather than replacing it with an empty map. Help checks accept multiple
+  aria-describedby IDs while retaining the original help and labels.
+- Verification exposed and fixed clean fields overriding resolved legacy outline
+  displays, return links preceding the new actions, Restore separating from its
+  existing Content save bar, empty override groups after reset, default shared
+  focus display, staged brand-select casing and font-weight/tracking readouts.
+  Invalid outline drafts now report native validation and cannot reach the model.
+  Rechecked each affected suite after its fix. No export fixture was changed.
+- Current checks: python scripts/check_structure.py passes (74 assets), python
+  scripts/browser_runner_review.py passes 12/12, and git diff --check passes. Ran
+  every registered offline browser command with at most three isolated Chrome
+  profiles concurrently: all 19 suites pass, 3,384 assertions and 20 empty
+  captured-error reports. python scripts/browser_review.py passes 279/279;
+  Palette 620/620, Sitemap 305/305, type 185/185 and export parity 98/98.
+  .property-final-coverage.log records the exact final/recheck logs per suite.
+- The Counter audit retains all 2,793 original monolith assertion occurrences,
+  zero missing. The 231 new shared-property checks add to the preceding local
+  3,153-assertion inventory; historical results below predate this shared control.
+  CONTRIBUTING and architecture/coverage documentation describe the new catalogue.
+- No commit, push, remote CI or publication has been performed; local changes
+  remain on feat/semantic-colour-picker with the earlier semantic dropdown and
+  Brand work preserved. Manual keyboard/screen-reader, other-browser and live-font
+  testing remain unperformed. Optional live-font fixture edits now explicitly Save,
+  but the network-dependent command was not run. Automated focus/layout checks do
+  not establish full accessibility.
+- Next: review the local common property workflow against the audit catalogue.
+  Semantic token-alias persistence remains a separate, unimplemented follow-up.
+
+## Brand property Save/Discard and focused preview (14 November 2026)
+
+- Added nearby Save, Discard and Responsive page preview actions to each selected
+  Brand colour's properties, on the existing local feature branch. Name, token
+  suffix and colour edits are now UI drafts until Save. Save validates and commits
+  the selected colour atomically; Discard restores that colour's saved fields
+  without replacing the project or reverting unrelated decisions.
+- Drafts survive unrelated updates, theme changes, row selection and preview
+  navigation. Project replacement clears them; changed or removed source colours
+  invalidate stale drafts. Add/remove remain explicit immediate collection actions,
+  with updated product guidance. Existing copied UI-anchor colours stay fixed.
+- The preview action keeps the source Brand section/stage and Responsive page
+  preview open, collapses other centre sections/Palette disclosures, preserves
+  the live preview document and model/storage, and focuses the preview with its
+  heading positioned below the sticky header. An unsaved draft remains available
+  on return; preview displays the saved project.
+- Updated existing brand-edit fixtures to explicitly Save, preserving their
+  assertions, and added draft/save/discard/validation/replacement and preview
+  focus/layout cases for both themes at 320/390/1440px. Refreshed affected asset
+  query versions. No project schema or exported CSS/HTML format changed.
+- Fixed a mobile scroll issue exposed by the new cases: the shared header offset
+  can be stale immediately after resizing. Preview now measures the current sticky
+  header synchronously. Corrected two new fixture assumptions about the first
+  starter colour and duplicate suffix; existing assertion names remain intact.
+- Current checks: python scripts/check_structure.py passes (71 assets), python
+  scripts/browser_runner_review.py passes 12/12, and every browser command from
+  python scripts/review_suites.py --matrix passes, with at most three concurrent
+  isolated profiles. All 18 suites pass, 3,153 assertions and 19 empty captured-error
+  reports (.brand-actions-palette-final.log and .brand-final-<suite>.log). Palette
+  passes 620/620, integration (python scripts/browser_review.py) 279/279 and export
+  byte parity 98/98. git diff --check passes.
+- The Counter audit accounts for all 2,793 original monolith check occurrences,
+  zero missing (.brand-final-coverage.log). Added 24 Brand checks to the prior
+  3,129-assertion local semantic-dropdown inventory. Export fixtures are unchanged.
+  A sandboxed runner-contract retry failed on temporary-directory cleanup access;
+  rerunning with the same temporary-profile access as browser checks passed 12/12.
+  An initial isolated probe also failed to load an unchanged local script; its
+  replacement probe and complete final suites loaded it without captured errors.
+- No commit, push or publication has been performed for these local changes.
+  Manual keyboard/screen-reader interaction, additional browsers and live-font
+  checks remain unperformed; automated focus/layout checks do not establish full
+  accessibility. The preview deliberately shows committed properties, preserving
+  unsaved drafts for return. Brand references still do not relink copied anchors.
+- Next: review the local Brand workflow. Semantic token-alias persistence remains
+  a separate discussed follow-up and is not implemented by these changes.
+
+## Proposed semantic colour dropdown (14 November 2026)
+
+- On feat/semantic-colour-picker, added a native Proposed colour dropdown to
+  Palette / Assign semantic colours. Options come from actual exported HEX
+  tokens: brand references plus all generated foundation, feedback, control-state
+  and button-state shades, grouped by family and labelled with token name/HEX.
+  Theme-specific declarations override base choices for the active project theme.
+- Selecting a choice stages its current HEX value in the existing proposal and
+  swatch. Preview/Cancel/Apply/Discard remain authoritative; selecting a choice
+  does not change the project, autosave or exported files. Custom HEX/picker
+  editing remains available. The product help explains that applied custom
+  semantic colours stay fixed after subsequent palette changes.
+- Options refresh after palette/method/theme/source changes, preserving nodes
+  and focus for unrelated edits. Imported brand labels use text nodes/native
+  options. No new persistence fields or schema changes were introduced.
+- Added focused coverage for catalogue completeness, theme correctness, staging,
+  cancellation, Apply/autosave/round trip, custom entry, source refresh, safe text
+  and 320/390/1440px controls in both themes. Refreshed the affected JS/CSS query
+  versions to 20261114-semantic-colour-picker.
+- Current checks: python scripts/check_structure.py passes (71 assets) and
+  python scripts/browser_runner_review.py passes 12/12. Ran every browser command
+  from python scripts/review_suites.py --matrix in batches of at most three
+  isolated profiles: all 18 suites pass, 3,129 browser assertions, with all 19
+  captured-error reports empty (.semantic-final-<suite>.log). Palette passes
+  596/596, integration 279/279 and export byte parity 98/98. The new choice
+  inventory checks derive expected values independently from palette/state
+  generators rather than copying the dropdown's token parser.
+- A Python Counter comparison accounts for all 2,793 original monolith check
+  occurrences with zero missing (.semantic-final-coverage.log). The feature adds
+  21 Palette checks to the previous 3,108 assertion inventory. Export fixtures
+  were not changed. git diff --check passes.
+- No commit, push or publication was performed for this feature. The live site
+  remains the prior published revision; the change is ready for review on
+  feat/semantic-colour-picker. Manual screen-reader/keyboard interaction,
+  browser/OS native popup rendering, additional browsers and live-font checks
+  were not performed. Automated geometry/focus checks do not establish complete
+  accessibility. Prior publication/refactor results below remain historical.
+
 ## Colour-repair close-event race found during publication (14 November 2026)
 
 - The publication-record-only revision 07391f6 exposed a real intermittent dialog

@@ -31,7 +31,7 @@ app.onload = async () => {
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   const revealAll = () => {revealArchitecture();d.querySelectorAll('#main > .studio-section, .step-more').forEach(section => {section.hidden=false;section.open=true;});};
   // Most historical feature fixtures exercise the complete Advanced sample.
@@ -47,7 +47,7 @@ app.onload = async () => {
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -82,7 +82,7 @@ app.onload = async () => {
       });
     }
     input('jBase',22);input('jRadius',28);input('jSpacing',8);input('jPrimary','#883366');input('jLeading',1.9);
-    input('advColor_success','#661144');d.getElementById('advUnderline').checked=false;d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));
+    input('advColor_success','#661144');d.getElementById('advUnderline').checked=false;d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('advUnderline'));
     test(studio+' Studio type, controls and surfaces survive project foundation edits',()=>chromeSnapshot()===fixedChrome && w.getComputedStyle(d.body).fontSize==='16px' && w.getComputedStyle(d.getElementById('mobileType').querySelector('.sample')).fontSize!=='16px');
     reset();await wait();
   }
@@ -324,7 +324,7 @@ app.onload = async () => {
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:originalClipboard});
   reset();
   input('brandApplyRole','accent','change');
-  const referenceAction=d.querySelector('[data-brand-role="accent"][data-brand-hex="#00BADC"]'); referenceAction.click();
+  const referenceAction=d.querySelector('[data-brand-role="accent"][data-brand-hex="#00BADC"]'); referenceAction.click();w.DSStudio.propertyEditors.saveFor(d.getElementById("jAccent"));
   test('Reference swatch selection synchronizes palette and guided controls', () => d.getElementById('accent').value===d.getElementById('jAccent').value && evaluate('state.accent')===referenceAction.dataset.brandHex.toLowerCase());
   d.querySelector('[data-journey-step="0"]').click(); d.getElementById('jNext').click();
   test('Guided navigation advances and returns to the first step', () => {
@@ -347,7 +347,7 @@ app.onload = async () => {
   test('Inspector keyboard tabs select HTML and label the code panel', () => d.activeElement.id==='dockTabHtml' && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockTabCss').tabIndex===-1 && d.getElementById('dockCss').getAttribute('aria-labelledby')==='dockTabHtml' && d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
   test('Switching inspector languages leaves project data unchanged', () => evaluate('projectJson()')===beforeInspector);
   input('jProject','Cedar Studio'); input('jTheme','dark'); input('bdSize','lg');
-  d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));
+  d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(d.getElementById('bdMobileFull'));
   test('HTML inspector follows project, theme and button selections live', () => d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('dockCss').textContent.includes('Cedar Studio') && d.getElementById('dockCss').textContent.includes('data-theme="dark"') && d.getElementById('dockCss').textContent.includes('ds-button--lg ds-button--mobile-full'));
   const inspectorDownloads=[]; w.download=(name,content,type)=>inspectorDownloads.push({name,content,type});
   d.getElementById('dockDownload').click();
@@ -474,7 +474,7 @@ app.onload = async () => {
   const beforePicking=evaluate('projectJson()'), pickingDoc=previewDoc();
   d.getElementById('studyPick').click();
   previewDoc().querySelector('#basic-layout a').click(); await wait();
-  test('Opt-in selection connects the clicked example without following its link or changing project data',()=>previewDoc()===pickingDoc && d.getElementById('studyExample').value==='profile' && !w.DSStudio.learning.picking && d.activeElement===d.getElementById('studyExample') && evaluate('projectJson()')===beforePicking);
+  test('Opt-in selection connects the clicked example without following its link or changing project data',()=>{const checks={document:previewDoc()===pickingDoc,example:d.getElementById('studyExample').value==='profile',picking:!w.DSStudio.learning.picking,focus:d.activeElement===d.getElementById('studyExample'),project:evaluate('projectJson()')===beforePicking};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({...checks,active:d.activeElement?.id}));return true;});
   previewDoc().querySelector('#basic-layout a').click(); await wait();
   test('Normal preview navigation resumes after selecting an example',()=>previewDoc().activeElement===previewDoc().getElementById('list-workflow'));
   d.getElementById('studyPick').click(); previewDoc().dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));

@@ -15,10 +15,10 @@
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261111-architecture-tool-context">
+    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261114-save-before-sitemap">
     <link rel="stylesheet" href="src/css/palette-workspace.css?v=20261112-colour-token-flow">
-    <link rel="stylesheet" href="src/css/palette-browser.css?v=20261112-palette-browser">
-    <link rel="stylesheet" href="src/css/typography-workspace.css?v=20261112-type-heading-scroll">
+    <link rel="stylesheet" href="src/css/palette-browser.css?v=20261114-semantic-colour-picker">
+    <link rel="stylesheet" href="src/css/typography-workspace.css?v=20261114-collapsible-learning-preview">
     <link rel="stylesheet" href="src/css/wireframe-workspace.css?v=20261112-fidelity-tabs">
     <link rel="stylesheet" href="src/css/design-process.css?v=20261112-centre-brief">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
@@ -27,7 +27,8 @@
     <link rel="stylesheet" href="src/css/tailwind-bridge.css?v=20261105-tailwind-mapping">
     <link rel="stylesheet" href="src/css/spacing-lesson.css?v=20261103-spacing-lesson">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
-    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261104-all-state-palettes">
+    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261114-brand-actions">
+    <link rel="stylesheet" href="src/css/property-actions.css?v=20261114-property-actions">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -789,7 +790,7 @@
             <summary>All parameters · Advanced editing</summary>
             <section class="panel">
               <h2>Configure foundations</h2>
-              <p class="help">Changes update the previews and generated code immediately.</p>
+              <p class="help">Save property changes to update previews and generated code.</p>
               <div class="field">
                 <label for="project">Project name</label>
                 <input id="project" maxlength="90" value="My Project" />
@@ -1552,7 +1553,7 @@
                     </div>
                   </div>
                   <div class="component clamp-result">
-                    <h4>3 · Explore the viewport</h4>
+                    <h4>Explore the viewport</h4>
                     <label for="clampViewport">
                       Viewport width: <output id="clampViewportOut">768px</output></label><input id="clampViewport"
        type="range"
@@ -1577,7 +1578,7 @@
                   </div>
                   <div class="component">
                     <div class="section-head">
-                      <h4>4 · Generated CSS and the calculation</h4>
+                      <h4>Generated CSS and the calculation</h4>
                       <button class="ghost" type="button" id="clampCopy">Copy CSS</button>
                     </div>
                     <pre class="clamp-css"><code id="clampCss"></code></pre>
@@ -2101,10 +2102,11 @@
       <script src="src/js/studio-registry.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/export-pipeline.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/view-updates.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/property-actions.js?v=20261114-property-actions" defer></script>
       <script src="src/js/studio-appearance.js?v=20261105-studio-appearance" defer></script>
-      <script src="src/js/brand-palette.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/brand-palette.js?v=20261114-property-actions" defer></script>
       <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/font-sources.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/font-sources.js?v=20261114-unified-type-lab" defer></script>
       <script src="src/js/design-process.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/responsive-design.js?v=20261113-view-updates" defer></script>
       <script src="src/js/section-sitemap.js?v=20261111-wireframe-ready" defer></script>
@@ -2112,11 +2114,11 @@
       <script src="src/js/website-content.js?v=20261111-wireframe-ready" defer></script>
       <script src="src/js/wireframe-engine.js?v=20261112-low-unfilled" defer></script>
       <script src="src/js/project-model.js?v=20261113-project-model-reset" defer></script>
-      <script src="src/js/core-state.js?v=20261113-export-pipeline" defer></script>
+      <script src="src/js/core-state.js?v=20261114-shared-type-css" defer></script>
       <script src="src/js/css-dock.js?v=20261113-view-updates" defer></script>
       <script src="src/js/advanced-params.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/journey-library.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/button-design.js?v=20261113-export-pipeline" defer></script>
+      <script src="src/js/button-design.js?v=20261114-property-actions" defer></script>
       <script src="src/js/sample-system.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/sample-homepage.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/basic-homepage.js?v=20261113-export-pipeline" defer></script>
@@ -2125,7 +2127,7 @@
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
       <script src="src/js/token-catalogue.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/clamp-explorer.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261114-shared-type-css" defer></script>
       <script src="src/js/contrast-audit.js?v=20261104-background-opacity" defer></script>
       <script src="src/js/colour-repair.js?v=20261114-repair-session" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
@@ -2133,18 +2135,19 @@
       <script src="src/js/section-accordions.js?v=20261109-active-lesson-startup" defer></script>
       <script src="src/js/site-builder.js?v=20261113-view-updates" defer></script>
       <script src="src/js/content-outline.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/studio-learning.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/wireframe-workspace.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/studio-learning.js?v=20261114-save-before-sitemap" defer></script>
+      <script src="src/js/wireframe-workspace.js?v=20261114-default-low-fidelity" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/palette-process.js?v=20261113-view-updates" defer></script>
       <script src="src/js/state-palettes.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/webpage-backgrounds.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/palette-workspace.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/palette-browser.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/typography-workspace.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/palette-workspace.js?v=20261114-property-actions" defer></script>
+      <script src="src/js/palette-browser.js?v=20261114-property-actions" defer></script>
+      <script src="src/js/typography-workspace.js?v=20261114-collapsible-learning-preview" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261113-view-updates" defer></script>
       <script src="src/js/utility-lesson.js?v=20261113-view-updates" defer></script>
       <script src="src/js/tailwind-bridge.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/property-editors.js?v=20261114-unified-type-lab" defer></script>
       <script src="src/js/section-navigation.js?v=20261104-home-links" defer></script>
     </body>
   </html>

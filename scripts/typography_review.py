@@ -17,7 +17,7 @@ app.onload=async()=>{
   const reset=()=>{evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const previewDoc=()=>d.getElementById('previewPage').contentDocument;
   const previewWindow=()=>d.getElementById('previewPage').contentWindow;
-  const input=(id,value,type='input')=>{const el=d.getElementById(id);w.DSStudio.paletteWorkspace?.revealControl(el);w.DSStudio.typographyWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));};
+  const input=(id,value,type='input')=>{const el=d.getElementById(id);w.DSStudio.paletteWorkspace?.revealControl(el);w.DSStudio.typographyWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);};
   const prepare=async step=>{
     app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')d.getElementById('themeToggle').click();
     reset();w.DSStudio.inspector.show({language:'css',section:'all'});d.querySelector('[data-width="fluid"]').click();w.dssShowWizardStep(step,false);await wait();
@@ -66,7 +66,7 @@ app.onload=async()=>{
   test('Older heading-tracking projects migrate from hundredths to em', () => evaluate('state.headingTracking===-.03 && state.bodyTracking===0'));
   input('advTracking',2.5); await wait();
   test('Existing advanced tracking control updates the shared em setting', () => evaluate('state.headingTracking===.025') && d.getElementById('typoHeadingTrackingOut').textContent==='0.025em');
-  d.getElementById('clampReset').click(); await wait();
+  d.getElementById('clampReset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('clampReset')); await wait();
   test('Reset responsive limits preserves letter spacing', () => evaluate('clampConfig.mobileFactor===.82 && state.headingTracking===.025'));
   await prepare(5);
   test('System fonts remain the offline default in the studio, preview and HTML export', () => evaluate('state.fontSettings.source')==='system' && !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]') && !evaluate('htmlExport()').includes('fonts.googleapis.com') && d.getElementById('fontFallback').disabled);
@@ -101,7 +101,7 @@ app.onload=async()=>{
   test('Google font selection reports loading and enables the CDN controls', () => d.getElementById('fontLoadStatus').dataset.state==='loading' && !d.getElementById('fontGoogleOptions').hidden && d.getElementById('font').disabled && d.getElementById('jFont').disabled);
   await wait(250);
   test('Font stylesheets and font faces load successfully through the browser', () => d.getElementById('fontLoadStatus').dataset.state==='loaded' && [...d.fonts].some(face=>face.family.includes('Inter') && face.status==='loaded') && [...previewDoc().fonts].some(face=>face.family.includes('Inter') && face.status==='loaded'));
-  test('A shared heading/body family produces one family request per document', () => fontRequests.length===2 && fontRequests.every(href=>new URL(href).searchParams.getAll('family').length===1));
+  test('Each saved or learning stylesheet deduplicates shared heading/body families', () => fontRequests.length>=2 && fontRequests.every(href=>new URL(href).searchParams.getAll('family').length===1));
   input('fontGoogleHeading','literata','change'); await wait(250);
   test('Google heading/body selections update specimens, components and the preview', () => w.getComputedStyle(d.querySelector('#mobileType [data-font-role="heading"]')).fontFamily.includes('Literata') && w.getComputedStyle(d.querySelector('#mobileType [data-font-role="body"]')).fontFamily.includes('Inter') && w.getComputedStyle(d.querySelector('.bd-button')).fontFamily.includes('Inter') && previewWindow().getComputedStyle(previewDoc().querySelector('h1')).fontFamily.includes('Literata') && previewWindow().getComputedStyle(previewDoc().querySelector('.sample-brand-title')).fontFamily.includes('Literata') && previewWindow().getComputedStyle(previewDoc().body).fontFamily.includes('Inter'));
   const fontExport=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
@@ -110,7 +110,7 @@ app.onload=async()=>{
     const request=new URL(evaluate('DSStudio.fonts.url()'));
     return request.searchParams.get('display')==='swap' && request.searchParams.getAll('family').join('|').includes('Inter:ital,wght@0,400;0,600;0,700;1,400') && request.searchParams.getAll('family').join('|').includes('Literata:wght@400;600;700');
   });
-  d.getElementById('fontWeight500').click(); input('advWeight',800,'change'); input('bdWeight',700); await wait(250);
+  d.getElementById('fontWeight500').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('fontWeight500')); input('advWeight',800,'change'); input('bdWeight',700); await wait(250);
   test('Optional and currently used weights stay represented in generated requests', () => evaluate('DSStudio.fonts.url()').includes('0,500') && evaluate('DSStudio.fonts.url()').includes('0,800') && d.getElementById('fontWeight800').checked && d.getElementById('fontWeight800').disabled && d.getElementById('fontWeight400').disabled);
   evaluate('importConfig({...JSON.parse(projectJson()),buttonDesign:{...state.buttonDesign,weight:650}})'); await wait(250);
   test('Font requests use the validated button weight after import', () => evaluate('state.buttonDesign.weight===600 && !DSStudio.fonts.url().includes("0,650")') && evaluate('cssExport()').includes('--button-font-weight: 600'));
@@ -141,8 +141,10 @@ app.onload=async()=>{
     if (report.status!=='loaded' || report.body!=='source-sans-3' || !report.faces.some(face=>face.family.includes('Source Sans 3') && face.status==='loaded')) throw Error(JSON.stringify(report));
     return true;
   });
+  d.getElementById('fontFallback').click();await wait();
   input('fontSource','system','change'); await wait();
   test('Switching to system fonts removes all managed font connections and restores body controls', () => !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]') && !d.getElementById('font').disabled && !d.getElementById('jFont').disabled && !evaluate('htmlExport()').includes('fonts.googleapis.com'));
+  test('Saving a different font source clears the previous fallback comparison',()=>!w.DSStudio.fonts.showFallback && !d.getElementById('fontFallback').checked);
   fontFixtureMode='error'; input('fontSource','google','change'); input('fontSource','system','change'); await wait(250);
   test('Stale font callbacks cannot replace the status after switching back to system fonts', () => d.getElementById('fontLoadStatus').dataset.state==='system' && !d.querySelector('link[data-dss-font]') && !previewDoc().querySelector('link[data-dss-font]'));
   for (const restore of fontRestores) restore();
@@ -173,94 +175,162 @@ app.onload=async()=>{
   input('jRatio',1.4); d.getElementById('jNewLocal').click(); await wait();
   test('New project starts with Minor Third after a custom scale', () => evaluate('state.ratio===1.2') && d.getElementById('jScalePreset').value==='minor-third');
   await prepare(5);
-  // Typography fixtures start in desktop/light Studio, independent of Brief.
-  app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();await wait();
-  // Guided Typography reuses the shared model and actual website wording.
-  {
-    reset();w.dssShowWizardStep(5,false);await wait();const ui=w.DSStudio.typographyWorkspace,keys=['content','fonts','body','hierarchy','rhythm','responsive','context','review'],sample=()=>d.getElementById('type-specimen-text');
-    test('Typography sidebar is a short process guide without saved-setting controls',()=>!d.querySelector('[data-journey-pane="5"] input,[data-journey-pane="5"] select') && d.querySelectorAll('[data-type-go]').length===8);
-    test('Eight typography stages use Architecture-style browse and properties columns',()=>d.querySelectorAll('[data-type-stage]').length===8 && keys.every(key=>d.querySelector('#type-stage-'+key+' .type-browser') && d.querySelector('#type-stage-'+key+' .type-properties')) && d.querySelectorAll('.type-specimen').length===1);
-    const original=evaluate('projectJson()');
-    for(const key of keys){ui.show(key,false);await wait();test('Typography '+key+' shows its shared specimen above selected properties in one explained stage',()=>d.querySelectorAll('[data-type-stage][open]').length===1 && d.getElementById('type-stage-'+key).open && keys.filter(other=>other!==key).every(other=>d.getElementById('type-properties-'+other).getBoundingClientRect().height===0) && d.getElementById('type-properties-'+key).firstElementChild===d.querySelector('.type-specimen') && d.querySelector('.type-specimen').nextElementSibling===d.getElementById('type-properties-title-'+key) && d.querySelector('#type-browse-'+key+' .type-observe').textContent.length>20 && d.querySelector('[data-type-go="'+key+'"]').getAttribute('aria-current')==='step' && evaluate('projectJson()')===original);}
-    ui.show('content',false);input('type-content-choice','headline','change');await wait();const site=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    test('Typography browses actual Architecture website wording rather than generic specimens',()=>sample().textContent===site.getElementById('hero-title').textContent && d.getElementById('type-content-text').value===sample().textContent && d.getElementById('type-content-text').readOnly && d.getElementById('type-content-tag').value==='h1' && parseFloat(sample().style.fontSize)===evaluate('fluidTypePx(4,Number(document.getElementById("clampViewport").value))'));
-    ui.show('fonts',false);input('jFont',"Georgia, 'Times New Roman', serif");input('type-font-role','heading','change');input('fontSystemHeading','verdana','change');await wait();
-    test('Selected font role exposes only its original editable family fields',()=>d.getElementById('jFont').closest('.field').hidden && !d.getElementById('fontSystemOptions').hidden && d.getElementById('type-properties-fonts').contains(d.getElementById('fontSystemHeading')) && evaluate('state.font').includes('Georgia') && evaluate('state.fontSettings.systemHeading')==='verdana');
-    d.getElementById('type-reset-fonts').click();await wait();test('Resetting the heading family preserves the chosen body font',()=>evaluate('state.fontSettings.systemHeading')==='same' && evaluate('state.font').includes('Georgia'));
-    input('jBase',20);input('jLeading',1.8);input('advMeasure',55);input('jPrimary','#246ABC');input('jHeadingTracking',.03);ui.show('body',false);d.getElementById('type-reset-body').click();await wait();
-    test('Body readability reset preserves fonts, palette and heading rhythm',()=>evaluate('state.base===DEFAULT.base && state.leading===DEFAULT.leading && adv.measure===ADV_DEFAULT.measure') && evaluate('state.font').includes('Georgia') && evaluate('state.primary').toUpperCase()==='#246ABC' && evaluate('state.headingTracking')===.03);
-    input('jBase',18);input('jScalePreset','major-third','change');input('clampRole','4','change');await wait();
-    test('Hierarchy uses one editable scale and generated read-only sizes',()=>evaluate('state.ratio')===1.25 && d.getElementById('type-role-size').readOnly && d.getElementById('type-role-size').value===evaluate('fluidTypePx(4,Number(document.getElementById("clampViewport").value))')+'px' && d.getElementById('type-properties-hierarchy').contains(d.getElementById('jRatio')) && d.getElementById('type-browse-hierarchy').contains(d.getElementById('clampRole')) && d.getElementById('clampRole').getBoundingClientRect().height>=44);
-    d.getElementById('type-reset-hierarchy').click();await wait();test('Scale reset preserves body size and the font family',()=>evaluate('state.ratio===DEFAULT.ratio && state.base===18') && evaluate('state.font').includes('Georgia'));
-    input('jBodyTracking',.025);await wait();test('Body rhythm owns one em editor while heading settings stay hidden',()=>!d.getElementById('jBodyTracking').closest('.field').hidden && d.getElementById('jHeadingTracking').closest('.field').hidden && d.getElementById('type-rhythm-role').value==='body');d.getElementById('type-reset-rhythm').click();await wait();test('Body rhythm reset preserves heading tracking',()=>evaluate('state.bodyTracking===DEFAULT.bodyTracking && state.headingTracking===.03'));
-    input('clampFactor',.7);input('clampViewport',390);await wait();test('Responsive stage keeps the original calculator and the shared specimen synchronized',()=>d.getElementById('type-stage-responsive').open && d.getElementById('clampComputed').textContent===sample().style.fontSize && d.getElementById('clampCss').textContent.includes('clamp(') && d.getElementById('type-properties-responsive').contains(d.getElementById('clampGraph')) && d.getElementById('type-browse-responsive').contains(d.getElementById('clampRole')) && ![...d.getElementById('clampGraph').parentElement.childNodes].some(node=>node.nodeType===w.Node.TEXT_NODE && node.textContent.trim()==='null'));
-    d.getElementById('clampReset').click();await wait();test('Responsive reset preserves the selected type scale and rhythm',()=>evaluate('clampConfig.minWidth===CLAMP_DEFAULTS.minWidth && clampConfig.mobileFactor===CLAMP_DEFAULTS.mobileFactor && state.base===18 && state.headingTracking===.03'));
-    ui.show('context',false);input('type-context-choice','button','change');await wait();
-    test('Component context uses real action text and resolved live typography',()=>sample().textContent===previewDoc().querySelector('.ds-button').textContent.trim() && d.getElementById('type-context-family').value===previewWindow().getComputedStyle(previewDoc().querySelector('.ds-button')).fontFamily && d.getElementById('type-context-family').readOnly);
-    ui.show('review',false);const beforeComparison=evaluate('projectJson()'),beforeSize=parseFloat(sample().style.fontSize);input('type-preview-enlarge','2','change');d.getElementById('type-preview-spacing').checked=true;d.getElementById('type-preview-spacing').dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
-    test('Specimen enlargement and user-spacing overrides are comparison-only',()=>Math.abs(parseFloat(sample().style.fontSize)-beforeSize*2)<.1 && sample().style.letterSpacing==='0.12em' && sample().style.wordSpacing==='0.16em' && evaluate('projectJson()')===beforeComparison && d.querySelector('.type-specimen-scroll').tabIndex===0);
-    const saved=JSON.parse(evaluate('projectJson()'));w.importConfig(saved);await wait();test('Import restores saved typography and clears specimen-only comparisons',()=>evaluate('state.base')===18 && evaluate('state.font').includes('Georgia') && d.getElementById('type-preview-enlarge').value==='1' && !d.getElementById('type-preview-spacing').checked && d.getElementById('type-stage-content').open);
-    const beforeAlias=evaluate('projectJson()');input('clampBase',19);await wait();test('Hidden legacy aliases keep their existing model bindings and reveal the canonical editor',()=>evaluate('state.base')===19 && d.getElementById('jBase').value==='19' && d.getElementById('type-stage-body').open && d.getElementById('type-legacy-controls').contains(d.getElementById('clampBase')));
-    w.dssConfigureToken({name:'--heading-letter-spacing',scope:'Light / base'});await wait();test('Configure links reach the owning Typography stage and visible original field',()=>w.DSStudio.activeStage===5 && d.getElementById('type-stage-rhythm').open && d.activeElement===d.getElementById('jHeadingTracking') && !d.getElementById('jHeadingTracking').closest('.field').hidden);
-    const content=w.DSStudio.websiteContent,heading=w.DSStudio.contentArchitecture.nodes().find(node=>node.sourceKey==='id:hero-title'),mode=evaluate('state.sampleMode');const fields=content.describe(heading.sourceKey,mode).fields,next=content.merge(mode,fields.map(field=>({...field,value:'A safe <img src=x onerror=alert(1)> title'})));
-    evaluate('state.designProcess.websiteContent['+JSON.stringify(mode)+']='+JSON.stringify(next)+';apply()');ui.show('content',false);input('type-content-choice','headline','change');await wait();test('Website text edits update Typography specimens as safe text',()=>sample().textContent==='A safe <img src=x onerror=alert(1)> title' && !sample().querySelector('img,script') && d.getElementById('type-content-text').value===sample().textContent);
-    w.dssShowWizardStep(3,false);await wait();const opener=d.querySelector('#process-prototype > summary');opener.focus();const previewBefore=previewDoc();evaluate('state.base=20;apply()');await wait();test('Background typography changes preserve another lesson, preview document and focus',()=>w.DSStudio.activeStage===3 && d.activeElement===opener && previewDoc()===previewBefore && !d.getElementById('studio-section-2').open);
-    w.dssShowWizardStep(5,false);await wait();
-    for(const theme of ['light','dark'])for(const width of [320,390,1440]){app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();await wait();for(const key of keys){ui.show(key,false);await wait();test(theme+' '+key+' Typography browse/properties fit '+width+'px',()=>{const grid=d.querySelector('#type-stage-'+key+' .type-editor-columns'),left=grid.children[0].getBoundingClientRect(),right=grid.children[1].getBoundingClientRect();if(d.documentElement.scrollWidth>w.innerWidth+1)throw Error('Page width '+d.documentElement.scrollWidth+' exceeds '+w.innerWidth);if(!(grid.clientWidth>720?Math.abs(left.top-right.top)<=1:right.top>=left.bottom-1))throw Error('Columns do not align: '+JSON.stringify({width:grid.clientWidth,left:left.toJSON(),right:right.toJSON()}));return [...grid.querySelectorAll('button,select,textarea,input')].filter(el=>el.getBoundingClientRect().height>0).every(el=>{const box=el.getBoundingClientRect();if(!(box.left>=0 && box.right<=w.innerWidth+1 && (el.type==='checkbox' || box.height>=44)))throw Error('Control '+el.id+' '+JSON.stringify(box.toJSON())+' in '+w.innerWidth);return true;});});}}
-    for(const width of [320,1440]){app.style.width=width+'px';await wait();w.dispatchEvent(new w.Event('resize'));d.querySelector('[data-type-go="fonts"]').click();await wait();test(width+'px Typography stage navigation leaves its focused heading below the sticky header',()=>{const title=d.querySelector('#type-stage-fonts > summary'),header=d.querySelector('.topbar');return d.activeElement===title && title.getBoundingClientRect().top>=header.getBoundingClientRect().bottom-1;});}
-    app.style.width='1440px';if(d.documentElement.dataset.theme==='dark')d.getElementById('themeToggle').click();reset();await wait();
+  const get=id=>d.getElementById(id),ui=w.DSStudio.typographyWorkspace;
+  const bar=()=>d.querySelector('[data-property-actions="typography"]'),save=()=>bar().querySelector('button').click(),discard=()=>bar().querySelectorAll('button')[1].click();
+  const draft=(id,value,event='input')=>{ui.revealControl(get(id));get(id).value=value;get(id).dispatchEvent(new w.Event(event,{bubbles:true}));};
+  const visible=id=>get(id).getBoundingClientRect().width>0;
+  const rows=()=>[...get('typeLadder').children];
+  test('Unified workspace has five independent control groups and one shared action bar',()=>get('type-control-pane').querySelectorAll('[data-type-stage]').length===5 && get('typography-workspace').querySelectorAll('[data-property-actions]').length===1 && !!bar());
+  test('Review group and redundant component selector are removed from settings and topic navigation',()=>!get('type-stage-review') && !get('type-context-choice') && !d.querySelector('[data-type-go="review"]') && [...d.querySelectorAll('[data-type-go]')].map(el=>el.dataset.typeGo).join(',')==='content,fonts,body,hierarchy,responsive');
+  test('Selected font details live with the sample and comparisons stay above it',()=>get('type-learning-preview').contains(get('type-context-family')) && get('type-learning-preview').contains(get('type-context-size')) && visible('type-selected-text-details') && get('type-learning-preview').contains(get('type-preview-enlarge')) && get('type-learning-preview').contains(get('type-preview-spacing')));
+  test('Generated CSS is global to Typography immediately below the Learning preview',()=>{const panel=get('type-generated-css'),preview=get('type-learning-preview');return preview.nextElementSibling===panel && panel.parentElement===preview.parentElement && !panel.closest('[data-type-stage]') && panel.contains(get('clampCss')) && panel.contains(get('clampMath')) && !panel.contains(get('clampGraph'));});
+  test('Viewport slider and graph belong to the Responsive typography exploration disclosure',()=>{const exploration=get('clampGraph').closest('.type-reference');return get('type-stage-responsive').contains(exploration) && exploration.contains(get('clampViewport')) && !get('type-learning-preview').contains(get('clampViewport')) && exploration.querySelector('summary').textContent==='Explore the viewport';});
+  test('Viewport exploration and generated CSS headings have no step numbers',()=>[...get('typography-workspace').querySelectorAll('h4,summary')].some(el=>el.textContent==='Explore the viewport') && ![...get('typography-workspace').querySelectorAll('h4,summary')].some(el=>/^[34]\s/.test(el.textContent)));
+  test('Realistic sample and all eight scale rows are visible together',()=>visible('type-realistic-sample') && visible('typeLadder') && rows().length===8);
+  const previewDisclosure=get('type-learning-preview'),previewSummary=get('type-specimen-title'),beforeCollapse=evaluate('projectJson()'),beforeCollapseCss=evaluate('cssExport()');
+  test('Learning preview uses an initially open native disclosure',()=>previewDisclosure.tagName==='DETAILS' && previewDisclosure.open && previewSummary.tagName==='SUMMARY' && previewSummary.parentElement===previewDisclosure);
+  previewSummary.focus();previewSummary.click();await wait();
+  test('Collapsing Learning preview keeps global CSS and the full ladder visible without changing project',()=>!previewDisclosure.open && !visible('type-realistic-sample') && visible('type-generated-css') && visible('typeLadder') && d.activeElement===previewSummary && evaluate('projectJson()')===beforeCollapse);
+  draft('jBase',20);await wait();
+  test('Global CSS follows drafts while Learning preview stays collapsed',()=>!previewDisclosure.open && get('clampCss').textContent.includes('20px') && get('type-css-state').textContent.startsWith('Proposed CSS') && evaluate('projectJson()')===beforeCollapse && evaluate('cssExport()')===beforeCollapseCss);
+  discard();previewSummary.click();await wait();
+  test('Reopening Learning preview restores its saved sample and leaves exports unchanged',()=>previewDisclosure.open && visible('type-realistic-sample') && w.getComputedStyle(d.querySelector('.type-sample-paragraph')).fontSize==='16px' && evaluate('cssExport()')===beforeCollapseCss);
+  previewSummary.click();await wait();ui.show('context',false);await wait();
+  test('Legacy inline-properties route opens the collapsed Learning preview',()=>previewDisclosure.open && visible('type-selected-text-details'));
+  ui.show('fonts',false);ui.show('body',false);ui.show('hierarchy',false);
+  test('Opening topics preserves other open control groups and both previews',()=>['fonts','body','hierarchy'].every(key=>get('type-stage-'+key).open) && visible('type-realistic-sample') && visible('typeLadder'));
+  get('jSaveLocal').click();
+  const baseline=evaluate('projectJson()'),css=evaluate('cssExport()'),html=evaluate('htmlExport()'),storage=w.localStorage.getItem('dss-v27-projects'),savedDoc=previewDoc(),savedHeading=previewWindow().getComputedStyle(savedDoc.querySelector('h1')).fontSize;
+  draft('jBase',20);draft('jRatio',1.3);draft('jLeading',1.8);draft('jHeadingLeading',1.4);draft('advWeight',800,'change');draft('jHeadingTracking',.03);draft('jBodyTracking',.02);draft('advMeasure',55);draft('clampFactor',.75);await wait();
+  test('Shared CSS and calculation follow unsaved base, ratio and fluid limits',()=>get('clampCss').textContent.includes('--text-h1:') && get('clampCss').textContent.includes('20px') && get('clampCss').textContent.includes('1.3^4') && get('clampMinFont').textContent==='42.84px' && get('clampMaxFont').textContent==='57.12px' && get('clampComputed').textContent===get('type-role-size').value && get('type-css-state').textContent.startsWith('Proposed CSS'));
+  draft('clampMinWidth',400);draft('clampMaxWidth',1200);draft('clampViewport',600);await wait();
+  test('Changing the preview viewport preserves proposed responsive controls and updates shared calculations',()=>get('clampMinWidth').value==='400' && get('clampMaxWidth').value==='1200' && get('clampFactor').value==='0.75' && get('clampMath').textContent.includes('1200') && get('clampExplanation').textContent.includes('At 600px') && get('clampComputed').textContent===get('type-role-size').value);
+  draft('clampMinWidth',375);draft('clampMaxWidth',1280);draft('clampViewport',768);await wait();
+  const beforeCopyProject=evaluate('projectJson()'),copyWrites=[],originalClipboard=w.navigator.clipboard;
+  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async value=>copyWrites.push(value)}});
+  get('clampCopy').click();await wait();
+  test('Common Copy CSS copies the current proposed rule without committing it',()=>copyWrites[0]===get('clampCss').textContent && get('clampCopyStatus').textContent==='CSS copied.' && evaluate('projectJson()')===beforeCopyProject);
+  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:originalClipboard});
+  test('Combined Typography draft leaves project, exports and storage unchanged',()=>evaluate('projectJson()')===baseline && evaluate('cssExport()')===css && evaluate('htmlExport()')===html && w.localStorage.getItem('dss-v27-projects')===storage);
+  test('Full website document and typography retain saved values during a draft',()=>previewDoc()===savedDoc && previewWindow().getComputedStyle(savedDoc.querySelector('h1')).fontSize===savedHeading);
+  test('Draft body size, leading, tracking and measure reach the realistic sample immediately',()=>{const p=d.querySelector('.type-sample-paragraph'),s=w.getComputedStyle(p);return s.fontSize==='20px' && s.lineHeight==='36px' && s.letterSpacing==='0.4px' && p.style.maxWidth==='55ch';});
+  test('Draft heading weight, rhythm and fluid scale reach sample and ladder immediately',()=>{const s=w.getComputedStyle(d.querySelector('.type-sample-heading')),ladder=rows().find(row=>row.dataset.typeLevel==='4').querySelector('.sample');return s.fontWeight==='800' && s.fontSize===w.getComputedStyle(ladder).fontSize && Math.abs(parseFloat(s.lineHeight)/parseFloat(s.fontSize)-1.4)<.01 && parseFloat(s.fontSize)>40;});
+  test('Draft size ladder shows each computed PX and REM value',()=>rows().every(row=>{const n=Number(row.dataset.typeLevel),px=evaluate('fluidTypePx('+n+','+get('clampViewport').value+',DSStudio.propertyEditors.draftSnapshot("typography").state,DSStudio.propertyEditors.draftSnapshot("typography").clampConfig)');return row.querySelector('small').textContent.includes(px+'px') && Math.abs(parseFloat(w.getComputedStyle(row.querySelector('.sample')).fontSize)-px)<.01;}));
+  test('Realistic sample contains every labelled typography level at its actual proposed size',()=>{
+    const levels=[...get('type-realistic-sample').querySelectorAll('[data-sample-level]')];
+    return levels.length===8 && new Set(levels.map(el=>el.dataset.sampleLevel)).size===8 && levels.every(el=>{const level=Number(el.dataset.sampleLevel),expected=evaluate('fluidTypePx('+level+','+get('clampViewport').value+',DSStudio.propertyEditors.draftSnapshot("typography").state,DSStudio.propertyEditors.draftSnapshot("typography").clampConfig)');return Math.abs(parseFloat(w.getComputedStyle(el).fontSize)-expected)<.01 && !!el.parentElement.querySelector('.type-sample-role') && el.getBoundingClientRect().height>0;});
+  });
+  for(const measure of [40,85]){
+    draft('advMeasure',measure);await wait();
+    test('Sample header fills the paper width at '+measure+'ch reading measure',()=>{const paper=get('type-realistic-sample'),nav=paper.querySelector('.type-sample-nav'),style=w.getComputedStyle(paper),expected=paper.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);return Math.abs(nav.getBoundingClientRect().width-expected)<1 && w.getComputedStyle(nav).maxWidth==='none';});
   }
-  // End guided Typography checks.
-  // Native Typography headers must retain a visible destination after sibling collapse.
-  {
-    reset();w.dssShowWizardStep(5,false);await wait();const ui=w.DSStudio.typographyWorkspace,keys=['content','fonts','body','hierarchy','rhythm','responsive','context','review'];
-    for(const width of [320,1440]){app.style.width=width+'px';await wait();w.dispatchEvent(new w.Event('resize'));ui.show('content');await wait();const before=evaluate('projectJson()');
-      for(const key of keys.slice(1)){const summary=d.querySelector('#type-stage-'+key+' > summary');summary.scrollIntoView({block:'center',behavior:'instant'});summary.focus({preventScroll:true});summary.click();await wait();test(width+'px opening Typography '+key+' directly keeps its heading visible',()=>{const box=summary.getBoundingClientRect(),header=d.querySelector('.topbar').getBoundingClientRect();return d.activeElement===summary && d.getElementById('type-stage-'+key).open && d.querySelectorAll('[data-type-stage][open]').length===1 && box.top>=header.bottom-1 && box.bottom<=w.innerHeight && evaluate('projectJson()')===before;});}
-      const summary=d.querySelector('#type-stage-review > summary');summary.click();await wait();test(width+'px clicking an open Typography heading still collapses it',()=>!d.getElementById('type-stage-review').open);
-    }
-    app.style.width='1440px';reset();await wait();
+  draft('advMeasure',55);
+  test('Learning preview clearly identifies its proposed versus saved boundary',()=>get('type-specimen-meta').textContent.includes('Proposed typography') && get('type-specimen-meta').textContent.includes('saved values'));
+  for(const group of d.querySelectorAll('[data-type-stage]'))group.open=false;await wait();
+  test('Collapsing every control group retains both previews and all proposed values',()=>visible('type-realistic-sample') && visible('typeLadder') && visible('type-generated-css') && get('jBase').value==='20' && !bar().querySelector('button').disabled);
+  discard();await wait();
+  test('One Discard restores every Typography group and learning preview',()=>evaluate('projectJson()')===baseline && get('jBase').value==='16' && get('jRatio').value==='1.2' && get('advWeight').value==='700' && get('clampFactor').value==='0.82' && w.getComputedStyle(d.querySelector('.type-sample-paragraph')).fontSize==='16px' && bar().querySelector('button').disabled);
+  test('Discard restores the common saved CSS and calculation alongside the preview',()=>get('type-css-state').textContent.startsWith('Saved CSS') && evaluate('cssExport()').includes(get('clampCss').textContent.split('\n').at(-1)) && get('clampComputed').textContent===get('type-role-size').value);
+  draft('jBase',20);draft('jRatio',1.3);draft('jHeadingLeading',1.4);draft('advWeight',800,'change');draft('clampFactor',.75);save();await wait();
+  test('One Save commits values across all Typography groups',()=>evaluate('state.base===20 && state.ratio===1.3 && state.headingLeading===1.4 && adv.weight===800 && clampConfig.mobileFactor===.75') && bar().querySelector('button').disabled);
+  test('Unified Save updates actual website, exports and active local project',()=>evaluate('cssExport()')!==css && previewWindow().getComputedStyle(previewDoc().body).fontSize==='20px' && JSON.parse(w.localStorage.getItem('dss-v27-projects'))[get('jProjects').value].data.base===20 && get('type-specimen-meta').textContent.startsWith('Saved typography'));
+  draft('jBase',21);input('jPrimary','#246789');discard();await wait();
+  test('Typography Discard preserves a concurrent saved Palette change',()=>evaluate('state.base===20 && state.primary==="#246789"') && get('jBase').value==='20');
+  draft('jBase',21);evaluate('state.base=18;apply()');await wait();
+  test('Conflicting source changes invalidate obsolete Typography draft fields',()=>get('jBase').value==='18' && bar().querySelector('button').disabled);
+  draft('jBase',21);evaluate('importConfig(JSON.parse(projectJson()))');await wait();
+  test('Project replacement clears Typography drafts and comparisons',()=>get('jBase').value==='18' && bar().querySelector('button').disabled && get('type-preview-enlarge').value==='1');
+  for(const [level,label]of [[5,'Display'],[4,'H1'],[3,'H2'],[2,'H3'],[1,'H4'],[0,'Body'],[-1,'Small'],[-2,'Extra small']]){
+    get('clampRole').value=String(level);get('clampRole').focus();get('clampRole').dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+    test(label+' selection highlights exactly one ladder row and matching sample',()=>get('typeLadder').querySelectorAll('[aria-current="true"]').length===1 && rows().find(row=>row.dataset.typeLevel===String(level)).getAttribute('aria-current')==='true' && get('type-selected-level').textContent.includes(label) && d.activeElement===get('clampRole') && d.querySelectorAll('#type-realistic-sample [aria-current="true"]').length===1);
+    test(label+' selection keeps all eight sample levels visible and highlights its exact example',()=>{
+      const levels=[...get('type-realistic-sample').querySelectorAll('[data-sample-level]')],selected=get('type-realistic-sample').querySelector('[aria-current="true"]');
+      return levels.length===8 && levels.every(el=>el.getBoundingClientRect().height>0) && selected.closest('[data-sample-level]')?.dataset.sampleLevel===String(level);
+    });
+    test(label+' common CSS uses the current exported size token',()=>evaluate('cssExport()').includes(get('clampCss').textContent.split('\n').at(-1)) && get('type-css-state').textContent.includes('for '+label+'.'));
   }
-  // End native Typography header checks.
-
-  // Typography is established from content before inspecting wireframe sizes.
-  {
-    reset();await wait();const ordered=[0,1,5,2,4,6,7,8,9,10,11,3];
-    test('Course follows Brief, Architecture, Typography, Wireframe and Palette with stable route indices',()=>JSON.stringify(w.DSStudio.stageOrder)===JSON.stringify(ordered) && w.DSStudio.stages[5].id==='typography' && w.DSStudio.stages[2].id==='wireframe' && w.DSStudio.stages[4].id==='palette' && [5,2,4].every((index,position)=>w.DSStudio.stages[index].position===position+2));
-    test('Planning phase is contiguous and contains the working typography baseline',()=>w.DSStudio.orderedStages.slice(0,4).every(stage=>stage.phase==='Plan') && [...d.querySelectorAll('.journey-phase')].map(el=>el.textContent).join('|')==='Plan|Foundations|Apply|Review and deliver');
-    const original=evaluate('projectJson()');w.dssShowWizardStep(1,false);d.getElementById('jNext').click();await wait();
-    test('Architecture Next opens Typography as Step 3',()=>w.DSStudio.activeStage===5 && d.getElementById('jProgress').textContent.includes('Step 3 of 12') && d.getElementById('studio-section-2').open && !d.querySelector('[data-journey-pane="5"]').hidden && d.getElementById('jNext').textContent==='Next: Wireframe' && evaluate('projectJson()')===original);
-    d.getElementById('jBack').click();await wait();test('Typography Previous returns to Architecture',()=>w.DSStudio.activeStage===1 && d.getElementById('jNext').textContent==='Next: Typography' && evaluate('projectJson()')===original);
-    d.getElementById('jNext').click();await wait();
-    input('jFont',"Georgia, 'Times New Roman', serif",'input');input('jBase',18);input('jLeading',1.6);d.getElementById('advMeasure').closest('details').open=true;input('advMeasure',58);await wait();
-    const edited=evaluate('projectJson()'),fontControl=d.getElementById('jFont');
-    d.getElementById('jNext').click();await wait();
-    test('Typography Next opens Wireframe as Step 4 without changing typography',()=>w.DSStudio.activeStage===2 && d.getElementById('jProgress').textContent.includes('Step 4 of 12') && d.getElementById('process-wireframe').open && d.getElementById('jNext').textContent==='Next: Palette' && evaluate('projectJson()')===edited);
-    d.getElementById('jNext').click();await wait();test('Wireframe Next opens Palette as Step 5',()=>w.DSStudio.activeStage===4 && d.getElementById('jProgress').textContent.includes('Step 5 of 12') && d.getElementById('brandPalette').querySelector(':scope > summary h2').textContent==='Step 5 of 12: Palette' && evaluate('projectJson()')===edited);
-    d.getElementById('jBack').click();await wait();test('Palette Previous returns to Wireframe',()=>w.DSStudio.activeStage===2 && evaluate('projectJson()')===edited);
-    for(const mode of ['basic','advanced']){
-      d.getElementById(mode==='basic'?'wf-basic':'wf-advanced').click();await wait();
-      for(const theme of ['light','dark']){input('jTheme',theme);await wait();for(const fidelity of ['low','high']){
-        w.DSStudio.wireframeView.setFidelity(fidelity);await wait();const doc=d.getElementById('wf-page').contentDocument,style=doc.defaultView.getComputedStyle(doc.body);
-        test(mode+' '+theme+' '+fidelity+' wireframe uses the early typography baseline',()=>style.fontFamily.includes('Georgia') && style.fontSize==='18px' && Math.abs(parseFloat(style.lineHeight)-28.8)<.1 && doc.getElementById('wf-source-styles').textContent.includes('--reading-measure: 58ch') && evaluate('state.font').includes('Georgia') && evaluate('state.base')===18);
-      }}
-    }
-    const saved=JSON.parse(evaluate('projectJson()'));w.importConfig(saved);await wait();w.dssShowWizardStep(5,false);await wait();
-    test('Project round trip retains typography values and original control identity at the new visible step',()=>d.getElementById('jFont')===fontControl && fontControl.value.includes('Georgia') && d.getElementById('jBase').value==='18' && d.getElementById('jLeading').value==='1.6' && d.getElementById('advMeasure').value==='58' && d.getElementById('jProgress').textContent.includes('Step 3 of 12'));
-    input('tokenSearch','--font-size-base');await wait();test('Typography token source metadata uses visible Step 3',()=>[...d.querySelectorAll('#tokenTableBody tr')].find(row=>row.querySelector('td:nth-child(2) code')?.textContent==='--font-size-base').textContent.includes('wizard step 3'));
-    w.dssConfigureToken({name:'--font-size-base',scope:'Light / base'});await wait();test('Existing typography Configure route reaches its original control',()=>w.DSStudio.activeStage===5 && d.activeElement===d.getElementById('jBase'));
-    for(const width of [320,1440]){
-      app.style.width=width+'px';await wait();w.dssShowWizardStep(0,false);await wait();const before=evaluate('projectJson()');
-      for(const [position,index]of ordered.entries()){if(position)d.getElementById('jNext').click();await wait();test(width+'px Next follows reordered '+(position+1)+' '+w.DSStudio.stages[index].label,()=>w.DSStudio.activeStage===index && d.getElementById('jProgress').textContent.startsWith('Step '+(position+1)+' of 12') && evaluate('projectJson()')===before);}
-    }
-    app.style.width='1440px';w.DSStudio.wireframeView.setFidelity('high');reset();await wait();
+  get('type-stage-hierarchy').open=false;rows().find(row=>row.dataset.typeLevel==='2').click();await wait();
+  test('Picking a ladder row reveals its owning group without hiding either preview',()=>get('clampRole').value==='2' && get('type-stage-hierarchy').open && visible('type-realistic-sample') && visible('typeLadder'));
+  rows().find(row=>row.dataset.typeLevel==='-1').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await wait();
+  test('Ladder selection supports keyboard activation',()=>get('clampRole').value==='-1' && get('type-stage-body').open);
+  d.querySelector('.type-sample-heading button').click();await wait();
+  test('Picking realistic heading connects it to hierarchy settings',()=>get('type-stage-hierarchy').open && get('clampRole').value==='4');
+  for(const level of [5,4,3,2,1,0,-1,-2]){
+    const control=get('type-realistic-sample').querySelector('[data-sample-level="'+level+'"] button');control.click();await wait();
+    test('Picking sample level '+level+' selects its matching hierarchy role',()=>get('clampRole').value===String(level) && control.getAttribute('aria-current')==='true');
+    test('Inline computed details follow selected sample level '+level,()=>{const style=w.getComputedStyle(get('type-specimen-text'));return get('type-context-family').value===style.fontFamily && get('type-context-size').value===style.fontSize+' / '+style.lineHeight+' / '+style.fontWeight;});
   }
-  // End early typography checks.
-  test('No typography JavaScript errors',()=>!w.__reviewErrors.length);
+  const beforeButtonShortcut=evaluate('projectJson()');get('type-edit-button').click();await wait();
+  test('Inline button shortcut opens the original Button typography control without changing project',()=>{const checks={adjacent:get('type-edit-button').parentElement.contains(d.querySelector('.type-sample-cta')),section:get('buttonDesignLab').open,focus:d.activeElement===get('bdWeight'),project:evaluate('projectJson()')===beforeButtonShortcut};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({...checks,active:d.activeElement?.id,stage:w.DSStudio.activeStage}));return true;});
+  w.dssShowWizardStep(5,false);await wait();
+  for(const [fragment,target]of [['type-stage-review','type-selected-text-details'],['type-stage-context','type-selected-text-details'],['type-context-choice','type-content-choice']]){
+    w.location.hash=fragment;await wait();
+    test('Legacy '+fragment+' fragment reveals its inline replacement',()=>get('studio-section-2').open && visible(target) && d.activeElement===get(target));
+  }
+  w.location.hash='';await wait();
+  const comparisonProject=evaluate('projectJson()'),comparisonCss=evaluate('cssExport()'),baseSize=parseFloat(w.getComputedStyle(d.querySelector('.type-sample-heading')).fontSize);
+  get('type-preview-enlarge').value='2';get('type-preview-enlarge').dispatchEvent(new w.Event('change',{bubbles:true}));await wait();
+  test('200 percent enlargement affects realistic sample and ladder without saving it',()=>Math.abs(parseFloat(w.getComputedStyle(d.querySelector('.type-sample-heading')).fontSize)-baseSize*2)<.01 && evaluate('projectJson()')===comparisonProject && evaluate('cssExport()')===comparisonCss);
+  get('type-preview-spacing').click();await wait();
+  test('User spacing comparison affects both learning previews without changing saved data',()=>{const sample=w.getComputedStyle(d.querySelector('.type-sample-paragraph')),ladder=w.getComputedStyle(rows()[0].querySelector('.sample'));return Math.abs(parseFloat(sample.letterSpacing)/parseFloat(sample.fontSize)-.12)<.001 && Math.abs(parseFloat(ladder.wordSpacing)/parseFloat(ladder.fontSize)-.16)<.001 && evaluate('projectJson()')===comparisonProject;});
+  get('type-preview-enlarge').value='1';get('type-preview-enlarge').dispatchEvent(new w.Event('change',{bubbles:true}));get('type-preview-spacing').click();
+  for(const id of ['jBase','jRatio','jHeadingTracking','clampMinWidth','fontGoogleHeading']){
+    w.dssRevealSection(id,false);await wait();test('Configure route reveals original '+id+' control',()=>get(id).closest('[data-type-stage]').open && get('typography-workspace').contains(get(id)));
+  }
+  ui.show('rhythm',false);ui.show('context',false);await wait();
+  test('Legacy topic aliases reveal hierarchy and inline text properties',()=>get('type-stage-hierarchy').open && visible('type-selected-text-details') && !get('type-stage-review'));
+  reset();w.dssShowWizardStep(5,false);await wait();
+  for(const wording of ['Learners <img src=x onerror="alert(1)"> & next steps','']){
+    const fields=w.DSStudio.websiteContent.describe('id:hero-title','advanced').fields;
+    const changes=fields.map(field=>({...field,value:wording}));
+    w.__typeWording=w.DSStudio.websiteContent.merge('advanced',changes);
+    evaluate('state.designProcess.websiteContent.advanced=window.__typeWording;apply()');await wait();
+    test('Realistic sample and ladder preserve inert Architecture wording '+(wording?'with markup':'when blank'),()=>d.querySelector('.type-sample-heading').textContent===wording && !d.querySelector('.type-sample-heading img') && rows().filter(row=>Number(row.dataset.typeLevel)>0).every(row=>row.querySelector('.sample').textContent===wording));
+  }
+  reset();w.dssShowWizardStep(5,false);await wait();
+  for(const mode of ['basic','advanced']){
+    get(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();await wait();
+    const source=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
+    test(mode+' realistic sample uses the real introduction rather than an earlier eyebrow label',()=>d.querySelector('.type-sample-paragraph').textContent===source.querySelector(mode==='basic'?'.hero .intro':'.sample-lead').textContent);
+    test(mode+' sample card uses body copy rather than a category label',()=>d.querySelector('.type-sample-copy').textContent===source.querySelector('.card > p:not(.eyebrow):not(.sample-eyebrow)').textContent);
+  }
+  const resetBaseline=evaluate('projectJson()');
+  draft('jBase',20);draft('jRatio',1.3);draft('jHeadingTracking',.03);draft('jBodyTracking',.02);draft('advWeight',800,'change');
+  test('Named scale remains Custom for a proposed ratio across group navigation',()=>get('jScalePreset').value==='custom' && (ui.show('review',false),get('jRatio').value==='1.3'));
+  get('type-reset-body').click();await wait();
+  test('Body reset stages owned defaults and preserves heading proposals',()=>get('jBase').value==='16' && get('jBodyTracking').value==='0' && get('jHeadingTracking').value==='0.03' && get('advWeight').value==='800' && evaluate('projectJson()')===resetBaseline);
+  get('type-reset-heading').click();await wait();
+  test('Heading reset preserves the proposed ratio and project boundary',()=>get('jRatio').value==='1.3' && get('jHeadingTracking').value===String(evaluate('DEFAULT.headingTracking')) && get('advWeight').value===String(evaluate('ADV_DEFAULT.weight')) && evaluate('projectJson()')===resetBaseline);
+  get('type-reset-hierarchy').click();await wait();
+  test('Scale reset restores the named preset without saving',()=>get('jRatio').value==='1.2' && get('jScalePreset').value==='minor-third' && evaluate('projectJson()')===resetBaseline);
+  discard();await wait();
+  test('Default sample stays compact with H3 and H4 sharing one row',()=>{const paper=get('type-realistic-sample'),items=[...paper.querySelector('.type-sample-supporting').children];return paper.getBoundingClientRect().height<850 && Math.abs(items[0].getBoundingClientRect().top-items[1].getBoundingClientRect().top)<1;});
+  let draftFontMode='ok';const head=d.head,append=head.append;
+  head.append=function(...nodes){for(const link of nodes)if(link.tagName==='LINK' && link.href?.startsWith('https://fonts.')){link.href=link.rel==='stylesheet'?'/__font_fixture__'+new URL(link.href).search+'&mode='+draftFontMode:w.location.origin;}return append.apply(this,nodes);};
+  const beforeFonts=evaluate('projectJson()'),beforeFontCss=evaluate('cssExport()');
+  draft('fontSource','google','change');draft('fontGoogleBody','literata','change');await wait(400);
+  test('Proposed curated font loads into a separate learning-preview stylesheet',()=>!!d.querySelector('[data-dss-learning-font][rel="stylesheet"]') && get('type-learning-font-status').textContent.includes('loaded') && w.getComputedStyle(d.querySelector('.type-sample-paragraph')).fontFamily.includes('Literata'));
+  test('Draft font loading preserves saved links, website, storage model and exports',()=>!d.querySelector('[data-dss-font]') && !previewDoc().querySelector('[data-dss-font]') && evaluate('projectJson()')===beforeFonts && evaluate('cssExport()')===beforeFontCss && !previewWindow().getComputedStyle(previewDoc().body).fontFamily.includes('Literata'));
+  get('type-reset-fonts').click();await wait(250);
+  test('Selected family reset uses the proposed Google source without committing',()=>get('fontSource').value==='google' && get('fontGoogleBody').value==='inter' && evaluate('projectJson()')===beforeFonts);
+  const stale=d.querySelector('[data-dss-learning-font][rel="stylesheet"]').onload;discard();await wait();await stale();await wait();
+  test('Discard removes proposed font connections and ignores late completion',()=>!d.querySelector('[data-dss-learning-font]') && get('fontSource').value==='system' && get('type-learning-font-status').textContent.includes('System fonts') && evaluate('projectJson()')===beforeFonts);
+  draftFontMode='error';draft('fontSource','google','change');await wait(400);
+  test('Failed proposed font loads show readable fallback and retry without a model write',()=>get('type-learning-font-status').textContent.includes('could not load') && w.getComputedStyle(d.querySelector('.type-sample-paragraph')).fontFamily.includes('Arial') && evaluate('projectJson()')===beforeFonts);
+  discard();head.append=append;await wait();
+  for(const theme of ['light','dark'])for(const width of [320,390,768,1440]){
+    app.style.width=width+'px';evaluate("state.theme='"+theme+"';apply()");w.dssShowWizardStep(5,false);for(const group of d.querySelectorAll('[data-type-stage]'))group.open=true;await wait(200);
+    test(theme+' '+width+'px unified sample and scale fit without page overflow',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && visible('type-realistic-sample') && visible('typeLadder'));
+    test(theme+' '+width+'px unified controls and shared actions retain accessible target sizes',()=>[...get('typography-workspace').querySelectorAll('select,input:not([type=checkbox]),textarea,button')].filter(el=>el.getBoundingClientRect().width>0).every(el=>{const box=el.getBoundingClientRect();return box.height>=43.9 && box.left>=0 && (el.closest('.type-specimen-scroll') || box.right<=w.innerWidth+1); }));
+  }
+  draft('jBase',19);const beforePreview=evaluate('projectJson()'),previewCss=evaluate('cssExport()'),docBefore=previewDoc();bar().querySelector('[data-property-preview]').click();await wait();
+  test('Shared saved-page preview retains Typography source, draft and keyboard focus',()=>get('studio-section-2').open && get('studio-section-4').open && d.activeElement===get('previewShell') && get('jBase').value==='19' && evaluate('projectJson()')===beforePreview && evaluate('cssExport()')===previewCss && previewDoc()===docBefore);
+  test('No Typography JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Focused harness completed',pass:false,error:String(error.stack||error)});}
   finish();
 };
-</script>'''
-
+</script>
+'''
 
 if __name__ == '__main__':
     raise SystemExit(run_review(HARNESS))

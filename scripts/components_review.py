@@ -31,7 +31,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   try {
   test('Independent components startup has no JavaScript errors',()=>!w.__reviewErrors.length);
@@ -77,10 +77,10 @@ app.onload=async()=>{
   input('advState','loading','change'); await wait();
   test('State Explorer loading uses the same progress cue and full-opacity text', () => d.getElementById('advDemoButton').textContent==='Processing…' && w.getComputedStyle(d.getElementById('advDemoButton')).opacity==='1' && w.getComputedStyle(d.getElementById('advDemoButton'),'::after').content==='""');
   input('bdState','loading');
-  d.getElementById('advReduce').checked=true; d.getElementById('advReduce').dispatchEvent(new w.Event('change',{bubbles:true})); await wait();
+  d.getElementById('advReduce').checked=true; d.getElementById('advReduce').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('advReduce')); await wait();
   test('Reduce demo animations stops progress in the laboratory and State Explorer', () => ['#bdSingle .bd-button','#advDemoButton'].every(selector=>w.getComputedStyle(d.querySelector(selector),'::after').animationName==='none'));
   test('Reduced demo motion also reaches the generated page and CSS export', () => previewWindow().getComputedStyle(previewDoc().querySelector('.sample-selected-action'),'::after').animationName==='none' && evaluate('cssExport()').includes('--button-progress-animation: none'));
-  d.getElementById('advReduce').checked=false; d.getElementById('advReduce').dispatchEvent(new w.Event('change',{bubbles:true})); await wait();
+  d.getElementById('advReduce').checked=false; d.getElementById('advReduce').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('advReduce')); await wait();
   test('Restoring demo animations preserves the platform reduced-motion preference', () => w.getComputedStyle(d.querySelector('#bdSingle .bd-button'),'::after').animationName===(w.matchMedia('(prefers-reduced-motion: reduce)').matches?'none':'dss-button-progress'));
   input('advState','selected','change'); await wait();
   test('State Explorer selection has a checkmark and nearby state guidance', () => w.getComputedStyle(d.getElementById('advDemoButton'),'::before').content==='""' && d.getElementById('advButtonHelp').textContent.includes('Keep the label'));

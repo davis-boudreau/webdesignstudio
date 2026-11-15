@@ -30,7 +30,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   // Blob/File reads use real I/O. A pending local request prevents Chrome's
   // virtual clock from expiring an artificial timer before that I/O completes.
@@ -38,7 +38,7 @@ app.onload=async()=>{
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -117,10 +117,11 @@ app.onload=async()=>{
   test('Custom IA survives mode changes while unlinked sitemap entries remain hidden', () => d.getElementById('plan-pages').value===customSitemap && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && d.querySelector('#process-ia .process-map').textContent.includes('Articles'));
   evaluate('importConfig('+customSitemapExport+')'); await wait();
   test('Custom sitemap survives JSON round trip while Basic omits unlinked entries', () => d.getElementById('plan-pages').value===customSitemap && !previewDoc().querySelector('#sitemap').textContent.includes('Articles') && previewDoc().querySelectorAll('#sitemap a').length===1);
+  const sitemapBeforeInvalid=evaluate('htmlExport()');
   input('plan-pages','<img src=x onerror=alert(1)> > <script>bad<\/script>'); await wait();
   test('Sitemap labels cannot inject HTML or arbitrary destinations', () => {
     const page=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
-    return !page.querySelector('#sitemap img, #sitemap script, #sitemap a') && !page.querySelector('#sitemap').textContent.includes('onerror=alert(1)') && page.querySelector('#sitemap').textContent.includes('No sitemap destinations selected') && d.getElementById('plan-pages').validationMessage.includes('three information levels') && !d.querySelector('#process-ia .process-map img, #process-ia .process-map script');
+    return !page.querySelector('#sitemap img, #sitemap script') && !page.querySelector('#sitemap').textContent.includes('onerror=alert(1)') && evaluate('htmlExport()')===sitemapBeforeInvalid && d.getElementById('plan-pages').validationMessage.includes('three information levels') && !d.querySelector('#process-ia .process-map img, #process-ia .process-map script');
   });
   input('plan-pages',''); await wait();
   test('Empty Architecture has an honest empty sitemap and keeps real footer navigation', () => previewDoc().querySelector('#sitemap').textContent.includes('No sitemap destinations selected') && previewDoc().querySelector('footer .footer-brand[href="#home"]'));
@@ -366,7 +367,7 @@ app.onload=async()=>{
   d.getElementById('dockModeAdvanced').click();await wait();
   test('Sample switches preserve a custom three-level outline',()=>evaluate('DSStudio.process.currentPlan().pages')===customThree && iaNode('Duration').depth===3);
   input('plan-pages','Root > Branch > Detail > Too deep');await wait();
-  test('Raw fourth-level lines are visibly flagged and excluded from rendered IA',()=>!d.getElementById('plan-pages').checkValidity() && d.getElementById('plan-sample-status').textContent.includes('three information levels') && iaNodes().length===0);
+  test('Raw fourth-level lines are visibly flagged and excluded from rendered IA',()=>!d.getElementById('plan-pages').checkValidity() && d.getElementById('plan-sample-status').textContent.includes('three information levels') && evaluate('state.designProcess.pages')===customThree && !iaNodes().some(node=>node.label==='Too deep'));
   const bulkThree=Array.from({length:64},(_,i)=>'Group '+i+' > Item '+i+' > Detail '+i).join('\n');input('plan-pages',bulkThree);await wait();iaChoice('Detail 63').click();await wait();
   test('Three-level legacy line limits retain all 192 derived entries and choices',()=>iaNodes().length===192 && evaluate('state.designProcess.pages')===bulkThree && iaNode('Detail 63').includeInSitemap && evaluate('state.designProcess.iaEntries.advanced.length')===192 && d.getElementById('plan-pages').checkValidity());
   input('plan-pages','Root > Branch > <img src=x onerror=alert(1)');await wait();

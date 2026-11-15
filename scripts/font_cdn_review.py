@@ -41,7 +41,7 @@ app.onload=async()=>{
     d.getElementById('fontFallback').click();await wait(50);
     test('Live fallback comparison changes preview families while preserving exports',()=>!view.getComputedStyle(doc.body).fontFamily.includes('Inter')&&view.getComputedStyle(doc.querySelector('h1')).fontFamily.includes('Georgia')&&w.eval('htmlExport()')===html&&w.eval('cssExport()')===css);
     for(const [id,value] of [['fontGoogleBody','source-sans-3'],['fontGoogleHeading','same']]){
-      d.getElementById(id).value=value;d.getElementById(id).dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById(id).value=value;d.getElementById(id).dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById(id));
     }
     d.getElementById('fontFallback').click();
     for(let attempt=0;attempt<140 && d.getElementById('fontLoadStatus').dataset.state==='loading';attempt++)await wait(80);

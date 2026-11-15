@@ -31,7 +31,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   const revealAll = () => {revealArchitecture();d.querySelectorAll('#main > .studio-section, .step-more').forEach(section => {section.hidden=false;section.open=true;});};
   // Blob/File reads use real I/O. A pending local request prevents Chrome's
@@ -40,7 +40,7 @@ app.onload=async()=>{
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -147,7 +147,7 @@ app.onload=async()=>{
   test('Website brief example and wizard labels render cleanly with preserved saved fields', () => d.querySelector('#process-brief .process-brief-example h4').textContent==='Example: a small café website' && d.querySelector('#process-brief .process-brief-example').textContent.includes("today's opening hours") && d.querySelector('label[for="plan-goal"]').textContent==='1. Purpose' && d.querySelector('label[for="plan-constraints"]').textContent==='5. Design and requirements');
   test('Brief wizard has the seven approved lesson questions in the same order with matching labels and prompts', () => {
     const controls=[...d.querySelectorAll('#plan-brief-fields [data-process-field]')], lesson=[...d.querySelectorAll('#process-brief .process-brief-guide li')];
-    return JSON.stringify(controls.map(el=>el.dataset.processField))===JSON.stringify(['goal','audience','scope','content','constraints','delivery','success']) && controls.every((el,i)=>d.querySelector('label[for="'+el.id+'"]').textContent===(i+1)+'. '+lesson[i].querySelector('strong').textContent.slice(0,-1) && lesson[i].textContent.trim().endsWith(d.getElementById(el.getAttribute('aria-describedby')).textContent));
+    return JSON.stringify(controls.map(el=>el.dataset.processField))===JSON.stringify(['goal','audience','scope','content','constraints','delivery','success']) && controls.every((el,i)=>d.querySelector('label[for="'+el.id+'"]').textContent===(i+1)+'. '+lesson[i].querySelector('strong').textContent.slice(0,-1) && lesson[i].textContent.trim().endsWith(d.getElementById(el.getAttribute('aria-describedby').split(' ')[0]).textContent));
   });
   previewDoc().getElementById('working-together').open=true;
   input('plan-audience','Draft audience'); await wait();

@@ -1,0 +1,112 @@
+<div id="typography-lab-wireframe" aria-label="Proposed Typography Lab wireframe">
+  <style>
+    #typography-lab-wireframe { --lab-bg:light-dark(#ffffff,#171b21); --lab-ink:light-dark(#20252b,#eef1f5); --lab-line:light-dark(#aab0b8,#65707d); --lab-soft:light-dark(#f3f4f6,#252c35); --lab-selected:light-dark(#e4e9ed,#394652); font:14px/1.5 system-ui,sans-serif; color:var(--lab-ink); color-scheme:light dark; }
+    #typography-lab-wireframe * { box-sizing:border-box; }
+    #typography-lab-wireframe .lab-window { background:var(--lab-bg); border:1px solid var(--lab-line); border-radius:8px; }
+    #typography-lab-wireframe .lab-header { padding:18px 20px; padding-inline-end:100px; border-bottom:1px solid var(--lab-line); }
+    #typography-lab-wireframe h2,#typography-lab-wireframe h3,#typography-lab-wireframe p { margin:0; }
+    #typography-lab-wireframe h2 { font-size:21px; font-weight:600; }
+    #typography-lab-wireframe h3 { font-size:15px; font-weight:600; }
+    #typography-lab-wireframe .lab-kicker { font-size:12px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px; }
+    #typography-lab-wireframe .lab-layout { display:grid; grid-template-columns:260px minmax(0,1fr); }
+    #typography-lab-wireframe .lab-controls { padding:20px; border-inline-end:1px solid var(--lab-line); min-width:0; }
+    #typography-lab-wireframe details { padding:13px 0; border-bottom:1px solid var(--lab-line); }
+    #typography-lab-wireframe summary { font-weight:600; min-height:30px; cursor:pointer; }
+    #typography-lab-wireframe label { display:block; margin-top:10px; }
+    #typography-lab-wireframe input,#typography-lab-wireframe select { width:100%; font:inherit; color:var(--lab-ink); accent-color:var(--lab-ink); }
+    #typography-lab-wireframe select { background:var(--lab-bg); border:1px solid var(--lab-line); border-radius:4px; min-height:38px; padding:6px; }
+    #typography-lab-wireframe input[type=range] { margin:7px 0; }
+    #typography-lab-wireframe button { font:inherit; color:var(--lab-ink); background:var(--lab-bg); border:1px solid var(--lab-line); border-radius:4px; padding:8px 10px; min-height:38px; cursor:pointer; }
+    #typography-lab-wireframe .lab-save { background:var(--lab-ink); color:var(--lab-bg); }
+    #typography-lab-wireframe .lab-actions { display:flex; gap:8px; flex-wrap:wrap; padding-top:18px; }
+    #typography-lab-wireframe .lab-page-button { width:100%; }
+    #typography-lab-wireframe .lab-status { font-size:12px; margin-top:10px; }
+    #typography-lab-wireframe .lab-preview { padding:20px; min-width:0; }
+    #typography-lab-wireframe .lab-tools { display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:15px; }
+    #typography-lab-wireframe .lab-tools label { margin:0; display:flex; align-items:center; gap:8px; }
+    #typography-lab-wireframe .lab-tools select { width:auto; max-width:100%; }
+    #typography-lab-wireframe .lab-sample { border:1px dashed var(--lab-line); padding:22px; margin-top:10px; overflow-wrap:anywhere; }
+    #typography-lab-wireframe .lab-nav { display:flex; justify-content:space-between; gap:12px; font-size:12px; padding-bottom:17px; border-bottom:1px solid var(--lab-line); }
+    #typography-lab-wireframe .lab-sample-heading { font-size:var(--lab-h1); line-height:1.12; margin:18px 0 12px; font-weight:600; }
+    #typography-lab-wireframe .lab-sample-copy { font-size:var(--lab-body); line-height:var(--lab-leading); margin-bottom:16px; max-width:55ch; }
+    #typography-lab-wireframe .lab-sample-action { display:inline-block; padding:8px 12px; background:var(--lab-soft); border:1px dashed var(--lab-line); font-size:var(--lab-body); }
+    #typography-lab-wireframe [data-selected=true] { outline:2px solid var(--lab-ink); outline-offset:4px; background:var(--lab-selected); }
+    #typography-lab-wireframe .lab-scale { margin-top:24px; }
+    #typography-lab-wireframe .lab-level { display:grid; grid-template-columns:105px minmax(0,1fr); gap:12px; align-items:center; padding:10px 8px; margin-top:8px; border-bottom:1px solid var(--lab-line); overflow-wrap:anywhere; }
+    #typography-lab-wireframe .lab-level small { display:block; font-size:12px; }
+    #typography-lab-wireframe .lab-level-text { line-height:1.12; }
+    #typography-lab-wireframe .lab-selected-word { font-weight:600; }
+    #typography-lab-wireframe .lab-note { font-size:12px; margin-top:10px; }
+    #typography-lab-wireframe dialog { background:var(--lab-bg); color:var(--lab-ink); border:1px solid var(--lab-line); border-radius:8px; max-width:min(90%,650px); padding:20px; }
+    #typography-lab-wireframe dialog::backdrop { background:light-dark(#20252b77,#000000aa); }
+    #typography-lab-wireframe .lab-narrow .lab-sample { max-width:390px; margin-inline:auto; }
+    @media(max-width:680px) { #typography-lab-wireframe .lab-layout { grid-template-columns:minmax(0,1fr); } #typography-lab-wireframe .lab-controls { border-inline-end:0; border-bottom:1px solid var(--lab-line); } #typography-lab-wireframe .lab-level { grid-template-columns:80px minmax(0,1fr); } }
+    @media(pointer:coarse) { #typography-lab-wireframe button,#typography-lab-wireframe select,#typography-lab-wireframe summary,#typography-lab-wireframe input { min-height:44px; } }
+  </style>
+  <section class="lab-window">
+    <header class="lab-header"><div class="lab-kicker">Proposed workspace · wireframe</div><h2>Typography Lab</h2></header>
+    <div class="lab-layout">
+      <aside class="lab-controls" aria-label="Typography controls">
+        <div class="lab-kicker">One control pane</div>
+        <details><summary>Content to explore</summary><p>Website heading, paragraph and action label</p></details>
+        <details><summary>Font families</summary><label>Body and heading family<select data-control="font"><option value="system-ui,sans-serif">System sans</option><option value="Georgia,serif">Serif</option></select></label></details>
+        <details open><summary>Readable body text</summary>
+          <label>Body size <output data-value="base">16 px</output><input data-control="base" type="range" min="14" max="22" step="1" value="16"></label>
+          <label>Line height <output data-value="leading">1.55</output><input data-control="leading" type="range" min="1.3" max="1.9" step="0.05" value="1.55"></label>
+        </details>
+        <details open><summary>Hierarchy and emphasis</summary>
+          <label>Scale ratio <output data-value="ratio">1.20</output><input data-control="ratio" type="range" min="1.05" max="1.5" step="0.01" value="1.2"></label>
+          <label>Typography level<select data-control="level"><option>Display</option><option selected>H1</option><option>H2</option><option>H3</option><option>H4</option><option>Body</option><option>Small</option><option>Extra small</option></select></label>
+        </details>
+        <details><summary>Responsive typography</summary><p>Fluid limits · mobile heading size</p></details>
+        <details><summary>Test and review</summary><p>Components · long text · fallback fonts · keyboard review</p></details>
+        <div class="lab-actions"><button type="button" class="lab-save" data-action="save">Save</button><button type="button" data-action="discard">Discard</button><button type="button" class="lab-page-button" data-action="preview">Responsive page preview</button></div>
+        <p class="lab-status" role="status" data-status>Saved values · sample and scale match</p>
+      </aside>
+      <main class="lab-preview" aria-label="Typography learning previews">
+        <div class="lab-tools"><div class="lab-kicker">See changes instantly</div><label>Sample width<select data-width><option value="wide">Wide</option><option value="narrow">390 px</option></select></label></div>
+        <section aria-labelledby="lab-sample-title"><h3 id="lab-sample-title">In-context sample</h3>
+          <div class="lab-sample" data-sample>
+            <div class="lab-nav"><span>YOUR WEBSITE</span><span>About · Learn · Contact</span></div>
+            <div class="lab-sample-heading" data-heading>Design for people</div>
+            <p class="lab-sample-copy" data-copy>Clear words and thoughtful typography help people find their way. Compare the heading, paragraph and action as you change the settings.</p>
+            <span class="lab-sample-action">Explore the guide</span>
+          </div>
+        </section>
+        <section class="lab-scale" aria-labelledby="lab-scale-title"><h3 id="lab-scale-title">Complete size ladder</h3><div data-ladder></div><p class="lab-note">Selected level is highlighted here and in the sample.</p></section>
+      </main>
+    </div>
+  </section>
+  <dialog data-dialog aria-label="Saved website preview"><h3>Saved website preview</h3><div class="lab-sample" data-saved-sample></div><div class="lab-actions"><button type="button" data-close>Close preview</button></div></dialog>
+  <script>
+    (()=>{
+      const root=document.getElementById('typography-lab-wireframe');
+      const defaults={base:16,leading:1.55,ratio:1.2,font:'system-ui,sans-serif',level:'H1',width:'wide'};
+      const restored=window.openai?.widgetState?.modelContent;
+      const initial=restored && typeof restored==='object'?restored:{};
+      let draft={...defaults},saved={...defaults};
+      for(const key of ['base','leading','ratio'])if(typeof initial[key]==='number' && Number.isFinite(initial[key]))draft[key]=Math.min(key==='base'?22:key==='leading'?1.9:1.5,Math.max(key==='base'?14:key==='leading'?1.3:1.05,initial[key]));
+      if(['H1','H2','H3','H4','Body','Small','Extra small','Display'].includes(initial.level))draft.level=initial.level;
+      const levels=[['Display',5],['H1',4],['H2',3],['H3',2],['H4',1],['Body',0],['Small',-1],['Extra small',-2]];
+      const ladder=root.querySelector('[data-ladder]');
+      for(const [name,step]of levels){const row=document.createElement('div');row.className='lab-level';row.dataset.level=name;const label=document.createElement('div'),caption=document.createElement('span'),value=document.createElement('small'),selected=document.createElement('small'),text=document.createElement('div');caption.textContent=name;value.dataset.size='';selected.className='lab-selected-word';selected.textContent='Selected level';selected.dataset.mark='';text.className='lab-level-text';text.textContent=name==='Body'?'Readable paragraph text':name==='Small'||name==='Extra small'?'Supporting text':'Design for people';label.append(caption,value,selected);row.append(label,text);ladder.append(row);}
+      const persist=()=>window.openai?.setWidgetState?.({modelContent:{base:draft.base,leading:draft.leading,ratio:draft.ratio,level:draft.level}})?.catch(()=>{});
+      function render(){
+        root.style.setProperty('--lab-body',draft.base+'px');root.style.setProperty('--lab-h1',(draft.base*draft.ratio**4).toFixed(1)+'px');root.style.setProperty('--lab-leading',draft.leading);
+        root.querySelector('[data-sample]').style.fontFamily=draft.font;
+        for(const [name,step]of levels){const row=[...ladder.children].find(el=>el.dataset.level===name),size=draft.base*draft.ratio**step,selected=name===draft.level;row.querySelector('[data-size]').textContent=size.toFixed(1)+' px · '+(size/16).toFixed(2)+' rem';row.querySelector('.lab-level-text').style.fontSize=size.toFixed(1)+'px';row.querySelector('.lab-level-text').style.fontFamily=draft.font;row.dataset.selected=String(selected);row.querySelector('[data-mark]').hidden=!selected;}
+        root.querySelector('[data-heading]').dataset.selected=String(draft.level==='H1');root.querySelector('[data-copy]').dataset.selected=String(draft.level==='Body');
+        root.querySelector('[data-value="base"]').textContent=draft.base+' px';root.querySelector('[data-value="ratio"]').textContent=draft.ratio.toFixed(2);root.querySelector('[data-value="leading"]').textContent=draft.leading.toFixed(2);
+        for(const control of root.querySelectorAll('[data-control]'))control.value=draft[control.dataset.control];
+        root.querySelector('.lab-preview').classList.toggle('lab-narrow',draft.width==='narrow');
+        const dirty=['base','leading','ratio','font'].some(key=>draft[key]!==saved[key]);root.querySelector('[data-status]').textContent=dirty?'Unsaved changes · learning previews update live':'Saved values · sample and scale match';
+      }
+      root.addEventListener('input',event=>{const key=event.target.dataset.control;if(!key)return;draft[key]=['base','leading','ratio'].includes(key)?Number(event.target.value):event.target.value;render();persist();});
+      root.querySelector('[data-width]').addEventListener('change',event=>{draft.width=event.target.value;render();});
+      root.querySelector('[data-action="save"]').addEventListener('click',()=>{saved={...draft};render();persist();});
+      root.querySelector('[data-action="discard"]').addEventListener('click',()=>{draft={...saved,level:draft.level,width:draft.width};render();persist();});
+      const dialog=root.querySelector('[data-dialog]');root.querySelector('[data-action="preview"]').addEventListener('click',()=>{const area=root.querySelector('[data-saved-sample]');area.replaceChildren();const heading=document.createElement('div'),copy=document.createElement('p');heading.textContent='Design for people';heading.style.fontSize=(saved.base*saved.ratio**4).toFixed(1)+'px';heading.style.lineHeight='1.12';copy.textContent='The full website uses saved typography. Draft changes stay in the learning previews until Save.';copy.style.fontSize=saved.base+'px';copy.style.lineHeight=saved.leading;area.style.fontFamily=saved.font;area.append(heading,copy);dialog.showModal();});root.querySelector('[data-close]').addEventListener('click',()=>dialog.close());
+      render();
+    })();
+  </script>
+</div>

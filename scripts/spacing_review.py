@@ -17,7 +17,7 @@ app.onload=async()=>{
   const reset=()=>{evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const previewDoc=()=>d.getElementById('previewPage').contentDocument;
   const previewWindow=()=>d.getElementById('previewPage').contentWindow;
-  const input=(id,value,type='input')=>{const el=d.getElementById(id);w.DSStudio.paletteWorkspace?.revealControl(el);w.DSStudio.typographyWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));};
+  const input=(id,value,type='input')=>{const el=d.getElementById(id);w.DSStudio.paletteWorkspace?.revealControl(el);w.DSStudio.typographyWorkspace?.revealControl(el);el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);};
   const prepare=async step=>{
     app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')d.getElementById('themeToggle').click();
     reset();w.DSStudio.inspector.show({language:'css',section:'all'});d.querySelector('[data-width="fluid"]').click();w.dssShowWizardStep(step,false);await wait();
@@ -49,13 +49,13 @@ app.onload=async()=>{
   test('All four padding sides are independently saved and shown in the centre',()=>paddingRegions.every((region,index)=>paddingSides.every((side,sideIndex)=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')')===8+index*16+sideIndex*4 && d.getElementById(region+'-padding-'+side+'-value').textContent===(8+index*16+sideIndex*4)+' px')));
   const sharedPadding=evaluate('JSON.stringify(state.regionPadding)');input('jTheme','light');await wait();
   test('Region padding is shared across themes',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding && d.getElementById('header-padding-left').value==='20');
-  input('header-background-hex','#123456');input('header-background-opacity',40);d.getElementById('header-background-reset').click();await wait();
+  input('header-background-hex','#123456');input('header-background-opacity',40);d.getElementById('header-background-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('header-background-reset'));await wait();
   test('Resetting a background preserves its separate padding',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding);
   const paddingProject=JSON.parse(evaluate('projectJson()'));d.getElementById('jSaveLocal').click();await wait();
   test('Region padding autosaves in existing local projects',()=>Object.values(JSON.parse(w.localStorage.getItem('dss-v27-projects'))).some(project=>JSON.stringify(project.data.regionPadding)===sharedPadding));
   reset();evaluate('importConfig('+JSON.stringify(paddingProject)+')');await wait();
   test('Region padding round trips through project JSON',()=>evaluate('JSON.stringify(state.regionPadding)')===sharedPadding && d.getElementById('footer-padding-left').value==='52');
-  const nonHeaderPadding=evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])');d.getElementById('header-padding-reset').click();await wait();
+  const nonHeaderPadding=evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])');d.getElementById('header-padding-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('header-padding-reset'));await wait();
   test('Padding reset restores one region without changing colours, alpha or other regions',()=>paddingValues().header.every(value=>value===0) && evaluate('JSON.stringify([state.regionPadding.main,state.regionPadding.footer,state.semanticOverrides,state.backgroundOpacity])')===nonHeaderPadding);
   const paddingToken=w.dssReadTokens().find(row=>row.name==='--main-padding-left');w.dssConfigureToken(paddingToken);await wait();
   test('Padding catalogue source reveals and focuses the actual slider',()=>w.DSStudio.activeStage===4 && d.activeElement===d.getElementById('main-padding-left') && d.getElementById('main-padding-controls').open);

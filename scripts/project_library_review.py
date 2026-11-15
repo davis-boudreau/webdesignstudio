@@ -21,7 +21,7 @@ app.onload = async () => {
   const input=(id,value,type='input')=>{
     const el=d.getElementById(id);
     w.DSStudio.typographyWorkspace?.revealControl(el);
-    el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   const reset=()=>{evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const stored=()=>JSON.parse(w.localStorage.getItem('dss-v27-projects')||'{}');
@@ -70,7 +70,7 @@ app.onload = async () => {
   input('advWeight',600,'change');
   test('Advanced select changes autosave after state updates', () => saved().advanced.weight===600);
   d.getElementById('advUnderline').checked=false;
-  d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));
+  d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('advUnderline'));
   test('Advanced checkbox changes autosave', () => saved().advanced.underline===false);
   input('clampBase',20);
   test('Clamp foundation changes autosave', () => saved().base===20);
