@@ -497,7 +497,7 @@ app.onload = async () => {
   test('Find rule selects complete CSS so shared dependencies remain visible',()=>d.getElementById('dockSection').value==='all' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').scrollTop>0 && d.activeElement===d.getElementById('dockCss'));
   d.querySelector('[data-journey-step="9"]').click(); const beforeLearningResponsive=evaluate('JSON.stringify(state.responsiveDesign)');
   d.querySelector('button[data-width="mobile"]').click();d.getElementById('studyPreview').click(); await wait();
-  test('Responsive task tests 390px without changing saved breakpoints',()=>Math.abs(previewWindow().innerWidth-390)<1 && evaluate('JSON.stringify(state.responsiveDesign)')===beforeLearningResponsive && previewDoc().activeElement===previewDoc().getElementById('home'));
+  test('Responsive task tests 390px without changing saved breakpoints',()=>{const checks={width:Math.abs(previewWindow().innerWidth-390)<1,breakpoints:evaluate('JSON.stringify(state.responsiveDesign)')===beforeLearningResponsive,focus:previewDoc().activeElement===previewDoc().getElementById('home')};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({checks,width:previewWindow().innerWidth,active:previewDoc().activeElement.outerHTML.slice(0,200)}));return true;});
   const learningFiles=[], beforeLearningDownload=w.download;w.download=(name,content,type)=>learningFiles.push({name,content,type});
   d.querySelector('[data-journey-step="11"]').click();
   test('Export exercise focuses Deliver without downloading automatically',()=>!d.querySelector('[data-journey-pane="11"]').hidden && learningFiles.length===0);

@@ -289,6 +289,16 @@ app.onload=async()=>{
     seed();d.getElementById('jNewLocal').click();if(mode==='advanced')d.getElementById('dockModeAdvanced').click();await wait();
     test(mode+' New starts a fresh browsing session while retaining saved projects',()=>fresh() && evaluate('state.sampleMode')===mode && w.localStorage.getItem('dss-v27-projects')===library);
   }
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']){
+    evaluate('resetStudio()');d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);await wait();
+    const doc=previewDoc(),hero=doc.getElementById('home');hero.tabIndex=-1;hero.focus({preventScroll:true});
+    const title='Focus restore '+mode+' '+theme;
+    input('jProject',title);w.DSStudio.views.flush();await wait();
+    test(mode+' '+theme+' HTML refresh restores its programmatic hero focus without exporting tabindex',()=>previewDoc()===doc && doc.getElementById('home')!==hero && doc.activeElement===doc.getElementById('home') && doc.getElementById('home').tabIndex===-1 && new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').getElementById('home').getAttribute('tabindex')===null && evaluate('state.project')===title);
+    d.getElementById('jProject').focus({preventScroll:true});
+    input('jProject',title+' edited');w.DSStudio.views.flush();await wait();
+    test(mode+' '+theme+' HTML refresh retains focus in the Studio editor',()=>previewDoc()===doc && d.activeElement===d.getElementById('jProject') && evaluate('state.project')===title+' edited');
+  }
   test('No responsive preview JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Focused harness completed',pass:false,error:String(error.stack||error)});}
   document.getElementById('results').textContent=JSON.stringify({results,errors:w.__reviewErrors});

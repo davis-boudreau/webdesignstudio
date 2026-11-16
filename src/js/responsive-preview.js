@@ -69,6 +69,8 @@
           x: doc.defaultView.scrollX, y: doc.defaultView.scrollY,
           activeId: doc.activeElement?.id,
           activeControl: controls.indexOf(doc.activeElement),
+          focused: document.activeElement === frame,
+          programmaticTarget: doc.activeElement?.getAttribute('tabindex') === '-1',
           controls: controls.map(control => ({ id: control.id, name: control.name,
             type: control.type, value: control.value, checked: control.checked })),
           details: detailsByKey(doc).map(([key,detail]) => [key,detail.open])
@@ -87,7 +89,8 @@
         for (const [key,detail] of detailsByKey(doc))
           if (disclosures.has(key)) detail.open = disclosures.get(key);
         const active = doc.getElementById(saved.activeId) || controls[saved.activeControl];
-        active?.focus({ preventScroll: true });
+        if (active && saved.programmaticTarget && active.tabIndex < 0 && !active.hasAttribute('tabindex')) active.tabIndex = -1;
+        if (saved.focused) active?.focus({ preventScroll: true });
         doc.defaultView.scrollTo(saved.x, saved.y);
       }
 

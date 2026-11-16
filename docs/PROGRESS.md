@@ -2,6 +2,39 @@
 
 Updated: 16 November 2026 (America/Halifax).
 
+## Preview target-focus restoration (16 November 2026)
+
+- Pushed the alignment correction as 043c188. Its full hosted run
+  [43957756291](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43957756291)
+  passed all other suites, including shared actions 234/234, but initially failed
+  integration's combined 390px/configuration/hero-focus assertion (278/279), with
+  no captured errors. An unchanged failed-jobs rerun passes integration and the
+  final gate; the run now has 21 successful jobs. No merge was performed while
+  investigating the intermittent assertion.
+- A separate focused probe confirmed a concrete focus-restoration defect (1/2
+  before): focus a programmatic hero target, then change the project title so the
+  preview HTML refreshes. Replacement removes its temporary tabindex=-1, so the
+  restore call cannot focus the new section and focus falls back to body. This
+  explains a possible focus race in the combined assertion; its original failure
+  log did not identify which condition failed. Added diagnostic details to that
+  assertion without changing its timing or conditions.
+- Capture now remembers programmatic target focus and whether the preview iframe
+  actually held focus. Restore re-establishes a missing temporary negative tab
+  index for a matching non-tabbable target, and focuses only when the preview
+  previously held focus. Editing a Studio field therefore retains Studio focus.
+  The focused probe now passes 2/2 with empty errors. No generated file, project
+  schema or saved values change. Refreshed the responsive-preview script query.
+- Added eight responsive-preview regressions: Basic/Advanced in Light/Dark each
+  cover target focus across HTML replacement, absence of temporary tabindex in
+  exported HTML, and retention of Studio editor focus. These extend the suite
+  from 149 to 157 assertions; the catalogue inventory becomes 3,894.
+- Final local checks pass responsive preview 157/157
+  (.release-responsive-focus-final.log), required integration 279/279
+  (.release-integration-focus-final.log) and shared actions 234/234
+  (.release-actions-focus-final.log), with empty captured errors. The temporary
+  focused probe was removed. Structure passes 81 assets; git diff --check passes.
+  Full hosted validation of this correction is pending before merge/publication.
+
 ## Hosted preview-alignment correction (16 November 2026)
 
 - Committed the audit/test correction as 4ef79b5, pushed the feature and opened

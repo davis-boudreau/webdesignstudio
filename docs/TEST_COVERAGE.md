@@ -14,6 +14,19 @@ errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
 
+A subsequent preview focus probe reproduced a lost programmatic hero target after
+HTML replacement (1/2 before, 2/2 after): temporary tabindex=-1 was missing from
+the replacement node. The restoration fix preserves that temporary target and
+restores focus only if the iframe held focus, preventing Studio editor focus from
+being taken. Eight new responsive-preview cases cover both samples/themes, live
+target restoration, unchanged exported tabindex and retained Studio focus (157
+cases; catalogue inventory 3,894). Final local responsive preview passes 157/157,
+integration 279/279 and shared actions 234/234, with empty captured errors;
+structure verifies 81 assets and diff checking passes. Hosted revalidation is
+pending. The preceding alignment revision's run 43957756291 succeeded on its
+unchanged failed-jobs retry after a 278/279 integration result; it does not validate
+this later focus correction. See PROGRESS for separate before/after evidence.
+
 The subsequent hosted release run 43955275407 found a real light-320px preview
 alignment failure in shared property actions (230/231); all 18 other browser
 suites passed and the required gate blocked merge. The scroll correction adds
