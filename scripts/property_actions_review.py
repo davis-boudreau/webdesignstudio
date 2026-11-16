@@ -74,6 +74,21 @@ app.onload=async()=>{
    test(theme+' '+width+'px '+id+' shared actions fit the editor',()=>[...bar.querySelectorAll('button')].every(control=>{const box=control.getBoundingClientRect();return box.width>0 && box.height>=44 && box.left>=0 && box.right<=w.innerWidth+1;}));
   }
  }
+ app.style.width='320px';await wait();
+ const header=d.querySelector('.topbar');
+ for(const theme of ['light','dark']){
+  evaluate("state.theme='"+theme+"';apply()");w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('roles',false);await wait();
+  const before=evaluate('projectJson()'),storage=w.localStorage.getItem('dss-v27-projects'),doc=get('previewPage').contentDocument;
+  actions('palette-roles').querySelector('[data-property-preview]').click();
+  w.requestAnimationFrame(()=>{header.style.paddingBottom='48px';header.style.marginBottom='-48px';});await wait();
+  test(theme+' narrow preview remains below a header that grows over the content after the click',()=>get('studio-section-4').getBoundingClientRect().top>=header.getBoundingClientRect().bottom-1 && d.activeElement===get('previewShell') && evaluate('projectJson()')===before && w.localStorage.getItem('dss-v27-projects')===storage && get('previewPage').contentDocument===doc && get('jBase').value==='19');
+  header.style.paddingBottom='';header.style.marginBottom='';await wait();
+ }
+ w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('roles',false);await wait();
+ actions('palette-roles').querySelector('[data-property-preview]').click();
+ get('themeToggle').focus({preventScroll:true});
+ const nativeScroll=w.scrollTo;let laterScrolls=0;w.scrollTo=(...args)=>{laterScrolls++;return nativeScroll.apply(w,args);};await wait();w.scrollTo=nativeScroll;
+ test('Moving focus away cancels deferred preview alignment',()=>d.activeElement===get('themeToggle') && laterScrolls===0);
  test('Shared property checks finish without JavaScript errors',()=>!w.__reviewErrors.length);
  }catch(error){results.push({name:'Property harness completed',pass:false,error:String(error.stack||error)});}
  finish();

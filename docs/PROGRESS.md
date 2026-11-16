@@ -2,6 +2,32 @@
 
 Updated: 16 November 2026 (America/Halifax).
 
+## Hosted preview-alignment correction (16 November 2026)
+
+- Committed the audit/test correction as 4ef79b5, pushed the feature and opened
+  [PR #2](https://github.com/davis-boudreau/webdesignstudio/pull/2).
+  [Its initial CI run](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43955275407)
+  passed checks and 18 browser suites but failed shared property actions (230/231).
+  The final required gate failed and no merge occurred. At light 320px, the saved
+  preview heading ended at 202.17px beneath a sticky header ending at 232.19px;
+  focus, source, project, storage, document and draft checks all passed.
+- Shared preview actions now align immediately, then re-measure the header bottom
+  and preview after two animation frames, allowing disclosure/resize/scroll-anchor
+  layout to settle. A newer preview, changed stage, closed result, disconnected
+  source or moved focus cancels the deferred alignment. No model, export, storage
+  or Save/Discard boundary changes. Refreshed the property-actions script query.
+- Added three tracked regressions: delayed header overlap in both themes at 320px
+  with focus/project/storage/document/draft preservation, and cancellation after
+  focus moves. A temporary focused driver reproduced the first overlap before
+  the fix (4/5) and passes after it (5/5); these overlap the tracked suite and are
+  not added to its count. Removed the temporary driver.
+- Final local shared-actions checks pass 234/234 (.release-property-actions-final.log)
+  and navigation 158/158 (.release-navigation-final.log), with empty captured errors.
+  Required integration passes 279/279 (.release-browser-final.log), with empty
+  captured errors. Structure passes 81 assets and git diff --check passes.
+  Full hosted revalidation of the correction is pending;
+  the failed first run is retained as historical evidence, not marked successful.
+
 ## Feature release preparation (16 November 2026)
 
 - User authorized review, merge and publication of feat/semantic-colour-picker.

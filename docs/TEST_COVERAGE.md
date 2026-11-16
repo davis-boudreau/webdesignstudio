@@ -14,6 +14,18 @@ errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
 
+The subsequent hosted release run 43955275407 found a real light-320px preview
+alignment failure in shared property actions (230/231); all 18 other browser
+suites passed and the required gate blocked merge. The scroll correction adds
+three property-action regressions (234 total): late sticky-header overlap in both
+themes with preserved focus/model/storage/document/drafts, and cancellation when
+focus moves elsewhere. A focused before/after reproduction is 4/5 then 5/5;
+these checks overlap the tracked suite. Final local shared actions passes 234/234
+and navigation 158/158, plus integration 279/279, with empty errors. Structure
+passes 81 assets and diff checking passes; full hosted revalidation is pending.
+These three new assertions bring the catalogue inventory to 3,886;
+the dated 3,883-assertion audit below describes the preceding revision.
+
 Current audit, 16 November 2026: the complete catalogue finished 20/21 commands
 (.audit-2026-11-16-checks.log). Its sole failing suite was Contrast (87/90): the
 fixture opened the inner saved review while its new outer Buttons reference
