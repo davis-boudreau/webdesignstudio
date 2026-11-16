@@ -2,6 +2,41 @@
 
 Updated: 16 November 2026 (America/Halifax).
 
+## Learning workspace release (16 November 2026)
+
+- Reviewed and merged [PR #2](https://github.com/davis-boudreau/webdesignstudio/pull/2)
+  under the user's explicit release authorization. Final feature head:
+  07a19c47fa405e135bb9f9a8951d297875625cc5. Its
+  [hosted CI run 43960139274](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43960139274)
+  passed all 21 jobs on its first attempt: checks, all 19 offline browser suites
+  and the final required gate. Current browser assertion inventory is 3,894;
+  runner contracts remain 12 and structure assets 81. Earlier failed revisions
+  and their focused reproductions below retain their separate results.
+- Rechecked the exact PR head, reviewed main base, mergeability, successful
+  required jobs and absence of requested changes before merging. Merge commit:
+  87296629dbf8f80f217f55d7a004d5794791a14f. Ran git fetch origin, git switch main
+  and git merge --ff-only origin/main; local main matches that remote merge.
+- [Pages run 43961315128](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43961315128)
+  passed all 22 jobs on its first attempt for the merge: complete validation,
+  final gate and deployment. Verified the
+  [public site](https://davis-boudreau.github.io/webdesignstudio/) with uncached
+  HTTP requests: index.html and all 81 referenced assets match the merged Git
+  bytes, 82/82 checks (.release-publication-verified.log). Pages reports built,
+  workflow publishing and enforced HTTPS. This is deployed-file verification,
+  not new manual browser/accessibility review.
+- Release review corrected two confirmed preview defects: a narrow heading
+  obscured after disclosure layout, and lost programmatic target focus after HTML
+  replacement. Regression coverage also protects Studio editor focus, drafts,
+  saved data and exports. Both runtime cache queries were refreshed. The existing
+  Contrast test fixture was corrected to reveal its enclosing reference section.
+- Manual keyboard/screen-reader/zoom/touch, Firefox/Safari, actual clipboard/
+  download permissions and learner observation remain open. Refresh the obsolete
+  eight-stage Typography trial prompts before running that trial. Shared globals,
+  finer view dependencies and CSS rule ownership remain maintenance debt.
+- This final handoff changes documentation only; index.html and src are unchanged
+  from the validated, merged and publicly verified revision. No feature release
+  tasks remain. Next: the manual reviews and refreshed learner trial above.
+
 ## Preview target-focus restoration (16 November 2026)
 
 - Pushed the alignment correction as 043c188. Its full hosted run
@@ -33,7 +68,8 @@ Updated: 16 November 2026 (America/Halifax).
   (.release-integration-focus-final.log) and shared actions 234/234
   (.release-actions-focus-final.log), with empty captured errors. The temporary
   focused probe was removed. Structure passes 81 assets; git diff --check passes.
-  Full hosted validation of this correction is pending before merge/publication.
+  Final hosted validation passes all 21 jobs on feature head 07a19c4; see the
+  release entry above for merge/publication evidence.
 
 ## Hosted preview-alignment correction (16 November 2026)
 
@@ -58,7 +94,8 @@ Updated: 16 November 2026 (America/Halifax).
   and navigation 158/158 (.release-navigation-final.log), with empty captured errors.
   Required integration passes 279/279 (.release-browser-final.log), with empty
   captured errors. Structure passes 81 assets and git diff --check passes.
-  Full hosted revalidation of the correction is pending;
+  Hosted revalidation of the correction succeeds on the unchanged integration
+  retry, and final feature head 07a19c4 passes all jobs on its first attempt;
   the failed first run is retained as historical evidence, not marked successful.
 
 ## Feature release preparation (16 November 2026)
@@ -7337,11 +7374,11 @@ this HTML startup-default change.
   for this change; automated tests do not establish full accessibility.
 - Next step: review the Basic hero in the UI and complete manual browser checks.
 
-## Historical open work (superseded by the 16 November audit above)
+## Historical open work (superseded by the audit/release notes above)
 
 This older list is retained for history. The first hosted validation and gated
 publication were completed on 14 November; the core refactor was also completed.
-Use the current-state audit at the top for remaining work.
+Use the current release/audit notes at the top for remaining work.
 
 1. Verify the first hosted run of the new shared structure/browser validation and
    Pages dependency gate after these local changes are committed and pushed.

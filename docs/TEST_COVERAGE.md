@@ -14,6 +14,19 @@ errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
 
+Final feature release validation, 16 November 2026:
+[CI run 43960139274](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43960139274)
+passes all 21 jobs on its first attempt for feature head 07a19c4: checks, all 19
+offline browser suites and the required structure gate. The current assertion
+inventory is 3,894, with 12 runner contracts and 81 assets. PR #2 is merged as
+8729662. [Pages run 43961315128](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43961315128)
+passes all 22 validation/deployment jobs on its first attempt. Uncached public
+index/asset comparisons match the merged Git bytes, 82/82 checks
+(.release-publication-verified.log). Pages reports built, workflow publishing and
+HTTPS enforced. No new manual accessibility or live-browser interaction review
+is implied. Earlier failures, local focused checks and historical baselines below
+describe their own revisions. This release handoff changes documentation only.
+
 A subsequent preview focus probe reproduced a lost programmatic hero target after
 HTML replacement (1/2 before, 2/2 after): temporary tabindex=-1 was missing from
 the replacement node. The restoration fix preserves that temporary target and
@@ -22,8 +35,9 @@ being taken. Eight new responsive-preview cases cover both samples/themes, live
 target restoration, unchanged exported tabindex and retained Studio focus (157
 cases; catalogue inventory 3,894). Final local responsive preview passes 157/157,
 integration 279/279 and shared actions 234/234, with empty captured errors;
-structure verifies 81 assets and diff checking passes. Hosted revalidation is
-pending. The preceding alignment revision's run 43957756291 succeeded on its
+structure verifies 81 assets and diff checking passes. Final hosted revalidation
+passes all 21 jobs as recorded above. The preceding alignment revision's run
+43957756291 succeeded on its
 unchanged failed-jobs retry after a 278/279 integration result; it does not validate
 this later focus correction. See PROGRESS for separate before/after evidence.
 
@@ -35,7 +49,8 @@ themes with preserved focus/model/storage/document/drafts, and cancellation when
 focus moves elsewhere. A focused before/after reproduction is 4/5 then 5/5;
 these checks overlap the tracked suite. Final local shared actions passes 234/234
 and navigation 158/158, plus integration 279/279, with empty errors. Structure
-passes 81 assets and diff checking passes; full hosted revalidation is pending.
+passes 81 assets and diff checking passes; final hosted revalidation passes as
+recorded above.
 These three new assertions bring the catalogue inventory to 3,886;
 the dated 3,883-assertion audit below describes the preceding revision.
 
