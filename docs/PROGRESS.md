@@ -1,6 +1,82 @@
 # Project progress
 
-Updated: 15 November 2026 (America/Halifax).
+Updated: 16 November 2026 (America/Halifax).
+
+## Feature release preparation (16 November 2026)
+
+- User authorized review, merge and publication of feat/semantic-colour-picker.
+  git fetch origin confirms the feature remains at 7c8728a and main edd6f5a.
+  Reviewed the combined feature scope, imported-value normalization, draft/save
+  ownership, contrast changes, script order and CI/Pages gate. No release blocker
+  identified. A cache-version comparison found all 36 changed runtime files have
+  refreshed referenced queries; index references 81 local assets.
+- Carrying the audit's three pending files into the release: PROGRESS,
+  TEST_COVERAGE and the one-line Contrast reference-disclosure fixture correction.
+  Runtime is unchanged from the complete local audit directly below (all 19
+  suites have passing final results, 3,883 assertions). Fresh structure passes
+  81 assets and git diff --check passes. Fresh runner contracts initially hit
+  sandbox temporary-profile cleanup permissions; the approved rerun passes 12/12.
+- GitHub API inspection found no open PR or feature-branch Actions runs. Pages
+  remains built with build_type workflow and HTTPS enforced. Preparing a PR for
+  exact-revision hosted validation before merge. Hosted checks and publication
+  for this feature are pending; historical deployment evidence is not reused.
+- No new manual accessibility, Firefox/Safari, browser/OS permission or learner
+  checks. These remain open and separate from the authorized release work.
+
+## Current-state audit (16 November 2026)
+
+- Reviewed handoff, contribution/architecture/coverage notes, historical project,
+  recovery and product audits, learner-trial plan, current suite catalogue and
+  CI/Pages workflows. Older proposals and audit findings are not automatically
+  outstanding: atomic project replacement, scheduled views, explicit exports,
+  independent suites and validation-gated publication have been implemented.
+  The 4 November recovery corrections also resolved its cache-identity,
+  sitemap-visibility and current-guidance findings.
+- Starting working tree was clean at 7c8728a on feat/semantic-colour-picker.
+  Read-only git ls-remote confirms remote feature head 7c8728a and main edd6f5a.
+  The two feature commits (9ea0807 and 7c8728a) are pushed but not on main.
+  Their combined changes still need integration/publication review; the earlier
+  successful refactor deployment does not validate these newer changes.
+- Ran python scripts/review_suites.py to close the full-catalogue gap after
+  the recent learning-workspace changes. The sandboxed attempt failed on Chrome
+  temporary-profile access/cleanup; these are environment failures. The approved
+  isolated-profile run completed 20/21 commands: 3,880/3,883 browser assertions,
+  12 runner contracts and 81 structure assets. All 20 captured error reports were
+  empty. Log: .audit-2026-11-16-checks.log (ignored).
+- Its only failures were three Contrast focus assertions. The fixture opened the
+  inner saved review but not the new outer Complete variant and state reference
+  disclosure, leaving its controls hidden. An unchanged rerun reproduced 87/90.
+  A temporary diagnostic opening the ancestor disclosure passed 90/90. Earlier
+  diagnostic attempts mistakenly used ordinal step 6 as an internal route ID;
+  the original stable Buttons route 7 is correct and remains unchanged.
+- Added one fixture line using buttonWorkspace.revealControl before opening the
+  saved review, retaining every assertion and all original routes/actions. Final
+  python scripts/contrast_review.py passes 90/90 with empty errors
+  (.audit-2026-11-16-contrast-final.log). All 19 browser suites therefore have
+  passing final results, totaling 3,883 assertions, including integration 279/279,
+  exports 98/98, reduced motion 9/9 and forced colours 11/11. This is the complete
+  catalogue plus a focused correction/rerun, not a new single 21/21 invocation or
+  assertion-name coverage audit. Temporary diagnostic driver removed. Rechecked
+  python scripts/check_structure.py (81 assets) and git diff --check (pass).
+- Remaining user-facing validation: keyboard-only, screen-reader, zoom/reflow,
+  touch/pointer and Firefox/Safari review, real clipboard/download/file-chooser
+  permission checks, and the unperformed learner trial in docs/LEARNER_TRIAL.md.
+  Refresh that trial guide first: its direct-header/eight-stage Typography prompts
+  still describe the retired sequential workflow (lines 156 onward).
+  Prior screenshots and synthetic browser events do not complete these tasks.
+  Include the merged semantic/region Save boundaries and combined Buttons and
+  Spacing drafts in that review. Optional live Google Fonts checks remain separate
+  from offline fixture coverage; Tailwind compilation is an optional downstream
+  integration, not part of the current website export contract.
+- Remaining architecture work is narrower than the old audit: shared globals,
+  navigation/palette adapters, finer view dependencies and CSS rule ownership.
+  It is maintenance debt, not an unfinished core refactor or a demonstrated
+  release blocker. No confirmed runtime defect found by these checks. No runtime
+  changes, commits, pushes or deployment in this audit; only the test fixture and
+  current audit/coverage documentation changed. No asset query bump is needed.
+- Next: refresh the learner-trial prompts and perform the manual checks above,
+  then review the feature branch for integration and hosted validation/publication.
+  Commit these audit/test corrections with the feature work when ready to proceed.
 
 
 ## Unified semantic colour learning workspace (15 November 2026)
@@ -7202,7 +7278,11 @@ this HTML startup-default change.
   for this change; automated tests do not establish full accessibility.
 - Next step: review the Basic hero in the UI and complete manual browser checks.
 
-## Open work / next session
+## Historical open work (superseded by the 16 November audit above)
+
+This older list is retained for history. The first hosted validation and gated
+publication were completed on 14 November; the core refactor was also completed.
+Use the current-state audit at the top for remaining work.
 
 1. Verify the first hosted run of the new shared structure/browser validation and
    Pages dependency gate after these local changes are committed and pushed.

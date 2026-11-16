@@ -14,6 +14,21 @@ errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
 
+Current audit, 16 November 2026: the complete catalogue finished 20/21 commands
+(.audit-2026-11-16-checks.log). Its sole failing suite was Contrast (87/90): the
+fixture opened the inner saved review while its new outer Buttons reference
+disclosure remained collapsed. A one-line fixture correction reveals that ancestor
+through buttonWorkspace.revealControl; all assertions and runtime code remain
+unchanged. Final python scripts/contrast_review.py passes 90/90 with empty errors
+(.audit-2026-11-16-contrast-final.log). Together these final results cover all 19
+offline browser suites, 3,883 passing assertions and 20 empty captured-error
+reports, plus 12 runner contracts and 81 structure assets. Integration passes
+279/279; export byte fixtures pass unchanged (98/98). Structure and git diff
+--check were rechecked successfully. This is a full run plus focused correction/
+rerun, not a new single 21/21 invocation or assertion-name Counter audit. Manual
+accessibility, Firefox/Safari, browser/OS permissions and learner observation
+remain open. The historical table and dated results below retain their own counts.
+
 Counts below are from the completed full catalogue run on 13 November 2026:
 20/20 commands passed (`.final-all-checks.log`), with no captured JavaScript errors
 in all 19 browser launches. The current-run audit is `.final-coverage.log`.

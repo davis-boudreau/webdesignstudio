@@ -205,6 +205,7 @@ app.onload=async()=>{
   app.style.width='1440px'; reset(); await wait();
   test('Project reset refreshes guided semantic values', () => d.getElementById('jSemanticCurrent').textContent.startsWith('Light:') && d.getElementById('jSemanticReset').disabled && !evaluate('state.semanticOverrides'));
   d.querySelector('[data-journey-step="7"]').click(); await wait();
+  w.DSStudio.buttonWorkspace.revealControl(d.getElementById('bdReview'));
   d.getElementById('bdReview').open=true;
   d.getElementById('jSaveLocal').click();
   const reviewButton = (variant, state) => d.querySelector(`[data-review-variant="${variant}"][data-review-state="${state}"]`);
