@@ -1,0 +1,3 @@
+.property-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: 1rem; grid-column: 1 / -1; }
+.property-actions button { min-height: 44px; max-width: 100%; white-space: normal; }
+.property-edit-status { grid-column: 1 / -1; overflow-wrap: anywhere; }

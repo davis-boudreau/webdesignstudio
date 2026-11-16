@@ -7,7 +7,7 @@
   const validHex = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
   const SEMANTIC_COLOUR_KEYS = ['background', 'header-background', 'main-background', 'footer-background', 'surface', 'surface-muted', 'text', 'text-muted', 'border', 'control-border', 'primary', 'on-primary', 'primary-hover', 'secondary', 'on-secondary', 'accent', 'on-accent', 'success', 'warning', 'danger', 'focus'];
   const BACKGROUND_REGIONS = ['body', 'header', 'main', 'footer'];
-  const PADDING_REGIONS = ['header', 'main', 'footer'];
+  const PADDING_REGIONS = ['body', 'header', 'main', 'footer'];
   const PADDING_SIDES = ['top', 'right', 'bottom', 'left'];
   const BUTTON_VARIANTS = ['primary', 'secondary', 'accent', 'outline', 'text'];
   const BUTTON_STATES = ['default', 'hover', 'focus', 'active', 'selected', 'disabled', 'loading'];
@@ -88,6 +88,7 @@
       focusWidth: 3,
       motion: 150,
       mobileFull: false,
+      elevation: {},
       overrides: {},
       sources: {
         primary: 'primary',
@@ -152,6 +153,7 @@
     b.focus = validHex(raw.focus) ? raw.focus : defaults.focus;
     b.mobileFull = raw.mobileFull === true;
     for (const k of BUTTON_VARIANTS) {
+      if(raw.elevation && typeof raw.elevation==='object' && !Array.isArray(raw.elevation) && ['subtle','medium'].includes(raw.elevation[k]))b.elevation[k]=raw.elevation[k];
       const source = raw.sources?.[k];
       if (['primary', 'secondary', 'accent', 'custom'].includes(source) || validHex(source)) b.sources[k] = source;
       if (validHex(raw.custom?.[k])) b.custom[k] = raw.custom[k];
@@ -222,6 +224,19 @@
     for (const theme of ['light', 'dark'])
       for (const key of SEMANTIC_COLOUR_KEYS)
         if (validHex(obj.semanticOverrides?.[theme]?.[key])) n.semanticOverrides[theme][key] = obj.semanticOverrides[theme][key].toUpperCase();
+    // Only acyclic foundation/brand references are accepted; preserve the saved
+    // HEX fallback if a reference is later removed or edited as a custom colour.
+    const sources = {};
+    for (const theme of ['light','dark']) for (const key of SEMANTIC_COLOUR_KEYS) {
+      const source = obj.semanticSources?.[theme]?.[key];
+      if (source && typeof source.token==='string' && /^--(?:brand-[a-z][a-z0-9-]{0,39}|(?:primary|secondary|accent|neutral)-(?:50|100|200|300|400|500|600|700|800|900|950))$/.test(source.token) && validHex(source.hex) && source.hex.toUpperCase()===n.semanticOverrides[theme][key]) {
+        (sources[theme]??={})[key]={token:source.token,hex:source.hex.toUpperCase()};
+      }
+    }
+    if (Object.keys(sources).length) n.semanticSources=sources;
+    const transparentKeys=[...SEMANTIC_COLOUR_KEYS.flatMap(key=>['light:'+key,'dark:'+key]),...['primary','secondary','accent'].map(key=>'anchor:'+key),'button:focus',...BUTTON_VARIANTS.flatMap(variant=>['source','bg','text','hover','hoverText','active','activeText','border'].map(key=>'button:'+variant+':'+key))];
+    const transparency={};for(const key of transparentKeys)if(obj.colourTransparency?.[key]===true)transparency[key]=true;
+    if(Object.keys(transparency).length)n.colourTransparency=transparency;
     n.advanced = normalizeAdvanced(obj.advanced, n.headingTracking);
     n.buttonDesign = normalizeButtons(obj.buttonDesign);
     return { state: n, clampConfig };
@@ -237,12 +252,21 @@
   }
 
   function configuration(foundation, clampConfig) {
-    const { advanced, ...values } = foundation;
+    const { advanced, semanticSources, colourTransparency, ...values } = foundation;
+    const sources={};
+    if(semanticSources){
+      for(const theme of ['light','dark'])for(const key of SEMANTIC_COLOUR_KEYS){
+        const source=semanticSources[theme]?.[key];
+        if(source && source.hex===values.semanticOverrides?.[theme]?.[key]?.toUpperCase())(sources[theme]??={})[key]=source;
+      }
+    }
     return {
       schemaVersion: 2.9,
       brandReference: 'Project Brand Palette',
       clampConfig: { ...clampConfig },
       ...values,
+      ...(Object.keys(sources).length?{semanticSources:sources}:{}),
+      ...(colourTransparency && Object.values(colourTransparency).some(value=>value===true)?{colourTransparency:Object.fromEntries(Object.entries(colourTransparency).filter(([,value])=>value===true).sort(([a],[b])=>a.localeCompare(b)))}:{}),
       advanced
     };
   }

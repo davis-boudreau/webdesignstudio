@@ -63,3 +63,6 @@
 .palette-step-list li[data-anchor="true"] { border-width: 2px; font-weight: 700; }
 .interaction-palette-field { min-width: 0; }
 .interaction-palette-field select { min-height: 44px; font: inherit; }
+.brand-palette-actions, [data-brand-edit-status] { grid-column: 1 / -1; }
+.brand-palette-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.brand-palette-actions button { min-height: 44px; max-width: 100%; white-space: normal; }

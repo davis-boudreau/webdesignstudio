@@ -20,7 +20,7 @@ app.onload=async()=>{
   const wait=(ms=100)=>new Promise(resolve=>setTimeout(resolve,ms));
   const input=(id,value,type='input')=>{
     const el=d.getElementById(id);w.DSStudio.paletteWorkspace?.revealControl(el);w.DSStudio.typographyWorkspace?.revealControl(el);
-    el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   const reset=()=>{evaluate('resetStudio()');d.getElementById('dockModeAdvanced').click();};
   const previewDoc=()=>d.getElementById('previewPage').contentDocument;
@@ -30,7 +30,7 @@ app.onload=async()=>{
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -43,6 +43,12 @@ app.onload=async()=>{
   };
   try {
   test('Independent wireframe startup has no JavaScript errors',()=>!w.__reviewErrors.length);
+  test('Wireframe initially selects Low Fidelity with matching tab semantics',()=>w.DSStudio.wireframeView.fidelity==='low' && d.getElementById('wf-tab-low').getAttribute('aria-selected')==='true' && d.getElementById('wf-tab-low').tabIndex===0 && d.getElementById('wf-tab-high').getAttribute('aria-selected')==='false' && d.getElementById('wf-tab-high').tabIndex===-1 && d.getElementById('wf-fidelity-panel').getAttribute('aria-labelledby')==='wf-tab-low');
+  w.dssShowWizardStep(2,false);await wait();
+  test('First Wireframe visit renders the low-fidelity website',()=>d.getElementById('wf-page').contentDocument.documentElement.dataset.wfFidelity==='low' && !!d.getElementById('wf-page').contentDocument.getElementById('wf-low-fidelity-styles') && d.getElementById('wf-page').title.includes('Low Fidelity'));
+  const defaultFiles=[],defaultDownload=w.download,defaultProject=evaluate('projectJson()'),defaultCss=evaluate('cssExport()');
+  try{w.download=(name,content)=>defaultFiles.push({name,content});d.getElementById('wf-download').click();}finally{w.download=defaultDownload;}
+  test('Default Wireframe download is low fidelity without changing the project or website CSS',()=>defaultFiles.length===1 && defaultFiles[0].content===w.DSStudio.wireframeEngine.documentHtml({fidelity:'low'}) && defaultFiles[0].content.includes('wf-low-fidelity-styles') && evaluate('projectJson()')===defaultProject && evaluate('cssExport()')===defaultCss);
   app.style.width='1440px';reset();w.DSStudio.wireframeView.setFidelity('high');input('wf-width','live','change');await wait();
   // Read-only wireframes use the actual website HTML and responsive CSS.
   {
@@ -86,7 +92,7 @@ app.onload=async()=>{
           if(differences.length)throw Error(JSON.stringify(differences.slice(0,4)));
           return frame.contentWindow.innerWidth===width;
         });
-        test(mode+' default wireframe component backgrounds and text match website at '+width+'px',()=>compareWireframePaint(reference.contentDocument,doc));
+        test(mode+' high-fidelity wireframe component backgrounds and text match website at '+width+'px',()=>compareWireframePaint(reference.contentDocument,doc));
         test(mode+' every rendered wireframe object has a visible boundary at '+width+'px',()=>{
           const missing=[];for(const el of doc.body.querySelectorAll('*')){
             if(el.matches('script,style,link,meta,title,base,template,source,track,br,wbr') || (el.namespaceURI==='http://www.w3.org/2000/svg' && (el.localName!=='svg' || el.parentElement?.closest('svg'))))continue;
@@ -140,7 +146,7 @@ app.onload=async()=>{
   {
     reset();w.dssShowWizardStep(2,false);w.dssRevealSection('process-wireframe',false);await wait();
     const ui=w.DSStudio.wireframeView,frame=d.getElementById('wf-page'),high=d.getElementById('wf-tab-high'),low=d.getElementById('wf-tab-low');
-    test('Wireframe offers labelled Low Fidelity and High Fidelity tabs with the existing high view selected',()=>d.querySelector('[role="tablist"][aria-label="Wireframe fidelity"]') && high.getAttribute('aria-selected')==='true' && high.tabIndex===0 && low.tabIndex===-1 && d.getElementById('wf-fidelity-panel').getAttribute('aria-labelledby')===high.id && d.getElementById('wf-fidelity-panel').contains(frame));
+    test('Wireframe offers labelled Low Fidelity and High Fidelity tabs with the explicitly chosen high view selected',()=>d.querySelector('[role="tablist"][aria-label="Wireframe fidelity"]') && high.getAttribute('aria-selected')==='true' && high.tabIndex===0 && low.tabIndex===-1 && d.getElementById('wf-fidelity-panel').getAttribute('aria-labelledby')===high.id && d.getElementById('wf-fidelity-panel').contains(frame));
     high.focus();high.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait();
     test('Arrow keys activate and focus Low Fidelity without changing project data',()=>ui.fidelity==='low' && d.activeElement===low && low.getAttribute('aria-selected')==='true' && high.tabIndex===-1 && frame.title.includes('Low Fidelity'));
     low.dispatchEvent(new w.KeyboardEvent('keydown',{key:'End',bubbles:true}));await wait();test('End activates High Fidelity and updates the shared panel label',()=>ui.fidelity==='high' && d.activeElement===high && d.getElementById('wf-fidelity-panel').getAttribute('aria-labelledby')===high.id);

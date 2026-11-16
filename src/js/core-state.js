@@ -141,23 +141,55 @@ function regionPadding(region, side, foundation = state) {
   return typeof value === 'number' && Number.isFinite(value) ? Math.round(clamp(value, 0, 64)) : 0;
 }
 
+function colourIsTransparent(key, theme = state.theme, foundation = state) {
+  if(foundation.colourTransparency?.[theme+':'+key])return true;
+  const anchor=key==='primary-hover'?'primary':key;
+  return ['primary','secondary','accent'].includes(anchor) && !validHex(foundation.semanticOverrides?.[theme]?.[key]) && !!foundation.colourTransparency?.['anchor:'+anchor];
+}
+function semanticPaint(key, theme = state.theme, foundation = state, value = palette(theme,foundation).roles[key]) {
+  return colourIsTransparent(key,theme,foundation)?'transparent':value;
+}
 function backgroundOpacity(region, theme = state.theme, foundation = state) {
+  if(colourIsTransparent(region==='body'?'background':region+'-background',theme,foundation))return 0;
   const value = foundation.backgroundOpacity?.[theme]?.[region];
   return typeof value === 'number' && Number.isFinite(value) ? Math.round(clamp(value, 0, 100)) / 100 : 1;
 }
 
+const canvasColours = new Map();
+function browserCanvasColour(theme) {
+  const key=theme+':'+window.matchMedia('(forced-colors: active)').matches;
+  if(!canvasColours.has(key)){
+    const probe=document.createElement('span');probe.hidden=true;probe.style.color='Canvas';probe.style.colorScheme=theme;document.documentElement.append(probe);
+    const channels=getComputedStyle(probe).color.match(/[\d.]+/g)?.slice(0,3).map(Number);probe.remove();
+    canvasColours.set(key,channels?.length===3?rgbHex(channels):'#FFFFFF');
+  }
+  return canvasColours.get(key);
+}
 function backgroundLayers(theme = state.theme, foundation = state, roles = palette(theme, foundation).roles) {
   const mix = (hex, below, alpha) => hexRgb(hex).map((channel, i) => channel * alpha + below[i] * (1 - alpha));
-  const canvas = hexRgb(roles.surface);
+  const canvas = hexRgb(colourIsTransparent('surface',theme,foundation)?browserCanvasColour(theme):roles.surface);
   const body = mix(roles.background, canvas, backgroundOpacity('body', theme, foundation));
   return { canvas, body, ...Object.fromEntries(['header','main','footer'].map(region => [region, mix(roles[region+'-background'], body, backgroundOpacity(region, theme, foundation))])) };
+}
+
+// References may only reach foundation colours, never another semantic role.
+function semanticSource(key, theme = state.theme, foundation = state) {
+  const source=foundation.semanticSources?.[theme]?.[key];
+  if(!source || source.hex!==foundation.semanticOverrides?.[theme]?.[key]?.toUpperCase())return null;
+  let value;
+  if(source.token.startsWith('--brand-'))value=foundation.brandPalette?.find(item=>'--brand-'+item.id===source.token)?.hex;
+  else {
+    const match=/^--(primary|secondary|accent|neutral)-(50|100|200|300|400|500|600|700|800|900|950)$/.exec(source.token);
+    if(match)value=(match[1]==='neutral'?makeNeutralRamp(foundation.primary,foundation.method):makeRamp(foundation[match[1]],foundation.method))[match[2]];
+  }
+  return validHex(value)?{token:source.token,hex:value.toUpperCase()}:null;
 }
 
 function resolvedSemanticRoles(roles, theme, foundation = state) {
   const overrides = foundation.semanticOverrides?.[theme] || {};
   const result = { ...roles };
   for (const key of SEMANTIC_COLOUR_KEYS)
-    if (typeof overrides[key] === 'string' && /^#[0-9a-f]{6}$/i.test(overrides[key])) result[key] = overrides[key].toUpperCase();
+    if (typeof overrides[key] === 'string' && /^#[0-9a-f]{6}$/i.test(overrides[key])) result[key] = semanticSource(key,theme,foundation)?.hex || overrides[key].toUpperCase();
   for (const [region, fallback] of [['header', 'surface'], ['main', 'background'], ['footer', 'surface']])
     if (!validHex(overrides[region + '-background'])) result[region + '-background'] = result[fallback];
   if (!overrides['control-border']) result['control-border'] = result.border;
@@ -225,7 +257,7 @@ function apply() {
     roles
   } = palette(), root = document.documentElement;
   root.dataset.projectTheme = state.theme;
-  for (const [k, v] of Object.entries(roles)) root.style.setProperty('--project-' + k, v);
+  for (const [k, v] of Object.entries(roles)) root.style.setProperty('--project-' + k, semanticPaint(k,state.theme,state,v));
   root.style.setProperty('--project-font-ui', state.font);
   root.style.setProperty('--project-base-size', state.base + 'px');
   root.style.setProperty('--project-body-leading', state.leading);
@@ -260,14 +292,14 @@ function renderRamps(all) {
 }
 
 function renderRoles(roles) {
-  $('semanticSwatches').innerHTML = Object.entries(roles).map(([k, v]) => `<div class="swatch"><div class="paint" style="background:${v}"></div><div class="swatch-text"><strong>--${k}</strong><code>${v}</code></div></div>`).join('');
+  $('semanticSwatches').innerHTML = Object.entries(roles).map(([k, v]) => `<div class="swatch"><div class="paint" style="background:${semanticPaint(k,state.theme,state,v)}"></div><div class="swatch-text"><strong>--${k}</strong><code>${semanticPaint(k,state.theme,state,v)}</code></div></div>`).join('');
 }
 
-function sizes() {
+function sizes(foundation = state) {
   return [-2, -1, 0, 1, 2, 3, 4, 5].map(n => ({
     name: n < 0 ? 'xs' + Math.abs(n) : n === 0 ? 'base' : 'step ' + n,
     step: n,
-    size: state.base * state.ratio ** n
+    size: foundation.base * foundation.ratio ** n
   }));
 }
 const CLAMP_DEFAULTS = DSStudio.project.clampDefaults();
@@ -275,33 +307,33 @@ let clampConfig = {
   ...CLAMP_DEFAULTS
 };
 
-function fluidTypeBounds(step) {
-  const full = state.base * Math.pow(state.ratio, step);
+function fluidTypeBounds(step, foundation = state, config = clampConfig) {
+  const full = foundation.base * Math.pow(foundation.ratio, step);
   return {
     full,
-    min: full * (step >= 3 ? clampConfig.mobileFactor : 1)
+    min: full * (step >= 3 ? config.mobileFactor : 1)
   };
 }
 
-function fluidTypePx(step, viewport) {
+function fluidTypePx(step, viewport, foundation = state, config = clampConfig) {
   const {
     full,
     min
-  } = fluidTypeBounds(step), {
+  } = fluidTypeBounds(step, foundation, config), {
     minWidth,
     maxWidth
-  } = clampConfig;
+  } = config;
   return round(Math.max(min, Math.min(full, min + (full - min) * (viewport - minWidth) / (maxWidth - minWidth))), 1);
 }
 
-function fluidTypeCss(step, unit = 'vw', viewportInset = 0) {
+function fluidTypeCss(step, unit = 'vw', viewportInset = 0, foundation = state, config = clampConfig) {
   const {
     full,
     min
-  } = fluidTypeBounds(step), {
+  } = fluidTypeBounds(step, foundation, config), {
     minWidth,
     maxWidth
-  } = clampConfig;
+  } = config;
   const slope = (full - min) / (maxWidth - minWidth) * 100;
   const offset = min - slope * minWidth / 100;
   // rem offsets scale with user root font preferences; 16px is the nominal root.
@@ -372,7 +404,7 @@ function renderContrast(roles) {
 
 function renderInspector(roles) {
   const names = ['primary', 'on-primary', 'text', 'text-muted', 'background', 'surface', 'surface-muted', 'border'];
-  $('tokenInspector').innerHTML = names.map(k => `<div class="token-item"><strong>--${k}</strong><code>${roles[k]}</code><span class="help">${k==='primary'?'Foundation ramp → semantic primary → button':k==='surface'?'Semantic surface → card background':k==='text'?'Semantic text → body and headings':'Semantic role → multiple components'}</span></div>`).join('');
+  $('tokenInspector').innerHTML = names.map(k => `<div class="token-item"><strong>--${k}</strong><code>${semanticPaint(k,state.theme,state,roles[k])}</code><span class="help">${k==='primary'?'Foundation ramp → semantic primary → button':k==='surface'?'Semantic surface → card background':k==='text'?'Semantic text → body and headings':'Semantic role → multiple components'}</span></div>`).join('');
 }
 
 function foundationCss() {
@@ -390,7 +422,7 @@ function foundationCss() {
     accent: a,
     neutral: n
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
-  const semantic = (r, theme) => Object.entries(r).map(([k, v]) => `  --${k}: ${v};`).concat(STATUS_PALETTE_ROLES.flatMap(role => {
+  const semantic = (r, theme) => Object.entries(r).map(([k, v]) => `  --${k}: ${colourIsTransparent(k,theme)?'transparent':semanticSource(k,theme)?'var('+semanticSource(k,theme).token+')':v};`).concat(STATUS_PALETTE_ROLES.flatMap(role => {
     const ramp = makeRamp(r[role], state.method);
     return steps.map(step => `  --${role}-${step}: ${ramp[step]};`);
   }), BACKGROUND_REGIONS.map(region => {

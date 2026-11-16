@@ -13,7 +13,7 @@ python scripts/review_suites.py
 git diff --check
 ```
 
-The catalogue command runs structure checks, runner contracts and all 18 offline
+The catalogue command runs structure checks, runner contracts and all 19 offline
 browser suites in separate processes, then returns nonzero if any check failed.
 It continues after failures so the summary reports every suite. Use
 `python scripts/review_suites.py --list` to see the individual commands; each suite

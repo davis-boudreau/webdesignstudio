@@ -11,9 +11,9 @@
   const statusOrder = { review: 0, conditional: 1, pass: 2, candidate: 3, exempt: 4 };
   const stateOrder = Object.fromEntries(['default', 'hover', 'focus', 'active', 'selected', 'disabled', 'loading', 'invalid', 'success', 'warning', 'danger', 'readonly', 'candidate'].map((name, index) => [name, index]));
   const esc = value => escapeHtml(String(value));
-  const rgb = colour => Array.isArray(colour) ? colour : hexRgb(colour);
-  const blend = (fg, bg, opacity = 1) => rgb(fg).map((v, i) => v * opacity + rgb(bg)[i] * (1 - opacity));
-  const brighten = (colour, factor) => rgb(colour).map(v => v * factor);
+  const rgb = colour => Array.isArray(colour) ? colour : hexRgb(colour==='transparent'?'#FFFFFF':colour);
+  const blend = (fg, bg, opacity = 1) => rgb(fg==='transparent'?bg:fg).map((v, i) => v * opacity + rgb(bg)[i] * (1 - opacity));
+  const brighten = (colour, factor) => colour==='transparent'?'transparent':rgb(colour).map(v => v * factor);
   const luminance = colour => rgb(colour).map(srgbToLinear).reduce((sum, channel, i) => sum + channel * [.2126, .7152, .0722][i], 0);
   const title = value => value.charAt(0).toUpperCase() + value.slice(1);
   let rows = [], queued = false;
@@ -72,14 +72,19 @@
     const button = window.dssGetButtonContrastData(configuration.buttonSettings, foundation);
     const palettes = Object.fromEntries(['light', 'dark'].map(theme => [theme, palette(theme, foundation)]));
     const add = (theme, group, name, stateName, location, fg, bg, threshold = 4.5, note = '', scope = 'required') => {
+      if(bg==='transparent')bg=colourIsTransparent('surface',theme,foundation)?backgroundLayers(theme,foundation).main:palette(theme,foundation).roles.surface;
+      if(fg==='transparent')fg=bg;
       const [light, dark] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
       const ratio = (light + .05) / (dark + .05);
       result.push({ theme, group, name, state: stateName, location, fg: rgbHex(rgb(fg)), bg: rgbHex(rgb(bg)), threshold, ratio, note, scope,
         status: threshold === null ? 'exempt' : ['candidate', 'potential'].includes(scope) ? 'candidate' : scope === 'conditional' ? 'conditional' : ratio >= threshold ? 'pass' : 'review' });
     };
     for (const theme of ['light', 'dark']) {
-      const { roles: r, p, s, a, n } = palettes[theme];
-      const layers=backgroundLayers(theme,foundation,r);
+      const { roles: raw, p, s, a, n } = palettes[theme];
+      const layers=backgroundLayers(theme,foundation,raw);
+      const r=Object.fromEntries(Object.entries(raw).map(([key,value])=>[key,semanticPaint(key,theme,foundation,value)]));
+      if(r.surface==='transparent')r.surface=layers.main;
+      if(r['surface-muted']==='transparent')r['surface-muted']=r.surface;
       const visible={...r,background:layers.body,'header-background':layers.header,'main-background':layers.main,'footer-background':layers.footer};
       const surfaces = ['background', 'surface', 'surface-muted', 'header-background', 'main-background', 'footer-background'];
       for (const bg of surfaces) {
@@ -105,12 +110,13 @@
         for (const [host, surround] of hosts) {
           const base = c.bg === 'transparent' ? surround : c.bg;
           for (const st of textStates) {
-            const bg = st === 'hover' ? c.hover : st === 'active' ? c.active : base;
+            const paint = st === 'hover' ? c.hover : st === 'active' ? c.active : base;
+            const bg=paint==='transparent'?surround:paint;
             const fg = st === 'hover' ? c.hoverText : st === 'active' ? c.activeText : c.fg;
             const alpha = st === 'disabled' ? .55 : 1;
             const disabled = st === 'disabled';
             add(theme, 'Button Laboratory: text', title(variant), st, host,
-              blend(fg, surround, alpha), blend(bg, surround, alpha), disabled ? null : 4.5,
+              blend(fg==='transparent'?bg:fg, surround, alpha), blend(bg, surround, alpha), disabled ? null : 4.5,
               disabled ? 'Native disabled control: contrast exemption; ratio shown for information.' :
                 st === 'loading' ? 'Busy controls keep full opacity, with a progress indicator and Processing label. Busy alone does not disable an action.' :
                 st === 'focus' ? 'Text stays the default colour; focus ring checked separately.' :
@@ -127,12 +133,12 @@
                 'Only necessary when the border or fill identifies the control; a readable action label can identify a button.', 'conditional');
             }
           }
-          add(theme, 'Button Laboratory: indicators', `${title(variant)} focus ring`, 'focus', host, button.settings.focus, surround, 3,
+          add(theme, 'Button Laboratory: indicators', `${title(variant)} focus ring`, 'focus', host, foundation.colourTransparency?.['button:focus']?'transparent':button.settings.focus, surround, 3,
             'Offset focus ring against its surrounding surface, including when hover/active is also present. Check geometry separately.');
-          add(theme, 'Button Laboratory: indicators', `${title(variant)} selection ring (outer)`, 'selected', host, button.settings.focus, surround, 3,
+          add(theme, 'Button Laboratory: indicators', `${title(variant)} selection ring (outer)`, 'selected', host, foundation.colourTransparency?.['button:focus']?'transparent':button.settings.focus, surround, 3,
             'Persistent toggle indicator against the outside surface; also expose aria-pressed.');
           add(theme, 'Button Laboratory: indicators', `${title(variant)} selection ring (inner)`, 'selected', host,
-            button.settings.focus, c.border === 'transparent' ? base : c.border, 3,
+            foundation.colourTransparency?.['button:focus']?'transparent':button.settings.focus, c.border === 'transparent' ? base : c.border, 3,
             'Extra inner-edge check, not an independent failure when the outside ring already identifies selection.', 'conditional');
         }
       }
@@ -144,7 +150,7 @@
         const bg = st === 'hover' ? r['primary-hover'] : st === 'active' ? brighten(r.primary, .86) : r.primary;
         const fg = st === 'active' ? brighten(r['on-primary'], .86) : r['on-primary'];
         add(theme, 'General components and form states', 'State Explorer button text', st, 'surface',
-          blend(fg, r.surface, faded ? .55 : 1), blend(bg, r.surface, faded ? .55 : 1), faded || st === 'loading' ? null : 4.5,
+          blend(fg==='transparent'?bg:fg, r.surface, faded ? .55 : 1), blend(bg, r.surface, faded ? .55 : 1), faded || st === 'loading' ? null : 4.5,
           faded || st === 'loading' ? 'Explorer disables this control; inactive-control exemption applies. Busy controls retain full opacity.' : 'Includes active brightness filtering; states without their own text style retain default colours.');
         const inputBg = st === 'readonly' ? r['surface-muted'] : r.surface;
         // button:disabled has opacity; the explorer input does not.
@@ -166,7 +172,7 @@
       for (const [label, bg] of [['Preview card', r.surface], ['Nested muted surface', r['surface-muted']]])
         for (const text of ['text', 'text-muted'])
           add(theme, 'Surfaces and opacity', `${label}: --${text}`, 'default', 'surface',
-            blend(r[text], r.surface, (configuration.opacity ?? adv.opacity) / 100), blend(bg, r.surface, (configuration.opacity ?? adv.opacity) / 100), 4.5,
+            blend(r[text]==='transparent'?bg:r[text], r.surface, (configuration.opacity ?? adv.opacity) / 100), blend(bg, r.surface, (configuration.opacity ?? adv.opacity) / 100), 4.5,
             `Whole-component opacity ${configuration.opacity ?? adv.opacity}%, composited onto an opaque --surface. Other backgrounds require a separate check.`);
 
       const swatches = [...DSStudio.brandPalette.normalize(foundation.brandPalette).map(item => [`Brand: ${item.name} (--brand-${item.id})`, item.hex]),

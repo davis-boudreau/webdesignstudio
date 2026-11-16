@@ -10,24 +10,28 @@
     <link rel="stylesheet" href="src/css/layout.css?v=20261020-section-menu">
     <link rel="stylesheet" href="src/css/journey-library.css?v=20261020-wizard-divider">
     <link rel="stylesheet" href="src/css/button-lab.css?v=20261019-state-practices">
+      <link rel="stylesheet" href="src/css/button-workspace.css?v=20261115-button-theme-elevation">
     <link rel="stylesheet" href="src/css/oklch-lab.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/state-explorer-outline.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/preview-typography.css?v=20261019-preview">
     <link rel="stylesheet" href="src/css/contrast-audit.css?v=20261019-typography">
     <link rel="stylesheet" href="src/css/font-sources.css?v=20261019-fonts">
-    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261111-architecture-tool-context">
+    <link rel="stylesheet" href="src/css/content-architecture.css?v=20261114-save-before-sitemap">
     <link rel="stylesheet" href="src/css/palette-workspace.css?v=20261112-colour-token-flow">
-    <link rel="stylesheet" href="src/css/palette-browser.css?v=20261112-palette-browser">
-    <link rel="stylesheet" href="src/css/typography-workspace.css?v=20261112-type-heading-scroll">
+    <link rel="stylesheet" href="src/css/palette-browser.css?v=20261115-semantic-learning">
+    <link rel="stylesheet" href="src/css/typography-workspace.css?v=20261115-clamp-lesson">
     <link rel="stylesheet" href="src/css/wireframe-workspace.css?v=20261112-fidelity-tabs">
-    <link rel="stylesheet" href="src/css/design-process.css?v=20261112-centre-brief">
+    <link rel="stylesheet" href="src/css/design-process.css?v=20261115-colour-defaults-brief">
     <link rel="stylesheet" href="src/css/responsive-design.css?v=20261021-responsive">
     <link rel="stylesheet" href="src/css/learning-path.css?v=20261104-home-links">
     <link rel="stylesheet" href="src/css/utility-lesson.css?v=20261106-local-css-first">
     <link rel="stylesheet" href="src/css/tailwind-bridge.css?v=20261105-tailwind-mapping">
     <link rel="stylesheet" href="src/css/spacing-lesson.css?v=20261103-spacing-lesson">
+    <link rel="stylesheet" href="src/css/spacing-workspace.css?v=20261115-spacing-workspace">
     <link rel="stylesheet" href="src/css/basic-homepage.css?v=20261103-basic-learning">
-    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261104-all-state-palettes">
+    <link rel="stylesheet" href="src/css/colour-selects.css?v=20261115-transparent-none">
+    <link rel="stylesheet" href="src/css/brand-palette.css?v=20261114-brand-actions">
+    <link rel="stylesheet" href="src/css/property-actions.css?v=20261114-property-actions">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to studio previews</a>
@@ -103,7 +107,7 @@
               <div id="plan-brief-fields"></div>
               <p class="journey-tip">
                 <strong>Your goal:</strong>
-                Answer the seven prompts in the same order as the Project brief lesson. Keep each answer short and mark unknowns as to confirm.
+                Work through three connected parts. Keep each answer short, expand the guidance when useful and mark unknowns as to confirm.
               </p>
               <p class="journey-tip"><strong>Before moving on:</strong> You can explain the purpose, audience, scope, content, design requirements, delivery plan and success check.</p>
             </div>
@@ -216,7 +220,7 @@
               </section>
               <section class="page-background-editor" aria-labelledby="page-background-title">
                 <h4 id="page-background-title">Webpage backgrounds</h4>
-                <p class="help" id="page-background-help">Choose Body, Header, Main and Footer backgrounds for the current theme after defining your Brand and Main Palettes. All brand colours are available; selecting one copies its hex value. Cards and controls retain their surface colours.</p>
+                <p class="help" id="page-background-help">Choose Body, Header, Main and Footer backgrounds for the current theme after defining your Brand and Main Palettes. Brand and Neutral choices follow their named tokens. Choose None for a transparent background, or Use default to restore its generated colour. Cards and controls retain their surface colours.</p>
                 <p class="help" id="background-opacity-help">Background opacity: 100% is solid; 0% is transparent. Text stays opaque. Body reveals a Surface-coloured canvas; Header, Main and Footer reveal Body. Changes apply to the current theme.</p>
                 <fieldset class="background-region" id="body-background-controls">
                 <legend>Body background</legend>
@@ -549,6 +553,11 @@
                   <option value="700">Bold · 700</option>
                 </select>
               </div>
+              <div class="field">
+                <label for="bdElevation">Elevation (box shadow) for selected variant</label>
+                <select id="bdElevation"><option value="none">None</option><option value="subtle">Subtle</option><option value="medium">Medium</option></select>
+                <p class="help">Elevation belongs to this variant and is shared across website themes. Review its light and dark shadow values in the learning preview.</p>
+              </div>
               <details>
                 <summary>Advanced state colours and behaviour</summary>
                 <div class="group-body">
@@ -789,7 +798,7 @@
             <summary>All parameters · Advanced editing</summary>
             <section class="panel">
               <h2>Configure foundations</h2>
-              <p class="help">Changes update the previews and generated code immediately.</p>
+              <p class="help">Save property changes to update previews and generated code.</p>
               <div class="field">
                 <label for="project">Project name</label>
                 <input id="project" maxlength="90" value="My Project" />
@@ -1552,7 +1561,7 @@
                     </div>
                   </div>
                   <div class="component clamp-result">
-                    <h4>3 · Explore the viewport</h4>
+                    <h4>Explore the viewport</h4>
                     <label for="clampViewport">
                       Viewport width: <output id="clampViewportOut">768px</output></label><input id="clampViewport"
        type="range"
@@ -1577,12 +1586,24 @@
                   </div>
                   <div class="component">
                     <div class="section-head">
-                      <h4>4 · Generated CSS and the calculation</h4>
+                      <h4>Generated CSS and the calculation</h4>
                       <button class="ghost" type="button" id="clampCopy">Copy CSS</button>
                     </div>
                     <pre class="clamp-css"><code id="clampCss"></code></pre>
-                    <div id="clampMath" class="help"></div>
-                    <p class="help">The calculator uses <code>rem</code> limits and offset so the exported rule better respects root font settings. Test browser zoom and user font preferences in your finished project.</p>
+                    <details id="clamp-calculation-lesson" class="clamp-calculation-lesson">
+                      <summary>Learn the clamp calculation</summary>
+                      <div id="clampMath" class="help">
+                        <p><code>clamp(minimum, preferred, maximum)</code> lets a size grow with the viewport, while keeping it within two limits.</p>
+                        <p id="clampCalculationCase"></p>
+                        <ol id="clampCalculationSteps">
+                          <li><strong>Choose the limits.</strong> <span id="clampCalculationLimits"></span></li>
+                          <li><strong>Find the growth rate.</strong> <span id="clampCalculationSlope"></span></li>
+                          <li><strong>Build the preferred size.</strong> <span id="clampCalculationPreferred"></span></li>
+                          <li><strong>Convert pixels to rem.</strong> <span id="clampCalculationRem"></span></li>
+                        </ol>
+                        <p><code>1vw</code> is 1% of viewport width. Numbers are rounded for display. For fluid rules, rem limits and offset follow root font settings; test browser zoom and font preferences in your finished project.</p>
+                      </div>
+                    </details>
                   </div>
                 </section>
                 <details class="learning-note">
@@ -1695,7 +1716,7 @@
               </section>
             </details>
               <details class="studio-section" id="studio-section-3">
-              <summary><h2>10. Spacing, surfaces and component states</h2></summary>
+              <summary><h2>Spacing and surfaces</h2></summary>
               <section class="panel">
 
                 <div class="grid2">
@@ -2101,50 +2122,56 @@
       <script src="src/js/studio-registry.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/export-pipeline.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/view-updates.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/property-actions.js?v=20261116-preview-alignment" defer></script>
       <script src="src/js/studio-appearance.js?v=20261105-studio-appearance" defer></script>
-      <script src="src/js/brand-palette.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/button-state-practices.js?v=20261019-state-practices" defer></script>
-      <script src="src/js/font-sources.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/design-process.js?v=20261113-export-pipeline" defer></script>
+      <script src="src/js/brand-palette.js?v=20261115-colour-defaults-brief" defer></script>
+      <script src="src/js/button-state-practices.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/font-sources.js?v=20261114-unified-type-lab" defer></script>
+      <script src="src/js/design-process.js?v=20261115-colour-defaults-brief" defer></script>
       <script src="src/js/responsive-design.js?v=20261113-view-updates" defer></script>
       <script src="src/js/section-sitemap.js?v=20261111-wireframe-ready" defer></script>
-      <script src="src/js/content-architecture.js?v=20261112-fidelity-tabs" defer></script>
+      <script src="src/js/content-architecture.js?v=20261114-content-plan-report-final" defer></script>
       <script src="src/js/website-content.js?v=20261111-wireframe-ready" defer></script>
       <script src="src/js/wireframe-engine.js?v=20261112-low-unfilled" defer></script>
-      <script src="src/js/project-model.js?v=20261113-project-model-reset" defer></script>
-      <script src="src/js/core-state.js?v=20261113-export-pipeline" defer></script>
+      <script src="src/js/project-model.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/core-state.js?v=20261115-transparent-none" defer></script>
       <script src="src/js/css-dock.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/advanced-params.js?v=20261113-export-pipeline" defer></script>
+      <script src="src/js/advanced-params.js?v=20261115-spacing-workspace" defer></script>
       <script src="src/js/journey-library.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/button-design.js?v=20261113-export-pipeline" defer></script>
-      <script src="src/js/sample-system.js?v=20261113-export-pipeline" defer></script>
+      <script src="src/js/button-design.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/sample-system.js?v=20261115-body-padding" defer></script>
       <script src="src/js/sample-homepage.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/basic-homepage.js?v=20261113-export-pipeline" defer></script>
       <script src="src/js/page-utilities.js?v=20261109-local-inspector" defer></script>
-      <script src="src/js/responsive-preview.js?v=20261113-preview-replacement" defer></script>
+      <script src="src/js/responsive-preview.js?v=20261116-preview-focus" defer></script>
       <script src="src/js/website-export.js?v=20261103-preview" defer></script>
       <script src="src/js/oklch-lab.js?v=20261021-reset" defer></script>
-      <script src="src/js/token-catalogue.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/clamp-explorer.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/contrast-audit.js?v=20261104-background-opacity" defer></script>
-      <script src="src/js/colour-repair.js?v=20261114-repair-session" defer></script>
+      <script src="src/js/token-catalogue.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/clamp-explorer.js?v=20261115-clamp-lesson" defer></script>
+      <script src="src/js/contrast-audit.js?v=20261115-transparent-none" defer></script>
+      <script src="src/js/colour-repair.js?v=20261115-transparent-none" defer></script>
       <script src="src/js/button-contrast.js?v=20261019-collapsed" defer></script>
       <script src="src/js/typography-controls.js?v=20261113-view-updates" defer></script>
       <script src="src/js/section-accordions.js?v=20261109-active-lesson-startup" defer></script>
       <script src="src/js/site-builder.js?v=20261113-view-updates" defer></script>
       <script src="src/js/content-outline.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/studio-learning.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/wireframe-workspace.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/studio-learning.js?v=20261114-save-before-sitemap" defer></script>
+      <script src="src/js/wireframe-workspace.js?v=20261114-default-low-fidelity" defer></script>
       <script src="src/js/learning-path.js?v=20261103-single-wizard" defer></script>
       <script src="src/js/palette-process.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/state-palettes.js?v=20261113-export-pipeline" defer></script>
-      <script src="src/js/webpage-backgrounds.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/palette-workspace.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/palette-browser.js?v=20261113-view-updates" defer></script>
-      <script src="src/js/typography-workspace.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/state-palettes.js?v=20261115-transparent-none" defer></script>
+      <script src="src/js/webpage-backgrounds.js?v=20261115-body-padding" defer></script>
+      <script src="src/js/palette-workspace.js?v=20261115-semantic-learning" defer></script>
+      <script src="src/js/palette-browser.js?v=20261115-semantic-learning" defer></script>
+      <script src="src/js/typography-workspace.js?v=20261114-collapsible-learning-preview" defer></script>
       <script src="src/js/spacing-lesson.js?v=20261113-view-updates" defer></script>
       <script src="src/js/utility-lesson.js?v=20261113-view-updates" defer></script>
       <script src="src/js/tailwind-bridge.js?v=20261113-view-updates" defer></script>
+      <script src="src/js/property-editors.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/colour-selects.js?v=20261115-transparent-none" defer></script>
+      <script src="src/js/button-workspace.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/spacing-workspace.js?v=20261115-button-theme-elevation" defer></script>
+      <script src="src/js/background-workspace.js?v=20261115-semantic-learning" defer></script>
       <script src="src/js/section-navigation.js?v=20261104-home-links" defer></script>
     </body>
   </html>

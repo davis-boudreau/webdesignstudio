@@ -26,14 +26,14 @@ DSStudio.register({
       <p id="background-lesson-theme"></p>
       <div class="background-page-model" aria-label="Current webpage background colours"></div>
       <p>Try a brand colour for Body, then choose a different Main background to see the distinction. Compare the responsive preview, switch themes and inspect the generated files. Header and Footer default to Surface; Main follows Body until overridden. Reset a region to follow that default again.</p>
-      <p>Background opacity changes only the paint behind content. Body blends over an opaque Surface canvas; Header, Main and Footer blend over Body. Text and controls keep their own opacity. The ratios below use the resulting blended colours; check focus and interactive states in Accessibility.</p>`;
+      <p>Background opacity changes only the paint behind content. Body blends over Surface, or the browser canvas when Surface is transparent; Header, Main and Footer blend over Body. Text and controls keep their own opacity. The ratios below use the resulting blended colours; check focus and interactive states in Accessibility.</p>`;
     const model = lesson.querySelector('.background-page-model');
     let innerRegions;
     for (const region of regions) {
       const card = document.createElement('section');
       card.className = 'background-model-region';
       card.innerHTML = `<h5>${title(region)}</h5><code id="${region}-background-value"></code><p><code id="${region}-background-opacity-code"></code></p><p id="${region}-background-composite" class="help"></p><p id="${region}-background-contrast"></p><div class="button-row"><button type="button" class="ghost" data-background-inspect="css">Inspect ${title(region)} CSS</button><button type="button" class="ghost" data-background-inspect="html">Inspect ${title(region)} HTML</button></div>`;
-      if(region!=='body') {
+      if(PADDING_REGIONS.includes(region)) {
         const padding=document.createElement('div');padding.className='region-padding-example';
         padding.innerHTML=`<p><strong>Region padding</strong> · top / right / bottom / left</p><p><code id="${region}-padding-code"></code></p><p class="help">The inset below shows the extra region padding. Existing page gutters and component spacing remain.</p><div id="${region}-padding-demo" class="region-padding-demo"><span>Content</span></div><button type="button" class="ghost">Inspect padding CSS</button>`;
         padding.querySelector('button').addEventListener('click',()=>DSStudio.inspector.show({language:'css',section:'all',find:'--'+region+'-padding-top:'}));
@@ -65,9 +65,9 @@ DSStudio.register({
     };
     for (const {id, key} of controls) {
       const region=id==='page-background'?'body':id.split('-')[0];
-      if(region!=='body') {
+      if(PADDING_REGIONS.includes(region)) {
         const details=document.createElement('details');details.className='region-padding-controls';details.id=region+'-padding-controls';
-        details.innerHTML=`<summary id="${region}-padding-summary">${title(region)} padding</summary><p class="help" id="${region}-padding-help">Extra space inside ${title(region)}, shared across themes and samples. Existing content gutters and section spacing still apply. Order: top, right, bottom, left. Each side is 0–64 px.</p>`+PADDING_SIDES.map(side=>`<label for="${region}-padding-${side}">${title(side)} padding <output id="${region}-padding-${side}-value">0 px</output></label><input id="${region}-padding-${side}" type="range" min="0" max="64" step="1" value="0" aria-describedby="${region}-padding-help">`).join('')+`<button id="${region}-padding-reset" type="button" class="ghost">Reset ${region} padding</button>`;
+        details.innerHTML=`<summary id="${region}-padding-summary">${title(region)} padding</summary><p class="help" id="${region}-padding-help">${region==='body'?'Inset the whole page to reveal the Body background around Header, Main and Footer.':'Extra space inside '+title(region)+'.'} Shared across themes, Basic, Advanced and wireframe views. Existing content gutters and section spacing still apply. Order: top, right, bottom, left. Each side is 0–64 px.</p>`+PADDING_SIDES.map(side=>`<label for="${region}-padding-${side}">${title(side)} padding <output id="${region}-padding-${side}-value">0 px</output></label><input id="${region}-padding-${side}" type="range" min="0" max="64" step="1" value="0" aria-describedby="${region}-padding-help">`).join('')+`<button id="${region}-padding-reset" type="button" class="ghost">Reset ${region} padding</button>`;
         get(id+'-reset').after(details);
         for(const side of PADDING_SIDES)get(region+'-padding-'+side).addEventListener('input',event=>{
           const value=Number(event.target.value);if(!Number.isFinite(value))return;
@@ -105,13 +105,14 @@ DSStudio.register({
         brandSignature=next;
         for (const {id} of controls) {
           const neutrals=document.createElement('optgroup');neutrals.label='Neutral palette · from Primary UI';
-          neutrals.append(...steps.map(step=>new Option(`Neutral ${step} · ${n[step]} (--neutral-${step})`,n[step])));
-          get(id+'-brand').replaceChildren(new Option('Custom colour (use picker or hex)', ''), ...items.map(item => new Option(`${item.name} · ${item.hex}`, item.hex)),neutrals);
+          neutrals.append(...steps.map(step=>{const option=new Option(`Neutral ${step} · ${n[step]} (--neutral-${step})`,n[step]);option.dataset.token='--neutral-'+step;return option;}));
+          get(id+'-brand').replaceChildren(new Option('Custom colour (use picker or hex)', ''), ...items.map(item => {const option=new Option(`${item.name} · --brand-${item.id} · ${item.hex}`,item.hex);option.dataset.token='--brand-'+item.id;return option;}),neutrals);
+          get(id+'-brand').prepend(new Option('None (transparent)','none'),new Option('Use default background','default'));
         }
       }
       const theme=state.theme==='dark'?'Dark':'Light';
       get('background-lesson-theme').textContent=theme+' theme · changes apply to both Basic and Advanced samples.';
-      model.style.backgroundColor=roles.surface;
+      model.style.backgroundColor=rgbHex(layers.canvas);
       for (const {id, key} of controls) {
         const region=id==='page-background'?'body':id.split('-')[0],alpha=backgroundOpacity(region);
         const colour=roles[key], hex=get(id+'-hex');
@@ -123,10 +124,10 @@ DSStudio.register({
         get(id+'-opacity-value').textContent=Math.round(alpha*100)+'%';
         get(id+'-opacity').setAttribute('aria-valuetext',Math.round(alpha*100)+'% opaque');
         get(id+'-reset').disabled=!state.semanticOverrides?.[state.theme]?.[key] && alpha===1;
-        get(id==='page-background'?'page-background-theme':id+'-current').textContent=`${theme} theme · ${colour} · ${state.semanticOverrides?.[state.theme]?.[key]?'custom choice':'default'}`;
+        get(id==='page-background'?'page-background-theme':id+'-current').textContent=colourIsTransparent(key)?`${theme} theme · None (transparent) · retained ${colour}`:`${theme} theme · ${colour} · ${semanticSource(key)?.token || (state.semanticOverrides?.[state.theme]?.[key]?'custom choice':'default')}`;
       }
       for (const region of regions) {
-        if(region!=='body') {
+        if(PADDING_REGIONS.includes(region)) {
           const values=PADDING_SIDES.map(side=>regionPadding(region,side));
           for(const [index,side] of PADDING_SIDES.entries()) {
             get(region+'-padding-'+side).value=String(values[index]);
@@ -142,11 +143,12 @@ DSStudio.register({
         // Validated colours only; imported names never become HTML or selectors.
         const alpha=backgroundOpacity(region);
         get(region+'-background-value').closest('section').style.backgroundColor=`rgb(${hexRgb(colour).join(' ')} / ${alpha})`;
-        get(region+'-background-value').textContent=`--${key}: ${colour};`;
+        const reference=semanticSource(key);
+        get(region+'-background-value').textContent=colourIsTransparent(key)?`--${key}: transparent;`:reference?`--${key}: var(${reference.token}); /* ${colour} */`:`--${key}: ${colour};`;
         get(region+'-background-opacity-code').textContent=`--${region}-background-opacity: ${alpha};`;
         const visible=rgbHex(layers[region]);
         get(region+'-background-composite').textContent=`${Math.round(alpha*100)}% opaque · blended background ${visible}`;
-        const text=contrast(roles.text,visible), link=contrast(roles.primary,visible);
+        const text=colourIsTransparent('text')?1:contrast(roles.text,visible), link=colourIsTransparent('primary')?1:contrast(roles.primary,visible);
         get(region+'-background-contrast').textContent=`Text ${text.toFixed(2)}:1 · Links ${link.toFixed(2)}:1 · ${text>=4.5&&link>=4.5?'both meet 4.5:1':'review text/link contrast'}`;
       }
     }

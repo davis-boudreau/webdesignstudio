@@ -9,19 +9,20 @@
   const cues={default:'Ready to activate.',hover:'Underline supplements the colour change.',focus:'Keep a visible outline and test actual keyboard focus.',active:'A pressed cue is momentary; it is separate from selection.',selected:'Keep the checkmark and aria-pressed on toggle buttons.',disabled:'Native disabled prevents activation; opacity .55 also affects the displayed colour.',loading:'Keep the progress indicator, busy label and duplicate-action protection.',invalid:'Include an error message and aria-invalid.',success:'Include a success message; colour alone is insufficient.',readonly:'Read-only text stays readable and selectable; it is separate from disabled.'};
   function entries(theme,group='general',buttonData=window.dssGetButtonContrastData(),roles=palette(theme).roles) {
     const semantic={default:'primary',hover:'primary-hover',focus:'focus',active:'primary',selected:'primary',disabled:'primary',loading:'primary',invalid:'danger',success:'success',readonly:'surface-muted'};
-    const isButton=variants.includes(group),colours=isButton?buttonData.themes[theme][group]:null;
+    const isButton=variants.includes(group),colours=isButton?buttonData.themes[theme][group]:null;let retained;
     return (isButton?buttonStates:generalStates).map(key=>{
       let anchor,source,control,property=null,transparent=false;
       if(isButton) {
         property=key==='hover'?'hover':key==='active'?'active':key==='focus'||key==='selected'?'focus':'bg';
         anchor=property==='focus'?buttonData.settings.focus:colours[property];
         transparent=anchor==='transparent';
-        if(transparent){anchor=colours.fg;property='text';}
+        if(transparent){const explicit=state.colourTransparency?.['button:'+group+':'+property] || state.colourTransparency?.['button:'+group+':source'] || state.colourTransparency?.['anchor:'+buttonData.settings.sources[group]];if(explicit){retained??=window.dssGetButtonContrastData(buttonData.settings,{...state,colourTransparency:{}}).themes[theme][group];anchor=retained[property]==='transparent'?retained.fg:retained[property];}else{anchor=colours.fg;property='text';}}
         source=property==='focus'?'--button-focus':'--button-'+group+'-'+(transparent?'text':property);
         control=property==='focus'?'bdFocus':transparent?'bdText':{bg:'bdDefaultBg',hover:'bdHover',active:'bdActive'}[property];
       } else {
         source='--'+semantic[key];anchor=roles[semantic[key]];control='jSemanticRole';
       }
+      if(!validHex(anchor))anchor=state.primary;
       return {key,label:labels[key],prefix:isButton?'--button-'+group+'-state-'+key:'--state-'+key,anchor:anchor.toUpperCase(),source,control,property,semantic:isButton?null:semantic[key],variant:isButton?group:null,cue:cues[key]+(transparent?' The background is transparent: this ramp uses the foreground colour; it is not the composited background.':'')};
     });
   }
@@ -29,7 +30,7 @@
   DSStudio.statePalettes={entries,variants,sourceFor:(prefix,theme)=>sourceRows.get(theme+prefix)};
   let signature='',generated='';
   function css() {
-    const next=JSON.stringify([state.method,state.primary,state.secondary,state.accent,state.semanticOverrides,state.buttonDesign]);
+    const next=JSON.stringify([state.method,state.primary,state.secondary,state.accent,state.semanticOverrides,state.semanticSources,state.colourTransparency,state.brandPalette,state.buttonDesign]);
     if(next===signature)return generated;
     const buttonData=window.dssGetButtonContrastData();
     const themes=['light','dark'].map(theme=>{
@@ -88,7 +89,7 @@
       addView(get('status-palette-lesson'),'interaction-palette-lesson');
       function sync() {
         const button=state.buttonDesign;
-        const rows=entries(state.theme,group),next=JSON.stringify([state.theme,state.method,group,rows,state.brandPalette,state.primary,state.secondary,state.accent,rows.map(row=>row.semantic?state.semanticOverrides?.[state.theme]?.[row.semantic]:null),button?.sources,button?.custom,button?.overrides,button?.focus]);
+        const rows=entries(state.theme,group),next=JSON.stringify([state.theme,state.method,group,rows,state.colourTransparency,state.brandPalette,state.primary,state.secondary,state.accent,rows.map(row=>row.semantic?state.semanticOverrides?.[state.theme]?.[row.semantic]:null),button?.sources,button?.custom,button?.overrides,button?.focus]);
         if(next===viewSignature)return;viewSignature=next;
         const tokens=window.dssReadTokens();
         const brands=DSStudio.brandPalette.normalize(state.brandPalette);
@@ -98,16 +99,16 @@
           if(!defaultColours.has(row.source))defaultColours.set(row.source,defaultColour(row,generalDefaults));
           const fallback=defaultColours.get(row.source);
           const overridden=row.variant?(row.property==='focus'?row.anchor!==fallback.toUpperCase():validHex(state.buttonDesign?.overrides?.[row.variant]?.[row.property])):validHex(state.semanticOverrides?.[state.theme]?.[row.semantic]);
-          const choices=[['default','Default · '+fallback.toUpperCase()]],seen=new Set();
-          const add=(value,label)=>{if(validHex(value) && !seen.has(value.toUpperCase())){seen.add(value.toUpperCase());choices.push([value.toUpperCase(),label+' · '+value.toUpperCase()]);}};
-          for(const brand of brands)add(brand.hex,'Brand: '+brand.name);
-          for(const role of ['primary','secondary','accent'])add(state[role],'Main: '+role);
-          for(const step of steps)add(tokens.find(token=>token.name==='--neutral-'+step)?.value,'Neutral '+step);
-          for(const step of steps)add(tokens.find(token=>token.name===row.prefix+'-'+step && (token.scope==='Dark')===(state.theme==='dark'))?.value,row.label+' '+step);
+          const choices=[['none','None (transparent)'],['default','Use default ('+row.source+') · '+fallback.toUpperCase()]],seen=new Set();
+          const add=(value,label,token)=>{if(validHex(value) && !seen.has(value.toUpperCase())){seen.add(value.toUpperCase());choices.push([value.toUpperCase(),label+' · '+value.toUpperCase(),token]);}};
+          for(const brand of brands)add(brand.hex,'Brand: '+brand.name+' (--brand-'+brand.id+')','--brand-'+brand.id);
+          for(const role of ['primary','secondary','accent'])add(state[role],'Main: '+role+' (--'+role+'-500)','--'+role+'-500');
+          for(const step of steps)add(tokens.find(token=>token.name==='--neutral-'+step)?.value,'Neutral '+step+' (--neutral-'+step+')','--neutral-'+step);
+          for(const step of steps)add(tokens.find(token=>token.name===row.prefix+'-'+step && (token.scope==='Dark')===(state.theme==='dark'))?.value,row.label+' '+step+' ('+row.prefix+'-'+step+')');
           if(overridden)add(row.anchor,'Current colour');
           const shared=rows.filter(other=>other.key!==row.key && other.source===row.source).map(other=>other.label);
-          const help='Edits '+row.source+'. '+(row.variant?'Button colours apply to both themes. '+(row.property==='focus'?'Focus colour is shared across button variants. ':''):(state.theme==='dark'?'Dark':'Light')+' theme only. ')+(shared.length?'Also updates '+shared.join(', ')+'. ':'')+'Brand and shade choices copy a colour value.';
-          return {choices,selected:overridden?row.anchor:'default',help};
+          const help='Edits '+row.source+'. '+(row.variant?'Button colours apply to both themes. '+(row.property==='focus'?'Focus colour is shared across button variants. ':''):(state.theme==='dark'?'Dark':'Light')+' theme only. ')+(shared.length?'Also updates '+shared.join(', ')+'. ':'')+(row.semantic?'Brand and foundation choices follow their tokens; state shades copy a colour value.':'Brand and shade choices copy a colour value.');
+          const paintKey=row.semantic?state.theme+':'+row.semantic:row.property==='focus'?'button:focus':'button:'+row.variant+':'+row.property;return {choices,selected:state.colourTransparency?.[paintKey]?'none':overridden?row.anchor:'default',help};
         });
         for(const view of views) {
           view.select.value=group;view.theme.textContent='Showing '+(state.theme==='dark'?'Dark':'Light')+' theme · '+(state.method==='oklch'?'OKLCH':'RGB mix')+'. Compare foreground/background pairs in each state.';
@@ -139,10 +140,10 @@
             });
           }
           for(const [index,item] of view.rows.entries()) {
-            const row=rows[index];item.anchor.textContent=row.source+': '+row.anchor+'; → '+row.prefix+'-500. The ramp follows this source and the generation method.';item.cue.textContent=row.cue;
+            const row=rows[index],sourceToken=tokens.find(token=>token.name===row.source && (token.scope==='Dark')===(state.theme==='dark'))||tokens.find(token=>token.name===row.source && token.scope!=='Dark');item.anchor.textContent=row.source+': '+(sourceToken?.value||row.anchor)+'; → '+row.prefix+'-500. The ramp follows this source and the generation method.';item.cue.textContent=row.cue;
             const editor=editors[index],choicesSignature=JSON.stringify(editor.choices);
             if(item.choicesSignature!==choicesSignature) {
-              item.colour.replaceChildren(...editor.choices.map(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;return option;}));item.choicesSignature=choicesSignature;
+              item.colour.replaceChildren(...editor.choices.map(([value,label,token])=>{const option=document.createElement('option');option.value=value;option.textContent=label;if(token)option.dataset.token=token;return option;}));item.choicesSignature=choicesSignature;
             }
             item.colour.value=editor.selected;item.colourHelp.textContent=editor.help;
             for(const shade of item.shades) {

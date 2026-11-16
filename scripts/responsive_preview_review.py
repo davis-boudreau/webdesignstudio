@@ -30,7 +30,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   // Most historical feature fixtures exercise the complete Advanced sample.
   // Default/reset behavior is checked separately through resetStudio directly.
@@ -45,7 +45,7 @@ app.onload=async()=>{
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -288,6 +288,16 @@ app.onload=async()=>{
     test(mode+' project reset clears browsing even when Basic and Advanced changes are coalesced',()=>fresh() && evaluate('state.radius')===12 && w.localStorage.getItem('dss-v27-projects')===library);
     seed();d.getElementById('jNewLocal').click();if(mode==='advanced')d.getElementById('dockModeAdvanced').click();await wait();
     test(mode+' New starts a fresh browsing session while retaining saved projects',()=>fresh() && evaluate('state.sampleMode')===mode && w.localStorage.getItem('dss-v27-projects')===library);
+  }
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark']){
+    evaluate('resetStudio()');d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);await wait();
+    const doc=previewDoc(),hero=doc.getElementById('home');hero.tabIndex=-1;hero.focus({preventScroll:true});
+    const title='Focus restore '+mode+' '+theme;
+    input('jProject',title);w.DSStudio.views.flush();await wait();
+    test(mode+' '+theme+' HTML refresh restores its programmatic hero focus without exporting tabindex',()=>previewDoc()===doc && doc.getElementById('home')!==hero && doc.activeElement===doc.getElementById('home') && doc.getElementById('home').tabIndex===-1 && new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').getElementById('home').getAttribute('tabindex')===null && evaluate('state.project')===title);
+    d.getElementById('jProject').focus({preventScroll:true});
+    input('jProject',title+' edited');w.DSStudio.views.flush();await wait();
+    test(mode+' '+theme+' HTML refresh retains focus in the Studio editor',()=>previewDoc()===doc && d.activeElement===d.getElementById('jProject') && evaluate('state.project')===title+' edited');
   }
   test('No responsive preview JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Focused harness completed',pass:false,error:String(error.stack||error)});}

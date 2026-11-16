@@ -17,6 +17,8 @@
     const foundation = copy(state);
     const settings = window.dssGetButtonContrastData().settings;
     if (target.type === 'semantic') {
+      if(foundation.colourTransparency)delete foundation.colourTransparency[target.theme+':'+target.key];
+      if(foundation.semanticSources?.[target.theme])delete foundation.semanticSources[target.theme][target.key];
       foundation.semanticOverrides = foundation.semanticOverrides || {};
       foundation.semanticOverrides[target.theme] = { ...foundation.semanticOverrides[target.theme], [target.key]: colour };
     } else if (target.type === 'anchor') foundation[target.key] = colour;
@@ -106,9 +108,9 @@
     suggestions();
   }
 
-  function open(targets, row = null) {
+  function open(targets, row = null, source = null) {
     if (!targets.length) return;
-    session = { targets: copy(targets), row, revision: projectJson(), opener: document.activeElement };
+    session = { source, targets: copy(targets), row, revision: projectJson(), opener: document.activeElement };
     get('repairTitle').textContent = row ? `Edit colour: ${row.name}` : 'Edit semantic colour';
     get('repairTarget').replaceChildren(...targets.map((item, index) => new Option(item.label, index)));
     selectTarget();
@@ -146,6 +148,10 @@
     }
     const selected = target();
     if (selected.type === 'semantic') {
+      if(state.colourTransparency)delete state.colourTransparency[selected.theme+':'+selected.key];
+      const proposal=session.source;
+      if(state.semanticSources?.[selected.theme])delete state.semanticSources[selected.theme][selected.key];
+      if(proposal?.hex===colour){state.semanticSources??={};state.semanticSources[selected.theme]??={};state.semanticSources[selected.theme][selected.key]=proposal;}
       state.semanticOverrides = { ...state.semanticOverrides, [selected.theme]: { ...state.semanticOverrides?.[selected.theme], [selected.key]: colour } };
       apply(); syncAdvanced();
     } else if (selected.type === 'anchor') {
@@ -159,14 +165,14 @@
 
   function syncEditor() {
     const theme = get('semanticTheme').value, key = get('semanticRole').value;
-    get('semanticCurrent').textContent = `${palette(theme).roles[key]} · ${state.semanticOverrides?.[theme]?.[key] ? 'custom override' : 'generated / base value'}`;
-    get('semanticReset').disabled = !state.semanticOverrides?.[theme]?.[key];
+    get('semanticCurrent').textContent = colourIsTransparent(key,theme)?`None (transparent); retained ${palette(theme).roles[key]}`:`${palette(theme).roles[key]} · ${state.semanticOverrides?.[theme]?.[key] ? 'custom override' : 'generated / base value'}`;
+    get('semanticReset').disabled = !state.semanticOverrides?.[theme]?.[key] && !state.colourTransparency?.[theme+':'+key];
     const guidedKey = get('jSemanticRole').value;
     const colour = palette(state.theme).roles[guidedKey];
-    get('jSemanticCurrent').textContent = `${state.theme === 'dark' ? 'Dark' : 'Light'}: ${colour} · ${state.semanticOverrides?.[state.theme]?.[guidedKey] ? 'custom override' : 'generated / base value'}`;
-    get('jSemanticSwatch').style.backgroundColor = colour;
+    get('jSemanticCurrent').textContent = colourIsTransparent(guidedKey)?`None (transparent); retained ${colour}`:`${state.theme === 'dark' ? 'Dark' : 'Light'}: ${colour} · ${semanticSource(guidedKey)?.token || (state.semanticOverrides?.[state.theme]?.[guidedKey] ? 'custom override' : 'generated / base value')}`;
+    get('jSemanticSwatch').style.backgroundColor = semanticPaint(guidedKey,state.theme,state,colour);
     get('jSemanticHelp').textContent = roleDescriptions[guidedKey][1];
-    get('jSemanticReset').disabled = !state.semanticOverrides?.[state.theme]?.[guidedKey];
+    get('jSemanticReset').disabled = !state.semanticOverrides?.[state.theme]?.[guidedKey] && !state.colourTransparency?.[state.theme+':'+guidedKey];
   }
   const roleDescriptions = {
     'header-background': ['Header background', 'The website header, independently of card surfaces.'],
@@ -194,8 +200,10 @@
   get('jSemanticRole').replaceChildren(...SEMANTIC_COLOUR_KEYS.map(key => new Option(`${roleDescriptions[key][0]} (--${key})`, key)));
   get('jSemanticRole').value = 'text';
   get('jSemanticRole').addEventListener('change', syncEditor);
-  get('jSemanticEdit').addEventListener('click', () => open([semanticTarget(state.theme, get('jSemanticRole').value)]));
+  get('jSemanticEdit').addEventListener('click', () => open([semanticTarget(state.theme, get('jSemanticRole').value)],null,DSStudio.paletteBrowser?.proposedSource()));
   function resetRole(theme, key) {
+    if(state.colourTransparency)delete state.colourTransparency[theme+':'+key];
+    if(state.semanticSources?.[theme])delete state.semanticSources[theme][key];
     if (state.semanticOverrides?.[theme]) delete state.semanticOverrides[theme][key];
     apply(); syncAdvanced(); syncEditor();
     announce(`Restored the generated ${theme} --${key} colour.`);

@@ -31,7 +31,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   try {
   test('Independent contrast startup has no JavaScript errors',()=>!w.__reviewErrors.length);
@@ -205,6 +205,7 @@ app.onload=async()=>{
   app.style.width='1440px'; reset(); await wait();
   test('Project reset refreshes guided semantic values', () => d.getElementById('jSemanticCurrent').textContent.startsWith('Light:') && d.getElementById('jSemanticReset').disabled && !evaluate('state.semanticOverrides'));
   d.querySelector('[data-journey-step="7"]').click(); await wait();
+  w.DSStudio.buttonWorkspace.revealControl(d.getElementById('bdReview'));
   d.getElementById('bdReview').open=true;
   d.getElementById('jSaveLocal').click();
   const reviewButton = (variant, state) => d.querySelector(`[data-review-variant="${variant}"][data-review-state="${state}"]`);

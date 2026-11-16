@@ -31,7 +31,7 @@ app.onload = async () => {
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   const revealAll = () => {revealArchitecture();d.querySelectorAll('#main > .studio-section, .step-more').forEach(section => {section.hidden=false;section.open=true;});};
   // Most historical feature fixtures exercise the complete Advanced sample.
@@ -47,7 +47,7 @@ app.onload = async () => {
     let imported=false;const alerts=[],oldAlert=w.alert,done=()=>{imported=true;};
     d.addEventListener('dss:imported',done,{once:true});w.alert=message=>alerts.push(String(message));
     try {
-      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));
+      d.getElementById('loadFile').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('loadFile'));
       for(let attempt=0;!imported && !alerts.length && attempt<100;attempt++)await fetch('/__review_tick__?attempt='+attempt,{cache:'no-store'});
       if(!imported)throw new Error('Project file import did not complete: '+alerts.join('; '));
       return true;
@@ -82,7 +82,7 @@ app.onload = async () => {
       });
     }
     input('jBase',22);input('jRadius',28);input('jSpacing',8);input('jPrimary','#883366');input('jLeading',1.9);
-    input('advColor_success','#661144');d.getElementById('advUnderline').checked=false;d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));
+    input('advColor_success','#661144');d.getElementById('advUnderline').checked=false;d.getElementById('advUnderline').dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('advUnderline'));
     test(studio+' Studio type, controls and surfaces survive project foundation edits',()=>chromeSnapshot()===fixedChrome && w.getComputedStyle(d.body).fontSize==='16px' && w.getComputedStyle(d.getElementById('mobileType').querySelector('.sample')).fontSize!=='16px');
     reset();await wait();
   }
@@ -111,12 +111,16 @@ app.onload = async () => {
   }
   app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();reset();await wait();
 
-  test('Every exported token has a source in its wizard step or centre Palette workspace', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
-    const source=w.dssTokenSource(row), control=source && d.getElementById(source.control);
-    return control && (control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step) || (source.step===4 && d.getElementById('palette-workspace').contains(control)) || (source.step===5 && d.getElementById('typography-workspace').contains(control)));
-  }));
+  test('Every exported token has a source in its owning wizard or learning workspace', () => {
+    const rows=w.dssReadTokens(),missing=rows.filter(row=>{
+      const source=w.dssTokenSource(row),control=source&&d.getElementById(source.control);
+      return !control||!(control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step)||(source.step===4&&d.getElementById('palette-workspace').contains(control))||(source.step===5&&d.getElementById('typography-workspace').contains(control))||(source.step===7&&d.getElementById('button-workspace').contains(control))||(source.step===8&&d.getElementById('spacing-workspace').contains(control)));
+    });
+    if(missing.length)throw Error('Incorrect token ownership: '+missing.map(row=>row.name+' '+row.scope).join(', '));
+    return rows.length>150;
+  });
   test('Derived token families identify their foundation instead of arbitrary overrides', () => ['--space-6','--primary-700','--text-step-4','--text-h1','--font-ui','--heading-tracking','--button-progress-animation'].every(name=>/Derived|Alias/.test(w.dssTokenSource({name}).mode)));
-  test('Font, responsive, layout and interaction settings live in their owning workspaces', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]')?.dataset.journeyPane===String(step) || (step===5 && d.getElementById('typography-workspace').contains(d.getElementById(id)))));
+  test('Font, responsive, layout and interaction settings live in their owning workspaces', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]')?.dataset.journeyPane===String(step) || (step===5 && d.getElementById('typography-workspace').contains(d.getElementById(id))) || (step===8 && d.getElementById('spacing-workspace').contains(d.getElementById(id)))));
   reset(); d.querySelector('[data-journey-step="0"]').click(); await wait();
   revealAll(); await wait();
   test('Neutral CSS, JSON, and HTML exports', () => !/nscc/i.test(evaluate('cssExport()+projectJson()+htmlExport()')));
@@ -324,7 +328,7 @@ app.onload = async () => {
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:originalClipboard});
   reset();
   input('brandApplyRole','accent','change');
-  const referenceAction=d.querySelector('[data-brand-role="accent"][data-brand-hex="#00BADC"]'); referenceAction.click();
+  const referenceAction=d.querySelector('[data-brand-role="accent"][data-brand-hex="#00BADC"]'); referenceAction.click();w.DSStudio.propertyEditors.saveFor(d.getElementById("jAccent"));
   test('Reference swatch selection synchronizes palette and guided controls', () => d.getElementById('accent').value===d.getElementById('jAccent').value && evaluate('state.accent')===referenceAction.dataset.brandHex.toLowerCase());
   d.querySelector('[data-journey-step="0"]').click(); d.getElementById('jNext').click();
   test('Guided navigation advances and returns to the first step', () => {
@@ -347,7 +351,7 @@ app.onload = async () => {
   test('Inspector keyboard tabs select HTML and label the code panel', () => d.activeElement.id==='dockTabHtml' && d.getElementById('dockTabHtml').getAttribute('aria-selected')==='true' && d.getElementById('dockTabCss').tabIndex===-1 && d.getElementById('dockCss').getAttribute('aria-labelledby')==='dockTabHtml' && d.getElementById('dockCss').textContent===evaluate('htmlExport()'));
   test('Switching inspector languages leaves project data unchanged', () => evaluate('projectJson()')===beforeInspector);
   input('jProject','Cedar Studio'); input('jTheme','dark'); input('bdSize','lg');
-  d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));
+  d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(d.getElementById('bdMobileFull'));
   test('HTML inspector follows project, theme and button selections live', () => d.getElementById('dockCss').textContent===evaluate('htmlExport()') && d.getElementById('dockCss').textContent.includes('Cedar Studio') && d.getElementById('dockCss').textContent.includes('data-theme="dark"') && d.getElementById('dockCss').textContent.includes('ds-button--lg ds-button--mobile-full'));
   const inspectorDownloads=[]; w.download=(name,content,type)=>inspectorDownloads.push({name,content,type});
   d.getElementById('dockDownload').click();
@@ -366,7 +370,7 @@ app.onload = async () => {
   input('tokenSearch','--brand-'); await wait();
   test('Token catalogue classifies renamed brand references', () => d.querySelectorAll('#tokenTableBody tr').length===11 && [...d.querySelectorAll('#tokenTableBody tr')].every(row=>row.textContent.includes('Brand palette')));
   reset(); await wait(); input('tokenSearch','');
-  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',4],['--button-secondary-hover-text','Dark','bdHoverText',4],['--brand-blue','Light / base',null,4]]) {
+  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',4],['--button-secondary-hover-text','Dark','bdHoverText',7],['--brand-blue','Light / base',null,4]]) {
     d.getElementById('studio-section-8').open=true;
     const button=d.querySelector(`[data-token-name="${name}"][data-token-scope="${scope}"]`);
     button.click(); await wait();
@@ -456,6 +460,7 @@ app.onload = async () => {
   test('A beginner colour change updates the example, connected token and inspector together',()=>previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(96, 45, 84)' && d.getElementById('studyTokens').textContent.toLowerCase().includes('#602d54') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
   d.querySelector('[data-journey-step="8"]').click();
   await wait();
+  w.dssRevealSection('jSpacing',false);
   test('Spacing exercise opens the existing source control',()=>{const control=d.getElementById('jSpacing'),box=control.getBoundingClientRect();return !d.querySelector('[data-journey-pane="8"]').hidden && box.width>0 && box.height>0 && !control.disabled;});
   const beforeLearningPadding=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('#lists')).paddingTop);
   input('jSpacing',6); await wait();
@@ -474,7 +479,7 @@ app.onload = async () => {
   const beforePicking=evaluate('projectJson()'), pickingDoc=previewDoc();
   d.getElementById('studyPick').click();
   previewDoc().querySelector('#basic-layout a').click(); await wait();
-  test('Opt-in selection connects the clicked example without following its link or changing project data',()=>previewDoc()===pickingDoc && d.getElementById('studyExample').value==='profile' && !w.DSStudio.learning.picking && d.activeElement===d.getElementById('studyExample') && evaluate('projectJson()')===beforePicking);
+  test('Opt-in selection connects the clicked example without following its link or changing project data',()=>{const checks={document:previewDoc()===pickingDoc,example:d.getElementById('studyExample').value==='profile',picking:!w.DSStudio.learning.picking,focus:d.activeElement===d.getElementById('studyExample'),project:evaluate('projectJson()')===beforePicking};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({...checks,active:d.activeElement?.id}));return true;});
   previewDoc().querySelector('#basic-layout a').click(); await wait();
   test('Normal preview navigation resumes after selecting an example',()=>previewDoc().activeElement===previewDoc().getElementById('list-workflow'));
   d.getElementById('studyPick').click(); previewDoc().dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
@@ -492,7 +497,7 @@ app.onload = async () => {
   test('Find rule selects complete CSS so shared dependencies remain visible',()=>d.getElementById('dockSection').value==='all' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').scrollTop>0 && d.activeElement===d.getElementById('dockCss'));
   d.querySelector('[data-journey-step="9"]').click(); const beforeLearningResponsive=evaluate('JSON.stringify(state.responsiveDesign)');
   d.querySelector('button[data-width="mobile"]').click();d.getElementById('studyPreview').click(); await wait();
-  test('Responsive task tests 390px without changing saved breakpoints',()=>Math.abs(previewWindow().innerWidth-390)<1 && evaluate('JSON.stringify(state.responsiveDesign)')===beforeLearningResponsive && previewDoc().activeElement===previewDoc().getElementById('home'));
+  test('Responsive task tests 390px without changing saved breakpoints',()=>{const checks={width:Math.abs(previewWindow().innerWidth-390)<1,breakpoints:evaluate('JSON.stringify(state.responsiveDesign)')===beforeLearningResponsive,focus:previewDoc().activeElement===previewDoc().getElementById('home')};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({checks,width:previewWindow().innerWidth,active:previewDoc().activeElement.outerHTML.slice(0,200)}));return true;});
   const learningFiles=[], beforeLearningDownload=w.download;w.download=(name,content,type)=>learningFiles.push({name,content,type});
   d.querySelector('[data-journey-step="11"]').click();
   test('Export exercise focuses Deliver without downloading automatically',()=>!d.querySelector('[data-journey-pane="11"]').hidden && learningFiles.length===0);
@@ -514,7 +519,7 @@ app.onload = async () => {
   d.querySelector('[data-journey-step="0"]').click();input('plan-goal','Choose a lesson and practise.');
   test('Learner journey starts with Brief controls and the matching lesson',()=>w.DSStudio.activeStage===0 && d.getElementById('process-brief').open && d.getElementById('plan-goal').value==='Choose a lesson and practise.');
   d.querySelector('[data-journey-step="5"]').click();input('jBase',18);d.getElementById('jBase').focus();await wait();
-  test('Learner journey connects Typography editing to the current preview and CSS',()=>w.DSStudio.activeStage===5 && d.getElementById('studio-section-2').open && d.activeElement===d.getElementById('jBase') && previewDoc()===journeyPreview && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('--font-size-base: 18px;'));
+  test('Learner journey connects Typography editing to the current preview and CSS',()=>{const checks={stage:w.DSStudio.activeStage===5,open:d.getElementById('studio-section-2').open,focus:d.activeElement===d.getElementById('jBase'),document:previewDoc()===journeyPreview,css:previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'),value:evaluate('cssExport()').includes('--font-size-base: 18px;')};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({checks,active:d.activeElement?.id}));return true;});
   d.querySelector('[data-journey-step="11"]').click();
   d.querySelector('#studio-section-6 [data-inspect="css"]').click();await wait();
   test('Learner journey reaches Deliver and inspects the edited CSS',()=>w.DSStudio.activeStage===11 && d.getElementById('studio-section-6').open && d.getElementById('studioInspector').open && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && evaluate('state.designProcess.goal')==='Choose a lesson and practise.');

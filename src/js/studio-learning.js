@@ -112,7 +112,7 @@ DSStudio.register({
         const sitemapSummary=document.createElement('summary');sitemapSummary.textContent='Visitor sitemap';sitemap.append(sitemapSummary,get('section-sitemap-editor'));
         const contentPlan=get('ia-content-plan');
         for(const control of contentPlan.querySelectorAll('input,textarea,select,button'))control.setAttribute('form','ia-form');
-        workspace.append(contentPlan,get('ia-content-editor'),sitemap);
+        workspace.append(contentPlan,get('ia-content-editor'),get('ia-save').closest('.ia-save-area'),sitemap);
         lesson.after(workspace);
         const review=document.createElement('details');review.id='architecture-saved-review';review.className='architecture-options';
         const artifact=panel.querySelector('[data-process-artifact="ia"]'),guidance=document.createElement('div');guidance.id='architecture-review-guidance';

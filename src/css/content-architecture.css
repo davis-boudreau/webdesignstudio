@@ -88,6 +88,7 @@
 .ia-current-content { border-top: 1px solid var(--border); padding-top: .85rem; }
 :is(.ia-content-editor,.ia-content-planning) .ia-current-content textarea { background: var(--surface-muted); }
 .ia-save-area { padding: .85rem; border: 1px solid var(--control-border); border-radius: var(--radius-base); background: var(--surface-muted); min-width: 0; }
+.architecture-workspace > .ia-save-area { margin-block: 1rem; }
 .ia-save-area button { min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
 .ia-save-area h4 { font-size: 1rem; margin: 0 0 .5rem; }
 .ia-save-area .help { margin-block: .5rem; }

@@ -152,6 +152,52 @@
     const branch=(parentId=null)=>`<ul>${(byParent.get(parentId)||[]).map(node=>{const children=byParent.has(node.id),value=node.value;const label=`<strong>${esc(node.label)}</strong> <small>${esc(typeNames[node.type])}${node.status!=='present'?' · '+esc(statusNames[node.status]):''}</small>`;return `<li>${children?`<details data-content-branch="${esc(node.id)}"><summary>${label}</summary>`:label}${value?`<p>${esc(value)}</p>`:''}${node.target?`<p class="help">${node.type==='link'?'References':'Destination'}: ${esc(names.get(node.target)||node.target)}</p>`:''}${node.reference?`<p class="help">Reference: ${esc(node.reference)}</p>`:''}${node.draft!==null?`<p><strong>Planned content:</strong> ${esc(node.draft)||'(deliberately empty)'}</p><p class="help">Sample content is unchanged.</p>`:''}${node.notes?`<p class="help">${esc(node.notes)}</p>`:''}${children?branch(node.id)+'</details>':''}</li>`;}).join('')}</ul>`;
     return `<section class="ia-content-map" aria-label="Complete website content structure"><h4>Website content structure</h4><p>Regions, sections, groups and actual content. Expand a branch to inspect its text, images, controls and destination references. ${list.length} entries.</p>${list.length?branch():'<p>No content entries. Add an entry or restore the sample content inventory.</p>'}</section>`;
   }
-  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory,planningNotes,
+  function reportCss() {
+    return `
+.ia-content-report { min-width:0; overflow-wrap:anywhere; }
+.ia-content-report header { margin-bottom:1rem; }
+.ia-content-report :is(h1,h2,h3,h4,h5,h6) { margin:.5rem 0; }
+.ia-report-summary { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin:1rem 0; }
+.ia-report-summary div { min-width:0; }
+.ia-report-summary dd { margin:0; font-weight:700; }
+.ia-report-tree { list-style:none; margin:0; padding:0; }
+.ia-report-tree .ia-report-tree { margin-inline-start:.5rem; }
+.ia-report-tree > li { min-width:0; border-inline-start:2px solid var(--border,#bcc3cd); padding-inline-start:.5rem; margin-block:.75rem; }
+.ia-report-entry { padding:.65rem; border:1px solid var(--border,#bcc3cd); border-radius:.35rem; }
+.ia-report-entry header { margin:0 0 .5rem; }
+.ia-report-kind { font-weight:400; }
+.ia-report-entry :is(h2,h3,h4,h5,h6) { font-size:1rem; line-height:1.4; }
+.ia-content-report > header > :is(h1,h2,h3,h4) { font-size:1.25rem; }
+.ia-content-report > header > h1 { font-size:1.75rem; }
+.ia-report-entry dl { margin:.5rem 0 0; }
+.ia-report-entry dt { font-weight:600; margin-top:.6rem; }
+.ia-report-entry dd { margin:.2rem 0 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ia-content-report button { min-height:44px; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+@media print { .ia-content-report button { display:none; } .ia-report-entry { break-inside:avoid; } }
+`;
+  }
+  function reportMarkup({download=true,headingLevel=4}={}) {
+    const list=nodes(),esc=escapeHtml,byParent=new Map(),names=new Map(DSStudio.process.inventory(mode()).map(([label,id])=>[id,label]));
+    for(const node of list){if(!byParent.has(node.parentId))byParent.set(node.parentId,[]);byParent.get(node.parentId).push(node);}
+    const counts=new Map(statuses.map(status=>[status,list.filter(node=>node.status===status).length]));
+    const field=(label,value,cls='')=>`<dt>${esc(label)}</dt><dd${cls?` class="${cls}"`:''}>${esc(value)}</dd>`;
+    function branch(parentId=null,position=[],depth=0) {
+      return `<ol class="ia-report-tree">${(byParent.get(parentId)||[]).map((node,index)=>{
+        const number=[...position,index+1],level=Math.min(headingLevel+depth+1,6),fields=[];
+        if(node.value || (node.sourceKey && ['text','image','link','field'].includes(node.type)))fields.push(field(node.sourceKey?'Current website content':'Planned item content',node.value||'(empty)','ia-report-current'));
+        if(node.sourceMissing)fields.push(field('Source','This item is no longer available in the current website.'));
+        if(node.draft!==null)fields.push(field('Saved proposal',node.draft||'(deliberately empty)','ia-report-proposal'));
+        if(node.target)fields.push(field(node.type==='link'?'References destination':'Related website section',names.get(node.target)||node.target));
+        if(node.reference)fields.push(field('Reference',node.reference,'ia-report-reference'));
+        if(node.notes)fields.push(field('Purpose, owner and next action',node.notes,'ia-report-notes'));
+        return `<li data-report-node="${esc(node.id)}" data-report-parent="${esc(node.parentId||'')}"><article class="ia-report-entry"><header><h${level}>${number.join('.')} ${esc(node.label)}</h${level}><p class="ia-report-kind">${esc(typeNames[node.type])} / ${esc(statusNames[node.status])}</p></header>${fields.length?`<dl>${fields.join('')}</dl>`:''}</article>${byParent.has(node.id)?branch(node.id,number,depth+1):''}</li>`;
+      }).join('')}</ol>`;
+    }
+    return `<article class="ia-content-map ia-content-report" aria-labelledby="ia-content-report-title"><header><h${headingLevel} id="ia-content-report-title">Content plan report</h${headingLevel}><p><strong>${esc(state.project)}</strong> / ${mode()==='basic'?'Basic':'Advanced'} website</p><p>Saved content arranged in its parent-and-child hierarchy. Current website content and saved proposals are shown separately. Unsaved editor changes are excluded.</p><dl class="ia-report-summary"><div><dt>Total entries</dt><dd>${list.length}</dd></div>${statuses.map(status=>`<div><dt>${esc(statusNames[status])}</dt><dd>${counts.get(status)}</dd></div>`).join('')}</dl>${download?'<button type="button" class="ghost" data-content-report-download>Download content plan report</button><p class="help" role="status" data-content-report-status></p>':''}</header>${list.length?branch():'<p>No content entries. Add an item and save it, or restore the sample inventory.</p>'}</article>`;
+  }
+  function reportDocument() {
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(state.project)} - Content plan report</title><style>body{margin:0 auto;padding:1.25rem;max-width:70rem;font:16px/1.5 system-ui,sans-serif;color:#182535;background:#fff}*{box-sizing:border-box}${reportCss()}</style></head><body>${reportMarkup({download:false,headingLevel:1})}</body></html>`;
+  }
+  DSStudio.contentArchitecture={MAX_NODES,MAX_DEPTH,MAX_PLAN_CHARS,types,statuses,typeNames,statusNames,normalizeNodes,prepare,nodes,descendants,path,markup,inventory,planningNotes,reportCss,reportMarkup,reportDocument,
     isCollecting:()=>collecting,sourceNodes:()=>{prepare();return cache[mode()]||[];}};
 })();

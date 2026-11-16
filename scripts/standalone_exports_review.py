@@ -30,7 +30,7 @@ app.onload=async()=>{
     w.DSStudio.typographyWorkspace?.revealControl(el);
     if(id.startsWith('ia-')){const disclosure=el.closest('.ia-editor-disclosure');if(disclosure)disclosure.open=true;}
     el.value=value;
-    el.dispatchEvent(new w.Event(type,{bubbles:true}));
+    el.dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(el);
   };
   // Most historical feature fixtures exercise the complete Advanced sample.
   // Default/reset behavior is checked separately through resetStudio directly.
@@ -47,7 +47,7 @@ app.onload=async()=>{
   try {
   test('Independent standalone exports startup has no JavaScript errors',()=>!w.__reviewErrors.length);
   await prepare();
-  input('bdSize','lg');d.getElementById('bdMobileFull').checked=true;d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
+  input('bdSize','lg');d.getElementById('bdMobileFull').checked=true;d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('bdMobileFull'));await wait();
   const sampleDoc=new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html');
   test('Sample home page has header, main, footer, hero and a single headline', () => !!sampleDoc.querySelector('body > header nav') && !!sampleDoc.querySelector('body > main') && !!sampleDoc.querySelector('body > footer nav') && !!sampleDoc.querySelector('#home .sample-lead') && sampleDoc.querySelectorAll('h1').length===1);
   test('Every sample navigation and action anchor reaches an existing section', () => [...sampleDoc.querySelectorAll('a[href^="#"]')].every(link=>sampleDoc.getElementById(link.hash.slice(1))));
@@ -351,7 +351,7 @@ app.onload=async()=>{
   const basicActionSettings=evaluate('projectJson()');
   for (const theme of ['light','dark']) {
     input('jTheme',theme); input('bdVariant','secondary'); input('bdDefaultBg','#602d54'); input('bdText','#ffffff'); input('bdSize','lg');
-    d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true})); await wait();
+    d.getElementById('bdMobileFull').checked=true; d.getElementById('bdMobileFull').dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors?.saveFor(d.getElementById('bdMobileFull')); await wait();
     test(theme+' Basic CTAs follow wizard variant colours, size and width settings in the preview and HTML inspector', () => {
       const page=previewDoc(), links=[...page.querySelectorAll('.section-actions .ds-button--secondary')];
       return links.length===4 && links.every(a=>previewWindow().getComputedStyle(a).backgroundColor==='rgb(96, 45, 84)' && a.classList.contains('ds-button--lg') && a.classList.contains('ds-button--mobile-full')) && previewWindow().getComputedStyle(page.querySelector('.section-actions .ds-button--primary')).backgroundColor!=='rgb(96, 45, 84)' && d.getElementById('dockCss').textContent===evaluate('htmlExport()');

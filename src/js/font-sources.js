@@ -24,33 +24,33 @@
     if (Array.isArray(value.weights)) next.weights = weights.filter(weight => value.weights.includes(weight));
     return next;
   }
-  const settings = () => normalize(state.fontSettings);
+  const settings = (foundation = state) => normalize(foundation.fontSettings);
   const bodyFont = config => catalogue.find(font => font.id === config.body);
   const headingFont = config => config.heading === 'same' ? bodyFont(config) : catalogue.find(font => font.id === config.heading);
   let fallback = false;
-  function resolve(useFallback = false) {
-    const config = settings();
+  function resolve(useFallback = false, foundation = state) {
+    const config = settings(foundation);
     if (config.source === 'system') return {
-      body: state.font,
-      heading: config.systemHeading === 'same' ? state.font : systems.find(([id]) => id === config.systemHeading)[2]
+      body: foundation.font,
+      heading: config.systemHeading === 'same' ? foundation.font : systems.find(([id]) => id === config.systemHeading)[2]
     };
     const stack = font => useFallback ? font.fallback : `"${font.family}", ${font.fallback}`;
     return { body: stack(bodyFont(config)), heading: stack(headingFont(config)) };
   }
-  const requiredWeights = () => [...new Set([400, 600, 700, Number(adv.weight), Number(state.buttonDesign?.weight || 600)])]
+  const requiredWeights = (foundation = state) => [...new Set([400, 600, 700, Number(foundation.advanced?.weight || 700), Number(foundation.buttonDesign?.weight || 600)])]
     .filter(weight => weights.includes(weight)).sort((a, b) => a - b);
-  const selectedWeights = () => [...new Set([...settings().weights, ...requiredWeights()])].sort((a, b) => a - b);
-  function families() {
-    const config = settings();
+  const selectedWeights = (foundation = state) => [...new Set([...settings(foundation).weights, ...requiredWeights(foundation)])].sort((a, b) => a - b);
+  function families(foundation = state) {
+    const config = settings(foundation);
     const entries = new Map();
     for (const font of [bodyFont(config), headingFont(config)]) entries.set(font.family, font);
     return [...entries.values()];
   }
-  function url() {
-    const config = settings();
+  function url(foundation = state) {
+    const config = settings(foundation);
     if (config.source !== 'google') return '';
-    const normal = selectedWeights();
-    const queries = families().map(font => {
+    const normal = selectedWeights(foundation);
+    const queries = families(foundation).map(font => {
       // Body copy includes the italic cite in the sample; heading-only families need normal styles.
       const styles = font.id === config.body ? `ital,wght@${normal.map(weight => `0,${weight}`).join(';')};1,400` : `wght@${normal.join(';')}`;
       return `family=${font.family.replaceAll(' ', '+')}:${styles}`;
@@ -125,7 +125,26 @@
   function syncPreview(doc) {
     syncLinks(doc, fallback ? '' : url());
   }
-  DSStudio.fonts = { defaults, normalize, resolve, url, htmlLinks, previewCss, syncPreview,
+  // Learning font faces have their own slot. Drafts never replace saved-page links.
+  const learningDocuments=new WeakMap();
+  function clearLearning(doc) {
+    const record=learningDocuments.get(doc);if(!record)return;
+    clearTimeout(record.timer);for(const link of record.links){link.onload=link.onerror=null;link.remove();}learningDocuments.delete(doc);
+  }
+  function syncLearning(doc,foundation,report,useFallback=false) {
+    const href=useFallback?'':url(foundation),previous=learningDocuments.get(doc);
+    if(!href || href===url()){clearLearning(doc);report(useFallback?'fallback':href?'saved':'system');return;}
+    if(previous?.url===href && previous.sheet.isConnected){previous.report=report;return;}
+    clearLearning(doc);const record={url:href,links:[],report,status:'loading'};learningDocuments.set(doc,record);
+    const current=()=>learningDocuments.get(doc)===record;
+    const notify=kind=>{if(!current())return;clearTimeout(record.timer);record.status=kind;record.report(kind);};
+    for(const host of ['https://fonts.googleapis.com','https://fonts.gstatic.com']){const link=doc.createElement('link');link.rel='preconnect';link.href=host;if(host.includes('gstatic'))link.crossOrigin='anonymous';link.dataset.dssLearningFont='';record.links.push(link);doc.head.append(link);}
+    const link=doc.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.dssLearningFont='';record.sheet=link;record.links.push(link);
+    const requested=families(foundation);
+    link.onload=async()=>{try{const loaded=await Promise.all(requested.map(font=>doc.fonts.load(`400 16px "${font.family}"`)));notify(loaded.every(faces=>faces.length && faces.every(face=>face.status==='loaded'))?'loaded':'error');}catch{notify('error');}};
+    link.onerror=()=>notify('error');record.timer=setTimeout(()=>notify('error'),12000);report('loading');doc.head.append(link);
+  }
+  DSStudio.fonts = { defaults, normalize, resolve, url, htmlLinks, previewCss, syncPreview,syncLearning,clearLearning,
     get showFallback() { return fallback; } };
 
   DSStudio.register({
@@ -138,8 +157,11 @@
         get(id).replaceChildren(...options);
       }
       get('fontSystemHeading').replaceChildren(new Option('Same as body', 'same'), ...systems.map(([id, label]) => new Option(label, id)));
+      let previousSource = settings().source;
       function sync() {
-        const config = settings(), google = config.source === 'google', fonts = resolve(fallback);
+        const config = settings();
+        if (config.source !== previousSource) { fallback = false; previousSource = config.source; }
+        const google = config.source === 'google', fonts = resolve(fallback);
         document.documentElement.style.setProperty('--font-body', fonts.body);
         document.documentElement.style.setProperty('--font-heading', fonts.heading);
         get('fontSource').value = config.source;
@@ -159,7 +181,7 @@
         if (get('fontHtmlCode').textContent !== html) get('fontHtmlCode').textContent = html;
         if (get('fontCssCode').textContent !== css) get('fontCssCode').textContent = css;
         syncLinks(document, google && !fallback ? url() : '', true);
-        if (!google) status('system', 'Using system fonts. No external font requests.');
+        if (!google) status('system', 'Saved project uses system fonts.');
         else if (fallback) status('fallback', 'Showing system fallbacks in previews. Saved choices and exports still use your Google Fonts.');
       }
       for (const [id, key] of [['fontSource', 'source'], ['fontGoogleBody', 'body'], ['fontGoogleHeading', 'heading'], ['fontSystemHeading', 'systemHeading']]) {

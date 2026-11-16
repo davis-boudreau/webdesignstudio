@@ -23,10 +23,13 @@ app.onload=async()=>{
     w.dssRevealSection('bdSingle',false);
     await wait();
     test(mode+' media preference is active',()=>w.matchMedia(mode==='reduce'?'(prefers-reduced-motion: reduce)':'(forced-colors: active)').matches);
+    const elevation=d.getElementById('bdElevation');elevation.value='medium';elevation.dispatchEvent(new w.Event('change',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(elevation);await wait();
+    test(mode+' elevation is saved and exported through component tokens',()=>w.eval('state.buttonDesign.elevation.primary')==='medium'&&w.eval('cssExport()').includes('--button-primary-shadow:'));
     w.dssSelectButtonState('primary','loading');await wait();
     const lab=d.querySelector('#bdSingle .bd-button');
     const pd=d.getElementById('previewPage').contentDocument,pw=pd.defaultView;
     test(mode+' busy text and progress remain visible',()=>w.getComputedStyle(lab).opacity==='1' && w.getComputedStyle(lab,'::after').content==='""' && lab.textContent==='Processing\u2026');
+    test(mode+' elevation respects the media-mode rendering',()=>mode==='forced'?w.getComputedStyle(lab).boxShadow==='none':w.getComputedStyle(lab).boxShadow.includes('10px'));
     if(mode==='reduce'){
       test('Reduced motion stops the studio progress animation',()=>w.getComputedStyle(lab,'::after').animationName==='none');
       test('Reduced motion stops the generated page progress animation',()=>pw.getComputedStyle(pd.querySelector('.sample-selected-action'),'::after').animationName==='none');
