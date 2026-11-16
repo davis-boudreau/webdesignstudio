@@ -27,14 +27,20 @@ ${button}[aria-busy="true"]::after { content: ""; display: inline-block; flex: n
 @media (forced-colors: active) { ${activeSelectors.map(value => value + ':not(:focus-visible)').join(', ')} { outline: 2px solid ButtonText; outline-offset: -4px; } }
 `;
   }
-  DSStudio.buttonStates = { css };
+  function elevationCss(selector,simulationAttribute,shadowVariable,focusVariable){
+    const button=`:is(${selector})`,available=':not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"])';
+    const active=[`${button}:active${available}`,`${button}[${simulationAttribute}="active"]${available}`];
+    const layer=`var(${shadowVariable}, 0 0 0 0 transparent)`,ring=`0 0 0 2px var(${focusVariable}, var(--focus))`;
+    return `\n/* Optional elevation layers preserve pressed and toggle indicators. */\n${button} { box-shadow: var(${shadowVariable}, none); }\n${button}[aria-pressed="true"] { box-shadow: ${ring}, ${layer}; }\n${active.join(', ')} { box-shadow: inset 0 0 0 2px currentColor, ${layer}; }\n${active.map(value=>value+'[aria-pressed="true"]').join(', ')} { box-shadow: inset 0 0 0 2px currentColor, ${ring}, ${layer}; }\n`;
+  }
+  DSStudio.buttonStates = { css, elevationCss };
   DSStudio.register({
     id: 'button-state-practices',
     title: 'Button state best practices',
     init() {
       const style = document.createElement('style');
       style.id = 'buttonStatePractices';
-      style.textContent = css('.bd-button, .demo-btn', 'data-sim');
+      style.textContent = css('.bd-button, .demo-btn', 'data-sim')+elevationCss('.bd-button','data-sim','--bd-elevation-shadow','--bd-focus');
       document.head.append(style);
     }
   });

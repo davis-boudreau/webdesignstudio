@@ -7,7 +7,7 @@
     const result=document.getElementById('studio-section-4'),keep=new Set([result]);
     if(stage)keep.add(document.getElementById(stage.lesson));
     for(let node=source;node;node=node.parentElement)if(node.tagName==='DETAILS')keep.add(node);
-    for(const section of document.querySelectorAll('#main > .studio-section, #palette-workspace details, #typography-workspace details'))section.open=keep.has(section);
+    for(const section of document.querySelectorAll('#main > .studio-section, #palette-workspace details, #typography-workspace details, #button-workspace details, #spacing-workspace details'))section.open=keep.has(section);
     result.open=true;DSStudio.views.flush();
     document.getElementById('previewShell').focus({preventScroll:true});
     const height=document.querySelector('.topbar').getBoundingClientRect().height;

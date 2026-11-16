@@ -184,6 +184,10 @@ app.onload=async()=>{
   test('Review group and redundant component selector are removed from settings and topic navigation',()=>!get('type-stage-review') && !get('type-context-choice') && !d.querySelector('[data-type-go="review"]') && [...d.querySelectorAll('[data-type-go]')].map(el=>el.dataset.typeGo).join(',')==='content,fonts,body,hierarchy,responsive');
   test('Selected font details live with the sample and comparisons stay above it',()=>get('type-learning-preview').contains(get('type-context-family')) && get('type-learning-preview').contains(get('type-context-size')) && visible('type-selected-text-details') && get('type-learning-preview').contains(get('type-preview-enlarge')) && get('type-learning-preview').contains(get('type-preview-spacing')));
   test('Generated CSS is global to Typography immediately below the Learning preview',()=>{const panel=get('type-generated-css'),preview=get('type-learning-preview');return preview.nextElementSibling===panel && panel.parentElement===preview.parentElement && !panel.closest('[data-type-stage]') && panel.contains(get('clampCss')) && panel.contains(get('clampMath')) && !panel.contains(get('clampGraph'));});
+  const calculationLesson=get('clamp-calculation-lesson'),lessonSummary=calculationLesson.querySelector('summary');
+  test('Clamp calculation is an initially closed, labelled native disclosure beside the generated CSS',()=>calculationLesson.tagName==='DETAILS' && !calculationLesson.open && lessonSummary.textContent==='Learn the clamp calculation' && get('type-generated-css').contains(calculationLesson) && get('clampCss').parentElement.nextElementSibling===calculationLesson);
+  const beforeLesson=evaluate('projectJson()'),beforeLessonCss=evaluate('cssExport()');lessonSummary.focus();lessonSummary.click();await wait();
+  test('Opening the four-step lesson preserves saved output and property drafts',()=>calculationLesson.open && get('clampCalculationSteps').children.length===4 && evaluate('projectJson()')===beforeLesson && evaluate('cssExport()')===beforeLessonCss && !w.DSStudio.propertyEditors.hasDrafts('typography'));
   test('Viewport slider and graph belong to the Responsive typography exploration disclosure',()=>{const exploration=get('clampGraph').closest('.type-reference');return get('type-stage-responsive').contains(exploration) && exploration.contains(get('clampViewport')) && !get('type-learning-preview').contains(get('clampViewport')) && exploration.querySelector('summary').textContent==='Explore the viewport';});
   test('Viewport exploration and generated CSS headings have no step numbers',()=>[...get('typography-workspace').querySelectorAll('h4,summary')].some(el=>el.textContent==='Explore the viewport') && ![...get('typography-workspace').querySelectorAll('h4,summary')].some(el=>/^[34]\s/.test(el.textContent)));
   test('Realistic sample and all eight scale rows are visible together',()=>visible('type-realistic-sample') && visible('typeLadder') && rows().length===8);
@@ -205,6 +209,8 @@ app.onload=async()=>{
   test('Shared CSS and calculation follow unsaved base, ratio and fluid limits',()=>get('clampCss').textContent.includes('--text-h1:') && get('clampCss').textContent.includes('20px') && get('clampCss').textContent.includes('1.3^4') && get('clampMinFont').textContent==='42.84px' && get('clampMaxFont').textContent==='57.12px' && get('clampComputed').textContent===get('type-role-size').value && get('type-css-state').textContent.startsWith('Proposed CSS'));
   draft('clampMinWidth',400);draft('clampMaxWidth',1200);draft('clampViewport',600);await wait();
   test('Changing the preview viewport preserves proposed responsive controls and updates shared calculations',()=>get('clampMinWidth').value==='400' && get('clampMaxWidth').value==='1200' && get('clampFactor').value==='0.75' && get('clampMath').textContent.includes('1200') && get('clampExplanation').textContent.includes('At 600px') && get('clampComputed').textContent===get('type-role-size').value);
+  test('Open lesson follows proposed values through limits, slope, offset and rem conversion',()=>calculationLesson.open && get('clampCalculationLimits').textContent.includes('1.3^4 = 57.122px') && get('clampCalculationSlope').textContent.includes('1.78506vw') && get('clampCalculationPreferred').textContent.includes('calc(2.23133rem + 1.78506vw)') && get('clampCalculationRem').textContent.includes('/ 16 =') && evaluate('projectJson()')===baseline);
+
   draft('clampMinWidth',375);draft('clampMaxWidth',1280);draft('clampViewport',768);await wait();
   const beforeCopyProject=evaluate('projectJson()'),copyWrites=[],originalClipboard=w.navigator.clipboard;
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async value=>copyWrites.push(value)}});
@@ -248,7 +254,12 @@ app.onload=async()=>{
       return levels.length===8 && levels.every(el=>el.getBoundingClientRect().height>0) && selected.closest('[data-sample-level]')?.dataset.sampleLevel===String(level);
     });
     test(label+' common CSS uses the current exported size token',()=>evaluate('cssExport()').includes(get('clampCss').textContent.split('\n').at(-1)) && get('type-css-state').textContent.includes('for '+label+'.'));
+    test(label+' lesson describes the actual fixed, constant or fluid exported rule',()=>{const fixed=[2,1,-2].includes(level),note=get('clampCalculationCase').textContent;return get('clampCalculationSteps').hidden===fixed && (fixed?note.includes('exports a fixed size:') && !get('clampCss').textContent.includes('clamp('):[0,-1].includes(level)?note.includes('Both limits are equal') && get('clampCalculationSlope').textContent.includes('0 px/px'):note.includes('Follow '+label));});
+
   }
+  rows().find(row=>row.dataset.typeLevel==='4').click();draft('clampFactor',1);await wait();
+  test('Equal heading limits explain how to enable fluid growth',()=>get('clampCalculationCase').textContent.includes('Lower Mobile heading size') && get('clampCalculationPreferred').textContent.includes('0vw'));
+  discard();await wait();
   get('type-stage-hierarchy').open=false;rows().find(row=>row.dataset.typeLevel==='2').click();await wait();
   test('Picking a ladder row reveals its owning group without hiding either preview',()=>get('clampRole').value==='2' && get('type-stage-hierarchy').open && visible('type-realistic-sample') && visible('typeLadder'));
   rows().find(row=>row.dataset.typeLevel==='-1').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await wait();

@@ -31,7 +31,7 @@ app.onload=async()=>{
   reset();w.dssShowWizardStep(4);await wait();
   const paddingRegions=['header','main','footer'],paddingSides=['top','right','bottom','left'];
   const paddingValues=()=>Object.fromEntries(paddingRegions.map(region=>[region,paddingSides.map(side=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')'))]));
-  test('Region padding starts at zero and is available only for Header, Main and Footer',()=>paddingRegions.every(region=>d.getElementById(region+'-padding-controls') && paddingValues()[region].every(value=>value===0)) && !d.getElementById('body-padding-controls'));
+  test('Body and inner-region padding start at zero with their own controls',()=>['body',...paddingRegions].every(region=>d.getElementById(region+'-padding-controls') && paddingSides.every(side=>evaluate('regionPadding('+JSON.stringify(region)+','+JSON.stringify(side)+')')===0)));
   for(const mode of ['basic','advanced']) for(const theme of ['light','dark']) for(const width of [320,1440]) for(const value of [0,64]) {
     app.style.width=width+'px';d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);w.dssShowWizardStep(4);
     for(const region of paddingRegions)for(const side of paddingSides)input(region+'-padding-'+side,value);await wait();
@@ -63,8 +63,8 @@ app.onload=async()=>{
   test('Padding edits preserve focus and update the centre inset',()=>d.activeElement===d.getElementById('main-padding-left') && d.getElementById('main-padding-demo').style.paddingLeft==='17px');
   d.querySelector('#main-padding-demo').parentElement.querySelector('button').click();await wait();
   test('Inspect padding opens complete live CSS at the real padding tokens',()=>d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--main-padding-left: 17px;') && d.getElementById('dockCss').scrollTop>0);
-  evaluate('importConfig({regionPadding:{header:{top:-10,right:500,bottom:13.6,left:"20",unknown:10},main:{top:NaN,right:Infinity,bottom:null,left:32},footer:"bad",body:{top:20}}})');await wait();
-  test('Padding imports accept only bounded finite numbers and known regions/sides',()=>evaluate('state.regionPadding.header.top===0 && state.regionPadding.header.right===64 && state.regionPadding.header.bottom===14 && !("left" in state.regionPadding.header) && !("unknown" in state.regionPadding.header) && state.regionPadding.main.left===32 && !("top" in state.regionPadding.main) && !("right" in state.regionPadding.main) && !("bottom" in state.regionPadding.main) && !("body" in state.regionPadding) && !("footer" in state.regionPadding)'));
+  evaluate('importConfig({regionPadding:{header:{top:-10,right:500,bottom:13.6,left:"20",unknown:10},main:{top:NaN,right:Infinity,bottom:null,left:32},footer:"bad",body:{top:20},unknownRegion:{left:20}}})');await wait();
+  test('Padding imports accept only bounded finite numbers and known regions/sides',()=>evaluate('state.regionPadding.header.top===0 && state.regionPadding.header.right===64 && state.regionPadding.header.bottom===14 && !("left" in state.regionPadding.header) && !("unknown" in state.regionPadding.header) && state.regionPadding.main.left===32 && !("top" in state.regionPadding.main) && !("right" in state.regionPadding.main) && !("bottom" in state.regionPadding.main) && state.regionPadding.body.top===20 && !("unknownRegion" in state.regionPadding) && !("footer" in state.regionPadding)'));
   for(const width of [320,390,1440]) {
     app.style.width=width+'px';w.dssShowWizardStep(4);await wait();
     paddingRegions.forEach(region=>d.getElementById(region+'-padding-controls').open=true);await wait();
@@ -76,6 +76,52 @@ app.onload=async()=>{
   }
   app.style.width='1440px';evaluate('resetStudio()');await wait();
   test('Reset clears custom region padding and restores existing spacing defaults',()=>!evaluate('state.regionPadding') && paddingRegions.every(region=>paddingValues()[region].every(value=>value===0) && d.getElementById(region+'-padding-reset').disabled));
+  // Body padding is the shared outer inset, not another independent preview setting.
+  reset();w.importConfig({sampleMode:'advanced'});w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('backgrounds',false);await wait();
+  const bodyControl=d.getElementById('body-padding-left'),bodyActions=d.querySelector('[data-property-actions="palette-backgrounds"]'),mini=d.getElementById('background-learning-canvas');
+  const paper=()=>mini.querySelector('[data-background-region="body"]'),miniHeader=()=>mini.querySelector('[data-background-region="header"]');
+  w.DSStudio.paletteWorkspace.revealControl(bodyControl);const beforeBody=evaluate('projectJson()'),beforeBodyCss=evaluate('cssExport()'),beforeHeaderX=miniHeader().getBoundingClientRect().left;
+  bodyControl.value='24';bodyControl.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
+  test('Body padding draft visibly insets the mini page while the website and files stay saved',()=>w.getComputedStyle(paper()).paddingLeft==='24px' && Math.abs(miniHeader().getBoundingClientRect().left-beforeHeaderX-24)<1 && evaluate('projectJson()')===beforeBody && evaluate('cssExport()')===beforeBodyCss && previewWindow().getComputedStyle(previewDoc().body).paddingLeft==='0px' && d.getElementById('background-preview-css').textContent.includes('--body-padding-left: 24px;'));
+  const draftReset=d.getElementById('body-padding-reset'),resetEnabled=!draftReset.disabled;draftReset.click();await wait();
+  test('Body padding reset works on an unsaved draft without committing the project',()=>resetEnabled && w.getComputedStyle(paper()).paddingLeft==='0px' && bodyControl.value==='0' && evaluate('projectJson()')===beforeBody);
+  bodyControl.value='24';bodyControl.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
+  bodyActions.querySelectorAll('button')[1].click();await wait();
+  test('Discard restores Body draft geometry and its controls',()=>w.getComputedStyle(paper()).paddingLeft==='0px' && bodyControl.value==='0' && evaluate('projectJson()')===beforeBody);
+  for(const [side,value]of [['top',12],['right',20],['bottom',28],['left',36]])input('body-padding-'+side,value);await wait();
+  test('Saved Body padding is the same four-sided token source for the mini page and website',()=>paddingSides.every((side,i)=>previewWindow().getComputedStyle(previewDoc().body).getPropertyValue('padding-'+side)===[12,20,28,36][i]+'px' && w.getComputedStyle(paper()).getPropertyValue('padding-'+side)===[12,20,28,36][i]+'px') && evaluate('cssExport()').includes('body { box-sizing: border-box; padding: var(--body-padding-top) var(--body-padding-right) var(--body-padding-bottom) var(--body-padding-left); }'));
+  const bodyToken=w.dssReadTokens().find(token=>token.name==='--body-padding-left');w.dssConfigureToken(bodyToken);await wait();
+  test('Body padding tokens navigate to the real Palette control',()=>w.dssTokenSource(bodyToken).control==='body-padding-left' && d.activeElement===bodyControl && d.getElementById('body-padding-controls').open);
+  const bodyJson=evaluate('projectJson()');reset();w.importConfig(JSON.parse(bodyJson));await wait();
+  test('Body padding round trips through JSON and restores its controls',()=>evaluate('regionPadding("body","left")')===36 && d.getElementById('body-padding-left').value==='36');
+  for(const mode of ['basic','advanced'])for(const theme of ['light','dark'])for(const width of [320,1440]){
+    app.style.width='1440px';w.importConfig({sampleMode:mode,theme,regionPadding:{body:{top:24,right:24,bottom:24,left:24}}});await wait();
+    const page=d.createElement('iframe');page.style.cssText='width:'+width+'px;height:800px;border:0';page.srcdoc=evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>');d.body.append(page);await wait();
+    const pd=page.contentDocument,pw=page.contentWindow;
+    test(mode+' '+theme+' '+width+'px standalone page applies Body insets without overflow',()=>paddingSides.every(side=>pw.getComputedStyle(pd.body).getPropertyValue('padding-'+side)==='24px') && Math.abs(pd.querySelector('body > header').getBoundingClientRect().left-24)<1 && pd.documentElement.scrollWidth<=width+1);page.remove();
+    for(const fidelity of ['low','high']){
+      const frame=d.createElement('iframe');frame.style.cssText='width:'+width+'px;height:800px;border:0';frame.srcdoc=w.DSStudio.wireframeEngine.documentHtml({fidelity});d.body.append(frame);await wait();
+      test(mode+' '+theme+' '+width+'px '+fidelity+' wireframe keeps Body geometry',()=>paddingSides.every(side=>frame.contentWindow.getComputedStyle(frame.contentDocument.body).getPropertyValue('padding-'+side)==='24px') && Math.abs(frame.contentDocument.querySelector('body > header').getBoundingClientRect().left-24)<1 && frame.contentDocument.documentElement.scrollWidth<=width+1);frame.remove();
+    }
+  }
+  for(const mode of ['basic','advanced']){
+    w.importConfig({sampleMode:mode,regionPadding:{body:{top:64,right:64,bottom:64,left:64}}});await wait();
+    for(const kind of ['website','low','high']){
+      const frame=d.createElement('iframe');frame.style.cssText='width:320px;height:800px;border:0';frame.srcdoc=kind==='website'?evaluate('htmlExport()').replace('<link rel="stylesheet" href="tokens.css">','<style>'+evaluate('cssExport()')+'</style>'):w.DSStudio.wireframeEngine.documentHtml({fidelity:kind});d.body.append(frame);await wait();
+      test(mode+' maximum Body padding fits a 320px '+kind+' page',()=>frame.contentWindow.getComputedStyle(frame.contentDocument.body).paddingLeft==='64px' && Math.abs(frame.contentDocument.querySelector('body > header').getBoundingClientRect().left-64)<1 && frame.contentDocument.documentElement.scrollWidth<=321);frame.remove();
+    }
+  }
+  for(const mode of ['basic','advanced']){
+    w.importConfig({sampleMode:mode,regionPadding:{body:{top:16,right:16,bottom:16,left:16}}});w.dssShowWizardStep(2,false);await wait();
+    for(const fidelity of ['low','high']){w.DSStudio.wireframeView.setFidelity(fidelity);await wait();const frame=w.DSStudio.wireframeView.frame;
+      test(mode+' live '+fidelity+' wireframe reads the same saved Body padding',()=>paddingSides.every(side=>frame.contentWindow.getComputedStyle(frame.contentDocument.body).getPropertyValue('padding-'+side)==='16px'));
+    }
+  }
+  w.importConfig({regionPadding:{body:{top:-1,right:999,bottom:12.6,left:'24',unknown:7},header:{left:9}},semanticOverrides:{light:{background:'#123456'}},backgroundOpacity:{light:{body:50}}});await wait();
+  test('Body padding imports clamp finite numbers and reject strings and unknown sides',()=>evaluate('state.regionPadding.body.top===0 && state.regionPadding.body.right===64 && state.regionPadding.body.bottom===13 && !("left" in state.regionPadding.body) && !("unknown" in state.regionPadding.body)'));
+  w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.revealControl(d.getElementById('body-padding-reset'));const bodyPaint=evaluate('JSON.stringify([state.semanticOverrides,state.backgroundOpacity,state.regionPadding.header])');d.getElementById('body-padding-reset').click();w.DSStudio.propertyEditors.saveFor(d.getElementById('body-padding-reset'));await wait();
+  test('Body padding reset changes layout only and preserves region padding, colour and opacity',()=>paddingSides.every(side=>evaluate('regionPadding("body",'+JSON.stringify(side)+')')===0) && evaluate('JSON.stringify([state.semanticOverrides,state.backgroundOpacity,state.regionPadding.header])')===bodyPaint);
+  reset();await wait();
   // End region padding checks.
   await prepare(8);
   test('Spacing chart lists exactly the numbered spacing tokens in the CSS export', () => {
@@ -93,7 +139,7 @@ app.onload=async()=>{
     d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();input('jTheme',theme);
     const beforeSpacingLesson=evaluate('projectJson()');
     d.querySelector('[data-journey-step="8"]').click();await wait();
-    const spacingNode=d.querySelector('#studio-section-3 > .panel > .spacing-lesson');
+    w.dssRevealSection('spacing-saved-reference',false);const spacingNode=d.querySelector('#spacing-saved-reference .spacing-lesson');
     const exampleId=mode==='basic'?'lists':'services',exampleSelector=mode==='basic'?'.section':'.sample-section';
     test(mode+' '+theme+' spacing lesson connects five teaching parts without replacing the design',()=>spacingNode && [...spacingNode.querySelectorAll(':scope > section:not(#utilityLesson) > h4')].map(heading=>heading.textContent).join('|')==='Understand|Try|Observe|Inspect|Reflect' && evaluate('projectJson()')===beforeSpacingLesson && d.getElementById('spacingPrompt').textContent.includes('4 px to 6 px'));
     test(mode+' '+theme+' lesson starts its comparison from current exported spacing',()=>d.getElementById('spacingBeforeUnit').textContent==='4 px' && d.getElementById('spacingBefore4').textContent==='16 px' && d.getElementById('spacingBefore8').textContent==='32 px' && d.getElementById('spacingCss').textContent.includes('--space-4: calc(var(--space-unit) * 4);'));
@@ -155,12 +201,12 @@ app.onload=async()=>{
   for (const theme of ['light','dark']) for (const width of [320,901,1440]) {
     app.style.width=width+'px';input('jTheme',theme);await wait();d.querySelector('[data-journey-step="8"]').click();
     // Measure displayed controls, not cached geometry inside a closed disclosure.
-    d.getElementById('utilityPractice').open=true;await wait();
+    w.dssRevealSection('jSpacing',false);w.dssRevealSection('utilityPractice',false);d.getElementById('utilityPractice').open=true;await wait();
     test(theme+' spacing tutorial stays within its lesson at '+width+'px',()=>{
       const lesson=d.querySelector('.spacing-lesson'),box=lesson.getBoundingClientRect();
       const source=d.getElementById('jSpacing'),inline=source.closest('.spacing-lesson > section');
       const buttons=[...lesson.querySelectorAll('.button-row > button')].map(button=>{const b=button.getBoundingClientRect();return {id:button.id,height:b.height,left:b.left,right:b.right,closedPractice:button.closest('#utilityPractice')?.open===false};});
-      const fits=d.documentElement.scrollWidth<=w.innerWidth+1 && lesson.scrollWidth<=lesson.clientWidth+1 && (width>900?source.closest('.studio-journey')!==null:inline?.querySelector('h4').textContent==='Try') && buttons.every(b=>b.height>=44 && b.left>=box.left-1 && b.right<=box.right+1);
+      const fits=d.documentElement.scrollWidth<=w.innerWidth+1 && lesson.scrollWidth<=lesson.clientWidth+1 && source.closest('#spacing-workspace')!==null && source.getBoundingClientRect().height>0 && buttons.every(b=>b.height>=44 && b.left>=box.left-1 && b.right<=box.right+1);
       if(!fits)throw Error(JSON.stringify({documentWidth:d.documentElement.scrollWidth,viewport:w.innerWidth,lessonWidth:lesson.clientWidth,lessonScroll:lesson.scrollWidth,left:box.left,right:box.right,inline:inline?.querySelector('h4').textContent,desktop:!!source.closest('.studio-journey'),buttons}));
       return true;
     });
@@ -221,7 +267,7 @@ app.onload=async()=>{
     const id=mode==='basic'?'basic-structure':'lesson-brief';
     test(mode+' '+theme+' local CSS example reads the exported component rule',()=>evaluate('cssExport()').replace(/\s+/g,'').includes(d.getElementById('localCardCss').textContent.replace(/\s+/g,'')) && d.getElementById('localCardCss').textContent.startsWith('.card {\n  ') && d.getElementById('localCardCss').textContent.includes('padding: var(--space-6)'));
     d.getElementById('utilityPractice').open=true;await wait();
-    test(mode+' '+theme+' lesson follows spacing reflection and reads the real article tag',()=>d.getElementById('utilityLesson').closest('.studio-lesson').classList.contains('spacing-lesson') && d.getElementById('utilityLesson').previousElementSibling.querySelector('h4').textContent==='Reflect' && d.getElementById('utilityHtml').textContent.includes('id="'+id+'"') && evaluate('htmlExport()').includes(d.getElementById('utilityHtml').textContent));
+    test(mode+' '+theme+' optional lesson follows saved spacing reference and reads the real article tag',()=>d.getElementById('spacing-further-learning').contains(d.getElementById('utilityLesson')) && d.getElementById('spacing-further-learning').previousElementSibling===d.getElementById('spacing-saved-reference') && d.getElementById('spacing-saved-reference').contains(d.getElementById('spacingReflection')) && d.getElementById('utilityHtml').textContent.includes('id="'+id+'"') && evaluate('htmlExport()').includes(d.getElementById('utilityHtml').textContent));
     for(const name of ['p-6','p-4','bg-surface','text-content','rounded-card']) {
       input('utilityClass',name,'change');await wait();const definition=w.DSStudio.utilities.definitions.find(item=>item.name===name);
       test(mode+' '+theme+' lesson separates practice '+name+' from actual component output',()=>d.getElementById('utilityRule').textContent===w.DSStudio.utilities.rule(name) && !evaluate('cssExport()').includes(d.getElementById('utilityRule').textContent) && d.getElementById('utilityPracticeHtml').textContent.includes(' '+name+'"') && !evaluate('htmlExport()').includes(d.getElementById('utilityPracticeHtml').textContent) && !d.getElementById('utilityPracticeHtml').children.length && d.getElementById('utilityToken').textContent.includes(definition.token+':') && d.getElementById('utilityMeasured').textContent.includes('component preview measures '+definition.property+': '+previewWindow().getComputedStyle(previewDoc().getElementById(id)).getPropertyValue(definition.property)));
@@ -252,6 +298,62 @@ app.onload=async()=>{
   d.querySelector('#tailwindBridge a[href="#utilityLesson"]').click();await wait();
   test('Tailwind exercise links back to the local CSS lesson',()=>w.DSStudio.activeStage===8 && !d.getElementById('studio-section-3').hidden && evaluate('projectJson()')===beforeLearningPath && previewDoc()===learningPathDoc);
 
+  // Detached Spacing workspace: one draft and existing component/export rules.
+  {
+    reset();w.dssShowWizardStep(8,false);w.dssRevealSection('spacing-workspace-title',false);await wait(200);
+    const get=id=>d.getElementById(id),frame=()=>get('spacing-learning-frame'),sample=()=>frame().contentDocument,style=selector=>frame().contentWindow.getComputedStyle(sample().querySelector(selector));
+    const edit=(id,value,type='input')=>{const el=get(id);if(el.type==='checkbox')el.checked=value;else el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));};
+    const save=()=>d.querySelector('[data-property-actions="spacing"] button').click(),discard=()=>d.querySelector('[data-property-actions="spacing"] button:nth-child(2)').click();
+    test('Spacing workspace owns its original controls and action bar',()=>['jSpacing','jRadius','advBorder','advShadow','advOpacity'].every(id=>get('spacing-workspace').contains(get(id)))&&get('spacing-workspace').contains(d.querySelector('[data-property-actions="spacing"]'))&&get('spacing-saved-reference').contains(get('spacingCompare'))&&get('spacing-further-learning').contains(get('utilityLesson')));
+    test('Component opacity label describes whole-element fading',()=>d.querySelector('label[for="advOpacity"]').textContent.includes('Component opacity'));
+    const before=evaluate('projectJson()'),beforeCss=evaluate('cssExport()'),beforeHtml=evaluate('htmlExport()'),liveDoc=previewDoc();
+    edit('jSpacing',6);await wait();
+    test('Proposed unit changes real card/nested padding and paragraph margins',()=>style('.card').paddingTop==='36px'&&style('.nested-surface').paddingTop==='24px'&&style('.card p').marginBottom==='36px');
+    test('Grid gap remains independent of proposed spacing',()=>style('.card-grid').gap==='24px'&&get('spacing-learning-explanation').textContent.includes('Grid gap stays 24px'));
+    test('Spacing drafts stay out of saved JSON, CSS, HTML and website',()=>evaluate('projectJson()')===before&&evaluate('cssExport()')===beforeCss&&evaluate('htmlExport()')===beforeHtml&&previewDoc()===liveDoc);
+    test('All ladder values use the proposed base unit',()=>[...get('spacing-learning-ladder').children].length===10&&[...get('spacing-learning-ladder').children].every(el=>el.textContent.includes(Number(el.dataset.spacingToken)*6+'px')));
+    edit('jRadius',20);edit('advBorder',3);await wait();
+    test('Proposed shape reaches both cards and the field',()=>style('.card').borderRadius==='20px'&&style('.input').borderRadius==='20px'&&style('.card').borderTopWidth==='3px'&&style('.input').borderTopWidth==='3px'&&get('spacing-learning-code').textContent.includes('--radius-base: 20px;'));
+    test('Base radius changes leave independent button geometry intact',()=>style('.ds-button').borderRadius===evaluate('state.buttonDesign.radius')+'px');
+    edit('advShadow','strong','change');edit('advOpacity',60);await wait();
+    test('Elevation and whole-card opacity use proposed component rules',()=>style('.card').boxShadow.includes('32px')&&style('.card').opacity==='0.6'&&get('spacing-learning-explanation').textContent.includes('60%')&&get('spacing-learning-code').textContent.includes('--surface-opacity: 0.6;'));
+    edit('spacing-learning-overlays',true,'change');edit('spacing-learning-element','input','change');await wait();
+    test('Guides and element selection are local and show measured field properties',()=>sample().documentElement.hasAttribute('data-guides')&&sample().querySelector('[data-space-selected]').matches('.input')&&get('spacing-selected-properties').textContent.includes('20px')&&evaluate('projectJson()')===before);
+    sample().querySelector('[data-space-part="card-secondary"]').click();await wait();
+    test('Clicking the second card selects and highlights that card',()=>get('spacing-learning-element').value==='card-secondary'&&sample().querySelector('[data-space-selected]').dataset.spacePart==='card-secondary');
+    get('spacing-learning-ladder').querySelector('[data-spacing-token="12"]').click();await wait();
+    test('Selecting a ladder token explains its actual proposed calculation',()=>get('spacing-learning-code').textContent.includes('--space-12: calc(var(--space-unit) * 12)')&&get('spacing-learning-explanation').textContent.includes('6px per unit x 12 = 72px'));
+    discard();await wait();
+    test('Spacing Discard restores the local page without changing saved output',()=>style('.card').paddingTop==='24px'&&style('.card').borderRadius==='12px'&&style('.card').opacity==='1'&&evaluate('projectJson()')===before);
+    edit('jSpacing',5);edit('jRadius',18);edit('advBorder',2);edit('advOpacity',80);edit('jPrimary','#234567');save();await wait();
+    test('One Spacing Save applies geometry/surfaces to page and exports',()=>evaluate('state.spacing')===5&&evaluate('state.radius')===18&&evaluate('state.advanced.border')===2&&evaluate('state.advanced.opacity')===80&&evaluate('cssExport()').includes('--space-unit: 5px;')&&previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'));
+    test('Spacing Save preserves an unrelated Palette draft',()=>evaluate('state.primary')==='#004780'&&get('jPrimary').value==='#234567');
+    d.querySelector('[data-property-actions="palette-roles"] button:nth-child(2)').click();
+    edit('advHeight',58);edit('jSpacing',7);save();await wait();
+    test('Spacing Save cannot commit the Accessibility control-height draft',()=>evaluate('state.advanced.height')===48&&get('advHeight').value==='58'&&w.DSStudio.propertyEditors.hasDrafts('accessibility'));
+    d.querySelector('[data-property-actions="accessibility"] button').click();await wait();
+    test('Accessibility Save commits its displayed control height',()=>evaluate('state.advanced.height')===58&&style('.input').minHeight==='58px'&&get('advHeight').closest('[data-journey-pane]').dataset.journeyPane==='10');
+    const roundTrip=JSON.parse(evaluate('projectJson()'));w.importConfig(roundTrip);await wait();
+    test('Saved spacing/surface changes round trip through existing project JSON',()=>evaluate('state.spacing')===7&&evaluate('state.radius')===18&&evaluate('state.advanced.opacity')===80&&!w.DSStudio.propertyEditors.hasDrafts('spacing'));
+    edit('jSpacing',6);const sharedUnit=evaluate('state.spacing');
+    for(const mode of ['basic','advanced'])for(const theme of ['light','dark'])for(const size of [320,390,1440]){
+      app.style.width=size+'px';get(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();edit('spacing-website-theme',theme,'change');w.dssRevealSection('spacing-workspace-title',false);await wait();
+      test(mode+' '+theme+' '+size+'px learning page uses shared draft and selected website theme',()=>style('.card').paddingTop==='36px'&&sample().documentElement.dataset.theme===theme&&evaluate('state.spacing')===sharedUnit&&get('spacing-website-theme').value===theme);
+      test(mode+' '+theme+' '+size+'px spacing workspace fits',()=>d.documentElement.scrollWidth<=w.innerWidth+1&&get('spacing-workspace').scrollWidth<=get('spacing-workspace').clientWidth+1&&frame().getBoundingClientRect().width>0);
+    }
+    app.style.width='1440px';edit('spacing-learning-width','320','change');await wait();
+    test('Narrow width is local and limits the learning viewport',()=>frame().getBoundingClientRect().width===320&&evaluate('state.spacing')===sharedUnit);
+    const staged=get('jSpacing').value;d.querySelector('[data-property-actions="spacing"] [data-property-preview]').click();await wait();
+    test('Responsive page preview preserves spacing proposals and focuses saved page',()=>get('studio-section-3').open&&get('studio-section-4').open&&d.activeElement===get('previewShell')&&get('jSpacing').value===staged&&evaluate('state.spacing')===sharedUnit);
+    w.dssConfigureToken({name:'--space-6',scope:'Light / base'});await wait();
+    test('Spacing token navigation opens the original control in its workspace',()=>w.DSStudio.activeStage===8&&d.activeElement===get('jSpacing')&&get('spacing-group-scale').open);
+    w.importConfig(JSON.parse(evaluate('projectJson()')));await wait();
+    test('Project replacement clears Spacing drafts and local comparison tools',()=>!w.DSStudio.propertyEditors.hasDrafts('spacing')&&!get('spacing-learning-overlays').checked&&get('spacing-learning-width').value==='fluid'&&style('.card').paddingTop===sharedUnit*6+'px');
+    input('bdSize','lg','change');await wait();
+    test('Saved button size changes reach the learning sample through shared button classes',()=>sample().querySelector('.ds-button').classList.contains('ds-button--lg'));
+    get('spacing-workspace').querySelectorAll('.spacing-workspace-links button')[2].click();await wait();
+    test('Surface colour link opens the actual Surface role editor in Palette',()=>w.DSStudio.activeStage===4&&get('jSemanticRole').value==='surface'&&d.activeElement===get('jSemanticRole'));
+  }
   test('No spacing JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Focused harness completed',pass:false,error:String(error.stack||error)});}
   finish();

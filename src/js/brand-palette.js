@@ -93,7 +93,7 @@
           get('jBrandSwatches').replaceChildren(...items.map(item => {
             const li = document.createElement('li'), chip = document.createElement('span'), label = document.createElement('span');
             chip.className = 'brand-palette-chip'; chip.style.backgroundColor = item.hex; chip.setAttribute('aria-hidden', 'true');
-            label.textContent = `${item.name} · ${item.hex}`;
+            label.textContent = `${item.name} · --brand-${item.id} · ${item.hex}`;
             const token = document.createElement('code'); token.textContent = `--brand-${item.id}`;
             label.append(document.createElement('br'), token); li.append(chip, label); return li;
           }));
@@ -130,9 +130,9 @@
             row.querySelector('[data-brand-discard]').setAttribute('aria-label',`Discard edits for ${item.name}`);
           }
           for (const key of Object.keys(roles)) {
-            get('j' + key[0].toUpperCase() + key.slice(1) + 'Brand').replaceChildren(new Option('Custom colour (use picker below)', ''), ...items.map(item => new Option(`${item.name} · ${item.hex}`, item.hex)));
+            get('j' + key[0].toUpperCase() + key.slice(1) + 'Brand').replaceChildren(new Option('Custom colour (use picker below)', ''), ...items.map(item => new Option(`${item.name} · --brand-${item.id} · ${item.hex}`, item.hex)));
           }
-          get('brandAccent').replaceChildren(new Option('Custom accent colour', ''), ...items.filter(item => item.group === 'accent').map(item => new Option(`${item.name} · ${item.hex}`, item.hex)));
+          get('brandAccent').replaceChildren(new Option('Custom accent colour', ''), ...items.filter(item => item.group === 'accent').map(item => new Option(`${item.name} · --brand-${item.id} · ${item.hex}`, item.hex)));
           get('jBrandAdd').disabled = items.length >= 24;
           get('jBrandCount').textContent = `${items.length} of 24 colours`;
         }

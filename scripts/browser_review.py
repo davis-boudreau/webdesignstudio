@@ -111,12 +111,16 @@ app.onload = async () => {
   }
   app.style.width='1440px';if(d.documentElement.dataset.theme!=='light')appearanceToggle.click();reset();await wait();
 
-  test('Every exported token has a source in its wizard step or centre Palette workspace', () => w.dssReadTokens().length>150 && w.dssReadTokens().every(row=>{
-    const source=w.dssTokenSource(row), control=source && d.getElementById(source.control);
-    return control && (control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step) || (source.step===4 && d.getElementById('palette-workspace').contains(control)) || (source.step===5 && d.getElementById('typography-workspace').contains(control)));
-  }));
+  test('Every exported token has a source in its owning wizard or learning workspace', () => {
+    const rows=w.dssReadTokens(),missing=rows.filter(row=>{
+      const source=w.dssTokenSource(row),control=source&&d.getElementById(source.control);
+      return !control||!(control.closest('[data-journey-pane]')?.dataset.journeyPane===String(source.step)||(source.step===4&&d.getElementById('palette-workspace').contains(control))||(source.step===5&&d.getElementById('typography-workspace').contains(control))||(source.step===7&&d.getElementById('button-workspace').contains(control))||(source.step===8&&d.getElementById('spacing-workspace').contains(control)));
+    });
+    if(missing.length)throw Error('Incorrect token ownership: '+missing.map(row=>row.name+' '+row.scope).join(', '));
+    return rows.length>150;
+  });
   test('Derived token families identify their foundation instead of arbitrary overrides', () => ['--space-6','--primary-700','--text-step-4','--text-h1','--font-ui','--heading-tracking','--button-progress-animation'].every(name=>/Derived|Alias/.test(w.dssTokenSource({name}).mode)));
-  test('Font, responsive, layout and interaction settings live in their owning workspaces', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]')?.dataset.journeyPane===String(step) || (step===5 && d.getElementById('typography-workspace').contains(d.getElementById(id)))));
+  test('Font, responsive, layout and interaction settings live in their owning workspaces', () => [['fontSource',5],['clampMinWidth',5],['advWeight',5],['advColumns',9],['advBorder',8],['jSpacing',8],['advState',10],['advReduce',10]].every(([id,step])=>d.getElementById(id).closest('[data-journey-pane]')?.dataset.journeyPane===String(step) || (step===5 && d.getElementById('typography-workspace').contains(d.getElementById(id))) || (step===8 && d.getElementById('spacing-workspace').contains(d.getElementById(id)))));
   reset(); d.querySelector('[data-journey-step="0"]').click(); await wait();
   revealAll(); await wait();
   test('Neutral CSS, JSON, and HTML exports', () => !/nscc/i.test(evaluate('cssExport()+projectJson()+htmlExport()')));
@@ -366,7 +370,7 @@ app.onload = async () => {
   input('tokenSearch','--brand-'); await wait();
   test('Token catalogue classifies renamed brand references', () => d.querySelectorAll('#tokenTableBody tr').length===11 && [...d.querySelectorAll('#tokenTableBody tr')].every(row=>row.textContent.includes('Brand palette')));
   reset(); await wait(); input('tokenSearch','');
-  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',4],['--button-secondary-hover-text','Dark','bdHoverText',4],['--brand-blue','Light / base',null,4]]) {
+  for (const [name,scope,control,step] of [['--space-6','Light / base','jSpacing',8],['--grid-gap','Light / base','advGap',9],['--text-h1','Light / base','clampFactor',5],['--text','Dark','jSemanticRole',4],['--button-secondary-hover-text','Dark','bdHoverText',7],['--brand-blue','Light / base',null,4]]) {
     d.getElementById('studio-section-8').open=true;
     const button=d.querySelector(`[data-token-name="${name}"][data-token-scope="${scope}"]`);
     button.click(); await wait();
@@ -456,6 +460,7 @@ app.onload = async () => {
   test('A beginner colour change updates the example, connected token and inspector together',()=>previewWindow().getComputedStyle(previewDoc().querySelector('#home .ds-button--primary')).backgroundColor==='rgb(96, 45, 84)' && d.getElementById('studyTokens').textContent.toLowerCase().includes('#602d54') && d.getElementById('dockCss').textContent===evaluate('cssExport()'));
   d.querySelector('[data-journey-step="8"]').click();
   await wait();
+  w.dssRevealSection('jSpacing',false);
   test('Spacing exercise opens the existing source control',()=>{const control=d.getElementById('jSpacing'),box=control.getBoundingClientRect();return !d.querySelector('[data-journey-pane="8"]').hidden && box.width>0 && box.height>0 && !control.disabled;});
   const beforeLearningPadding=parseFloat(previewWindow().getComputedStyle(previewDoc().querySelector('#lists')).paddingTop);
   input('jSpacing',6); await wait();
@@ -514,7 +519,7 @@ app.onload = async () => {
   d.querySelector('[data-journey-step="0"]').click();input('plan-goal','Choose a lesson and practise.');
   test('Learner journey starts with Brief controls and the matching lesson',()=>w.DSStudio.activeStage===0 && d.getElementById('process-brief').open && d.getElementById('plan-goal').value==='Choose a lesson and practise.');
   d.querySelector('[data-journey-step="5"]').click();input('jBase',18);d.getElementById('jBase').focus();await wait();
-  test('Learner journey connects Typography editing to the current preview and CSS',()=>w.DSStudio.activeStage===5 && d.getElementById('studio-section-2').open && d.activeElement===d.getElementById('jBase') && previewDoc()===journeyPreview && previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()') && evaluate('cssExport()').includes('--font-size-base: 18px;'));
+  test('Learner journey connects Typography editing to the current preview and CSS',()=>{const checks={stage:w.DSStudio.activeStage===5,open:d.getElementById('studio-section-2').open,focus:d.activeElement===d.getElementById('jBase'),document:previewDoc()===journeyPreview,css:previewDoc().getElementById('dssPreviewStyles').textContent===evaluate('cssExport()'),value:evaluate('cssExport()').includes('--font-size-base: 18px;')};if(!Object.values(checks).every(Boolean))throw Error(JSON.stringify({checks,active:d.activeElement?.id}));return true;});
   d.querySelector('[data-journey-step="11"]').click();
   d.querySelector('#studio-section-6 [data-inspect="css"]').click();await wait();
   test('Learner journey reaches Deliver and inspects the edited CSS',()=>w.DSStudio.activeStage===11 && d.getElementById('studio-section-6').open && d.getElementById('studioInspector').open && d.getElementById('dockTabCss').getAttribute('aria-selected')==='true' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && evaluate('state.designProcess.goal')==='Choose a lesson and practise.');

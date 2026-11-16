@@ -167,6 +167,40 @@ assertions, no captured errors), with 74 structure assets and clean whitespace
 checks. Engine programmatic defaults and website exports remain unchanged. This
 is a focused run; historical full-catalogue counts above are unchanged.
 
+The Content Plan report adds 37 content-tree assertions (238 total): complete
+numbered containment hierarchy and twelve-level support, sample/project and
+readiness totals, current/proposed/empty/missing content, escaped hostile text and
+plain references, standalone HTML download, unsaved-form and storage isolation,
+Save/Undo, stable DOM on unrelated styling, explicit empty plans and light/dark
+layout/targets at 320/390/1440px. The previous Studio inventory-layout assertion
+now checks the complete report while retaining the Advanced export's nested-map
+expectation. Both report styles and downloads use shared authored helpers.
+
+Current content-tree 238, integration 279, planning 76 and export pipeline 98
+pass (691 assertions; empty error reports), with 74 structure assets and clean
+whitespace checks. Export byte fixtures are unchanged. A focused 37-check report
+harness also passes after the final heading-size refinement. Initial failures
+caught a dropped report stylesheet on artifact refresh; the refresh now retains
+report CSS. Earlier full-catalogue counts remain historical; manual accessibility
+and other browsers are not established by these checks.
+
+Shared colour-selector previews add 52 Palette assertions (672 total), covering
+Body/Header/Main/Footer brand/neutral lists, semantic choices and visible roles,
+UI anchors, button sources, dynamic state choices, actual swatch colours, original
+native control identity/focus, pointer cancellation, keyboard browsing/type-ahead,
+disabled options, dismissal, draft/Save/Discard/contrast boundaries, imports,
+hide/show, queued feature updates and light/dark geometry at 320/390/1440px.
+A viewport-fixed edge fixture checks available popup space. A toggle fixture
+reproduced a late native-value update leaving stale swatches; settled refresh
+fixes it. Original non-colour selectors and export bytes are unchanged.
+
+Current focused suites pass Palette 672, shared properties 231, integration 279,
+navigation 158, view updates 16 and export pipeline 98 (1,454 assertions, empty
+error reports). The final swatch-only matrix also passes 53 checks. Structure now
+checks 76 assets; whitespace checks pass. This is a focused run, not a repeated
+full catalogue. A desktop open-menu capture was inspected; manual keyboard/touch,
+screen-reader, other-browser and live-CDN review remain outstanding.
+
 | Suite (`scripts/`) | Checks | Owns |
 | --- | ---: | --- |
 | `project_model_review.py` | 14 | Normalization, complete replacement, observer ordering and save isolation |
@@ -253,3 +287,227 @@ part of CI. Manual keyboard/screen-reader/zoom/reflow, additional-browser review
 and browser/OS file-chooser, download and clipboard permission behavior remain
 outside this automated baseline. Passing these checks does not establish full
 accessibility or successful browser/OS file saving.
+
+## Colour sources and grouped Brief verification (15 November 2026)
+
+Palette coverage now includes None/default choices for page regions, semantic
+proposals, anchors, button sources and state assignments; staged reference edits;
+source following and CSS variable output; both-theme import/save behavior;
+removed-token fallbacks; feedback-state cache invalidation; hostile references and
+display names; all valid brand suffixes; and omission of empty source metadata.
+The focused new matrix passes 71/71 (.brief-colours-sources-final.log); it overlaps
+the full Palette suite and must not be added to its assertion count.
+
+Planning adds two assertions for the three labelled Brief groups and guidance
+that leaves saved data and drafts untouched: 78/78 pass. The final integration
+run passes 279/279, shared actions 231/231 and export pipeline 98/98; structure
+passes with 76 assets and git diff --check passes. Final full Palette coverage
+passes 742/742 (.brief-colours-palette-complete.log). These five focused suites
+pass 1,428 assertions with empty captured-error reports; the separate 71-check
+matrix overlaps Palette. Earlier full-catalogue results remain historical.
+Manual keyboard/touch, screen-reader, other-browser and live-CDN testing remain
+outside this session's verification.
+
+## Confirmed transparent None (15 November 2026)
+
+The user's clarification supersedes the earlier None/default interpretation.
+Palette now distinguishes transparent paint from Use default, while raw HEX and
+source references continue generating shades. New coverage owns both-theme
+Save/Discard/import, live paint, native None toggles, transparent foreground/focus
+contrast, retained button anchors, browser Canvas compositing and standalone
+Basic/Advanced regions/cards/buttons. The final focused matrix passes 77/77 (.transparent-focused-labels-verified.log);
+it overlaps the expanded full Palette suite. Strengthened default restoration to
+assert immediate live-CSS synchronization after transparent-only edits.
+
+Current shared-actions checks pass 231/231, exports 98/98 and reduced-motion /
+forced-colour checks 7/7 + 9/9. Default export byte fixtures are unchanged. Final
+sequential full Palette passes 818/818 and integration 279/279, bringing these five
+focused suites to 1,442 assertions. The separate 77-check matrix overlaps Palette.
+Concurrent runs each hit an existing scroll/focus assertion once; sequential runs
+pass with empty captured-error reports. Parallel timing remains an observed gap. Added diagnostics to an existing
+Typography journey assertion without weakening its checks. Manual keyboard/touch,
+screen-reader and other-browser testing remain pending.
+
+## Clamp lesson (15 November 2026)
+
+Typography adds twelve checks for the initially collapsed calculation disclosure,
+non-mutating expansion, proposed limit/slope/offset/rem values, the eight fluid/
+constant/fixed role cases and equal-heading guidance. The focused Typography
+suite passes 184/184 (.clamp-lesson-typography.log), with empty captured errors.
+Integration passes 279/279 (.clamp-lesson-browser.log); these two suites total
+463 assertions with empty captured errors. Structure verifies 76 assets and
+git diff --check passes. Expanded-lesson visual checks pass 4/4 at 320/390px in
+light/dark (.clamp-lesson-visual.log). The desktop screenshot is
+work/reviews/clamp-calculation-lesson.png. Manual keyboard/screen-reader and
+other-browser review remain pending; older suite totals are historical.
+
+## Page background learning workspace (15 November 2026)
+
+Palette adds a focused learning-page matrix for control/preview/action placement,
+clickable region labels, theme-wide multi-region drafts, token references, alpha
+and transparency, actual extra padding, Save/Discard, theme isolation, unrelated
+saved updates, invalid fields, safe project wording, saved-page focus and 320/
+390/1440px light/dark layouts. The final focused matrix passes 30/30
+(.background-learning-focused-verified.log), including transparent diagnostic
+contrast and a Custom HEX selection that previously displayed the None label.
+These assertions overlap the full Palette suite and are not added to its count.
+Final broad runs pass Palette 847/847, shared actions 231/231, integration 279/279
+and export pipeline 98/98: 1,455 assertions with empty captured-error reports.
+Structure verifies 77 assets and git diff --check passes. Inspected
+work/reviews/background-learning-workspace.png; the final visual smoke passes 1/1
+(.background-learning-visual-final.log). Manual keyboard/touch, screen-reader and
+other-browser review remain pending. See PROGRESS for exact log paths.
+
+## Body padding across page views (15 November 2026)
+
+The focused Body matrix passes 43/43 (.body-padding-focused-verified.log),
+overlapping the final spacing suite. It checks exact draft insets, reset/discard,
+four independent sides, token navigation, JSON validation, Basic/Advanced pages,
+both themes and low/high wireframes, including live frames and 64px at 320px.
+Final spacing passes 265/265 (.body-padding-spacing-final.log), integration
+279/279 (.body-padding-browser-final.log) and exports 98/98
+(.body-padding-export.log): 642 assertions with empty captured-error reports.
+The intentionally refreshed export baseline adds 259 bytes to CSS/shared CSS in
+all 16 cases for the four Body tokens and rule; HTML hashes are unchanged.
+Structure verifies 77 assets and git diff --check passes. Inspected
+work/reviews/body-padding-linked.png; the final visual smoke passes 1/1 with
+empty errors (.body-padding-visual-final.log). The full wireframe suite was not
+rerun; the focused matrix covers the affected geometry. Manual keyboard/touch,
+screen-reader and other-browser review remain pending.
+
+## Unified Buttons workspace (15 November 2026)
+
+Components adds regressions for detached geometry/colour proposals, full-matrix
+and theme parity, proposed contrast, variant switching, latest shared focus,
+transparent focus replacement, combined Save/Discard, unrelated Palette drafts,
+JSON/live CSS, reset followed by a new edit, transparent None, narrow full-width
+buttons, all seven CSS lessons, focus retention, contextual/matrix selection,
+responsive-preview routing, control height, responsive layout and project import.
+The final component run passes 98/98 (.button-workspace-components-complete.log),
+with empty captured errors. Shared actions pass 231/231
+(.button-workspace-actions.log), exercising the actual workspace action bar.
+Palette passes 848/848 (.button-workspace-palette-verified.log), including the
+new invalid-background-draft reset regression and updated Buttons token routes.
+Its focused sizing/reset matrix passes 18/18 and overlaps the broad suite.
+Palette and shared actions ran before the final shared-focus paint-clear cleanup;
+the final component run covers that cleanup and its cross-variant regression.
+Final integration passes 279/279 (.button-workspace-browser-verified.log), exports
+98/98 (.button-workspace-exports.log) and media modes 7/7 + 9/9
+(.button-workspace-media.log), all with empty captured errors. The six affected
+suites total 1,570 assertions; focused/visual runs are not added. Integration also
+checks ownership of derived button-state shade tokens, with diagnostics naming
+misrouted tokens. Export byte fixtures remain unchanged for this work.
+Structure verifies 79 assets and diff checking passes. Inspected the desktop screenshot
+work/reviews/button-learning-workspace.png; the final visual smoke passes 1/1
+with empty errors (.button-workspace-visual-final.log). These are affected suites,
+not a complete repeated 19-suite catalogue. Trusted keyboard/touch, screen-reader
+and other-browser testing remain pending.
+
+## Five-variant Button learning preview (15 November 2026)
+
+Components now verifies all five visible action labels, each variant's editor
+route/current indication and draft preservation, plus wrapping in both website
+themes at 320/390/1440px. The complete component suite passes 109/109 with empty
+captured errors (.button-variants-components.log). Required integration passes
+279/279 with empty errors (.button-variants-browser.log): 388 assertions across
+both suites. Visual smoke passes 1/1 (.button-variants-visual.log); the refreshed
+work/reviews/button-learning-workspace.png shows all five variants together.
+Structure verifies 79 assets and diff checking passes. Saved models
+and export generation are unchanged; earlier export/media results are historical.
+Manual keyboard/touch, screen-reader and other-browser review remain pending.
+
+## Contextual Buttons CSS lessons (15 November 2026)
+
+Components verifies every Size/spacing, Shape/type, Colour/token and State/behaviour
+control against its short teaching topic, proposed token value and explanation.
+Checks include both size multipliers, all colour overrides/source/custom/focus,
+focus width, timing, mobile opt-in, transparent paint, all seven states, balanced
+CSS blocks with reduced-motion rules, focus-only topic changes, saved-output
+isolation and Save/Discard parity. Light/dark colour scope and transparent tokens
+are explicit. Final Components passes 149/149 with empty captured errors
+(.button-css-components-final.log). Integration passes 279/279
+(.button-css-browser.log) and exports 98/98 (.button-css-exports.log), all with
+empty captured errors: 526 assertions across these three affected suites.
+Export fixtures remain unchanged. Visual smoke passes 1/1 (.button-css-visual-final.log);
+the screenshot is work/reviews/button-css-lesson.png.
+Structure verifies 79 assets and diff checking passes. Earlier full Palette/media
+results are historical; manual keyboard/touch, screen-reader and other-browser
+review remain pending.
+
+## Spacing and surfaces learning workspace (15 November 2026)
+
+The new focused matrix passes 46/46 (.spacing-workspace-focused.log), overlapping
+the expanded Spacing suite. It covers normalized draft geometry/surfaces,
+computed padding/margins, independent grid gap, ladder arithmetic, guides and
+selection, one Save/Discard boundary, unrelated Palette drafts, Accessibility
+height ownership, JSON, both samples/themes at 320/390/1440px, responsive preview,
+token navigation and project replacement. Additional checks cover independent
+button geometry/saved size classes and the Surface colour source link.
+
+The initial full Spacing result was 292/310 with empty captured errors; 18 assertions
+still required the previous lesson/control/utility placement. Updated fixtures
+open the actual disclosures and assert the new owners without dropping their
+arithmetic, layout, focus or saved-output checks. Final Spacing passes 313/313
+(.spacing-workspace-spacing-final.log) with empty captured errors.
+Shared actions pass 231/231, Components 149/149, required integration 279/279 and
+exports 98/98, all with empty captured errors (.spacing-workspace-actions.log,
+-components.log, -browser.log and -exports.log). Export fixtures remain unchanged.
+These five affected suites total 1,070 passing assertions; focused checks overlap
+Spacing and are not added. Visual smoke passes 1/1 (.spacing-workspace-visual.log);
+inspected work/reviews/spacing-learning-workspace.png, with contextual CSS placed
+before the complete ladder. Structure verifies 81 assets and diff checking passes.
+Manual accessibility/other-browser review remains pending; these affected suites
+do not constitute a full catalogue run.
+
+## Buttons website theme and elevation (15 November 2026)
+
+The focused feature matrix passes 47/47 (.button-elevation-focused-final.log),
+overlapping Components. It verifies default flat appearance, per-variant proposals,
+light/dark synchronization and token values, Studio independence, draft retention,
+combined Save/Discard, JSON round trip, seven states in both themes, standalone
+Basic/Advanced styles, combined pressed/toggle layers, actual focus, token routes,
+None removal, narrow controls and strict/legacy import validation. Components also
+checks loading a locally saved project and readable teaching instructions outside
+the dark website sample. Final Components passes 197/197
+(.button-theme-shadow-components-final.log); final integration passes 279/279
+(.button-theme-shadow-browser-final.log), both with empty captured errors.
+Model passes 14/14 (-model.log), media modes 9/9 + 11/11 (-media.log) and shared
+actions 231/231 (-actions.log). The media suite enables elevation before checking
+actual reduced-motion and forced-colour rendering, outlines and checkmarks.
+
+Initial exports passed 97/98 with matching byte fixtures but a failed local load
+of unchanged clamp-explorer.js. Confirmed its presence and reran without changing
+source/fixtures: exports pass 98/98 with empty errors
+(.button-theme-shadow-exports-final.log). Other named broad logs share the prefix
+.button-theme-shadow. The initial visual check exposed Studio-coloured instruction
+text inside a dark project sample; moved instructions to the Studio surface and
+added a contrast regression. Final Light/Dark visual checks pass 4/4
+(.button-theme-shadow-visual-final.log), including instruction contrast. Captures:
+work/reviews/button-theme-elevation-light.png and button-theme-elevation-dark.png.
+The six affected suites total 839 passing assertions; focused/visual checks are
+not added to that count. Structure
+verifies 81 assets and diff checking passes. Manual focus/shadow visibility,
+keyboard/touch, screen-reader and other-browser review remain pending; a full
+catalogue rerun was not performed.
+
+
+## Unified semantic colours and backgrounds (15 November 2026)
+
+Final Palette passes 844/844 (.semantic-workspace-palette-final.log), required
+integration 279/279 (-browser.log) and shared actions 231/231 (-actions.log), all
+with empty captured errors. Log names share the .semantic-workspace prefix.
+These affected suites total 1,354 assertions; the full catalogue was not repeated.
+Palette includes placement of the learning sample, six visible stages, all 21
+selectable roles, detached colour/None/token proposals, invalid HEX, Discard and
+region-to-role synchronization. Existing background paint, alpha, padding, theme,
+Save/storage/export-isolation and responsive controls remain covered. The first
+palette run passed 830/842 before correcting obsolete layout/visibility fixtures
+and the compatibility route's disclosure handling; final coverage supersedes it.
+
+Light/Dark visual review passes 4/4 each (.semantic-workspace-visual.log) for sample
+placement, desktop columns, theme/role availability and viewport fit. Inspected
+work/reviews/semantic-learning-light.png and semantic-learning-dark.png. These
+visual checks overlap and are not added to the broad count. Structure verifies
+81 assets; diff checking passes. No project schema or export fixture changes were
+needed for this UI refactor. Trusted keyboard/touch, screen-reader and other-browser
+manual testing remain open; these checks do not establish full accessibility.

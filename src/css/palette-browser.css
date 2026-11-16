@@ -25,3 +25,61 @@
 
 .palette-stage-body { container-type: inline-size; }
 @container (max-width: 45rem) { .palette-editor-columns { grid-template-columns: minmax(0,1fr); } }
+
+/* Region editing and its detached learning page share one action bar. */
+.background-learning-controls .page-background-editor { margin-top: 0; }
+.background-learning-controls #background-controls-title { font-size: 1rem; margin-block: 1rem .5rem; }
+.background-learning-controls .background-region > button[id$="-reset"] { display: none; }
+.background-learning-actions { margin-top: 1rem; min-width: 0; }
+.background-learning-actions .property-actions { margin-top: 0; }
+.background-learning-preview .webpage-background-lesson { border: 0; margin: 0; padding: 0; }
+.background-learning-canvas { max-height: 28rem; overflow: auto; padding: 8px; border: 1px solid var(--control-border); border-radius: var(--radius-base); }
+.background-learning-paper { padding: 0; min-width: 0; }
+.background-learning-region { min-width: 0; }
+.background-learning-canvas [data-background-region].is-selected { outline: 3px solid var(--focus); outline-offset: 2px; }
+.background-region-pick { display: block; min-height: 44px; min-width: 44px; overflow-wrap: anywhere; max-width: 100%; padding: .35rem .6rem; margin-bottom: .4rem; border: 1px solid var(--control-border); border-radius: .3rem; font: 700 13px/1.4 system-ui,sans-serif; color: var(--text); background: var(--surface); cursor: pointer; }
+.background-region-pick[aria-pressed="true"]::after { content: " \2713"; }
+.background-learning-canvas :is(p,span,strong) { overflow-wrap: anywhere; }
+.background-learning-canvas :is(p,span) { font: 14px/1.5 system-ui,sans-serif; }
+.background-learning-canvas p { margin-block: .35rem; }
+.background-learning-canvas strong { display: block; font: 700 16px/1.4 system-ui,sans-serif; }
+.background-learning-canvas .background-example-heading { font-size: 19px; }
+.background-example-link { display: inline-block; text-decoration: underline; margin-block: .25rem; }
+.background-example-card { padding: 8px; margin-top: .5rem; border: 1px solid; border-radius: .25rem; }
+.background-example-card span { display: block; }
+.background-proposed-css > summary, .background-saved-details > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 700; }
+.background-proposed-css pre { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+.background-saved-details { margin-top: 1rem; }
+.background-learning-controls .background-region { padding: .75rem; }
+
+.background-saved-details .background-page-model, .background-saved-details .background-model-region { background: var(--surface) !important; color: var(--text); }
+
+.background-learning-controls .background-region { gap: .5rem; }
+.background-learning-controls .background-region > label { margin: 0; }
+.background-learning-controls .background-region > p { margin-block: .25rem; }
+.background-learning-canvas [data-background-region="header"] { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 0 8px; align-items: center; }
+.background-learning-canvas [data-background-region="header"] > .background-region-pick { grid-row: 1 / span 2; margin: 0; }
+.background-learning-canvas [data-background-region="header"] > :not(button) { grid-column: 2; }
+.background-learning-canvas [data-background-region="footer"] { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.background-learning-canvas [data-background-region="footer"] > .background-region-pick { margin: 0; }
+.background-learning-canvas [data-background-region="footer"] > span { flex: 1; min-width: 0; }
+
+@media (min-width: 1101px) {
+  @container (min-width: 45rem) {
+    .background-learning-preview { position: sticky; top: var(--studio-section-scroll-offset,125px); max-height: calc(100vh - var(--studio-section-scroll-offset,125px) - 16px); overflow: auto; }
+  }
+}
+
+/* One semantic workspace, with the learning page at the top of the right pane. */
+.semantic-learning-layout .palette-semantic-fields input:not([type="color"]) { width: 100%; }
+.semantic-region-settings > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 700; }
+.semantic-region-settings .palette-browser { padding: 0; border: 0; }
+.semantic-role-samples { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,10rem),1fr)); gap: .4rem; margin-block: .75rem; }
+.semantic-role-sample { display: grid; grid-template-columns: 1.4rem minmax(0,1fr); gap: .25rem .5rem; text-align: left; padding: .5rem; color: var(--text); background: var(--surface); border: 1px solid var(--control-border); border-radius: .3rem; }
+.semantic-role-sample code { grid-column: 2; font-size: .7rem; }
+.semantic-role-sample[aria-pressed="true"] { outline: 2px solid var(--focus); outline-offset: 1px; }
+.semantic-sample-chip { width: 1.4rem; height: 1.4rem; border: 1px solid var(--control-border); }
+.semantic-field-sample { border: 1px solid; outline: 2px solid; outline-offset: 2px; padding: 6px; margin: 8px 3px; }
+.semantic-action-samples, .semantic-feedback-samples { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 8px; }
+.background-learning-canvas .semantic-action-samples span, .background-learning-canvas .semantic-feedback-samples span { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; }
+.semantic-feedback-samples span { border: 1px solid; }

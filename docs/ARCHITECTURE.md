@@ -466,7 +466,7 @@ the existing default. No arbitrary imported CSS overrides were introduced.
 | Markup | `index.html` | Sections, landmarks, asset manifest |
 | Tokens & base | `src/css/base-tokens.css`, `layout.css` | `:root` custom properties, themes, page layout |
 | Core | `src/js/studio-registry.js`, `export-pipeline.js`, `view-updates.js`, `project-model.js`, `core-state.js` | Registry/events, export assembly, view scheduling, pure project codec, state/DOM adapters |
-| Features | `responsive-design`, `design-process`, `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `sample-homepage`, `basic-homepage`, `responsive-preview`, `website-export`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
+| Features | `responsive-design`, `design-process`, `brand-palette`, `button-state-practices`, `font-sources`, `css-dock`, `advanced-params`, `journey-library`, `button-design`, `button-workspace`, `spacing-workspace`, `sample-homepage`, `basic-homepage`, `responsive-preview`, `website-export`, `oklch-lab`, `token-catalogue`, `clamp-explorer`, `contrast-audit`, `colour-repair`, `button-contrast`, `typography-controls`, `section-accordions` | One user-facing capability each |
 
 Load order is the order in `index.html`. Scripts are `defer`red; `DSStudio.start()` runs on `DOMContentLoaded`. Export and view services load after the registry and before core/features.
 
@@ -741,6 +741,23 @@ Save, Discard and dirty-form guards reveal it before focusing Save. Manually
 collapsing it preserves form values and project data; ordinary rendering retains
 its disclosure state. Save-area styles are independent of the content-editor
 ancestor so moved actions keep their responsive wrapping and touch targets.
+
+Review the Content Plan now presents a complete, numbered hierarchical report
+rather than a second editing outline. The Studio-only report shows every saved
+parent/child item, sample/project identity, readiness totals, current website
+content, saved proposals (including explicit empty proposals), unavailable sources,
+references and purpose/owner/next-action notes. Unsaved form values are excluded.
+Nested lists preserve all twelve supported levels; imported strings are escaped
+and references remain plain text. Report viewing/download does not mutate state.
+
+`contentArchitecture.reportMarkup()` and `reportDocument()` share the same saved
+model and hierarchical renderer. The separate HTML report download embeds its
+styles, has no scripts or network assets, and can be read or printed standalone.
+`reportCss()` is included in the Studio stylesheet on initialization and artifact
+refresh, but excluded from website export contributors. Only the `studio-plan`
+artifact prefix selects the report; existing website content-map markup and export
+bytes are unchanged. The review disclosure, action nodes and dirty-form guards
+retain their existing behavior. Unrelated styling preserves the report DOM.
 
 The content editor guards selection, creation, move/delete, Undo and restoration
 while its form is dirty, announces Save or discard and focuses Save. Same-content
@@ -1056,16 +1073,18 @@ paint to the opacity slider in the correct theme.
 `backgroundLayers()` composites unrounded sRGB channels against the same known
 canvas/parent stack. The contrast audit uses those channels for text/links,
 indicators and button host backgrounds; source colour repair targets stay the
-original validated semantic colours. The centre nested model paints actual alpha
-and shows its percentage, alpha token, blended hex and text/link ratios. It uses
-rounded hex for its readable ratio display; audit ratios use unrounded channels.
+original validated semantic colours. The learning page paints actual alpha and displays selected-region ratios.
+Optional saved diagnostics show percentage, alpha token, blended hex and text/link
+ratios. They use rounded hex for readable ratio displays; audit ratios use
+unrounded channels.
 
-Optional `regionPadding[header|main|footer][top|right|bottom|left]` stores shared
+Optional `regionPadding[body|header|main|footer][top|right|bottom|left]` stores shared
 layout insets as integer pixel values (0–64px), independently of theme/sample.
 Imports accept only finite numbers, round/clamp to these bounds and ignore unknown
 regions/sides. Missing values resolve to zero extra padding, preserving existing
-layouts and background settings. Twelve `--*-padding-*` foundation tokens drive
-the outer header/main/footer boxes. Advanced main keeps its existing narrow/wide
+layouts and background settings. Sixteen `--*-padding-*` foundation tokens drive
+Body and the outer Header/Main/Footer boxes. Body uses border-box sizing and its
+inset exposes the Body background around the page; region padding is internal. Advanced main keeps its existing narrow/wide
 container gutter in addition to the selected left/right padding; its media rule
 uses the saved responsive wide cutoff. Header/Footer inner spacing stays intact.
 Webpage backgrounds includes per-region disclosure controls, summaries, reset and
@@ -1161,8 +1180,10 @@ Replacing project state restores field values and clears stale input validity.
 ### Guided Palette workspace
 
 `palette-browser.js` initializes immediately after palette-workspace. Each of
-the seven stages has a left browse/manage column and a right selected-properties
-form, stacking when the available width is narrow. It moves the original controls
+the seven stages starts with a left browse/manage column and a right selected-
+properties form, stacking when the available width is narrow. The background
+learning workspace specializes that arrangement into left controls and a right
+mini page, with shared actions below both. It moves the original controls
 and delegates to their existing listeners; it adds no persisted model. Brand
 search and selection preserve the selected editor, and Add/Remove use the existing
 validated CRUD. Fixed anchors, semantic roles, regions and component families can
@@ -1831,6 +1852,33 @@ scan every rendered element, determine whether a boundary is necessary, or
 validate focus geometry, announcements or arbitrary background layers. New state
 styles need matching report coverage and browser regression checks.
 
+## Inline colour choices
+
+`colour-selects.js` initializes after property editors. It projects existing native
+colour selects into rows with validated HEX swatches and keeps the original IDs,
+values, labels, form ownership, focus and input/change handlers. One shared popup
+serves dropdowns; visible multi-row role selectors retain their original size and
+native keyboard owner, with scrollable coloured rows for pointer selection.
+Names/HEX/token text remain readable beside decorative swatches. Non-colour
+selectors and existing native colour inputs/swatch buttons are not replaced.
+
+Coverage includes Body/Header/Main/Footer background palettes, brand assignments,
+semantic proposals and roles, UI anchors, button sources, Colour lab roles,
+feedback and dynamic state-colour selectors. The original options remain the
+source of truth; semantic HEX metadata and current theme/anchor values resolve
+previews. Custom entries can preview their existing picker value. Only validated
+six-digit HEX values are assigned to CSS; imported names enter through textContent.
+No imported references, HTML, URLs or CSS are executed.
+
+Choices dispatch the original input/change contract; browsing, preview refresh
+and popup dismissal do not mutate the project. Existing property draft and
+contrast-review controllers remain authoritative. Option/context changes refresh
+previews; late feature callbacks get a settled refresh. A mutation observer handles
+dynamic selectors and removed controls. Popup geometry stays within its chosen
+viewport space and follows layout scrolling. Keyboard navigation, disabled values,
+optgroups, outside dismissal, hide/show and native focus are retained. The module
+and stylesheet are local Studio assets and add no export contributors.
+
 ## Typography and section navigation
 
 `typography-workspace.js` moves original controls into one left pane with five
@@ -1949,3 +1997,212 @@ at least 44 px height; native keyboard focus scrolls offscreen items into view.
 - Export formats as modules (W3C Design Tokens JSON, Tailwind config, SCSS, Style Dictionary).
 - Component editors beyond buttons (inputs, cards, alerts) using the same state/preview/export contract.
 - Theme packs (brand palettes as JSON files in `presets/`).
+
+## Colour source references and default choices
+
+`semanticSources[theme][role] = {token, hex}` is optional saved metadata. `hex`
+identifies the corresponding saved override and supplies its safe fallback. The
+project normalizer accepts only existing semantic keys and syntactically bounded
+brand/foundation shade names with matching six-digit overrides. `semanticSource`
+resolves only Brand Palette entries and Primary/Secondary/Accent/Neutral ramps;
+semantic and state references cannot introduce cycles. Removed brand references
+and custom edits fall back to ordinary saved HEX values. Foundation CSS emits
+`var(--token)` for a valid active reference; resolved HEX values still drive
+contrast, background compositing and generated state ramps. State CSS cache keys
+include brand colours and source metadata.
+
+Property drafts stage overrides and source metadata together. Use default removes
+an override/reference or restores a starter anchor. None instead stages a validated
+`colourTransparency` paint flag. Underlying HEX/source values stay available for
+shade generation and native colour controls. The paint helpers apply transparency
+to semantic tokens, component output, Studio and website previews. Button source
+None clears its background/hover/active/border paint; explicit property flags also
+support transparent foregrounds and focus. Native colour inputs have adjacent
+labelled None toggles. Semantic explicit-colour proposals retain contrast Apply;
+None and Use generated apply directly on Save.
+
+Transparent page-region paint uses zero effective background opacity. Transparent
+Surface exposes the browser canvas: `browserCanvasColour` resolves the Canvas
+system colour for the project theme and forced-colour mode, independently of the
+Studio theme. Contrast composes transparent backgrounds over that canvas/parent
+and treats invisible text or focus paint as 1:1. Ramps never receive transparent
+strings; button state ramps retain their unpainted source colour. Strict key/value
+validation and stable serialization keep the optional flags safe across imports.
+Existing fixed-colour projects remain unchanged until a transparency edit.
+Picker labels expose token names; derived state-shade choices remain explicit
+copies because those ramps may themselves depend on the destination role.
+
+The Brief editor groups the original seven fields into three labelled fieldsets
+with native optional guidance disclosures. This presentation preserves field IDs,
+order, validation, saved data, shared actions and exported teaching artifacts.
+
+## Expandable clamp lesson
+
+The global Typography CSS panel keeps its generated declaration and Copy CSS
+outside an initially closed native `#clamp-calculation-lesson` disclosure.
+`#clampMath` contains four short steps populated by the existing draft-aware
+clamp renderer: limits, slope, preferred size/offset and nominal 16px rem
+conversion. Text-node updates preserve expansion and focus; no export contributor,
+project schema or generated CSS algorithm changes. Equal bounds are explicitly
+constant. H3/H4/Extra small use the existing fixed-px export branch, hide the fluid
+steps and explain their scale calculation instead. Headings with equal bounds
+suggest lowering Mobile heading size rather than selecting the same role again.
+
+## Background learning workspace
+
+`background-workspace.js` initializes after the property editors and colour-choice
+projection. It moves the original background fields into the left browse panel
+and uses the right panel for a small Body/Header/Main/Footer learning page. Native
+region-label buttons share the original region selector; the selected highlight
+and fields change without writing the project. A Surface card distinguishes page
+backgrounds from component surfaces. The scrollable page has a bounded height,
+while actual extra padding and background alpha remain visible.
+
+The original action bar spans both columns. `palette-backgrounds` now groups
+records by theme rather than theme/region, preserving edits across region changes
+and saving/discarding the current theme together. Padding paths remain shared.
+`draftSnapshot('palette-backgrounds')` supplies the same validated state shape used
+by saved previews/exports; core palette, alpha/compositing, transparency, token
+reference and padding helpers drive the learning page and proposed CSS. The full
+website and storage keep saved values until Save. Fields/readouts stay aligned
+with the draft even after unrelated project refreshes. The workspace renders only
+while its stage and section are open, then hydrates on reopening.
+
+Optional saved diagnostics retain the old readout IDs and real inspector actions,
+with neutral Studio surfaces for readability. They are explicitly saved values;
+the selected-region CSS beside the learning page follows the draft. Imported
+project wording uses textContent; painted values are normalized HEX, literal
+transparent, or bounded numeric alpha/padding. No network/runtime dependency or
+export contributor is added.
+
+Body padding is also the learning-page inset, with no extra demo gutter added.
+Its selection label sits outside the mock Body. Like other background properties,
+Body padding follows the normalized current-theme draft until Save. Values are
+shared across themes and samples. Both wireframe fidelities take the same saved
+CSS through wireframeEngine; Low Fidelity removes paint but retains geometry.
+Draft-aware reset availability allows padding/default actions before a first Save.
+
+## Buttons learning workspace
+
+`button-workspace.js` initializes after property editors and inline colour choices.
+It relocates the original geometry, source, override and behaviour controls into
+five expandable groups. Palette retains component token readouts and a link to the
+same button colour editor; token source routes use Buttons (internal stage 7).
+Existing IDs, labelled controls, colour swatches and transparent None survive.
+The wizard provides a workspace entry point rather than a second editor.
+
+`DSStudio.buttons` exposes specimen, matrix and CSS generators accepting explicit
+normalized button settings and foundation data. Default calls still use saved
+state and produce the existing export bytes. Learning views use copied settings;
+they do not assign a proposed project into the shared state. The selected sample,
+size/state/theme comparisons and full matrix use those same generators. Stable
+specimens survive refreshes when their inputs and DOM nodes are unchanged.
+
+Property editors retain the original geometry and per-variant Palette records.
+`buttonSnapshot`, `hasButtonDrafts`, `saveButtons` and `discardButtons` project or
+finish only button model/paint paths across those records. The workspace action
+bar handles every edited variant together; unrelated Palette drafts remain local.
+A shared property such as focus has one latest proposal across variant contexts.
+Clearing a variant removes earlier descendant proposals; subsequent edits apply
+after that reset, including when the chosen value equals the original saved one.
+Project replacement clears drafts through the existing identity check.
+
+The learning contrast summary calls `dssContrastTools.collect` with the detached
+foundation and settings. It keeps both theme results, required pairs, conditional
+boundaries and disabled exemptions separate from the collapsed saved audit.
+The short lesson follows the focused control group or changed proposed values:
+size/spacing, shape/type, colours/tokens or states/behaviour. It extracts token
+declarations from the complete proposed stylesheet, including the selected theme,
+then pairs those current values with component rule excerpts and a brief
+explanation. Group focus only changes this local teaching topic. The complete
+proposed stylesheet is expandable. Copy reads that stylesheet. Download remains saved-project
+CSS and is labelled accordingly. Page/wireframe exports and browser persistence
+continue to use saved values until Save. Learning viewport width is temporary;
+mobile full-width proposals are demonstrated in the narrow context.
+
+## Spacing and surfaces learning workspace
+
+`spacing-workspace.js` initializes after the existing lessons and property editors.
+It moves the original unit, radius, border, elevation and opacity fields into four
+control groups and reuses the existing `spacing` Save/Discard/preview bar. The
+wizard links to this workspace. Existing spacing comparisons, real-page inspection,
+component examples and utility/Tailwind exercises remain in disclosures, retaining
+their original IDs and saved-output semantics.
+
+`advHeight` remains in the Accessibility panel and is now bound to that scope.
+Its token route already points there. Spacing Save cannot commit a pending height
+edit; the local sample shows the saved height. Grid gap remains Responsive,
+region padding and surface paint remain Palette, and button dimensions remain
+Buttons. Navigation links expose those sources without copying their controls.
+The opacity field is labelled Component opacity because `.card` opacity fades
+text and descendants as well as its background.
+
+The new script-free, same-origin sandboxed iframe uses static sample HTML and
+exported CSS. The advanced component generator accepts explicit normalized
+settings/foundation values, with default saved-output calls preserving export
+bytes. The learning frame appends its proposed component rules and sets only
+its own spacing-unit/base-radius custom properties. Generated CSS enters via
+style.textContent; project content is never parsed into this iframe's HTML.
+No temporary reassignment of global project state or export entry points occurs.
+The sample keeps actual card/input rules and section responsive padding, with
+small authored layout/typography rules and a labelled nested-surface example.
+
+The local ladder, guides, element selection and narrow viewport do not persist.
+Website Light/Dark uses the existing website-theme control; dimensions remain
+shared and changes of theme retain pending geometry. Actual computed padding,
+radius, border and paragraph margin accompany contextual token/rule excerpts.
+Guides alter only the iframe. The existing reference lesson continues to measure
+the saved full website and labels its before/now comparison as session state.
+
+## Button themes and optional elevation
+
+Buttons exposes the shared website Light/Dark selector above its learning sample,
+separate from Studio appearance. Theme changes retain property drafts and the
+selected CSS teaching topic. Both Buttons and Spacing synchronize their theme
+selectors even while their main sections are closed. The short CSS reader merges
+all authored dark-theme blocks so optional component tokens resolve correctly.
+
+`buttonDesign.elevation` is an optional variant-to-preset map. The project codec
+accepts only `subtle` and `medium` for the five known variants; None, invalid and
+legacy entries remain absent/flat. The original Buttons draft scope owns the
+selected-variant elevation field, and the combined bar saves/discards it with
+other button paths. Colour resets and other variants do not erase elevation.
+
+The button renderer resolves each preset through one validated light/dark table.
+Studio specimens receive a private shadow variable. Optional exports add named
+`--button-<variant>-shadow` tokens, variant aliases and shared composition rules
+only when at least one variant enables elevation. Defaults therefore retain the
+existing flat exported CSS. The catalogue routes shadow tokens to the selected
+variant's elevation field; base geometry remains shared and independent.
+
+`buttonStates.elevationCss` composes drop shadow with the existing inset press cue,
+selection ring and their combination. It never replaces focus outlines or native
+button semantics. The same composition generator is used by the laboratory and
+saved/exported buttons. Forced colours continue to use the existing pressed outline
+and selected checkmark; reduced motion retains static depth while stopping progress
+animation. The contrast audit still models its named solid-colour contexts;
+manual focus visibility, shadow appearance and cross-browser checks remain necessary.
+
+
+## Unified semantic colour workspace (15 November 2026)
+
+The visible Palette process now has six stages. Assign semantic colours includes
+page backgrounds; the old backgrounds stage remains a hidden compatibility node
+for initialization, while show('backgrounds') resolves to semantics. Previous
+seven-stage descriptions above document the original layout.
+
+The existing background-workspace module also composes the unified interface.
+Semantic selection, original colour controls and contrast-review actions occupy
+the left pane. The learning page starts the right pane, followed by selected-token
+CSS and selectable samples for all semantic roles. It demonstrates text, muted
+surfaces, borders, focus, actions/hover, feedback and the four page regions.
+Original region controls and their actions are a left-pane disclosure. Their
+current-theme drafts retain their own Save/Discard boundary; semantic Save still
+reviews one selected colour. Region selection and semantic selection synchronize.
+
+paletteBrowser.proposedState(base) overlays the current selected colour proposal
+onto a detached region snapshot, including live foundation token sources, generated
+reset and transparent paint. It never assigns the candidate to shared state.
+The learning page consumes the same palette, token, alpha and padding helpers;
+website previews, storage and exports continue to consume saved state. CSS and
+project labels use textContent. No schema or export contributor changes are needed.

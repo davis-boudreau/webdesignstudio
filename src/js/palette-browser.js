@@ -4,8 +4,8 @@ DSStudio.register({
   id:'palette-browser',title:'Palette lists and selected properties',
   init() {
     const get=id=>document.getElementById(id),ui=DSStudio.paletteWorkspace,root=get('palette-workspace');
-    root.querySelector(':scope > header > p').textContent='Choose an item on the left and edit its properties on the right. Use Save to apply property changes or Discard to restore saved values. Semantic Save opens contrast review before Apply. Responsive page preview shows saved values and preserves drafts.';
-    const layouts=new Map(),brandButtons=new Map(),readouts=new WeakMap();let anchor='primary',shade='primary',readoutId=0,identity,draftKey='',draftBase='',draft='';
+    root.querySelector(':scope > header > p').textContent='Select colours and edit their properties. Background controls sit beside a live learning preview. Use Save to apply property changes or Discard to restore saved values. Semantic colour proposals open contrast review before Apply; None and Use generated apply directly on Save. Responsive page preview shows saved values and preserves drafts.';
+    const layouts=new Map(),brandButtons=new Map(),readouts=new WeakMap();let anchor='primary',shade='primary',readoutId=0,identity,draftKey='',draftBase='',draft='',draftPaint;
     function element(tag,cls,text){const node=document.createElement(tag);if(cls)node.className=cls;if(text)node.textContent=text;return node;}
     function button(text,action){const node=element('button','ghost',text);node.type='button';node.addEventListener('click',action);return node;}
     function append(target,...nodes){target.append(...nodes.filter(Boolean));}
@@ -44,7 +44,7 @@ DSStudio.register({
     const semanticName=field('palette-semantic-name','Role name','text',true),semanticToken=field('palette-semantic-token','CSS token','text',true),semanticHex=field('palette-semantic-hex','Proposed HEX colour'),semanticPicker=field('palette-semantic-picker','Colour picker','color');
     const choiceField=element('div','field'),choiceLabel=element('label',null,'Proposed colour'),colourChoice=element('select'),choiceHelp=element('p','help');
     colourChoice.id='palette-semantic-colour';choiceLabel.htmlFor=colourChoice.id;
-    choiceHelp.id='palette-semantic-colour-help';choiceHelp.textContent='Choose a brand colour or generated shade for the current theme, or enter a custom colour below. Preview before applying; applied custom colours stay fixed when the palette changes.';
+    choiceHelp.id='palette-semantic-colour-help';choiceHelp.textContent='Choose a brand colour or generated shade for the current theme, or enter a custom colour below. Preview before applying; brand and foundation shade choices follow their tokens. Other shade choices and custom colours copy a fixed value.';
     colourChoice.setAttribute('aria-describedby',choiceHelp.id);choiceField.append(choiceLabel,colourChoice,choiceHelp);semanticHex.closest('.field').before(choiceField);
     let choiceSignature='',preferredChoice=null;
     function syncColourChoices(){
@@ -64,26 +64,30 @@ DSStudio.register({
           const option=new Option((brand?brandNames.get(row.name)+' · ':'')+row.name+' · '+row.value.toUpperCase(),row.name);
           option.dataset.hex=row.value.toUpperCase();groups.get(label).append(option);
         }
-        colourChoice.replaceChildren(new Option('Custom colour','custom'),...groups.values());
+        colourChoice.replaceChildren(new Option('None (transparent)','none'),new Option('Use generated role','default'),new Option('Custom colour','custom'),...groups.values());
       }
       const options=[...colourChoice.options],hex=draft.toUpperCase(),selected=options.find(option=>option.value===preferredChoice);
-      if(preferredChoice!=='custom' && (!selected || selected.dataset.hex!==hex))preferredChoice=null;
-      colourChoice.value=preferredChoice||options.find(option=>option.dataset.hex===hex)?.value||'custom';
+      if(!['custom','none','default'].includes(preferredChoice) && (!selected || selected.dataset.hex!==hex))preferredChoice=null;
+      colourChoice.value=preferredChoice||(!state.semanticOverrides?.[state.theme]?.[semanticSelect.value] && hex===draftBase.toUpperCase()?'default':options.find(option=>option.dataset.hex===hex)?.value||'custom');
     }
     semanticHex.maxLength=7;semanticHex.pattern='#[0-9A-Fa-f]{6}';semanticHex.placeholder='#14253A';
     const proposalStatus=element('p','help');proposalStatus.id='palette-semantic-proposal-status';semanticHex.setAttribute('aria-describedby',proposalStatus.id);
-    const discard=button('Discard proposed colour',()=>{draft=draftBase;preferredChoice=null;semanticHex.setCustomValidity('');syncSemantic();});discard.id='palette-semantic-discard';form.append(proposalStatus,discard);semanticSection.insertBefore(form,get('jSemanticHelp'));
+    const discard=button('Discard proposed colour',()=>{draft=draftBase;preferredChoice=colourIsTransparent(semanticSelect.value)?'none':null;semanticHex.setCustomValidity('');syncSemantic();});discard.id='palette-semantic-discard';form.append(proposalStatus,discard);semanticSection.insertBefore(form,get('jSemanticHelp'));
     function syncSemantic(){
       const key=state.theme+':'+semanticSelect.value,value=palette().roles[semanticSelect.value];
-      if(key!==draftKey)preferredChoice=null;
+      const paint=colourIsTransparent(semanticSelect.value);
+      if(key!==draftKey || paint!==draftPaint){preferredChoice=paint?'none':semanticSource(semanticSelect.value)?.token||null;draftPaint=paint;}
       if(key!==draftKey || value!==draftBase){draftKey=key;draftBase=value;draft=value;semanticHex.setCustomValidity('');}
       semanticName.value=(semanticSelect.selectedOptions[0]?.textContent||'').replace(/\s*\(--[^)]+\)$/,'');semanticToken.value='--'+semanticSelect.value;
       if(document.activeElement!==semanticHex)semanticHex.value=draft;if(validHex(draft))semanticPicker.value=draft;
       syncColourChoices();
-      const changed=draft.toUpperCase()!==draftBase.toUpperCase();discard.disabled=!changed;
-      proposalStatus.textContent=changed?'Proposed change is not applied. Preview its contrast effects, then Apply or cancel.':'Current website value. Edit a proposal, then preview before applying.';
+      const changed=draft.toUpperCase()!==draftBase.toUpperCase() || (preferredChoice==='none')!==colourIsTransparent(semanticSelect.value) || preferredChoice==='default' && !!state.semanticOverrides?.[state.theme]?.[semanticSelect.value];discard.disabled=!changed;
+      proposalStatus.textContent=!changed && colourIsTransparent(semanticSelect.value)?'Current paint is transparent. The HEX value is retained for shade generation; choose a colour to restore visible paint.':changed?'Proposed change is not applied. Preview its contrast effects, then Apply or cancel.':'Current website value. Edit a proposal, then preview before applying.';
+      DSStudio.emit('palette:proposal');
     }
     colourChoice.addEventListener('change',()=>{
+      if(colourChoice.value==='none'){preferredChoice='none';draft=draftBase;syncSemantic();return;}
+      if(colourChoice.value==='default'){preferredChoice='default';draft=palette(state.theme,{...state,semanticOverrides:{...state.semanticOverrides,[state.theme]:{...state.semanticOverrides?.[state.theme],[semanticSelect.value]:undefined}}}).roles[semanticSelect.value];semanticHex.value=draft;syncSemantic();return;}
       if(colourChoice.value==='custom'){preferredChoice='custom';syncSemantic();return;}
       const option=colourChoice.selectedOptions[0];if(!validHex(option?.dataset.hex))return;
       preferredChoice=option.value;draft=option.dataset.hex;semanticHex.value=draft;semanticHex.setCustomValidity('');syncSemantic();
@@ -91,7 +95,7 @@ DSStudio.register({
     semanticHex.addEventListener('input',()=>{draft=semanticHex.value;preferredChoice=null;semanticHex.setCustomValidity('');syncSemantic();});
     semanticPicker.addEventListener('input',()=>{draft=semanticPicker.value;preferredChoice=null;semanticHex.value=draft;semanticHex.setCustomValidity('');syncSemantic();});
     semanticHex.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();get('jSemanticEdit').click();}});
-    get('jSemanticEdit').addEventListener('click',event=>{syncSemantic();if(!validHex(draft)){semanticHex.setCustomValidity('Enter a six-digit HEX colour, such as #14253A.');semanticHex.reportValidity();event.preventDefault();event.stopImmediatePropagation();}},true);
+    get('jSemanticEdit').addEventListener('click',event=>{syncSemantic();if(['none','default'].includes(preferredChoice)){event.preventDefault();event.stopImmediatePropagation();const key=state.theme+':'+semanticSelect.value;state.colourTransparency??={};if(preferredChoice==='none'){state.colourTransparency[key]=true;apply();syncAdvanced();window.dssAutosave?.();}else{delete state.colourTransparency[key];get('jSemanticReset').click();}preferredChoice=colourIsTransparent(semanticSelect.value)?'none':null;syncSemantic();return;}if(!validHex(draft)){semanticHex.setCustomValidity('Enter a six-digit HEX colour, such as #14253A.');semanticHex.reportValidity();event.preventDefault();event.stopImmediatePropagation();}},true);
     get('jSemanticEdit').addEventListener('click',()=>{if(get('colourRepair').open && validHex(draft) && draft.toUpperCase()!==draftBase.toUpperCase()){get('repairHex').value=draft;get('repairHex').dispatchEvent(new Event('input',{bubbles:true}));}});
     const backgrounds=layouts.get('backgrounds'),regionSelect=get('palette-region-selection');regionSelect.size=4;backgrounds.browse.append(regionSelect.closest('.field'));
     const clearBackground=button('Use default for selected region',()=>get((regionSelect.value==='body'?'page':regionSelect.value)+'-background-reset').click());clearBackground.id='palette-background-clear';backgrounds.browse.append(clearBackground);
@@ -128,9 +132,9 @@ DSStudio.register({
       for(const [key,item]of shadeButtons){const details=get('main-palette-steps').querySelector('[data-palette-role="'+key+'"]');details.hidden=key!==shade;if(key===shade)details.open=true;item.setAttribute('aria-pressed',String(key===shade));}
       get('neutralPaletteAnchor').closest('section').hidden=shade!=='neutral';
       syncSemantic();
-      const region=regionSelect.value,reset=get((region==='body'?'page':region)+'-background-reset');clearBackground.disabled=reset.disabled;backgrounds.title.textContent=region[0].toUpperCase()+region.slice(1)+' background properties';
-      const isButton=familySelect.value==='buttons';get('palette-component-values').hidden=isButton;get('palette-button-clear').hidden=!isButton;get('palette-button-focus-reset').hidden=!isButton;
-      if(isButton)root.querySelector('.palette-component-overrides').open=true;
+      const region=regionSelect.value,reset=get((region==='body'?'page':region)+'-background-reset');clearBackground.disabled=reset.disabled;backgrounds.title.textContent='Page background learning preview';
+      const isButton=familySelect.value==='buttons',inButtons=!!get('palette-button-clear').closest('#button-workspace');get('palette-component-values').hidden=isButton&&!inButtons;get('palette-button-clear').hidden=!isButton&&!inButtons;get('palette-button-focus-reset').hidden=!isButton&&!inButtons;
+      const buttonOverrides=root.querySelector('.palette-component-overrides');if(isButton&&buttonOverrides)buttonOverrides.open=true;
       components.title.textContent=isButton?(variantSelect.selectedOptions[0]?.textContent||'Button')+' colour properties':(familySelect.selectedOptions[0]?.textContent||'Component')+' properties';
       for(const code of root.querySelectorAll('#main-palette-steps [data-shade] code,[data-component-token]'))readout(code);
     }
@@ -147,6 +151,18 @@ DSStudio.register({
     root.addEventListener('toggle',()=>queueMicrotask(sync),true);
     get('brandPalette').addEventListener('toggle',()=>{if(get('brandPalette').open)sync();});
     DSStudio.on('stage:change',({stage})=>{if(stage.index===4)sync();});
-    DSStudio.paletteBrowser={sync};sync();DSStudio.emit('lesson:content');
+    DSStudio.paletteBrowser={sync,proposedState(base){
+      const candidate=JSON.parse(JSON.stringify(base)),theme=state.theme,key=semanticSelect.value;
+      if(!validHex(draft))return candidate;
+      candidate.semanticOverrides??={};candidate.semanticOverrides[theme]??={};
+      candidate.colourTransparency??={};candidate.semanticSources??={};candidate.semanticSources[theme]??={};
+      const changed=draft.toUpperCase()!==draftBase.toUpperCase() || (preferredChoice==='none')!==colourIsTransparent(key) || preferredChoice==='default' && !!state.semanticOverrides?.[theme]?.[key];
+      if(!changed)return candidate;
+      delete candidate.colourTransparency[theme+':'+key];delete candidate.semanticSources[theme][key];
+      if(preferredChoice==='none')candidate.colourTransparency[theme+':'+key]=true;
+      else if(preferredChoice==='default')delete candidate.semanticOverrides[theme][key];
+      else{candidate.semanticOverrides[theme][key]=draft;const source=this.proposedSource();if(source)candidate.semanticSources[theme][key]=source;}
+      return candidate;
+    },proposedSource(){const option=colourChoice.selectedOptions[0];return option && /^--(?:brand-|primary-|secondary-|accent-|neutral-)/.test(option.value) && validHex(option.dataset.hex)?{token:option.value,hex:option.dataset.hex}:null;}};sync();DSStudio.emit('lesson:content');
   }
 });

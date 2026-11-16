@@ -17,7 +17,7 @@ change project settings. Buttons wrap and have a minimum 44px height.
 | Palette: shade generation | Draft shared generation method; calculated shade values remain read-only |
 | Palette: semantic roles | Shared bar reuses existing proposal/discard; Save opens contrast review, Apply confirms; Cancel leaves the saved role unchanged |
 | Palette: feedback shade sources | Scoped draft/save/discard for optional editable state-source selectors |
-| Palette: page backgrounds | Theme/region drafts for colour, opacity, padding and scoped resets |
+| Palette: page backgrounds | Theme-wide region drafts; left controls update a local learning page; one shared bar saves/discards all current-theme regions; padding remains shared |
 | Palette: component colours | Variant drafts for source, custom colour, state overrides and reset; shared focus remains a shared model property |
 | Palette: states/review | Theme/feedback-role drafts; review instructions are read-only |
 | Brief | Draft brief fields, saved together; existing saved brief remains the preview/export source |
@@ -29,7 +29,7 @@ change project settings. Buttons wrap and have a minimum 44px height.
 | Typography: hierarchy | Shared scale/heading draft; persistent realistic sample and complete labelled ladder |
 | Typography: responsive limits | Shared draft for limits/mobile factor and viewport exploration; global CSS/calculation panel below the collapsible Learning preview; specimen width remains a comparison |
 | Typography: content / inline inspection | Read-only source selection and computed text details beside the sample; one workspace-wide action bar |
-| Buttons | Scoped size, dimensions, shape, weight, focus width, timing and mobile-width drafts; variant/state browsing stays immediate |
+| Buttons | Combined geometry and multi-variant colour drafts; proposed samples, contrast and CSS; variant/state browsing stays immediate |
 | Spacing and surfaces | Scoped unit, radius, surface and component-dimension drafts |
 | Responsive layout | Scoped breakpoints, gutters, grid size/gap/alignment drafts; coupled breakpoint validation preserved |
 | Accessibility and interaction | Scoped focus, motion, underline and simulated-state properties; contrast repairs keep their existing reviewed Apply/Cancel |
@@ -83,3 +83,119 @@ the current model, preserving unrelated edits and shared object identities.
 It then uses the existing render/autosave lifecycle. External source changes
 invalidate conflicting drafts; complete project replacement clears all drafts.
 No schema or export-format change is required.
+
+## Inline colour preview audit
+
+The common colour selector previews each palette colour with a thumbnail and
+keeps its name, HEX or token visible. Coverage: all four webpage background
+palettes; brand/UI assignments; semantic proposal choices and visible role lists;
+button colour sources; Colour lab roles; feedback roles; and dynamic state-source
+palettes. Existing colour inputs and brand/shade swatch buttons already preview
+their colours. Unrelated region, method, font and component selectors remain native.
+
+The original select and its input/change path stay authoritative. Pointer/keyboard
+selection stages the same properties; Save/Discard and reviewed semantic Apply
+retain their boundaries. Menu browsing/dismissal and swatch refresh do not save.
+Only validated HEX values paint thumbnails; imported labels remain plain text.
+Current validation results and manual-review gaps are recorded in PROGRESS.md.
+
+## Colour defaults, transparency and sources (15 November 2026)
+
+The user's confirmed meaning is None = transparent paint. Use default is a
+separate choice. Required brand-entry HEX values and shade anchors remain valid;
+optional paint flags control transparency without corrupting ramp generation.
+Role-to-edit lists remain navigation rather than colour assignments.
+
+| Area | None | Use default / source handling |
+| --- | --- | --- |
+| Main Palette / accent | Transparent associated action paint; retain anchor HEX | Restore starter anchor and opaque paint |
+| Page regions | Transparent region background; preserve content opacity | Remove override and transparency; restore inherited/generated paint |
+| Semantic proposals | Save transparent role paint | Restore generated role; brand/foundation proposals retain token links |
+| General state colours | Transparent semantic paint; retain source ramp | Restore semantic source default |
+| Button source | Transparent background states and border | Restore source, clear variant colour overrides/paint flags |
+| Button properties / focus | Transparent selected property via nearby None control | Existing reset or a real colour restores paint |
+
+Flags share Save/Discard boundaries; semantic explicit-colour proposals still use
+contrast review. Native colour inputs retain a valid HEX fallback and expose a
+labelled None toggle with draft-aware pressed state. None uses a checkerboard;
+Use default previews the actual generated colour. Contrast/exports consume the
+same validated paint flags. Brand source metadata is assigned from validated IDs
+and authored shade steps, never inferred from editable display names.
+
+## Typography calculation lesson (15 November 2026)
+
+Generated CSS and Copy CSS remain outside an initially closed native disclosure.
+Learn the clamp calculation uses four dynamic steps and stays open during draft
+changes. Expansion is view state, with no Save/Discard or project mutation.
+Fixed-px roles explain their actual rule; equal bounds explicitly explain the
+constant size. The original shared Typography controls retain their scope.
+
+## Background learning page (15 November 2026)
+
+The small Body/Header/Main/Footer page follows a normalized current-theme draft,
+with clickable region labels, padding and paint-only opacity. The original shared
+action bar sits below controls and preview. Changing the selected region is view
+state; Save/Discard applies to all pending regions in the current theme. Shared
+padding retains its existing model paths. The saved responsive-page action keeps
+the draft and focuses the existing saved website. Selected-region draft CSS and
+contrast are separate from optional saved diagnostics. No duplicate action bar or
+replacement form controls were introduced.
+
+## Body inset controls (15 November 2026)
+
+Body now has the same four-sided padding disclosure/reset as the other regions.
+It creates the outer page frame; Header/Main/Footer padding stays inside those
+regions. All use the shared regionPadding map and Save/Discard scope. The learning
+page uses exact proposed Body values; full pages and both wireframe fidelities
+use the saved CSS. Resets/default buttons reflect draft values as well as saved
+values, preserving independent paint/opacity edits when resetting padding.
+
+## Unified Buttons controls
+
+Buttons now has one workspace bar that saves/discards geometry and all proposed
+variant colours together. Learning samples, comparisons, CSS and contrast use
+those combined drafts. Shared geometry, focus and behaviour are labelled separately
+from variant colour overrides. Palette routes to the original colour controls in
+Buttons; the records are shared, not copied into a second editor. Palette's own
+component actions retain their existing selected-context boundary for its optional
+state-source controls. Responsive page preview preserves all drafts and displays
+the saved website. Complete references and the saved contrast audit are collapsed.
+
+## Spacing workspace and control-height ownership
+
+Spacing/surfaces reuses one original action bar with its normalized draft. Unit,
+base radius, card/field borders, elevation and whole-component opacity update the
+local learning page; Save commits those properties and Discard restores them.
+Light/Dark is the shared website theme. Local selection/guides/width and token
+selection are comparison tools. Archived inspection lessons show saved output.
+Control height belongs to Accessibility for display, token navigation and Save;
+it is no longer committed by the Spacing scope. Other source links preserve
+Palette, Responsive and Buttons boundaries instead of duplicating their editors.
+
+## Buttons theme and elevation
+
+The nearby Website theme selector controls the shared website theme and preserves
+button drafts; Studio appearance remains independent. Elevation is a validated
+None/Subtle/Medium choice for the selected variant, shared across website themes
+through theme-specific resolved shadow tokens. It participates in the existing
+combined Save/Discard boundary, project storage and exports. Radius/border/weight
+remain shared; elevation and colour overrides are per variant. None removes the
+optional variant elevation; clearing colours does not reset elevation. Pressed and
+selected cues are composed with depth, while keyboard focus retains its own outline.
+
+
+## Unified semantic colour workspace
+
+Assign semantic colours now owns the visible background workflow as well as all
+other semantic roles. The six-stage navigation omits Apply page backgrounds;
+legacy background entry routes reveal the merged stage and region disclosure.
+Role controls and their original review actions sit left of the learning sample.
+Original region controls/actions retain their current-theme draft boundary in the
+same left pane. Selected semantic colour Save still reviews one proposal, while
+region Save commits that scope's paint/opacity/padding proposals. Neither commits
+the other's unrelated edits. Padding remains shared between themes and website
+views. The learning sample composes both proposals into a detached state; full
+website previews and exports retain saved values until their corresponding Save.
+None is transparent paint; generated reset removes a custom role assignment;
+valid foundation token sources remain references. All original control IDs and
+project formats are preserved. Current results are in PROGRESS and TEST_COVERAGE.

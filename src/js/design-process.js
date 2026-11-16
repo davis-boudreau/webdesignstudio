@@ -206,7 +206,7 @@
       const basic = state.sampleMode === 'basic';
       return `<section class="process-ia-guidance"><h4>Information architecture and sitemap: different jobs</h4><p>The Brief agrees what belongs in this release. Information architecture organizes that information: its labels, groups and relationships, including content inside pages. A sitemap represents part of that structure. Here, the footer Sitemap is a visitor-facing navigation list.</p><p>For example, Contact and Opening hours both belong in the information architecture. Contact can appear in the sitemap while Opening hours remains content on the page. Unchecking its sitemap choice does not remove those hours from the website.</p><p>Keep the full Website content structure in view. The default Sitemap follows visible eyebrow text, with existing headings as fallbacks. Each link goes directly to its section or container; nested links follow containment on the page. Slashes remain part of the label. Select useful sections, then test whether someone can find an important item. Custom destination plans remain available for saved projects.</p><p class="learning-reference">Further reading: <a href="https://www.nngroup.com/articles/information-architecture-sitemaps/">Nielsen Norman Group: Information Architecture vs. Sitemaps</a>. IA includes ongoing decisions about content and findability; a sitemap is one of its artifacts.</p></section>
       <p>Plan meaningful containers, subcontainers and actual content, as deeply as needed. For example: Header &gt; Main navigation &gt; Home, and Home &gt; Hero &gt; Hero image &gt; Alternative text. Navigation items reference destinations; they do not duplicate those destinations. A deeper content outline does not require extra pages or clicks. Keep it shallow where clear labels suffice. <a href="https://www.nngroup.com/articles/flat-vs-deep-hierarchy/">NN/g: balancing flat and deep hierarchies</a>.</p>
-      ${DSStudio.contentArchitecture?.markup() || ''}
+      ${(prefix==='studio-plan'?DSStudio.contentArchitecture?.reportMarkup():DSStudio.contentArchitecture?.markup()) || ''}
       <details class="ia-destination-map"><summary>Custom destination outline (optional)</summary><p>This separate navigation plan includes selected and unselected entries. Content containment, such as a link inside Header, does not determine sitemap ancestry. Manage destinations in the sitemap controls.</p><div class="process-map${basic ? ' process-map--basic' : ''}"><p><strong>${text(state.project)}</strong> / sitemap destination outline</p>${tree(plan.pages).length ? renderTree(tree(plan.pages)) : '<p>Add destination labels in Architecture to begin the sitemap plan.</p>'}<p>This is the destination outline, including entries excluded from the sitemap. Sitemap choices do not remove website content or create new pages.</p></div></details>
       <section class="process-sitemap-preview" aria-label="Visitor sitemap preview"><h4>Visitor sitemap preview</h4>${sitemapHtml({linksOnly:true,previewLinks:prefix==='studio-plan'})}<p>This preview and the footer use the same Sitemap configuration. Section labels come from eyebrows or existing headings. Excluding a parent hides its branch while retaining child choices and all website content.</p></section>`;
     }
@@ -263,16 +263,28 @@
     id: 'design-process',
     title: 'Brief, architecture, wireframes and prototypes',
     init() {
+      const studioCss=()=>processCss() + (DSStudio.contentArchitecture?.reportCss()||'');
       const style = document.createElement('style');
-      style.textContent = processCss(); document.head.append(style);
+      style.textContent = studioCss(); document.head.append(style);
       DSStudio.exports.registerCss({id:'planning',stage:'planning',generate:()=> '\n' + processCss()});
       for (const [index, [id,title,heading,explanation,exercise]] of stages.entries()) {
         const panel = document.querySelector(`#process-${id} > .panel`);
         panel.innerHTML = `<section class="studio-lesson"><h3>${heading}</h3><p>${explanation}</p><p><strong>Practice:</strong> ${exercise}</p><button class="ghost" type="button" data-configure-step="${index}">Configure in wizard · step ${index+1}</button></section><div data-process-artifact="${id}"></div>`;
       }
-      document.getElementById('plan-brief-fields').innerHTML = briefFields.map(({key,label,prompt,placeholder,limit},index)=>`<div class="field process-editor"><label for="plan-${key}">${index+1}. ${label}</label><p class="help" id="plan-${key}-help">${escapeHtml(prompt)}</p><textarea id="plan-${key}" data-process-field="${key}" aria-describedby="plan-${key}-help" placeholder="${escapeHtml(placeholder)}" maxlength="${limit}" rows="3"></textarea></div>`).join('');
+      const briefParts = [
+        {title:'People and purpose',intro:'Start with the people who need this website and the useful action it should help them take.',keys:['goal','audience'],guide:'Choose one main audience and task. Describe the problem in everyday language before deciding how the website should look.',example:'A community group needs to help local residents find an event and book a place. Some visitors use phones or need clear, simple instructions.'},
+        {title:'Scope, content and requirements',intro:'Turn that task into a realistic first release: what belongs in it, who supplies the content and what it must support.',keys:['scope','content','constraints'],guide:'Separate essential pages and features from later ideas. Record content owners, missing materials and approval needs. Include brand tone, accessibility, devices and any platform or hosting constraints.',example:'Include Home, Events and Contact; leave member accounts for later. The organiser supplies dates and photographs. Visitors must be able to book using a phone or keyboard.'},
+        {title:'Delivery and success',intro:'Agree who will finish, approve and maintain the website, then describe how you will know it works.',keys:['delivery','success'],guide:'Write a practical deadline and time or budget limit. Name the approver and future maintainer. Choose a visitor task you can observe, and record unknown decisions as &ldquo;to confirm&rdquo;.',example:'Release before registration opens. The organiser approves the content and updates events. Ask a new visitor to find an event date and complete a booking without help.'}
+      ];
+      const briefField = ({key,label,prompt,placeholder,limit}) => `<div class="field process-editor"><label for="plan-${key}">${briefFields.findIndex(field=>field.key===key)+1}. ${label}</label><p class="help" id="plan-${key}-help">${escapeHtml(prompt)}</p><textarea id="plan-${key}" data-process-field="${key}" aria-describedby="plan-${key}-help" placeholder="${escapeHtml(placeholder)}" maxlength="${limit}" rows="3"></textarea></div>`;
+      document.getElementById('plan-brief-fields').innerHTML = briefParts.map((part,index)=>`<fieldset class="brief-part" data-brief-part="${index+1}"><legend>${index+1} &middot; ${part.title}</legend><p class="help">${part.intro}</p><details class="brief-part-guide"><summary>Guidance and example</summary><p>${part.guide}</p><p><strong>Example:</strong> ${part.example}</p></details>${part.keys.map(key=>briefField(briefFields.find(field=>field.key===key))).join('')}</fieldset>`).join('');
       const controls = [...document.querySelectorAll('[data-process-field]')];
       const rendered = new Map();
+      document.getElementById('process-ia').addEventListener('click',event=>{
+        const button=event.target.closest('[data-content-report-download]');if(!button)return;
+        download('content-plan-'+(state.sampleMode==='basic'?'basic':'advanced')+'.html',DSStudio.contentArchitecture.reportDocument(),'text/html');
+        button.closest('.ia-content-report').querySelector('[data-content-report-status]').textContent='Saved content plan report downloaded. Open the HTML file to read or print it.';
+      });
       document.getElementById('process-ia').addEventListener('click',event=>{
         const link=event.target.closest('a[data-sitemap-target]');if(!link || event.defaultPrevented || event.button!==0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
         event.preventDefault();
@@ -302,7 +314,7 @@
       });
       let feedbackMode = state.sampleMode, feedbackPages = null;
       DSStudio.on('output:artifacts', () => {
-        const css = processCss();
+        const css = studioCss();
         if (style.textContent !== css) style.textContent = css;
         const plan = currentPlan();
         if (feedbackMode !== state.sampleMode || plan.pages !== feedbackPages) document.getElementById('plan-sample-status').textContent = '';

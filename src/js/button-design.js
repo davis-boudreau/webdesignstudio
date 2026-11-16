@@ -42,8 +42,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     variants: ['outline', 'text']
   }];
 
-  function sourceLabel(v) {
-    const source = b.sources[v] || defaults.sources[v];
+  function sourceLabel(v, settings = b, foundation = state) {
+    if(foundation.colourTransparency?.['button:'+v+':source'])return 'None (transparent paint)';
+    const source = settings.sources[v] || defaults.sources[v];
     if (source === 'custom') return 'Custom colour';
     if (source.startsWith('#')) return `Example swatch ${source.toUpperCase()}`;
     return `Theme ${source}`;
@@ -105,23 +106,39 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     const fg = o.text || (isClear ? readableAgainst(base, surface) : readable(base));
     const hover = o.hover || hexDark(base, .83),
       active = o.active || hexDark(base, .69);
+    const clear=foundation.colourTransparency||{},prefix='button:'+v+':';
+    const sourceClear=clear[prefix+'source'] || clear['anchor:'+settings.sources[v]];
+    const paint=(key,value)=>clear[prefix+key] || sourceClear && ['bg','hover','active','border'].includes(key)?'transparent':value;
     return {
-      bg,
-      fg,
-      border: o.border || (v === 'outline' ? base : 'transparent'),
-      hover,
-      active,
-      hoverText: o.hoverText || readable(hover),
-      activeText: o.activeText || readable(active)
+      bg:paint('bg',bg),
+      fg:paint('text',fg),
+      border:paint('border',o.border || (v === 'outline' ? base : 'transparent')),
+      hover:paint('hover',hover),
+      active:paint('active',active),
+      hoverText:paint('hoverText',o.hoverText || readable(hover)),
+      activeText:paint('activeText',o.activeText || readable(active))
     };
   }
 
-  function props(v, size = b.size, mode = state.theme) {
-    const c = colors(v, mode),
+  function elevation(v,mode=state.theme,settings=b){
+    const preset=settings.elevation?.[v];
+    if(preset==='subtle')return mode==='dark'?'0 2px 4px #00000066':'0 2px 4px #00000024';
+    if(preset==='medium')return mode==='dark'?'0 4px 10px #00000099':'0 4px 10px #00000038';
+    return 'none';
+  }
+  function elevationCSS(settings){
+    const variants=Object.keys(names).filter(v=>elevation(v,'light',settings)!=='none');
+    if(!variants.length)return '';
+    const tokens=mode=>Object.keys(names).map(v=>'  --button-'+v+'-shadow: '+elevation(v,mode,settings)+';').join('\n');
+    return '\n/* Optional per-variant elevation; None keeps other variants flat. */\n:root {\n'+tokens('light')+'\n}\n[data-theme="dark"] {\n'+tokens('dark')+'\n}\n'+variants.map(v=>'.ds-button--'+v+' { --button-elevation-shadow: var(--button-'+v+'-shadow); }').join('\n')+'\n'+DSStudio.buttonStates.elevationCss('.ds-button','data-preview-state','--button-elevation-shadow','--button-focus');
+  }
+
+  function props(v, size = b.size, mode = state.theme, settings = b, foundation = state) {
+    const c = colors(v, mode, settings, foundation),
       scale = size === 'sm' ? .8 : size === 'lg' ? 1.22 : 1;
     return {
       c,
-      style: `--bd-focus:${b.focus};--bd-focus-width:${b.focusWidth}px;--bd-motion:${b.motion}ms;background:${c.bg};color:${c.fg};border:${b.border}px solid ${c.border};border-radius:${b.radius}px;min-height:${Math.round(b.minHeight*scale)}px;padding:${Math.round(b.padY*scale)}px ${Math.round(b.padX*scale)}px;font-weight:${b.weight};font-size:${size==='sm'?'0.875rem':size==='lg'?'1.125rem':'1rem'}`
+      style: `${elevation(v,mode,settings)==='none'?'':'--bd-elevation-shadow:'+elevation(v,mode,settings)+';'}--bd-focus:${foundation.colourTransparency?.['button:focus']?'transparent':settings.focus};--bd-focus-width:${settings.focusWidth}px;--bd-motion:${settings.motion}ms;background:${c.bg};color:${c.fg};border:${settings.border}px solid ${c.border};border-radius:${settings.radius}px;min-height:${Math.round(settings.minHeight*scale)}px;padding:${Math.round(settings.padY*scale)}px ${Math.round(settings.padX*scale)}px;font-weight:${settings.weight};font-size:${size==='sm'?'0.875rem':size==='lg'?'1.125rem':'1rem'}`
     };
   }
 
@@ -129,8 +146,8 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  function btn(v, st = 'default', size = b.size, mode = state.theme, real = false) {
-    const p = props(v, size, mode);
+  function btn(v, st = 'default', size = b.size, mode = state.theme, real = false, settings = b, foundation = state) {
+    const p = props(v, size, mode, settings, foundation);
     let c = p.c;
     let style = p.style;
     if (st === 'hover') style += `;background:${c.hover};color:${c.hoverText}`;
@@ -160,6 +177,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     };
     for (const [id, val] of Object.entries(map)) $(id).value = val;
     $('bdMobileFull').checked = b.mobileFull;
+    $('bdElevation').value=b.elevation?.[b.variant]||'none';
     const v = b.variant,
       base = bases()[v];
     $('bdSource').value = b.sources[v] || defaults.sources[v];
@@ -176,8 +194,12 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
         bdActiveText: col.activeText,
         bdDefaultBg: col.bg === 'transparent' ? base : col.bg,
         bdBorderColor: col.border === 'transparent' ? base : col.border
-      })) $(id).value = val.toLowerCase();
+      })) $(id).value = validColor(val)?val.toLowerCase():base.toLowerCase();
     for (const id of ['bdHover', 'bdActive', 'bdFocus', 'bdText', 'bdHoverText', 'bdActiveText', 'bdDefaultBg', 'bdBorderColor']) $(id + 'Out').textContent = $(id).value.toUpperCase();
+  }
+
+  function matrix(settings = b, foundation = state) {
+    return stateGroups.map(group => `<section class="bd-state-group" aria-label="${group.title}"><div class="bd-state-group-heading"><h4>${group.title}</h4><p class="help">${group.description}</p></div>${group.items.map(st=>`<section class="bd-state-section" aria-label="${stateLabels[st]}"><div class="bd-state-section-head"><h5>${stateLabels[st]}</h5><p class="help">${esc(explain[st])}</p></div>${colorGroups.map(type=>`<div class="bd-color-group"><h6>${type.title}</h6><div class="bd-state-grid">${type.variants.map(v=>`<div class="bd-cell"><strong>${names[v]}</strong><span class="bd-source-label">${esc(sourceLabel(v, settings, foundation))}</span>${btn(v,st,'md',foundation.theme,false,settings,foundation)}</div>`).join('')}</div></div>`).join('')}</section>`).join('')}</section>`).join('');
   }
 
   function render() {
@@ -185,7 +207,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     $('bdDescription').textContent = explain[b.selectedState] + (b.selectedState === 'disabled' ? ' This state example is unavailable; explain the prerequisite beside disabled actions in your application.' : '');
     $('bdSingle').innerHTML = btn(b.variant, b.selectedState, b.size, state.theme, true);
     $('bdThemes').innerHTML = ['light', 'dark'].map(m => `<div class="bd-theme-card" data-mode="${m}"><strong>${m==='light'?'Light':'Dark'} preview</strong>${btn(b.variant,b.selectedState,b.size,m)}</div>`).join('');
-    $('bdMatrix').innerHTML = stateGroups.map(group => `<section class="bd-state-group" aria-label="${group.title}"><div class="bd-state-group-heading"><h4>${group.title}</h4><p class="help">${group.description}</p></div>${group.items.map(st=>`<section class="bd-state-section" aria-label="${stateLabels[st]}"><div class="bd-state-section-head"><h5>${stateLabels[st]}</h5><p class="help">${esc(explain[st])}</p></div>${colorGroups.map(type=>`<div class="bd-color-group"><h6>${type.title}</h6><div class="bd-state-grid">${type.variants.map(v=>`<div class="bd-cell"><strong>${names[v]}</strong><span class="bd-source-label">${esc(sourceLabel(v))}</span>${btn(v,st,'md',state.theme)}</div>`).join('')}</div></div>`).join('')}</section>`).join('')}</section>`).join('');
+    $('bdMatrix').innerHTML = matrix(b, state);
     syncLegacyButtons();
     window.dssUpdateContrastChecks?.();
     $('bdCode').textContent = buttonCSS();
@@ -215,15 +237,15 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     root.style.setProperty('--demo-accent-active-text', accent.activeText);
   }
 
-  function buttonColourCSS() {
+  function buttonColourCSS(settings = b, foundation = state) {
     const variants = mode => Object.keys(names).map(v => {
-      const c = colors(v, mode);
-      return `  /* ${names[v]} variant colours */\n  --button-${v}-source: ${baseFor(v)};\n  --button-${v}-bg: ${c.bg};\n  --button-${v}-text: ${c.fg};\n  --button-${v}-border: ${c.border};\n  --button-${v}-hover: ${c.hover};\n  --button-${v}-active: ${c.active};\n  --button-${v}-hover-text: ${c.hoverText};\n  --button-${v}-active-text: ${c.activeText};`;
+      const c = colors(v, mode, settings, foundation);
+      return `  /* ${names[v]} variant colours */\n  --button-${v}-source: ${baseFor(v, settings, foundation)};\n  --button-${v}-bg: ${c.bg};\n  --button-${v}-text: ${c.fg};\n  --button-${v}-border: ${c.border};\n  --button-${v}-hover: ${c.hover};\n  --button-${v}-active: ${c.active};\n  --button-${v}-hover-text: ${c.hoverText};\n  --button-${v}-active-text: ${c.activeText};`;
     }).join('\n');
-    return `/* Web Design System Studio V4.1 · Button component CSS\n   FOUNDATION → COMPONENT TOKENS → STATES.\n   Verify text contrast in each theme and state. */\n:root {\n  --button-pad-x: ${b.padX}px;\n  --button-pad-y: ${b.padY}px;\n  --button-min-height: ${b.minHeight}px;\n  --button-radius: ${b.radius}px;\n  --button-border-width: ${b.border}px;\n  --button-font-weight: ${b.weight};\n  --button-focus: ${b.focus};\n  --button-focus-width: ${b.focusWidth}px;\n  --button-motion: ${b.motion}ms;\n${variants('light')}\n}\n[data-theme="dark"] {\n${variants('dark')}\n}\n/* Base component: reusable for all variants. */\n.ds-button {\n  display: inline-flex; align-items: center; justify-content: center;\n  gap: .5em; min-height: var(--button-min-height);\n  padding: var(--button-pad-y) var(--button-pad-x);\n  border: var(--button-border-width) solid transparent;\n  border-radius: var(--button-radius);\n  font: inherit; font-weight: var(--button-font-weight);\n  cursor: pointer; text-align: center;\n  transition: background-color var(--button-motion), border-color var(--button-motion);\n}\n/* Size variants scale the same foundation dimensions. */\n.ds-button--sm { min-height: calc(var(--button-min-height) * .8); padding: calc(var(--button-pad-y) * .8) calc(var(--button-pad-x) * .8); font-size: .875rem; }\n.ds-button--lg { min-height: calc(var(--button-min-height) * 1.22); padding: calc(var(--button-pad-y) * 1.22) calc(var(--button-pad-x) * 1.22); font-size: 1.125rem; }\n${Object.keys(names).map(v=>`/* ${names[v]} variant and its interactive states. */\n.ds-button--${v} { background: var(--button-${v}-bg); color: var(--button-${v}-text); border-color: var(--button-${v}-border); }\n.ds-button--${v}:hover:not(:disabled) { background: var(--button-${v}-hover); color: var(--button-${v}-hover-text); }\n.ds-button--${v}:active:not(:disabled) { background: var(--button-${v}-active); color: var(--button-${v}-active-text); }`).join('\n')}\n/* Real keyboard focus, not just the preview simulation. */\n.ds-button:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }\n/* Native disabled attribute prevents activation. */\n.ds-button:disabled { opacity: .55; cursor: not-allowed; }\n/* aria-pressed is only for persistent toggle buttons. */\n.ds-button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--button-focus); }\n/* aria-busy requires JavaScript behaviour and status announcements. */\n.ds-button[aria-busy="true"] { cursor: progress; }\n${b.mobileFull?'/* Optional mobile full-width action. */\n@media (max-width: 40rem) { .ds-button--mobile-full { width: 100%; } }\n':''}/* Honour user reduced-motion preferences. */\n@media (prefers-reduced-motion: reduce) { .ds-button { transition: none; } }\n`;
+    return `/* Web Design System Studio V4.1 · Button component CSS\n   FOUNDATION → COMPONENT TOKENS → STATES.\n   Verify text contrast in each theme and state. */\n:root {\n  --button-pad-x: ${settings.padX}px;\n  --button-pad-y: ${settings.padY}px;\n  --button-min-height: ${settings.minHeight}px;\n  --button-radius: ${settings.radius}px;\n  --button-border-width: ${settings.border}px;\n  --button-font-weight: ${settings.weight};\n  --button-focus: ${foundation.colourTransparency?.['button:focus']?'transparent':settings.focus};\n  --button-focus-width: ${settings.focusWidth}px;\n  --button-motion: ${settings.motion}ms;\n${variants('light')}\n}\n[data-theme="dark"] {\n${variants('dark')}\n}\n/* Base component: reusable for all variants. */\n.ds-button {\n  display: inline-flex; align-items: center; justify-content: center;\n  gap: .5em; min-height: var(--button-min-height);\n  padding: var(--button-pad-y) var(--button-pad-x);\n  border: var(--button-border-width) solid transparent;\n  border-radius: var(--button-radius);\n  font: inherit; font-weight: var(--button-font-weight);\n  cursor: pointer; text-align: center;\n  transition: background-color var(--button-motion), border-color var(--button-motion);\n}\n/* Size variants scale the same foundation dimensions. */\n.ds-button--sm { min-height: calc(var(--button-min-height) * .8); padding: calc(var(--button-pad-y) * .8) calc(var(--button-pad-x) * .8); font-size: .875rem; }\n.ds-button--lg { min-height: calc(var(--button-min-height) * 1.22); padding: calc(var(--button-pad-y) * 1.22) calc(var(--button-pad-x) * 1.22); font-size: 1.125rem; }\n${Object.keys(names).map(v=>`/* ${names[v]} variant and its interactive states. */\n.ds-button--${v} { background: var(--button-${v}-bg); color: var(--button-${v}-text); border-color: var(--button-${v}-border); }\n.ds-button--${v}:hover:not(:disabled) { background: var(--button-${v}-hover); color: var(--button-${v}-hover-text); }\n.ds-button--${v}:active:not(:disabled) { background: var(--button-${v}-active); color: var(--button-${v}-active-text); }`).join('\n')}\n/* Real keyboard focus, not just the preview simulation. */\n.ds-button:focus-visible { outline: var(--button-focus-width) solid var(--button-focus); outline-offset: 3px; }\n/* Native disabled attribute prevents activation. */\n.ds-button:disabled { opacity: .55; cursor: not-allowed; }\n/* aria-pressed is only for persistent toggle buttons. */\n.ds-button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--button-focus); }\n/* aria-busy requires JavaScript behaviour and status announcements. */\n.ds-button[aria-busy="true"] { cursor: progress; }\n${settings.mobileFull?'/* Optional mobile full-width action. */\n@media (max-width: 40rem) { .ds-button--mobile-full { width: 100%; } }\n':''}/* Honour user reduced-motion preferences. */\n@media (prefers-reduced-motion: reduce) { .ds-button { transition: none; } }\n`;
   }
-  function buttonCSS() {
-    return buttonColourCSS() + `\n:root { --button-progress-animation: ${adv.reduce ? 'none' : 'dss-button-progress'}; }\n` + DSStudio.buttonStates.css('.ds-button, .button', 'data-preview-state');
+  function buttonCSS(settings = b, foundation = state) {
+    return buttonColourCSS(settings, foundation) + `\n:root { --button-progress-animation: ${foundation.advanced.reduce ? 'none' : 'dss-button-progress'}; }\n` + DSStudio.buttonStates.css('.ds-button, .button', 'data-preview-state') + elevationCSS(settings);
   }
   DSStudio.on('project:install', () => { b = state.buttonDesign; });
   DSStudio.on('project:sync', controls);
@@ -275,7 +297,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   $('bdJump').addEventListener('click', () => window.dssRevealSection('buttonDesignLab'));
   $('bdCopy').addEventListener('click', async () => {
     try {
-      await navigator.clipboard.writeText(buttonCSS());
+      await navigator.clipboard.writeText($('bdCode').textContent);
       $('bdCopy').textContent = 'Copied';
     } catch (e) {
       $('bdCopy').textContent = 'Select CSS above to copy';
@@ -323,8 +345,9 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
     if (!['text', 'bg', 'hover', 'active'].includes(property)) return null;
     const settings = JSON.parse(JSON.stringify(b));
     if (settings.overrides[variant]) delete settings.overrides[variant][property];
-    return colors(variant, theme, settings)[property === 'text' ? 'fg' : property];
+    return colors(variant, theme, settings,{...state,colourTransparency:{}})[property === 'text' ? 'fg' : property];
   };
+  DSStudio.buttons = { specimen: btn, css: buttonCSS, matrix, elevation, sourceLabel, names, states, stateLabels };
   controls();
   render();
 })();

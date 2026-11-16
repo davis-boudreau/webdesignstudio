@@ -74,7 +74,7 @@ app.onload=async()=>{
     const homeRef=nodes.find(node=>node.parentId===nav.id && node.label==='Home');
     test(mode+' navigation references canonical destinations without duplicating their content',()=>homeRef.type==='link' && homeRef.target==='home' && homeRef.reference==='#home' && nodes.filter(node=>node.target==='home' && node.type!=='link').length===1 && !nodes.some(node=>node.parentId===homeRef.id));
     test(mode+' every authored sitemap destination has exactly one canonical content entry',()=>w.DSStudio.process.inventory(mode).every(([,id])=>nodes.filter(node=>node.target===id && node.type!=='link').length===1));
-    test(mode+' native outline starts collapsed and center/export content roles remain safe text',()=>[...d.querySelectorAll('#ia-outline details')].every(el=>!el.open) && d.querySelectorAll('#process-ia .ia-content-map details').length>10 && !d.querySelector('#process-ia .ia-content-map img, #process-ia .ia-content-map script'));
+    test(mode+' native outline starts collapsed and center/export content roles remain safe text',()=>[...d.querySelectorAll('#ia-outline details')].every(el=>!el.open) && d.querySelectorAll('#process-ia .ia-content-report [data-report-node]').length===model.nodes().length && (mode==='basic' || new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelectorAll('.ia-content-map details').length>10) && !d.querySelector('#process-ia .ia-content-map img, #process-ia .ia-content-map script'));
     input('ia-search','alternative text');await wait();
     test(mode+' search reveals matching deep content and ancestor context',()=>d.getElementById('ia-count').textContent.includes('matching') && [...d.querySelectorAll('#ia-outline details')].some(el=>el.open) && d.getElementById('ia-outline').textContent.includes('Alternative text'));
     input('ia-search','');d.getElementById('ia-collapse').click();
@@ -136,6 +136,7 @@ app.onload=async()=>{
   const deep=Array.from({length:12},(_,i)=>({id:'content-depth-'+i,parentId:i?'content-depth-'+(i-1):null,label:'Level '+(i+1),type:i===11?'text':'group',draft:i===11?'Twelve levels of useful content':null,status:'planned'}));
   w.importConfig({sampleMode:'basic',designProcess:{contentPlan:{basic:deep}}});w.dssShowWizardStep(1);await wait();
   test('Content structures support twelve levels independently from the destination outline',()=>contentNodes().length===12 && model.path(contentNodes(),contentNode('Level 12')).length===12 && d.querySelectorAll('#ia-outline details').length===11);
+  test('Hierarchical report retains all twelve supported levels',()=>d.querySelectorAll('#architecture-saved-review [data-report-node]').length===12 && d.querySelector('[data-report-node="content-depth-11"] .ia-report-proposal').textContent==='Twelve levels of useful content');
   selectContent(contentNode('Level 12').id);test('Depth limit disables adding a child at the boundary',()=>d.getElementById('ia-add-placement').options[0].disabled);
   const unsafe=[{id:'content-safe',parentId:null,label:'<img src=x onerror=alert(1)>',type:'text',draft:'<script>alert(1)<\/script>',notes:'<svg onload=alert(1)>',status:'planned',target:'javascript:alert(1)'},{id:'content-cycle-a',parentId:'content-cycle-b',label:'Cycle A'},{id:'content-cycle-b',parentId:'content-cycle-a',label:'Cycle B'},{id:'content-safe',label:'Duplicate'}];
   const sanitized=model.normalizeNodes(unsafe,'basic');
@@ -314,6 +315,47 @@ app.onload=async()=>{
       !w.DSStudio.contentEditor.isDirty() && d.getElementById('ia-undo').disabled && d.getElementById('ia-discard').disabled &&
       evaluate('state.sampleMode==="basic" && state.designProcess.contentPlan.basic===null && state.designProcess.contentPlan.advanced===null') && w.localStorage.getItem('dss-v27-projects')===library);
   }
+  // The saved plan is also a complete, read-only hierarchical report.
+  for(const mode of ['basic','advanced']){
+    reset();d.getElementById(mode==='basic'?'dockModeBasic':'dockModeAdvanced').click();w.dssShowWizardStep(1,false);await wait();
+    const model=w.DSStudio.contentArchitecture,source=model.sourceNodes().find(node=>node.sourceKey==='id:hero-title');
+    const hostile='<img src=x onerror="window.__reportExecuted=1">';w.__reportExecuted=0;
+    const rows=[
+      {id:'content-report-page',label:'Home',type:'page',status:'present',target:'home'},
+      {id:'content-report-section',parentId:'content-report-page',label:'Introduction',type:'section',status:'needs-content'},
+      {id:'content-report-copy',parentId:'content-report-section',label:'Planned words '+hostile,type:'text',status:'planned',value:'Original planning text',draft:'A saved proposal <script>unsafe<\/script>',notes:'Purpose: Introduce the service.\nOwner: Course tutor\nNext action: Review '+hostile,reference:'javascript:window.__reportExecuted=1'},
+      {id:'content-report-heading',parentId:'content-report-page',label:'Current hero heading',type:'text',status:'present',sourceKey:source.sourceKey,draft:'Proposed hero wording'},
+      {id:'content-report-empty',parentId:'content-report-page',label:'Intentionally blank proposal',type:'text',status:'planned',draft:''},
+      {id:'content-report-missing',parentId:'content-report-section',label:'Retired source',type:'image',status:'needs-content',sourceKey:'id:removed-source'}
+    ];
+    w.importConfig({project:'Report '+hostile,sampleMode:mode,designProcess:{contentPlan:{[mode]:rows}}});w.dssShowWizardStep(1,false);d.getElementById('architecture-saved-review').open=true;await wait();
+    const report=()=>d.querySelector('#architecture-saved-review .ia-content-report'),entry=id=>report().querySelector('[data-report-node="'+id+'"]');
+    test(mode+' report contains every saved item in its exact parent-and-child hierarchy',()=>{const saved=model.nodes(),items=[...report().querySelectorAll('[data-report-node]')];return items.length===saved.length && items.every((item,index)=>item.dataset.reportNode===saved[index].id && (item.parentElement.closest('[data-report-node]')?.dataset.reportNode||null)===saved[index].parentId) && entry('content-report-copy').querySelector('h6').textContent.startsWith('1.1.1 ');});
+    test(mode+' report presents project, sample and accurate readiness totals',()=>report().querySelector('header strong').textContent==='Report '+hostile && report().querySelector('header').textContent.includes(mode==='basic'?'Basic website':'Advanced website') && [...report().querySelectorAll('.ia-report-summary dd')].map(el=>el.textContent).join(',')==='6,2,2,2');
+    test(mode+' report distinguishes current website wording from a saved proposal and notes',()=>entry('content-report-heading').querySelector('.ia-report-current').textContent===source.value && entry('content-report-heading').querySelector('.ia-report-proposal').textContent==='Proposed hero wording' && entry('content-report-copy').querySelector('.ia-report-notes').textContent.includes('Owner: Course tutor'));
+    test(mode+' report preserves deliberately empty proposals and identifies unavailable sources',()=>entry('content-report-empty').querySelector('.ia-report-proposal').textContent==='(deliberately empty)' && entry('content-report-missing').textContent.includes('no longer available'));
+    test(mode+' report labels, proposals, notes and references remain inert text',()=>!report().querySelector('img,script,svg,iframe,a,[onerror],[onclick]') && report().textContent.includes(hostile) && report().textContent.includes('<script>unsafe<\/script>') && entry('content-report-copy').querySelector('.ia-report-reference').textContent==='javascript:window.__reportExecuted=1' && !w.__reportExecuted);
+    const before=evaluate('projectJson()'),beforeHtml=evaluate('htmlExport()'),beforeStorage=w.localStorage.getItem('dss-v27-projects');
+    w.DSStudio.contentEditor.select('content-report-copy');input('ia-notes','UNSAVED report note');await wait();
+    test(mode+' report excludes unsaved editor changes',()=>!report().textContent.includes('UNSAVED report note') && report().textContent.includes('Owner: Course tutor') && evaluate('projectJson()')===before);
+    const files=[],download=w.download;try{w.download=(name,content,type)=>files.push({name,content,type});report().querySelector('[data-content-report-download]').click();}finally{w.download=download;}
+    const doc=new w.DOMParser().parseFromString(files[0].content,'text/html');
+    test(mode+' report download is a complete self-contained hierarchical HTML page',()=>files.length===1 && files[0].name==='content-plan-'+mode+'.html' && files[0].type==='text/html' && doc.querySelector('h1').textContent==='Content plan report' && doc.querySelectorAll('[data-report-node]').length===6 && !!doc.querySelector('meta[name="viewport"]') && !!doc.querySelector('style') && !doc.querySelector('script,link,iframe,img,button') && !doc.body.textContent.includes('UNSAVED report note'));
+    test(mode+' report download preserves model, website export, storage and dirty form',()=>evaluate('projectJson()')===before && evaluate('htmlExport()')===beforeHtml && w.localStorage.getItem('dss-v27-projects')===beforeStorage && w.DSStudio.contentEditor.isDirty() && d.getElementById('ia-notes').value==='UNSAVED report note');
+    d.getElementById('ia-save').click();await wait();
+    test(mode+' saving refreshes the report while proposals stay separate from actual website wording',()=>report().textContent.includes('UNSAVED report note') && previewDoc().getElementById('hero-title').textContent===source.value && !new w.DOMParser().parseFromString(evaluate('htmlExport()'),'text/html').querySelector('.ia-content-report'));
+    d.getElementById('ia-undo').click();await wait();
+    test(mode+' Undo restores the saved report and project together',()=>!report().textContent.includes('UNSAVED report note') && report().textContent.includes('Owner: Course tutor') && evaluate('projectJson()')===before);
+    const reportNode=report();input('jPrimary','#246789');await wait();
+    test(mode+' unrelated styling updates preserve the report DOM and expanded review',()=>report()===reportNode && d.getElementById('architecture-saved-review').open);
+    for(const theme of ['light','dark'])for(const width of [320,390,1440]){
+      app.style.width=width+'px';if(d.documentElement.dataset.theme!==theme)d.getElementById('themeToggle').click();await wait();
+      test(mode+' '+theme+' report hierarchy and download control fit '+width+'px',()=>{const bad=[...report().querySelectorAll('.ia-report-entry,button')].map(el=>({tag:el.tagName,text:el.textContent.slice(0,30),width:el.getBoundingClientRect().width,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,height:el.getBoundingClientRect().height})).filter(box=>!(box.width>0 && box.left>=0 && box.right<=w.innerWidth+1 && (box.tag!=='BUTTON'||box.height>=44)));if(d.documentElement.scrollWidth>w.innerWidth+1||bad.length)throw Error(JSON.stringify({width:w.innerWidth,scrollWidth:d.documentElement.scrollWidth,open:d.getElementById('architecture-saved-review').open,bad}));return true;});
+    }
+    app.style.width='1440px';w.importConfig({sampleMode:mode,designProcess:{contentPlan:{[mode]:[]}}});w.dssShowWizardStep(1,false);d.getElementById('architecture-saved-review').open=true;await wait();
+    test(mode+' an intentionally empty plan has an explicit empty report',()=>report().querySelectorAll('[data-report-node]').length===0 && report().textContent.includes('No content entries.') && report().querySelector('.ia-report-summary dd').textContent==='0');
+  }
+
   test('No content-tree JavaScript errors',()=>!w.__reviewErrors.length);
   }catch(error){results.push({name:'Content-tree harness completed',pass:false,error:String(error.stack||error)});}
   finish();

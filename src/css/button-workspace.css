@@ -1,0 +1,23 @@
+.button-workspace { min-width: 0; }
+.button-workspace select { min-height: 44px; max-width: 100%; box-sizing: border-box; }
+#button-workspace-title { scroll-margin-top: var(--studio-section-scroll-offset, 90px); }
+.button-workspace-layout { display: grid; grid-template-columns: minmax(220px, .85fr) minmax(0, 1.4fr); gap: 20px; align-items: start; }
+.button-workspace-controls, .button-workspace-previews { min-width: 0; }
+.button-workspace-controls select, .button-workspace-controls button, .button-workspace-controls input:not([type="range"]):not([type="checkbox"]) { min-height: 44px; max-width: 100%; box-sizing: border-box; }
+.button-learning-details { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-block: 12px; }
+.button-learning-details > summary { cursor: pointer; font-weight: 700; }
+.button-learning-details > div { min-width: 0; padding-top: 10px; }
+.button-learning-page, .button-learning-selected, .button-learning-css { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-block: 14px; min-width: 0; }
+.button-learning-page { overflow-wrap: anywhere; }
+.button-learning-page h4 { font-size: 1.3rem; margin-block: 10px; }
+.button-learning-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 8px; }
+.button-learning-mobile-full > .bd-button { width: 100%; }
+.button-learning-row > div, .button-learning-states > div { display: grid; gap: 10px; min-width: 0; justify-items: start; }
+.button-learning-states { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr)); gap: 18px; padding: 8px; }
+.button-workspace pre { max-width: 100%; overflow: auto; max-height: 340px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.button-workspace .palette-component-fields { grid-template-columns: minmax(0, 1fr); }
+.button-workspace .bd-single { min-height: 90px; }
+.button-workspace > .property-actions { position: sticky; bottom: 8px; z-index: 3; margin-block: 18px 8px; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.button-workspace .bd-state-group { min-width: 0; }
+@media (max-width: 1100px) { .button-workspace-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 400px) { .button-learning-details, .button-learning-page, .button-learning-selected, .button-learning-css { padding: 10px; } .button-workspace .bd-theme-grid { grid-template-columns: minmax(0, 1fr); } }

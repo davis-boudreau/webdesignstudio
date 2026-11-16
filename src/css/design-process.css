@@ -50,3 +50,12 @@
   .background-contained-regions > .background-model-region { padding: 12px; }
 }
 #brief-editor select { min-height: 44px; }
+
+/* Brief: three connected decisions, with optional teaching beside each group. */
+.brief-part { display: grid; gap: 1rem; min-width: 0; margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-base); }
+.brief-part legend { max-width: 100%; padding-inline: .25rem; font-weight: 700; overflow-wrap: anywhere; }
+.brief-part .process-editor { display: grid; gap: .5rem; margin: 0; }
+.brief-part-guide { min-width: 0; }
+.brief-part-guide summary { min-height: 44px; align-content: center; cursor: pointer; }
+.brief-part-guide p { overflow-wrap: anywhere; }
+@media (max-width: 480px) { .brief-part { padding: .65rem; } }

@@ -1,6 +1,597 @@
 # Project progress
 
-Updated: 14 November 2026 (America/Halifax).
+Updated: 15 November 2026 (America/Halifax).
+
+
+## Unified semantic colour learning workspace (15 November 2026)
+
+- Assign semantic colours is now the main editor for all 21 semantic roles,
+  including Body/Header/Main/Footer backgrounds. The visible Palette process has
+  six stages; the separate Apply page backgrounds stage is removed from navigation.
+- Original role selection, colour/token pickers and contrast-review actions sit
+  on the left. The right pane starts with a compact learning page, then selected
+  token CSS with a usage example and selectable previews for every semantic role.
+  The sample demonstrates muted surfaces/text, action/hover colours, feedback,
+  borders and focus as well as the page regions.
+- Original region colour/opacity/padding controls remain in a left disclosure,
+  retaining their current-theme Save/Discard scope and shared padding paths.
+  Selected semantic colour proposals keep their existing individual contrast
+  review before Apply; None/default retain their existing direct Save behaviour.
+  The combined sample previews both scopes without changing saved state or exports.
+- Added a detached paletteBrowser.proposedState overlay for valid colour, token,
+  reset and transparent proposals. Existing palette/paint/alpha/padding helpers
+  drive the sample. Labels/CSS use textContent; no schema/export changes or runtime
+  dependency. Background compatibility routes reveal the merged stage and region
+  controls; region and semantic selection synchronize. Refreshed affected assets.
+- Initial palette run passed 830/842: corrected obsolete layout/visibility
+  fixtures and the legacy background entry route/disclosure. Final palette passes
+  844/844 (.semantic-workspace-palette-final.log), including new sample placement,
+  all-role selection, proposal isolation, Discard, transparent None, token CSS,
+  invalid HEX and region selection checks. Required integration passes 279/279
+  (.semantic-workspace-browser.log). Both have empty captured errors. Structure
+  verifies 81 assets and git diff --check passes.
+- Shared actions pass 231/231 (.semantic-workspace-actions.log), including the
+  background compatibility entry and responsive preview preservation. These three
+  browser suites total 1,354 passing assertions. Light/Dark visual checks pass
+  4/4 each (.semantic-workspace-visual.log); inspected both refreshed captures:
+  work/reviews/semantic-learning-light.png and semantic-learning-dark.png.
+  Visual checks overlap browser coverage and are not added to the broad count.
+  Final structure verifies 81 assets; git diff --check passes. This is affected
+  verification, not a repeated full catalogue or new export fixture capture.
+- Manual trusted keyboard/touch, screen-reader and other-browser review remain
+  open. No commit, push or publication. Next: user review of the unified semantic
+  workspace, including the separate selected-colour and region Save boundaries.
+
+## Buttons website theme and per-variant elevation (15 November 2026)
+
+- Added a Website Light/Dark selector above the learning sample. It uses the
+  existing shared website theme, keeps Studio appearance independent, preserves
+  button drafts and the current teaching topic, and synchronizes hidden selectors.
+- Added None/Subtle/Medium elevation under Shape and typography. The optional
+  buttonDesign.elevation map validates only known variants/presets; missing,
+  invalid and legacy entries remain None. One preset applies to both themes,
+  with explicit light/dark shadow tokens. Geometry and other variants stay separate.
+- Learning specimens, matrix, theme cards and CSS consume the same validated
+  preset resolver. An optional shared CSS helper layers depth with pressed,
+  selected and combined pressed-toggle cues, leaving focus outlines intact.
+  Export shadow rules are emitted only when a variant enables elevation, keeping
+  the default None stylesheet compatible. Shadow token routes use the actual
+  selected variant control; original Save/Discard/JSON boundaries are retained.
+- First focused result 34/47, with empty captured errors: corrected hidden-theme
+  synchronization, dark-token extraction across multiple theme blocks and theme
+  control height. Corrected test browsing events to use native input semantics.
+  Final focused matrix passes 47/47 (.button-elevation-focused-final.log),
+  overlapping Components. Added saved-project loading and elevated media-mode
+  regressions afterwards. Final Components passes 196/196
+  (.button-theme-shadow-components.log), model 14/14 (-model.log), media modes
+  9/9 + 11/11 (-media.log), shared actions 231/231 (-actions.log) and required
+  integration 279/279 (-browser.log), all with empty captured errors.
+- Initial exports passed 97/98: byte fixtures matched, but Chrome reported an
+  unchanged clamp-explorer asset failed to load. Confirmed the local file exists;
+  reran the export suite without source/fixture changes. Final exports pass 98/98
+  with empty captured errors (.button-theme-shadow-exports-final.log). These six
+  affected suites total 838 assertions; focused checks overlap Components and
+  are not added. No default export fixture refresh was needed. Structure verifies
+  81 assets; git diff --check passes.
+- Initial Light/Dark visual smoke passed 2/2, but inspection found Studio-coloured
+  teaching instructions inside the dark project sample. Moved these instructions
+  onto the Studio surface and added a computed contrast regression. Final
+  Components passes 197/197 (.button-theme-shadow-components-final.log) and
+  integration 279/279 (.button-theme-shadow-browser-final.log), with empty captured
+  errors. Together with model 14, media 20, actions 231 and exports 98, the final
+  six affected suites total 839 passing assertions. This supersedes the earlier
+  838 count; focused checks overlap and are not added.
+- Final visual checks pass 4/4 across both website themes, including instruction
+  contrast (.button-theme-shadow-visual-final.log). Refreshed review captures:
+  work/reviews/button-theme-elevation-light.png and
+  work/reviews/button-theme-elevation-dark.png. These are affected checks, not a
+  repeated full suite catalogue. Structure verifies 81 assets; diff check passes.
+- No commit, push or publication. Manual keyboard/touch, screen-reader, shadow/
+  focus visibility and other-browser review remain open.
+  Next: user review of the nearby theme selector and optional variant elevation.
+
+## Unified Spacing and surfaces workspace (15 November 2026)
+
+- Added four groups for Spacing system, Inside/outside relationships, Shape/borders
+  and Surfaces/elevation, using the original controls and shared Spacing action bar.
+  The wizard is an entry point. Renamed Muted surface opacity to Component opacity.
+  Corrected advHeight ownership to Accessibility, where its field and token route
+  already reside; Spacing Save no longer commits that unrelated height proposal.
+- Added a script-free iframe sample with two cards, nested surface and form field,
+  selectable regions, local guides, a narrow viewport, explicit website Light/Dark,
+  complete selectable spacing ladder, measured properties and contextual CSS.
+  It consumes exported rules plus explicit snapshot-aware advanced component CSS;
+  unit/radius overrides are confined to the iframe. CSS is assigned as text and
+  all sample HTML is static. No temporary global project assignment is used.
+- Existing before/now arithmetic, measured real-page inspection, component demos
+  and local utility/Tailwind lessons are retained in reference disclosures.
+  Links identify Palette region padding/colours, Responsive grid gap, Accessibility
+  height and independent Buttons geometry. No new model fields were introduced.
+- Initial startup check caught a duplicate local declaration. The initial older
+  Spacing suite then stopped after controls were detached before label lookup;
+  attached the workspace before moving the original fields. These were failed
+  intermediate checks, not the final result.
+- Focused new-workspace matrix passes 46/46 with empty captured errors
+  (.spacing-workspace-focused.log), overlapping the expanded full Spacing suite.
+  It verifies draft isolation, geometry/opacity/ladder, selection/guides, Save/
+  Discard, unrelated drafts, height ownership, JSON, both samples/themes at
+  320/390/1440px, preview routing and project replacement. Structure verifies
+  81 assets. Broader first run: Spacing 292/310, no captured errors; the 18 failures
+  were assertions of the old lesson/control/utility placement. Updated those to
+  exercise the reference disclosures and new control owner while retaining their
+  calculations, focus, sizing and saved-output checks. Final Spacing rerun passes
+  313/313 with empty captured errors (.spacing-workspace-spacing-final.log).
+- Shared actions pass 231/231 (.spacing-workspace-actions.log), Components 149/149
+  (.spacing-workspace-components.log), required integration 279/279
+  (.spacing-workspace-browser.log), and exports 98/98 (.spacing-workspace-exports.log),
+  all with empty captured errors. The export baseline is unchanged. Added final
+  checks for independent button geometry/size classes and the Surface source link.
+- The five affected suites total 1,070 passing assertions; the focused matrix
+  overlaps Spacing and is not added. Visual smoke passes 1/1
+  (.spacing-workspace-visual.log), and inspected
+  work/reviews/spacing-learning-workspace.png. Positioned contextual CSS immediately
+  beneath the preview, before the complete ladder. Manual keyboard/touch,
+  screen-reader and other-browser review remain pending; no full catalogue rerun.
+- Refreshed affected runtime asset queries. No commits, pushes or deployment.
+  Next: user review of the unified Spacing and surfaces workflow.
+
+## Spacing and surfaces workflow analysis (15 November 2026)
+
+- Reviewed spacing/utility lessons, wizard relocation, shared draft bindings,
+  foundation/card CSS and advanced component settings. This was source analysis;
+  no runtime changes or browser checks were performed in this investigation.
+- Existing spacing lesson has useful before/now arithmetic, exported rules,
+  measured section padding and Basic/Advanced responsive overrides. It reads saved
+  exports and the saved page; it does not consume the Spacing draft snapshot.
+  Controls, surface demos, state examples and utility/Tailwind guidance are split.
+- Found a control/save ownership inconsistency: advHeight is displayed with the
+  Accessibility state controls but property-editors binds it to the Spacing scope.
+  Align its displayed owner and Save/Discard boundary before moving the workspace.
+- The Muted surface opacity label understates its scope: advanced rendering fades
+  preview cards/nested muted components and exported .card uses whole-element
+  opacity, including text. Recommend Component opacity and explicit guidance;
+  background paint opacity remains a separate Palette setting.
+- Recommend one Spacing and surfaces learning workspace with expandable Spacing
+  system, Inside/outside spacing, Shape/borders and Surfaces/elevation groups.
+  Use a small two-card/nested-surface/form sample, selectable element highlights,
+  optional padding/margin/gap overlays and a visible compact token ladder.
+  Show existing derived padding values; avoid adding independent dimensions that
+  silently bypass exported token rules. Keep grid gap/breakpoints in Responsive,
+  region padding/background paint in Palette, and button geometry in Buttons.
+- Proposed samples and contextual CSS explanations should follow one normalized
+  Spacing draft, with one Save/Discard/Responsive page preview bar. Include explicit
+  Website Light/Dark review; shared dimensions stay common. Retain before/now
+  comparisons and real exported HTML/CSS in disclosures. Keep utility/Tailwind
+  exercises as optional follow-on learning. No implementation started.
+- Next proposed step: agree the workspace structure, resolve control ownership,
+  then implement shared draft-aware samples/CSS with affected regression coverage.
+
+## Contextual Button CSS lessons (15 November 2026)
+
+- Confirmed the complete proposed stylesheet updated for all controls, but the
+  short excerpt only followed interaction state and kept static variable names.
+  Radius, weight, colour and behaviour changes were therefore poorly explained.
+- Added a current-topic heading and lessons for Size/spacing, Shape/typography,
+  Colours/tokens and States/behaviour. Focus or proposed-value changes select the
+  relevant lesson. Tokens are extracted from the actual proposed stylesheet,
+  including dark-theme values; excerpts retain var() references and show current
+  numeric/paint values. Size scaling, shared versus variant properties, opacity,
+  focus/timing, mobile-width opt-in and reduced motion have explicit guidance.
+- Complete stylesheet, source-aware Copy, saved CSS download and draft boundaries
+  remain intact. No model/export generator changed. Refreshed the runtime query.
+- Added per-control lesson checks, transparency, all seven state excerpts, CSS
+  brace balance, focus-only browsing, Save/Discard and saved-output isolation.
+  Components pass 149/149 with empty captured errors
+  (.button-css-components-final.log), including explicit light/dark colour-scope
+  checks. Required integration passes 279/279 (.button-css-browser.log) and exports
+  pass 98/98 (.button-css-exports.log), all with empty captured errors: 526 assertions.
+  Export fixtures remain unchanged. Visual smoke passes 1/1
+  (.button-css-visual-final.log); captured work/reviews/button-css-lesson.png.
+  Structure passes (79 assets); git diff --check passes.
+- Manual keyboard/touch, screen-reader and other-browser review remain open.
+  Next: user review of the contextual CSS lessons alongside the controls.
+
+## Button font-weight investigation (15 November 2026)
+
+- Verified the existing Shape and typography control without changing runtime
+  code. A focused stdin harness using scripts/browser_runner.py passes 11/11
+  checks with empty captured errors (.button-weight-verified.log).
+- All four choices (400/500/600/700) reach the computed style of all 53 learning
+  specimens and the proposed CSS while saved JSON/CSS remain unchanged. Discard
+  restores 600; Save applies 700 to the live website and CSS export.
+- With the default Arial family, the measured Primary action label width is
+  102.25px at both 400 and 500, and 111.16px at both 600 and 700. Adjacent choices
+  can therefore appear very similar; comparing Regular 400 with Bold 700 gives
+  a clear difference in this environment. No confirmed control bug was found.
+- No full suites rerun for this read-only investigation; earlier suite totals are
+  historical. Other fonts/browsers and manual accessibility remain unverified.
+  Next: user comparison of Regular and Bold in the learning preview.
+
+## All variants in Button learning preview (15 November 2026)
+
+- Expanded the always-visible learning page from two actions to Primary,
+  Secondary, Accent, Outline and Text action, using the existing draft-aware
+  specimen generator. Variants wrap using the existing responsive layout and
+  retain the narrow full-width comparison behaviour.
+- Each action now routes by its explicit variant identity; selecting one reveals
+  the editor, marks the current variant and preserves proposed changes. No saved
+  model or export generator changed. Refreshed the affected script cache query.
+- Extended component coverage for all five labels, each selection route, draft
+  preservation/current indication and wrapping in both themes at 320/390/1440px.
+  Structure passes (79 assets) and git diff --check passes. Components pass
+  109/109 with empty captured errors (.button-variants-components.log).
+  Required integration passes 279/279 with empty captured errors
+  (.button-variants-browser.log): 388 assertions across both suites.
+  Visual smoke passes 1/1 (.button-variants-visual.log); refreshed the review image
+  work/reviews/button-learning-workspace.png with all five actions visible.
+- Manual keyboard/touch, screen-reader and other-browser review remain open.
+  Next: user review of the five-variant learning page.
+
+## Unified Buttons learning workspace (15 November 2026)
+
+- Implemented expandable purpose/variant, size/spacing, shape/type, colours/tokens
+  and states/behaviour groups using original controls. Palette links to the same
+  colour editor in Buttons; button-token navigation now routes to that workspace.
+- Added a realistic action context, narrow-width comparison, selected specimen,
+  three-size comparison, seven-state comparison, theme cards, selected properties,
+  proposed contrast and short CSS lessons. Complete matrix, saved audit and full
+  stylesheet remain available in disclosures. The original wizard is an entry point.
+- Shared read-only button rendering/CSS helpers accept detached normalized settings.
+  Proposed geometry, multi-variant colour drafts, focus and transparent paint use
+  existing records. Combined Save/Discard handles button paths across scopes;
+  unrelated Palette drafts survive. Full website/export state changes on Save.
+  Copy uses the proposed CSS; standalone Download remains explicitly saved CSS.
+- Initial existing component suite passed 57/57. Expanded component regressions
+  passed 89/89 with empty captured errors (.button-workspace-components-verified.log),
+  before added action-selection/control-height checks. Shared actions pass 231/231
+  (.button-workspace-actions.log). Structure passes (79 assets); diff check passes.
+- Initial integration passed 277/279; the two failures were ownership assertions
+  still expecting wizard/Palette button controls. Updated those assertions to
+  require the Buttons workspace and token routes. Initial Palette stopped at
+  170/171 after a root-local override lookup failed following relocation. Guarded
+  that lookup and retained Palette token readouts and the shared editor link.
+- Broader Palette rerun passed 827/847 with empty captured errors. Fifteen failures
+  exposed lost control-height styles after relocation, one expected the old token
+  route, and four exposed an existing background-reset cascade after invalid HEX.
+  Restored 44px editor controls, updated routing checks and kept background reset
+  available for invalid drafts. Focused sizing/reset verification passes 18/18
+  (.button-workspace-palette-focused.log). The final Palette rerun passes 848/848
+  with empty captured errors (.button-workspace-palette-verified.log).
+- Final review also found a shared-focus edge case: choosing a real focus colour
+  from another variant must clear an earlier transparent focus proposal. Removed
+  duplicate paint-clear records across variant contexts and added a focused
+  component regression. Palette completed with the preceding implementation;
+  the remaining queued suites load this final focus fix. Final Components passes
+  98/98 (.button-workspace-components-complete.log), exports pass 98/98 without
+  fixture changes (.button-workspace-exports.log), and reduced-motion/forced-colour
+  runs pass 7/7 and 9/9 (.button-workspace-media.log), all with empty captured errors.
+- Integration rerun passed 278/279: the remaining ownership assertion found that
+  derived button-state shade tokens still advertised Palette while their controls
+  live in Buttons. Corrected that metadata for variant-derived ramps, preserving
+  general semantic ramp routes. Improved assertion diagnostics to name incorrectly
+  owned tokens. Required final integration rerun passes 279/279 with empty
+  captured errors (.button-workspace-browser-verified.log). The six affected
+  suites total 1,570 passing assertions (Palette 848, Components 98, shared actions
+  231, integration 279, exports 98 and media modes 7+9). Focused/visual checks
+  overlap or supplement these counts and are not added. This was not a repeated
+  full 19-suite catalogue. Structure verifies 79 assets; git diff --check passes.
+- Inspected work/reviews/button-learning-workspace.png after removing duplicate
+  introductory content. Visual smoke passes 1/1 with empty captured errors
+  (.button-workspace-visual-final.log); the shared bar remains near the viewport
+  bottom while editing. Copying the full proposed CSS remains separate from the
+  explicitly saved standalone CSS download.
+  No commits, pushes or publication. Manual accessibility/other-browser review open.
+  Next: user review of the unified Buttons workflow and its CSS lessons.
+
+## Buttons workflow analysis (15 November 2026)
+
+- Reviewed the existing Buttons markup, button-design renderer/exporter,
+  button-contrast review, shared property drafts, Palette control relocation and
+  Typography learning workspace. This was source analysis; no runtime changes or
+  new browser verification were performed. Earlier passing results remain historical.
+- Current workflow splits geometry controls in the wizard, colour/source/focus
+  controls in Palette, and the selected specimen, fixed theme comparison, full
+  five-variant/seven-state matrix and complete CSS in the laboratory. Geometry
+  drafts have Save/Discard, but the laboratory renders saved button settings;
+  it does not consume the Buttons draft snapshot. Browsing variant/state is immediate.
+- Recommend one Buttons learning workspace with left-hand expandable groups:
+  purpose/variant, size/spacing, shape/type, colours/tokens, states/behaviour.
+  Keep a compact realistic action context, selected-state specimen and size/state
+  comparisons nearby. Collapse the complete matrix, full contrast audit and full
+  stylesheet; show selected properties and selected-rule teaching beside the preview.
+- Use one shared Save/Discard/Responsive page preview bar. Draft changes should
+  update proposed specimens, CSS and relevant contrast together; saved pages,
+  wireframes and exports should update on Save. Preserve all variant edits while
+  browsing; label system-wide geometry/focus versus variant colour overrides.
+- Palette must remain an entry point to the same colour model/editor, with an
+  explicit draft ownership policy so two independent drafts cannot silently
+  overwrite each other. Retain token provenance, inline swatches and transparent
+  None. Inspect source-to-token export behaviour before promising variable links
+  for every generated shade; the current button source model is narrower.
+- Next proposed implementation: workspace layout and draft-aware shared rendering
+  first, followed by consolidated colour editing and contextual CSS lessons.
+  Verification should cover scope boundaries, variant switching, draft contrast,
+  Save/Discard, project/theme switching, export parity, responsive layouts and
+  preserved keyboard focus. Implementation awaits the user's choice of direction.
+
+## Body padding linked to every page view (15 November 2026)
+
+- Added the missing Body padding controls (top/right/bottom/left, 0-64px) alongside
+  Header/Main/Footer padding. Body insets the entire page and exposes its background
+  around the regions; the existing controls retain their separate inner spacing.
+  Padding is shared across Basic/Advanced, themes, exports and wireframe fidelity.
+- Extended the existing validated regionPadding map and generated foundation to
+  include Body, with four --body-padding-* tokens and one shared border-box body
+  rule. No separate wireframe setting/model was introduced: both fidelity views
+  consume the same CSS as the website. Missing Body values remain zero.
+- The learning page updates from the current draft, using the exact Body inset
+  rather than its former fixed 10px display gutter. Moved the Body selection label
+  outside the page so it does not masquerade as padding. Save updates saved pages
+  and wireframes; Discard restores local geometry. Token navigation, JSON, reset
+  and autosave use the existing shared controls/codec.
+- Visual review found padding reset disabled for unsaved insets. Reset/default
+  availability now follows normalized draft values, allowing a local padding reset
+  without committing or discarding unrelated colour changes.
+- Added focused checks for physical insets, draft/reset/discard, all four sides,
+  token navigation, JSON validation, narrow exports and both wireframe fidelities
+  for both samples/themes, including live workspace frames and 64px at 320px width.
+  Final focused checks pass 43/43 (overlapping spacing). Final full spacing
+  265/265, integration 279/279 and export pipeline 98/98 pass: 642 assertions,
+  with empty captured-error reports. Structure passes (77 assets);
+  git diff --check passes. Logs: .body-padding-focused-verified.log,
+  .body-padding-spacing-final.log, .body-padding-browser-final.log and
+  .body-padding-export.log.
+- Intentionally refreshed the reviewed export baseline after validating the new
+  layout. All 16 cases add exactly 259 bytes to CSS/shared CSS (four tokens and
+  the body rule); every HTML hash remains unchanged. Logs: .body-padding-*.log.
+  Inspected the refreshed work/reviews/body-padding-linked.png with a 24px outer
+  frame and enabled draft resets. Visual smoke passes 1/1 with empty captured
+  errors (.body-padding-visual-final.log). Manual keyboard/touch, screen-reader
+  and other-browser review remain pending. No commit, push or publication.
+  Next: user review of Body framing alongside the existing inner region padding.
+
+## Page background learning workspace (15 November 2026)
+
+- Replaced the collapsed Compare region colours, contrast and padding entry with
+  an always-visible small page beside the original controls. Body contains Header,
+  Main and Footer; labelled buttons select/highlight a region and reveal its
+  original fields. Generic text, link colour and a separate Surface card make the
+  page layers understandable without recreating a full website.
+- Background controls now sit on the left, with one original Save / Discard /
+  Responsive page preview bar below both columns. Background drafts are grouped
+  per website theme, so switching regions preserves all proposed changes and one
+  Save/Discard handles that theme's regions together. Padding remains a shared
+  project property. No saved project schema or export generator changed.
+- New background-workspace module paints a detached normalized scope snapshot;
+  proposed colours, named token sources, opacity, transparency and extra padding
+  update the mini page immediately. Full website, project JSON and storage remain
+  saved until Save. The saved-page preview preserves these drafts. Project/theme
+  changes refresh the model; hidden workspaces defer rendering until reopened.
+- Selected-region text/link ratios use the same compositing helpers as the
+  website. Proposed CSS is available in a short disclosure. Legacy saved token,
+  contrast, padding and inspector controls remain in clearly labelled optional
+  diagnostics, styled for readable data rather than another coloured page model.
+  Fixed a saved-diagnostics case that scored retained HEX instead of transparent
+  text/link paint; invisible paint now scores 1:1 in both views.
+- Added focused workflow, transparent-diagnostics and custom-HEX label coverage.
+  The final focused matrix passes 30/30 (.background-learning-focused-verified.log).
+  Final Palette 847/847, shared actions 231/231, integration 279/279 and export
+  pipeline 98/98 pass: 1,455 assertions across four broad suites, with empty
+  captured-error reports. Logs: .background-learning-palette-final.log,
+  -actions-final.log, -browser-final.log and -exports.log. Focused 30/30 overlaps
+  Palette and is not added to that total. Structure passes (77 assets);
+  git diff --check passes. Export contributors and default byte fixtures remain
+  unchanged. These are focused runs, not a repeated full 19-suite catalogue.
+- Visual inspection caught a native custom HEX selection with no matching palette
+  entry being described as the first None option. Fixed actual Custom selection
+  for brand-valued selects and added a regression. Compacted the header/card/footer
+  sample so all regions fit, removed duplicate instructions from the controls,
+  and kept the wide-screen preview in view while longer padding controls scroll.
+- Refreshed affected asset queries and retained original bound controls and their
+  input/change contracts. Inspected the refreshed final screenshot
+  work/reviews/background-learning-workspace.png; its final smoke check passes 1/1
+  for visible Footer, correct Custom label and shared actions in view
+  (.background-learning-visual-final.log). Remaining gaps: manual keyboard/touch,
+  screen-reader and other-browser review. No commit, push or publication.
+  Next: user review of the background learning page and theme-wide Save/Discard.
+
+## Expandable clamp calculation lesson (15 November 2026)
+
+- Replaced the dense paragraph under Typography's global Generated CSS panel
+  with an initially closed native disclosure, Learn the clamp calculation. The
+  generated rule and Copy CSS stay visible. The lesson briefly explains the
+  minimum/preferred/maximum contract, then walks through limits, growth rate,
+  offset/preferred size and rem conversion using the current proposed settings.
+- Kept the existing clampMath container and shared draft renderer. Text updates
+  preserve the disclosure state and never commit properties or change exported
+  rules. Notes identify nominal 16px conversion and rounded display values.
+- Analysed the actual export paths: Body/Small have equal bounds, so the lesson
+  explicitly explains constant sizes; equal heading bounds recommend lowering
+  Mobile heading size. H3/H4/Extra small export fixed px sizes, so they show their
+  scale calculation and a pointer to fluid roles instead of misleading clamp steps.
+- Updated only the Studio markup, clamp lesson renderer and workspace styles;
+  refreshed the two affected runtime asset query versions. Added 12 regressions
+  for initial collapse, non-mutating disclosure, live draft formulas, all eight
+  role cases and equal heading limits. python scripts/typography_review.py passes
+  184/184 with no captured errors (.clamp-lesson-typography.log).
+  python scripts/browser_review.py passes 279/279 (.clamp-lesson-browser.log).
+  These two isolated suites pass 463 assertions with empty captured-error reports.
+  python scripts/check_structure.py passes (76 assets); git diff --check passes.
+- Inspected work/reviews/clamp-calculation-lesson.png. Supplementary expanded-
+  lesson layout checks pass 4/4 at 320/390px in light/dark (.clamp-lesson-visual.log).
+  Manual trusted keyboard/screen-reader and other-browser review remain pending;
+  these checks do not establish full accessibility. No commit, push or publication.
+  Earlier verification remains historical. Next: user review of the short lesson.
+
+## None means transparent paint (15 November 2026)
+
+- Applied the user's clarification: None now makes colour paint transparent.
+  Use default / Use generated is a distinct choice. This supersedes the default-
+  restoring interpretation in the earlier entry below; the grouped Brief stays.
+- Added validated optional colourTransparency flags for semantic roles in either
+  theme, UI anchors, button sources/properties and button focus. Retained HEX/source
+  values continue generating valid shade ladders; transparent strings never enter
+  ramp mathematics or native HEX inputs. Flags round-trip through project JSON;
+  unknown keys and values other than strict true are rejected. Empty maps are
+  omitted and flag serialization has stable ordering.
+- Shared controls stage flags with Save/Discard. Native colour inputs have nearby
+  labelled None toggles; assignment menus distinguish None from default paint.
+  Semantic None/generated actions apply on Save; explicit HEX/token proposals
+  retain contrast review. Choosing a real colour clears its transparency flag.
+- Live Studio/sample paints and generated CSS now agree on transparent roles and
+  all button background states, borders, text and focus. Background compositing
+  treats None as zero paint opacity. A hidden Canvas-colour probe resolves the
+  browser's actual document canvas for the chosen theme/forced-colour mode when
+  Surface itself is transparent. Contrast compares invisible text/indicators at
+  1:1 and uses visible surrounding surfaces for transparent backgrounds.
+- State ramps keep their retained source anchor and show actual source-token
+  declarations; source cache keys include transparency. None thumbnails use the
+  existing checkerboard, while Use default shows the actual generated colour.
+  Added regression coverage for both themes, drafts/discard/save/import, default
+  restoration, native controls, source anchors, safe imports, invisible focus,
+  and standalone Basic/Advanced page regions, cards and buttons.
+- Current checks: structure (76 assets) and git diff --check pass. Full Palette
+  818/818, integration 279/279, shared actions 231/231 and export pipeline 98/98
+  pass; reduced-motion 7/7 and forced-colours 9/9 also pass. These five focused
+  suites pass 1,442 assertions with empty captured-error reports. Final focused paint,
+  canvas, retained-anchor and reset checks pass 77/77, including immediate live-CSS
+  restoration after a transparent-only edit. Logs: .transparent-focused-labels-verified.log,
+  .transparent-actions.log, .transparent-exports-final.log and
+  .transparent-button-states.log. The focused matrix overlaps Palette.
+- Expanded Palette and integration runs each missed one existing scroll/preview
+  timing assertion while running concurrently; source/paint checks and captured
+  JavaScript errors remain clean. Sequential Palette now passes 818/818
+  (.transparent-palette-sequential.log) and integration passes 279/279
+  (.transparent-browser-sequential.log). The broader runs were repeated one
+  profile at a time; parallel scroll/focus timing remains an observed suite gap.
+  Historical full-catalogue results below are not current-session claims.
+- Intermediate failures identified older tests assuming Default was the first
+  state option and a new fixture that inherited a button group rather than General
+  controls; corrected those expectations/fixture. Added diagnostics to an existing
+  intermittent Typography integration assertion; the final 279/279 rerun passes.
+  A final visual smoke check caught a background current-value label still showing
+  the retained HEX as default paint; corrected it and strengthened all-region checks.
+  Final focused checks pass 77/77; the screenshot/label smoke passes 1/1 with no
+  captured errors (.transparent-screenshot-final.log). Inspected the refreshed
+  work/reviews/transparent-none.png with None selected and its menu open.
+  Pending: manual keyboard/touch,
+  screen-reader and other-browser testing. No commit, push or publication.
+
+## Colour defaults, token sources and grouped Brief (15 November 2026)
+
+- Added explicit None choices to colour-assignment dropdowns: backgrounds,
+  semantic proposals, Main Palette brand assignments, accent and button sources;
+  state dropdowns label their existing default option None. Here None means no
+  custom override / follow the generated or starter default, rather than transparent
+  paint. Role-to-edit selectors and required brand-entry colour values retain
+  their meaningful roles. Button source None also clears variant colour overrides.
+- Brand/foundation source names accompany colour choices. Background and semantic
+  assignments can now retain validated, acyclic brand/foundation token references
+  in optional semanticSources metadata alongside their saved HEX fallback. CSS
+  emits var(--token), palette resolution drives previews/contrast, and source edits
+  update linked choices. Removed/renamed references preserve their saved HEX.
+  Imported cycles, CSS expressions and mismatched references are rejected.
+  State shades and button fixed-colour choices remain explicitly described copies;
+  their derived shades can depend on the edited role and would introduce cycles.
+- Save/Discard stages both colour and reference together. Semantic Apply retains
+  its contrast review; selecting None stages generated colour until Save. Source
+  cache invalidation now includes brand references and semanticSources. Contrast
+  proposals remove existing links from the detached candidate before evaluating
+  a proposed HEX. Existing projects need no source metadata and keep fixed colours.
+- Grouped the seven Brief answers into three connected fieldsets: People and
+  purpose; Scope, content and requirements; Delivery and success. Each includes
+  optional guidance and a worked example. Original IDs, order, labels, limits,
+  saved values, exports and shared Save/Discard controls remain intact.
+- Refreshed affected runtime query versions. Current structure check passes
+  (76 assets); git diff --check passes. Planning suite passes 78/78, final
+  integration 279/279, focused source checks 71/71, shared actions 231/231 and
+  export pipeline 98/98. Final full Palette suite passes 742/742. These five
+  suites pass 1,428 assertions with empty captured-error reports. The focused
+  71-check source matrix overlaps Palette and is not added to that total. Logs:
+  .brief-colours-planning.log, -browser-complete.log, -sources-final.log,
+  -actions-verified.log, -exports-complete.log and -palette-complete.log. Existing export byte fixtures
+  remain unchanged. This is a focused verification, not a full 19-suite catalogue.
+- Updated older Palette assertions for intentionally added None entries and token
+  following. Fixed native selection preservation when inserting None, metadata
+  serialization ordering, and source validation to match all valid brand suffixes.
+  Source metadata comes from validated IDs, not user-supplied colour names. An
+  intermediate integration responsive-focus assertion missed once; two earlier
+  runs and the final 279/279 run pass. No captured JavaScript errors.
+- Inspected work/reviews/brief-grouped.png and colour-defaults.png, including the
+  open menu. Automated checks cover saved data, drafts, both themes and narrow
+  layouts. Pending: user/manual keyboard, touch,
+  screen-reader and other-browser review. No commit, push or publication.
+
+## Inline colour previews throughout Studio (14 November 2026)
+
+- Added a shared colour-selector projection with actual HEX thumbnails beside
+  choices and selected values. Audited background palettes for all four regions,
+  brand assignments, semantic proposals/roles, UI anchors, button colour sources,
+  Colour lab roles, feedback and dynamically generated state-source choices.
+  Existing colour inputs and brand/shade swatch buttons retain their previews;
+  non-colour selectors stay native.
+- Preserved original select IDs, values, labels, form/focus ownership and input/
+  change events. Dropdowns use one shared labelled option list; visible role lists
+  retain their size/native keyboard owner and scrollable coloured rows. Selecting
+  a choice follows existing Save/Discard or semantic contrast-review boundaries.
+- Supports optgroups, disabled options, Escape/Tab, arrows/Home/End/type-ahead,
+  native pointer cancellation, direct hide/show and dynamic options. Names remain
+  text; only validated HEX paints a swatch. No project/export schema or runtime
+  dependency changed. Two new assets bring structure coverage to 76 assets.
+- Fixed popup sizing for its chosen side and re-anchoring on layout scroll, plus
+  a coalesced settled refresh after queued feature control updates. A regression
+  reproduced a stale swatch when a feature changed its native selection after a
+  toggle; the settled refresh now runs after those callbacks. Added 52 Palette
+  assertions for cross-area colours, original control identity, native pointer
+  cancellation, keyboard/dismissal/disabled behavior, draft/Save/Discard/contrast
+  boundaries, dynamic lists, hide/show, imports, timing and viewport placement.
+- Current commands: python scripts/check_structure.py passes (76 assets),
+  git diff --check passes; python scripts/palette_review.py 672/672,
+  property_actions_review.py 231/231, browser_review.py 279/279,
+  navigation_review.py 158/158, view_updates_review.py 16/16 and
+  export_pipeline_review.py 98/98 pass. These six isolated suites pass 1,454
+  assertions with empty captured-error reports. Final reports are
+  .inline-colour-final-palette_review.log / -property_actions_review.log /
+  -view-updates.log, .inline-colour-complete-browser_review.log,
+  .inline-colour-navigation.log and .inline-colour-export_pipeline_review-full.log.
+  The final focused swatch matrix also passes 53/53 (.inline-colour-timing-verified.log).
+  Export byte fixtures remain unchanged; this is not a repeated full catalogue.
+- Inspected work/reviews/inline-colour-palette.png with the background menu open.
+  Automated checks cover light/dark at 320/390/1440px. No manual keyboard/touch,
+  screen-reader or other-browser review, live-CDN testing, commit, push or
+  publication. Earlier full-suite results remain historical.
+  Next: user review of inline colour choices and manual accessibility testing.
+
+## Hierarchical Content Plan report (14 November 2026)
+
+- Replaced the Studio review inventory with a complete numbered report of the
+  saved content hierarchy, project/sample, readiness totals, website wording,
+  proposals, references and purpose/owner/next-action notes. Added a self-contained
+  HTML report download with print styling. The review remains read only and
+  excludes unsaved editor changes; current content and proposals stay distinct.
+- Shared report markup/CSS serves Studio and downloaded reports. Imported strings
+  remain escaped; references are plain text. Website content-map markup, exports
+  and project schema are unchanged. Updated both affected script cache versions.
+- Initial checks found report styles being dropped by artifact refresh; fixed the
+  Studio stylesheet refresh to retain them. Corrected one new Basic export fixture
+  that incorrectly expected an Advanced-only content map, and escaped an HTML
+  closing-script delimiter in the test harness. Full content checks are rerunning.
+- Current commands: python scripts/check_structure.py passes (74 assets),
+  git diff --check passes; content_tree_review.py 238/238, browser_review.py
+  279/279, planning_review.py 76/76 and export_pipeline_review.py 98/98 pass.
+  All four isolated suites pass 691 assertions with empty captured-error reports
+  (.content-plan-report-*.log; content's final full run is
+  .content-plan-report-content-tree-verified.log). Export byte fixtures are unchanged.
+- Added 37 regressions covering parent/child order and twelve levels, totals,
+  current/proposed/empty/missing content, hostile text/references, download safety,
+  dirty-form isolation, Save/Undo, stable DOM, modes, light/dark layouts and 320/
+  390/1440px targets. After a final heading-size refinement, reran the focused
+  report harness: 37/37 (.content-plan-report-visual-recheck.log).
+- Inspected desktop capture work/reviews/content-plan-report.png; nested heading
+  sizes were then made consistently readable and verified by the focused checks.
+  No manual keyboard/screen-reader, other-browser/live-CDN testing, commit, push
+  or publication. Earlier full-catalogue results remain historical.
+  Next: user review of the saved hierarchical report and its HTML download.
 
 ## Low Fidelity default for Wireframe (14 November 2026)
 

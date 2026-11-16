@@ -64,3 +64,9 @@
 
 .type-specimen > summary { min-height: 44px; align-content: center; margin-bottom: .75rem; font-weight: 700; cursor: pointer; }
 .type-specimen:not([open]) > summary { margin-bottom: 0; }
+
+.clamp-calculation-lesson { min-width: 0; margin-top: 1rem; }
+.clamp-calculation-lesson > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 700; }
+.clamp-calculation-lesson ol { padding-inline-start: 1.5rem; }
+.clamp-calculation-lesson li { margin-block: .75rem; overflow-wrap: anywhere; }
+.clamp-calculation-lesson code { white-space: normal; overflow-wrap: anywhere; }

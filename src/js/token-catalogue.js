@@ -13,7 +13,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
     const name = row.name;
     const source = (step, control, mode = 'Direct setting', extra = {}) => ({ step, control, mode, ...extra });
     if (name.startsWith('--brand-')) return source(4, 'jBrandEditor', 'Brand reference', { brand: name.slice(8) });
-    if (/^--(header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return source(4,name.slice(2),'Region padding shared across themes');
+    if (/^--(body|header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return source(4,name.slice(2),'Region padding shared across themes');
     const backgroundPaint=name.match(/^--(body|header|main|footer)-background-(opacity|rgb|paint)$/);
     if(backgroundPaint) return source(4,(backgroundPaint[1]==='body'?'page':backgroundPaint[1])+'-background-'+(backgroundPaint[2]==='rgb'?'colour':'opacity'),backgroundPaint[2]==='opacity'?'Background opacity / theme setting':'Derived background paint from colour and opacity',{background:true});
     if (name === '--background') return source(4, 'page-background-colour', 'Body background / optional theme override', { background: true });
@@ -26,11 +26,11 @@ No separate hardcoded values: the table stays synchronized with the export. */
     const interactionRamp=name.match(/^(--(?:button-(primary|secondary|accent|outline|text)-)?state-(default|hover|focus|active|selected|disabled|loading|invalid|success|readonly))-\d+$/);
     if(interactionRamp) {
       const entry=DSStudio.statePalettes.sourceFor(interactionRamp[1],row.scope==='Dark'?'dark':'light');
-      if(entry)return source(4,entry.control,'Derived from the resolved state colour and ramp method',{...(entry.variant?{variant:entry.variant}:{semantic:entry.semantic})});
+      if(entry)return source(entry.variant?7:4,entry.control,'Derived from the resolved state colour and ramp method',{...(entry.variant?{variant:entry.variant}:{semantic:entry.semantic})});
     }
     if (SEMANTIC_COLOUR_KEYS.includes(name.slice(2))) return source(4, 'jSemanticRole', 'Theme role / optional override', { semantic: name.slice(2) });
-    const button = name.match(/^--button-(primary|secondary|accent|outline|text)-(source|bg|text|border|hover|active|hover-text|active-text)$/);
-    if (button) return source(4, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
+    const button = name.match(/^--button-(primary|secondary|accent|outline|text)-(source|bg|text|border|hover|active|hover-text|active-text|shadow)$/);
+    if (button) return source(7, { source:'bdSource', bg:'bdDefaultBg', text:'bdText', border:'bdBorderColor', hover:'bdHover', active:'bdActive', 'hover-text':'bdHoverText', 'active-text':'bdActiveText', shadow:'bdElevation' }[button[2]], 'Button variant setting / optional override', { variant: button[1] });
     const settings = {
       '--page-max-width':[9,'responsive-maxWidth'], '--page-gutter':[9,'responsive-gutter'], '--page-gutter-wide':[9,'responsive-wideGutter'],
       '--font-body':[5,'fontSource'], '--font-heading':[5,'fontSource'], '--font-ui':[5,'fontSource','Alias of the body font'],
@@ -42,7 +42,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
       '--surface-opacity':[8,'advOpacity'], '--elevation':[8,'advShadow'], '--motion-duration':[10,'advMotion'],
       '--button-pad-x':[7,'bdPaddingX'], '--button-pad-y':[7,'bdPaddingY'], '--button-min-height':[7,'bdMinHeight'],
       '--button-radius':[7,'bdRadius'], '--button-border-width':[7,'bdBorder'], '--button-font-weight':[7,'bdWeight'],
-      '--button-focus':[4,'bdFocus'], '--button-focus-width':[7,'bdFocusWidth'], '--button-motion':[7,'bdMotion'],
+      '--button-focus':[7,'bdFocus'], '--button-focus-width':[7,'bdFocusWidth'], '--button-motion':[7,'bdMotion'],
       '--button-progress-animation':[10,'advReduce','Derived from reduced-motion configuration']
     };
     if (settings[name]) return source(...settings[name]);
@@ -55,7 +55,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   window.dssTokenSource = sourceFor;
 
   const describe = (name, type) => {
-    if (/^--(header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return 'Additional padding inside the website region; existing content gutters and section spacing still apply. Shared by light and dark themes.';
+    if (/^--(body|header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return name.startsWith('--body-')?'Inset around the whole page, exposing its Body background. Shared across samples, themes and wireframes.':'Additional padding inside the website region; existing content gutters and section spacing still apply. Shared by light and dark themes.';
     if (/^--(body|header|main|footer)-background-(opacity|rgb|paint)$/.test(name)) return 'Background paint and alpha; text and controls remain independently opaque. Transparent regions blend over their parent background.';
     if (name.startsWith('--page-')) return 'Responsive page maximum width or side gutter; configure in the Responsive phase.';
     if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Extra character spacing in em, relative to the element font size.';
@@ -65,6 +65,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
     if (/^--(success|warning|danger)-\d+$/.test(name)) return 'Generated status shade for this theme; 500 preserves its resolved semantic colour. Check contrast and use text or icons alongside colour.';
     if (/^--(primary|secondary|accent)-\d+$/.test(name))
       return 'Generated colour ramp step; 500 preserves the selected anchor colour.';
+    if (/^--button-.*-shadow$/.test(name)) return 'Optional per-variant elevation; light and dark presets share geometry while state cues remain layered.';
     if (name.includes('hover-text')) return 'Foreground colour for the button hover state.';
     if (name.includes('active-text')) return 'Foreground colour for the button pressed state.';
     if (name.includes('hover')) return 'Colour applied during pointer hover.';
@@ -82,7 +83,7 @@ No separate hardcoded values: the table stays synchronized with the export. */
   };
 
   const classify = name => {
-    if (/^--(header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return 'Layout';
+    if (/^--(body|header|main|footer)-padding-(top|right|bottom|left)$/.test(name)) return 'Layout';
     if (/^--(body|header|main|footer)-background-(opacity|rgb|paint)$/.test(name)) return 'Surface & controls';
     if (name.includes('letter-spacing') || name.includes('heading-tracking')) return 'Typography';
     if (name.startsWith('--brand-')) return 'Brand palette';

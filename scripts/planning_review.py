@@ -139,6 +139,14 @@ app.onload=async()=>{
   }
   processPage.remove(); app.style.width='1440px'; reset(); await wait();
   reset();await wait();previewDoc().getElementById('sample-menu').open=false;
+  test('Brief combines seven preserved answers into three labelled parts with optional guidance',()=>{
+    const parts=[...d.querySelectorAll('#plan-brief-fields .brief-part')];
+    return parts.length===3 && parts.map(part=>part.querySelectorAll('[data-process-field]').length).join() === '2,3,2' && parts.every(part=>part.querySelector('legend').textContent.trim() && part.querySelector('details > summary').textContent==='Guidance and example' && part.querySelector('details').textContent.includes('Example:'));
+  });
+  test('Opening Brief guidance leaves saved project and drafts untouched',()=>{
+    const before=evaluate('projectJson()'),guide=d.querySelector('.brief-part-guide');guide.open=true;
+    return evaluate('projectJson()')===before && !w.DSStudio.propertyEditors.hasDrafts('brief');
+  });
   test('Brief lesson teaches seven website-project prompts instead of displaying a prefilled project', () => d.querySelectorAll('#process-brief .process-brief-guide > li').length===7 && d.querySelector('#process-brief .process-brief-template').textContent.includes('[audience]') && !d.querySelector('#process-brief .process-brief-draft') && ['goal','audience','scope','content','constraints','delivery','success'].every(key=>d.getElementById('plan-'+key).value===''));
   test('Website brief covers scope, content ownership, requirements, delivery and a concrete example', () => {
     const lesson=d.querySelector('#process-brief'), guide=lesson.querySelector('.process-brief-guide').textContent;
