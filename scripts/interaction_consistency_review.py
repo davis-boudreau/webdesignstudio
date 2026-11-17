@@ -4,7 +4,7 @@ from browser_runner import run_review
 HARNESS = r'''<!doctype html><meta charset="utf-8"><title>Interaction consistency review</title>
 <iframe id="app" style="width:1440px;height:1100px" src="/index.html"></iframe><pre id="results">RUNNING</pre><script>
 app.onload=async()=>{
- const w=app.contentWindow,d=w.document,results=[],get=id=>d.getElementById(id),evaluate=code=>w.eval(code),wait=()=>new Promise(r=>setTimeout(r,120));
+ const w=app.contentWindow,d=w.document,results=[],get=id=>d.getElementById(id),evaluate=code=>w.eval(code),wait=(ms=120)=>new Promise(r=>setTimeout(r,ms));
  const test=(name,fn)=>{try{if(!fn())throw Error('Assertion failed');results.push({name,pass:true});}catch(e){results.push({name,pass:false,error:String(e.stack||e)});}document.title='Interaction consistency: '+results.length+' checks';};
  const edit=(id,value,type='input')=>{get(id).value=value;get(id).dispatchEvent(new w.Event(type,{bubbles:true}));};
  const choose=(id,value)=>{get(id).value=value;for(const type of ['input','change'])get(id).dispatchEvent(new w.Event(type,{bubbles:true}));w.DSStudio.views.flush();};
@@ -66,12 +66,13 @@ app.onload=async()=>{
   for(const width of [1440,320])for(const appearance of ['light','dark']){
    app.style.width=width+'px';if(d.documentElement.dataset.theme!==appearance)get('themeToggle').click();w.dssShowWizardStep(9,false);await wait();
    const panel=get('responsiveDesign').querySelector(':scope > .panel'),fixture=d.createElement('section');fixture.innerHTML='<div style="height:500px"></div><details><summary>Open a learning area</summary><div style="height:1100px">Long learning content</div></details><div style="height:1100px"></div>';panel.append(fixture);
-   const details=fixture.querySelector('details'),summary=details.querySelector('summary'),json=evaluate('projectJson()');summary.focus({preventScroll:true});summary.click();await wait();
+   const details=fixture.querySelector('details'),summary=details.querySelector('summary'),json=evaluate('projectJson()');summary.focus({preventScroll:true});w.setTimeout(()=>fixture.firstElementChild.style.height='640px',60);summary.click();await wait(300);
    test(width+' '+appearance+' opening an accordion aligns its summary below the header',()=>details.open&&Math.abs(summary.getBoundingClientRect().top-d.querySelector('.topbar').getBoundingClientRect().bottom-8)<3&&d.activeElement===summary&&evaluate('projectJson()')===json);
    details.open=false;await wait();const before=w.scrollY;details.open=true;await wait();
    test(width+' '+appearance+' programmatic opening preserves scroll and project',()=>Math.abs(w.scrollY-before)<3&&evaluate('projectJson()')===json);
    details.open=false;await wait();summary.click();get('responsive-step-theme').focus({preventScroll:true});w.scrollTo({top:0,behavior:'instant'});await wait();
    test(width+' '+appearance+' later focus cancels delayed accordion alignment',()=>w.scrollY<3&&d.activeElement===get('responsive-step-theme'));
+   details.open=false;await wait();summary.focus({preventScroll:true});summary.click();summary.dispatchEvent(new w.WheelEvent('wheel',{bubbles:true}));w.scrollTo({top:0,behavior:'instant'});await wait(300);test(width+' '+appearance+' manual scrolling cancels settling alignment without changing focus',()=>w.scrollY<3&&d.activeElement===summary);
    fixture.remove();
    const scroller=d.createElement('div');scroller.style.cssText='height:160px;overflow-y:auto;';scroller.innerHTML='<div style="height:400px"></div><details><summary>Nested scrolling lesson</summary><div style="height:600px"></div></details><div style="height:600px"></div>';panel.append(scroller);const nested=scroller.querySelector('summary');nested.focus({preventScroll:true});nested.click();await wait();
    test(width+' '+appearance+' accordion in a scrolling panel reveals the opened area',()=>Math.abs(nested.getBoundingClientRect().top-scroller.getBoundingClientRect().top-8)<3&&scroller.scrollTop>0);scroller.remove();

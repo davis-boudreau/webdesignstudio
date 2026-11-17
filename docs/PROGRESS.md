@@ -2,6 +2,26 @@
 
 Updated: 17 November 2026 (America/Halifax).
 
+## Accordion settling follow-up (17 November 2026)
+
+- The documentation-only handoff Pages run 44073640483 passes every other
+  browser suite but catches one intermittent 1440px Light accordion alignment
+  failure (144/145); required validation blocks deployment. The earlier verified
+  source publication remains live. Retrieved its failure artifact rather than
+  retrying the unchanged run.
+- Reproduced a confirmed late-layout defect with content growing 60ms after
+  opening: before 0/1, summary gap 148.0625px; after 1/1, gap 8.0625px. The initial
+  ResizeObserver-only attempt also fails 0/1 under headless virtual time, so the
+  final correction includes bounded timed measurements between paint frames.
+- Follow layout changes for 250ms using ResizeObserver plus guarded 80/160ms
+  measurements. Later wheel, touch, pointer or keyboard input cancels settling;
+  existing focus/open/revision guards remain. No project or export mutation.
+  Runtime cache query refreshed. Regression opens now deliberately grow earlier
+  content after the click and verify the completed settling interval. Four new
+  wheel-cancellation checks preserve manual scrolling without requiring focus
+  to move. Focused consistency passes 149/149 with empty errors; the final
+  catalogue is running. Work is isolated on fix/accordion-layout-settling.
+
 ## Verified interaction and learning-preview release (17 November 2026)
 
 - Reviewed final feature head d063847fb5efedeb30af6bcc227fe84d132f2329 and merged
