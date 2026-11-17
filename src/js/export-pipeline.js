@@ -18,8 +18,8 @@
       finally { rendering.delete(name); }
     }
 
-    function text(generate, name) {
-      const value = generate();
+    function text(generate, name, snapshot) {
+      const value = generate(snapshot);
       if (typeof value !== 'string') throw new TypeError(`Export contributor "${name}" must return a string`);
       return value;
     }
@@ -50,13 +50,13 @@
       return samples.get(mode) || samples.get('advanced') || samples.get('fallback');
     }
 
-    function sharedCss() {
-      return guard('shared-css', () => ordered().map(entry => text(entry.generate, entry.id)).join(''));
+    function sharedCss(snapshot) {
+      return guard('shared-css', () => ordered().map(entry => text(entry.generate, entry.id, snapshot)).join(''));
     }
 
-    function css(mode) {
+    function css(mode, snapshot) {
       const selected = sample(mode);
-      return guard('css', () => sharedCss() + (selected ? text(selected.css, mode + ' CSS') : ''));
+      return guard('css', () => sharedCss(snapshot) + (selected ? text(selected.css, mode + ' CSS', snapshot) : ''));
     }
 
     function html(mode) {

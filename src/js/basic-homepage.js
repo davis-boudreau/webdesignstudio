@@ -149,7 +149,8 @@ ${DSStudio.fonts.htmlLinks()}  <link rel="stylesheet" href="tokens.css">
       selector + ' {\n  ' + declarations.split(/;\s*/).filter(Boolean).join(';\n  ') + ';\n}');
   }
 
-  function basicCss() {
+  function basicCss(snapshot) {
+    const responsive=DSStudio.responsive.normalize((snapshot?.state || state).responsiveDesign);
     return readableCss(`
 /* SECTION: basics */
 /* BASIC WEBSITE: the same system tokens and components as Advanced.
@@ -262,15 +263,15 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
 .checkbox-label input { width: 1.25em; height: 1.25em; margin-top: .25em; }
 /* SECTION: responsive */
 /* Wider viewports add space; the final query stacks Hero and Skills. */
-@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
+@media (min-width: ${DSStudio.responsive.rem(responsive.stack)}) {
   .section { padding-block: var(--space-12); }
 }
-@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
+@media (min-width: ${DSStudio.responsive.rem(responsive.wide)}) {
   .container { padding-inline: var(--page-gutter-wide); }
   .section { padding-block: var(--space-16); }
   .hero { padding-block: var(--space-20); }
 }
-@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
+@media (max-width: ${DSStudio.responsive.rem(responsive.stack)}) {
   .header-inner { flex-wrap: nowrap; }
   .site-header .brand { flex: 1; }
   .desktop-navigation { display: none; }
@@ -280,7 +281,7 @@ small { display: block; margin-top: var(--space-1); font-size: var(--text-small)
   .skills-intro { padding-block: 0; }
   .skills-intro, .skill-cards { flex: auto; width: 100%; }
 }
-` + '\n/* SECTION: footer */\n' + DSStudio.samples.footerCss());
+` + '\n/* SECTION: footer */\n' + DSStudio.samples.footerCss(snapshot));
   }
 
   DSStudio.samples.basicExcerpt = (code, language, section) => {

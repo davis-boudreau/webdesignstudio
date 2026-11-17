@@ -39,7 +39,7 @@ DSStudio.register({
     const websiteThemeField=node('div','field'),websiteThemeLabel=node('label',null,'Website theme'),websiteTheme=node('select');websiteTheme.id='button-website-theme';websiteThemeLabel.htmlFor=websiteTheme.id;websiteTheme.add(new Option('Light','light'));websiteTheme.add(new Option('Dark','dark'));const websiteThemeHelp=node('p','help','Changes the shared website theme. Unsaved button edits stay in place.');websiteThemeHelp.id='button-website-theme-help';websiteTheme.setAttribute('aria-describedby',websiteThemeHelp.id);websiteThemeField.append(websiteThemeLabel,websiteTheme,websiteThemeHelp);previews.append(websiteThemeField);
     const viewportField=node('div','field'),viewportLabel=node('label',null,'Learning page width'),viewport=node('select');viewport.id='button-learning-viewport';viewportLabel.htmlFor=viewport.id;viewport.add(new Option('Wide context','wide'));viewport.add(new Option('Narrow context (390px maximum)','narrow'));viewportField.append(viewportLabel,viewport);previews.append(viewportField);
     const sample=node('section','button-learning-page');sample.id='button-learning-page';sample.append(node('p','mini','COURSE PLANNER'),node('h4',null,'Keep your next lesson ready'),node('p',null,'Save a lesson to return to it later, or explore the course before deciding.'));
-    const context=node('div','button-learning-row');context.id='button-learning-context';context.setAttribute('role','group');context.setAttribute('aria-label','Button variants');sample.append(context);previews.append(sample);
+    const context=node('div','button-learning-row');context.id='button-learning-context';context.setAttribute('role','group');context.setAttribute('aria-label','Button variants');sample.append(context);const sampleHost=node('div','button-learning-host');sampleHost.style.overflow='auto';previews.append(sampleHost);const learning=DSStudio.learningPreviews.mount({id:'button-learning-frame',title:'Button learning preview',element:sample,parent:sampleHost,ready:sync,layout:'.button-learning-page { padding: var(--space-4); overflow-wrap: anywhere; } .button-learning-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; padding: var(--space-2); }'});
     const previewHint=node('p','help','Compare all five action variants. Select one to edit its properties. This is a local teaching sample.');previewHint.id='button-learning-instructions';previews.append(previewHint);
     const selected=node('section','button-learning-selected');selected.append(node('h4',null,'Selected button and state'),get('bdSingle'),get('bdDescription'),node('p','help','State examples hold an appearance still. Use Tab on the Default specimen to test genuine keyboard focus.'));
     previews.append(selected);
@@ -48,9 +48,9 @@ DSStudio.register({
     const themes=get('bdThemes');previews.append(disclosure('Compare Light and Dark',themes));
     const properties=node('p','help');properties.id='button-learning-properties';previews.append(disclosure('Selected properties and token source',properties));
     const contrast=node('div');contrast.id='button-learning-contrast';previews.append(disclosure('Proposed contrast in both themes',contrast,true));
-    const css=node('section','button-learning-css');css.append(node('h4',null,'Generated CSS and explanation'));
+    const css=node('details','button-learning-css');css.id='button-learning-css';css.append(node('summary',null,'Generated CSS and the calculation'));
     const topic=node('h5');topic.id='button-learning-topic';css.append(topic);const snippet=node('pre','code');snippet.id='button-learning-rule';const lesson=node('p','help');lesson.id='button-learning-explanation';css.append(snippet,lesson);
-    const full=node('div');full.append(get('bdCode'),get('bdCopy'),get('bdExport'),node('p','help','Copy uses the proposed stylesheet shown here. Download button CSS exports the saved project; Save first to include proposed changes.'));css.append(disclosure('Complete button stylesheet',full));previews.append(css);
+    const full=node('div');full.append(get('bdCode'),get('bdCopy'),get('bdExport'),node('p','help','Copy uses the proposed stylesheet shown here. Download button CSS exports the saved project; Save first to include proposed changes.'));css.append(disclosure('Complete button stylesheet',full));previews.prepend(css);
     const all=node('div');all.append(get('bdMatrix'),review,selectedReview);workspace.append(disclosure('Complete variant and state reference',all));
     workspace.append(disclosure('Learn about button behaviour',notes));
     const actions=DSStudio.propertyActions.create({id:'button-workspace',parent:workspace,save:()=>editors.saveButtons(),discard:()=>editors.discardButtons()});
@@ -105,6 +105,7 @@ DSStudio.register({
         const lessonValues={size:JSON.stringify([b.size,b.padX,b.padY,b.minHeight]),shape:JSON.stringify([b.radius,b.border,b.weight,b.elevation]),colours:JSON.stringify([variant,b.sources[variant],b.custom[variant],b.overrides[variant],b.focus,foundation.colourTransparency,foundation.theme,foundation.primary,foundation.secondary,foundation.accent]),states:JSON.stringify([st,b.focusWidth,b.motion,b.mobileFull])};
         if(previousLessons)for(const group of ['size','shape','colours','states'])if(previousLessons[group]!==lessonValues[group])lessonGroup=group;
         previousLessons=lessonValues;
+        learning.render(snapshot);
         const key=JSON.stringify([b,foundation.theme,foundation.colourTransparency,foundation.primary,foundation.secondary,foundation.accent,foundation.advanced.reduce,viewport.value,lessonGroup]);
         // Restore shared draft values after the legacy renderer synchronizes its saved controls.
         const resolved=window.dssGetButtonContrastData(b,foundation).themes[foundation.theme][variant];
@@ -116,12 +117,12 @@ DSStudio.register({
           signature=key;
           paint(get('bdSingle'),api.specimen(variant,st,b.size,foundation.theme,true,b,foundation));
           const variants=Object.keys(api.names);paint(context,variants.map(key=>api.specimen(key,'default',b.size,foundation.theme,true,b,foundation)).join(''));
-          [...context.children].forEach((el,index)=>{el.dataset.buttonVariant=variants[index];if(variants[index]===variant)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current');});
-          sample.style.maxWidth=viewport.value==='narrow'?'390px':'none';context.classList.toggle('button-learning-mobile-full',b.mobileFull&&viewport.value==='narrow');
+          [...context.children].forEach((el,index)=>{el.dataset.buttonVariant=variants[index];el.toggleAttribute('data-learning-selected',variants[index]===variant);if(variants[index]===variant)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current');});
+          learning.frame.style.maxWidth=viewport.value==='narrow'?'390px':'none';sample.style.maxWidth='none';context.classList.toggle('button-learning-mobile-full',b.mobileFull&&viewport.value==='narrow');
           paint(sizes,['sm','md','lg'].map(size=>'<div><small>'+({sm:'Small',md:'Medium',lg:'Large'})[size]+'</small>'+api.specimen(variant,'default',size,foundation.theme,false,b,foundation)+'</div>').join(''));
           paint(states,api.states.map(stateName=>'<div><small>'+api.stateLabels[stateName]+'</small>'+api.specimen(variant,stateName,b.size,foundation.theme,false,b,foundation)+'</div>').join(''));
           paint(themes,['light','dark'].map(theme=>'<div class="bd-theme-card" data-mode="'+theme+'"><strong>'+theme+'</strong>'+api.specimen(variant,st,b.size,theme,false,b,foundation)+'</div>').join(''));
-          sample.style.backgroundColor=palette(foundation.theme,foundation).roles.surface;sample.style.color=palette(foundation.theme,foundation).roles.text;
+          for(const el of context.querySelectorAll('.bd-button')){el.removeAttribute('style');el.classList.add('ds-button','ds-button--'+el.dataset.buttonVariant);if(b.size!=='md')el.classList.add('ds-button--'+b.size);if(b.mobileFull)el.classList.add('ds-button--mobile-full');}learning.size();
           properties.textContent=name+' / '+b.size.toUpperCase()+'. '+api.sourceLabel(variant,b,foundation)+'. Padding '+b.padY+'px '+b.padX+'px; medium minimum height '+b.minHeight+'px; radius '+b.radius+'px; border '+b.border+'px; weight '+b.weight+'. Elevation '+(b.elevation?.[variant]||'none')+'. Colour token: --button-'+variant+'-bg. '+(b.overrides[variant]?'This variant has explicit colour overrides.':'Generated state colours follow its source.');
           get('bdCode').textContent=api.css(b,foundation);
           renderLesson(b,foundation,api.css(b,foundation));
@@ -140,7 +141,7 @@ DSStudio.register({
       }finally{syncing=false;}
     }
     controls.addEventListener('focusin',event=>{const group=event.target.closest('[id^="button-group-"]')?.id.slice('button-group-'.length);if(group&&group!=='purpose'){lessonGroup=group;sync();}});
-    websiteTheme.addEventListener('change',()=>{const keepTopic=lessonGroup;get('jTheme').value=websiteTheme.value;get('jTheme').dispatchEvent(new Event('input',{bubbles:true}));lessonGroup=keepTopic;previousLessons=null;signature='';sync();});
+    DSStudio.learningPreviews.bindTheme(websiteTheme,()=>{previousLessons=null;signature='';sync();});
     workspace.addEventListener('input',sync);workspace.addEventListener('change',sync);
     const previousReveal=window.dssRevealSection;window.dssRevealSection=function(id,scroll=true){revealControl(get(id));return previousReveal(id,scroll);};
     // Matrix clicks browse the selected state without committing properties.

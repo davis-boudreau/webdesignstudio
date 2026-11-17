@@ -135,7 +135,8 @@ app.onload=async()=>{
 
   // Buttons learning workspace: proposals stay local until the combined Save.
   reset();w.dssShowWizardStep(7,false);w.dssRevealSection('button-workspace-title',false);await wait();
-  const get=id=>d.getElementById(id),edit=(id,value,type='input')=>{const el=get(id);if(el.type==='checkbox')el.checked=value;else el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));};
+  const learningDoc=()=>d.getElementById('button-learning-frame').contentDocument;
+  const get=id=>d.getElementById(id)||learningDoc().getElementById(id),edit=(id,value,type='input')=>{const el=get(id);if(el.type==='checkbox')el.checked=value;else el.value=value;el.dispatchEvent(new w.Event(type,{bubbles:true}));};
   const saveButtons=()=>d.querySelector('[data-property-actions="button-workspace"] button').click();
   const discardButtons=()=>d.querySelector('[data-property-actions="button-workspace"] button:nth-child(2)').click();
   const proposed=()=>w.DSStudio.propertyEditors.buttonSnapshot().state;
@@ -249,9 +250,9 @@ app.onload=async()=>{
   // Per-variant elevation and the synchronized website theme selector.
   {
     reset();w.dssShowWizardStep(7,false);w.dssRevealSection('bdElevation',false);await wait();
-    const bget=id=>d.getElementById(id),stage=(id,value)=>{const el=bget(id);el.value=value;el.dispatchEvent(new w.Event(id==='bdVariant'||id==='bdState'?'input':'change',{bubbles:true}));},cancel=()=>d.querySelector('[data-property-actions="button-workspace"] button:nth-child(2)').click(),commit=()=>d.querySelector('[data-property-actions="button-workspace"] button').click();
-    const shadow=selector=>w.getComputedStyle(d.querySelector(selector)).boxShadow,snapshot=()=>w.DSStudio.propertyEditors.buttonSnapshot().state;
-    test('Button elevation defaults to None in every variant',()=>bget('bdElevation').value==='none'&&[...d.querySelectorAll('#button-learning-context .bd-button')].every(el=>w.getComputedStyle(el).boxShadow==='none')&&!evaluate('cssExport()').includes('--button-primary-shadow:'));
+    const bget=id=>get(id),stage=(id,value)=>{const el=bget(id);el.value=value;el.dispatchEvent(new w.Event(id==='bdVariant'||id==='bdState'?'input':'change',{bubbles:true}));},cancel=()=>d.querySelector('[data-property-actions="button-workspace"] button:nth-child(2)').click(),commit=()=>d.querySelector('[data-property-actions="button-workspace"] button').click();
+    const shadow=selector=>(selector.startsWith('#button-learning-context')?learningDoc().defaultView.getComputedStyle(learningDoc().querySelector(selector)):w.getComputedStyle(d.querySelector(selector))).boxShadow,snapshot=()=>w.DSStudio.propertyEditors.buttonSnapshot().state;
+    test('Button elevation defaults to None in every variant',()=>bget('bdElevation').value==='none'&&[...learningDoc().querySelectorAll('#button-learning-context .bd-button')].every(el=>w.getComputedStyle(el).boxShadow==='none')&&!evaluate('cssExport()').includes('--button-primary-shadow:'));
     const cleanJson=evaluate('projectJson()'),cleanCss=evaluate('cssExport()'),page=previewDoc();
     stage('bdElevation','subtle');await wait();
     test('Primary elevation drafts update only the intended variant',()=>snapshot().buttonDesign.elevation.primary==='subtle'&&shadow('#button-learning-context [data-button-variant="primary"]').includes('4px')&&shadow('#button-learning-context [data-button-variant="secondary"]')==='none'&&shadow('#button-learning-context [data-button-variant="outline"]')==='none'&&shadow('#button-learning-context [data-button-variant="text"]')==='none');

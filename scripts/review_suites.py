@@ -16,7 +16,8 @@ BROWSER_SUITES = (
     'palette_review', 'contrast_review', 'components_review', 'typography_review',
     'spacing_review', 'responsive_preview_review', 'standalone_exports_review',
     'view_updates_review', 'export_pipeline_review', 'browser_review',
-    'button_states_review', 'property_actions_review',
+    'button_states_review', 'property_actions_review', 'learning_previews_review',
+    'interaction_consistency_review',
 )
 OPTIONAL_NETWORK_SUITES = ('font_cdn_review',)
 LOCAL_CHECKS = ('check_structure', 'browser_runner_review', *BROWSER_SUITES)

@@ -1,5 +1,46 @@
 # Architecture
 
+## Shared learning-preview documents
+
+`step-learning.js` adds these views to Palette brand/anchor/shade/component/review
+stages, Colour lab, Responsive layout and Accessibility. It uses each property's
+normalized candidate and the complete existing CSS generator, with selection
+guides and held interaction states in a separate teaching layer. Planning retains
+its artifacts and delivery retains its export tools. Shared theme binding handles
+both native input/change ordering and change-only callers, delegating once to
+the saved project theme. Step-side and specimen controls stay synchronized.
+
+`section-accordions.js` handles explicit summary opening clicks across the app,
+including later-created details. It aligns the summary below the measured sticky
+header and inside scrolling ancestors, then checks layout again after two frames.
+Closing and programmatic opening do not trigger this behavior; later focus or
+activation cancels a pending adjustment.
+
+`learning-previews.js` supplies script-free same-origin sandboxed teaching frames.
+Typography, Buttons and semantic colours adopt their authored sample nodes into
+these documents, retaining listeners; Spacing keeps its existing static frame.
+Content is independent of the website samples. Typography's current website
+wording remains a read-only reference, while its teaching copy stays stable.
+
+`DSStudio.exports.css(mode, snapshot)` and `sharedCss(snapshot)` accept an optional
+normalized `{state, clampConfig}` candidate. Contributors and sample-layout CSS
+read that candidate explicitly; the default call still generates saved website
+CSS with the same byte order. No global project replacement is used for preview
+generation. The website stylesheet is assigned as text, separately from teaching
+layout/selection guides and optional comparison overrides. Saved exports never
+contain those teaching layers. State-shade snapshots cannot overwrite saved UI
+source metadata and use a bounded colour cache.
+
+Each learning document manages its own curated font links, including when its
+choices match the saved website. Optional fallback comparisons remain view-only;
+project replacement clears stale font sessions. Theme controls delegate to the
+existing shared website theme and preserve drafts; Studio appearance remains a
+separate local preference. Generated CSS and the calculation is a native closed
+disclosure at the top of every primary learning-preview pane.
+Editing labels and region-selection guides use Studio interface colours so they
+remain readable when website text or focus colours are transparent; the teaching
+content itself keeps the generated website colours.
+
 ## Validation and publishing
 
 `scripts/browser_runner.py` owns Chrome discovery, the loopback HTTP server,
@@ -14,7 +55,7 @@ codes, malformed/empty reports and incomplete harnesses fail validation.
 Project-model, project-library, navigation, planning, content-tree, sitemap,
 wireframe, palette, contrast, components, typography, spacing, responsive-preview,
 standalone-export, view-update, export-pipeline,
-button-media, shared-property-action and optional live-font suites own their HTML and initialize the app
+button-media, shared-property-action, shared-learning-preview and optional live-font suites own their HTML and initialize the app
 independently through the same runner.
 `browser_runner_review.py` tests the runner contract with standard-library mocks
 and real loopback requests, without launching Chrome. CI runs it before the Chrome

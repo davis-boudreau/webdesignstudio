@@ -131,9 +131,9 @@
     const record=learningDocuments.get(doc);if(!record)return;
     clearTimeout(record.timer);for(const link of record.links){link.onload=link.onerror=null;link.remove();}learningDocuments.delete(doc);
   }
-  function syncLearning(doc,foundation,report,useFallback=false) {
+  function syncLearning(doc,foundation,report,useFallback=false,standalone=false) {
     const href=useFallback?'':url(foundation),previous=learningDocuments.get(doc);
-    if(!href || href===url()){clearLearning(doc);report(useFallback?'fallback':href?'saved':'system');return;}
+    if(!href || !standalone && href===url()){clearLearning(doc);report(useFallback?'fallback':href?'saved':'system');return;}
     if(previous?.url===href && previous.sheet.isConnected){previous.report=report;return;}
     clearLearning(doc);const record={url:href,links:[],report,status:'loading'};learningDocuments.set(doc,record);
     const current=()=>learningDocuments.get(doc)===record;

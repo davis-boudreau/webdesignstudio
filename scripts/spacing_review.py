@@ -79,7 +79,7 @@ app.onload=async()=>{
   // Body padding is the shared outer inset, not another independent preview setting.
   reset();w.importConfig({sampleMode:'advanced'});w.dssShowWizardStep(4,false);w.DSStudio.paletteWorkspace.show('backgrounds',false);await wait();
   const bodyControl=d.getElementById('body-padding-left'),bodyActions=d.querySelector('[data-property-actions="palette-backgrounds"]'),mini=d.getElementById('background-learning-canvas');
-  const paper=()=>mini.querySelector('[data-background-region="body"]'),miniHeader=()=>mini.querySelector('[data-background-region="header"]');
+  const paper=()=>d.getElementById('semantic-learning-frame').contentDocument.querySelector('[data-background-region="body"]'),miniHeader=()=>d.getElementById('semantic-learning-frame').contentDocument.querySelector('[data-background-region="header"]');
   w.DSStudio.paletteWorkspace.revealControl(bodyControl);const beforeBody=evaluate('projectJson()'),beforeBodyCss=evaluate('cssExport()'),beforeHeaderX=miniHeader().getBoundingClientRect().left;
   bodyControl.value='24';bodyControl.dispatchEvent(new w.Event('input',{bubbles:true}));await wait();
   test('Body padding draft visibly insets the mini page while the website and files stay saved',()=>w.getComputedStyle(paper()).paddingLeft==='24px' && Math.abs(miniHeader().getBoundingClientRect().left-beforeHeaderX-24)<1 && evaluate('projectJson()')===beforeBody && evaluate('cssExport()')===beforeBodyCss && previewWindow().getComputedStyle(previewDoc().body).paddingLeft==='0px' && d.getElementById('background-preview-css').textContent.includes('--body-padding-left: 24px;'));

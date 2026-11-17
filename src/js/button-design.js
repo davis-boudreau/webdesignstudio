@@ -250,7 +250,7 @@ State simulations are labelled; browser-native focus/disabled remain testable. *
   DSStudio.on('project:install', () => { b = state.buttonDesign; });
   DSStudio.on('project:sync', controls);
   DSStudio.on('properties:committed', () => { controls(); render(); });
-  DSStudio.exports.registerCss({id:'buttons',stage:'components',order:20,generate:()=> '\n' + buttonCSS()});
+  DSStudio.exports.registerCss({id:'buttons',stage:'components',order:20,generate:snapshot=> '\n' + buttonCSS(snapshot?.state?.buttonDesign || b, snapshot?.state || state)});
   // sample-homepage.js reads shared button settings for generated HTML.
   for (const id of ['bdVariant', 'bdSize', 'bdState', 'bdPaddingX', 'bdPaddingY', 'bdMinHeight', 'bdRadius', 'bdBorder', 'bdWeight', 'bdFocus', 'bdFocusWidth', 'bdMotion', 'bdMobileFull', 'bdHover', 'bdActive', 'bdText', 'bdHoverText', 'bdActiveText', 'bdDefaultBg', 'bdBorderColor', 'bdSource', 'bdCustom']) $(id).addEventListener('input', e => {
     const key = {
