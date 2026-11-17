@@ -2,6 +2,33 @@
 
 Updated: 17 November 2026 (America/Halifax).
 
+## Verified accordion settling release (17 November 2026)
+
+- Reviewed and merged [PR #4](https://github.com/davis-boudreau/webdesignstudio/pull/4)
+  under the existing release authorization. Exact feature head:
+  f97965351ec39136deb8ace72d9a363dc8146865.
+  [CI run 44075430144](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44075430144)
+  passes all 23 jobs on its first attempt, including every browser suite and the
+  required gate. Rechecked exact head, base, successful checks, mergeability and
+  review state before merging. Merge c7bff4f17b9332d8591d5f17f4d8d02c79a34518;
+  local main was fetched and fast-forwarded to the same commit.
+- [Pages run 44076430016](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44076430016)
+  passes all 24 validation/deployment jobs on its first attempt. Uncached public
+  index/asset comparisons match merged Git bytes, 85/85 checks
+  (.accordion-settle-publication-verified.log). Pages reports built, workflow
+  publishing and HTTPS enforced. This supersedes the blocked documentation-only
+  run 44073640483; its failure and the confirmed fix remain recorded below.
+- Fresh python scripts/review_suites.py passes all 23/23 commands, with no failed
+  assertions or captured errors: 4,157/4,157 browser assertions across 21 suites
+  (22 browser launches), including the 149-check consistency suite, plus 12 runner
+  contracts and 84 assets. Log: .accordion-settle-catalogue.log. Git diff --check
+  passes. Final exact-head hosted CI and merged-main Pages validation also pass.
+- This handoff changes documentation only; runtime source remains identical to
+  the validated and publicly verified merge. The requested accordions, learning
+  views, selected-component highlights, theme controls and JSON persistence are
+  released. Manual keyboard, screen-reader, zoom, touch and Firefox/Safari review
+  remain follow-up work; no full accessibility claim is made.
+
 ## Accordion settling follow-up (17 November 2026)
 
 - The documentation-only handoff Pages run 44073640483 passes every other
