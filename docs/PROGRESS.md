@@ -2,6 +2,34 @@
 
 Updated: 17 November 2026 (America/Halifax).
 
+## Verified interaction and learning-preview release (17 November 2026)
+
+- Reviewed final feature head d063847fb5efedeb30af6bcc227fe84d132f2329 and merged
+  [PR #3](https://github.com/davis-boudreau/webdesignstudio/pull/3) under the user's
+  explicit release authorization. Final
+  [CI run 44071416209](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44071416209)
+  passes all 23 jobs on its first attempt: checks, all 21 browser suites and the
+  required gate. Rechecked exact head, main base, mergeability, successful checks
+  and absence of requested changes before merging. Merge commit:
+  f71bdbfed6282d67a3a2289e8e85d0710e791577. Fetched origin, switched to main and
+  fast-forwarded to that merge.
+- [Pages run 44072502110](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44072502110)
+  passes all 24 validation/deployment jobs on its first attempt. Uncached HTTP
+  comparisons of the [public site](https://davis-boudreau.github.io/webdesignstudio/)
+  index and all 84 referenced assets match the merged Git bytes, 85/85 checks
+  (.consistency-publication-verified.log). Pages reports built, workflow publishing
+  and enforced HTTPS. This verifies deployed files; it is not an additional full
+  manual interaction/accessibility audit.
+- Final assertion inventory: 4,153 across 21 browser suites (22 browser launches),
+  12 runner contracts and 84 assets. Earlier local resource failures, the closed
+  Neutral fixture failure and their corrected reruns remain separately recorded
+  below. Final exact-head hosted CI and merged-main Pages validation both pass.
+- This handoff changes documentation only; index.html and src remain identical
+  to the validated and publicly verified merge. No feature release task remains.
+  Manual keyboard, screen-reader, zoom, touch and Firefox/Safari checks remain
+  follow-up work. Broader shared-global/CSS-ownership maintenance remains deferred;
+  this feature uses explicit CSS candidates and separate teaching styles.
+
 ## Consistent accordions, design-step learning and theme persistence (17 November 2026)
 
 - User authorized implementation, repository update, merge and hosted publication.
@@ -55,8 +83,8 @@ Updated: 17 November 2026 (America/Halifax).
   query audit verifies every changed tracked runtime asset has a new version.
 - Pushed the reviewed feature as 384904a and opened
   [PR #3](https://github.com/davis-boudreau/webdesignstudio/pull/3). Final correction
-  and validation notes are ready for the next feature commit. Next: hosted
-  revalidation, authorized merge, Pages deployment and public-file verification.
+  and validation notes were pushed as d063847. Hosted revalidation, authorized
+  merge, Pages deployment and public-file verification are complete as above.
   Earlier dated counts below describe their original revisions; manual keyboard,
   screen-reader, zoom, touch and Firefox/Safari review remain open.
 

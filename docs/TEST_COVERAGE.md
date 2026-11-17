@@ -14,6 +14,18 @@ errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
 
+Final release validation, 17 November 2026:
+[CI run 44071416209](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44071416209)
+passes all 23 jobs on its first attempt for exact feature head d063847: checks,
+all 21 browser suites and the required gate. PR #3 is merged as f71bdbf.
+[Pages run 44072502110](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44072502110)
+passes all 24 validation/deployment jobs on its first attempt. The 4,153-assertion
+inventory, 12 runner contracts and 84 assets are validated. Uncached public index
+and asset comparisons match the merged Git bytes, 85/85 checks, with Pages built
+and HTTPS enforced. This final handoff changes documentation only. Earlier failed
+runs and focused corrections below retain their own results; no full manual
+accessibility or cross-browser audit is implied.
+
 17 November 2026 consistency work adds interaction_consistency_review.py: native
 accordion alignment and cancellation in nested scrollers at 320/1440px and both
 Studio appearances; generated CSS and component selection across eight added
@@ -27,8 +39,9 @@ finishes 21/23 commands: Typography has a local script-load failure (clean rerun
 Opening the actual Neutral view/reference and requiring both to be visible
 corrects that fixture; Palette then passes 844/844. Every other suite passes.
 The final successful suite inventory is 4,153 assertions across 21 browser suites
-(22 launches), plus 12 runner contracts and 84 assets. Hosted CI must validate
-the final exact head; the local catalogue was not repeated after focused fixes.
+(22 launches), plus 12 runner contracts and 84 assets. Hosted CI subsequently
+validates the final exact head as above; the local catalogue was not repeated
+after focused fixes.
 These results are separate from the dated prior validation below. Screenshots
 are visual checks, not a complete accessibility audit.
 
