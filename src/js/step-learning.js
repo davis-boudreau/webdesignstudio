@@ -38,8 +38,8 @@ DSStudio.register({
       if(stage!==4){const field=node('div');field.className='step-theme-field';pane.querySelector('h3').after(field);view.stepTheme=api.theme(id+'-step-theme',field);}
       for(const container of [owner,pane])container.addEventListener('focusin',event=>{
         if(host.contains(event.target))return;const control=event.target.id;
-        if(stage===9)choose(/gutter|maxWidth|wide|stack/i.test(control)?'layout':'grid');
-        if(stage===10)choose(/Underline/.test(control)?'links':/Motion|Reduce/.test(control)?'control':'inputs');
+        if(stage===9 && event.target.matches('[data-responsive-field],#advColumns,#advGap,#advAlign'))choose(/gutter|maxWidth|wide|stack/i.test(control)?'layout':'grid');
+        if(stage===10 && event.target.matches('#advState,#advFocus,#advHeight,#advReduce,#advUnderline,#advMotion'))choose(/Underline/.test(control)?'links':/Motion|Reduce/.test(control)?'control':'inputs');
       });
       owner.addEventListener('toggle',sync);return view;
     }
@@ -57,7 +57,7 @@ DSStudio.register({
       for(const view of views){
         view.theme.value=state.theme;if(view.stepTheme)view.stepTheme.value=state.theme;if(DSStudio.activeStage!==view.stage || !view.owner.open)continue;
         const snapshot=candidate(view),s=snapshot.state,a=s.advanced,r=s.responsiveDesign;
-        const family=view.id==='palette-components'?get('palette-component-family').value:view.selected;
+        const family=view.id==='palette-components'?get('palette-component-family').value:['palette-brand','palette-shades'].includes(view.id)?'colour tokens':view.id==='palette-roles'||view.id==='colour'?'buttons':view.selected;
         for(const part of view.paper.querySelectorAll('[data-learning-part]'))part.toggleAttribute('data-learning-selected',part.dataset.learningPart===family);
         const role=view.id==='colour'?get('oklchRole').value:view.id==='palette-roles'?get('palette-anchor-selection').value:null;
         for(const button of view.paper.querySelectorAll('[data-learning-variant]')){button.className='ds-button ds-button--'+button.dataset.learningVariant+(s.buttonDesign.size==='md'?'':' ds-button--'+s.buttonDesign.size);button.toggleAttribute('data-learning-selected',button.dataset.learningVariant===role);}

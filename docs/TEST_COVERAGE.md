@@ -21,9 +21,16 @@ learning views; native input/change theme sequences; per-theme colour overrides;
 local save, downloaded JSON and reimport; brand proposals, shade families and
 component highlights. Focused result: 144/144 with empty errors. Existing learning
 checks pass 114/114; structure verifies 84 assets and runner contracts pass 12/12.
-The complete 23-command catalogue is running. These results are separate from
-the dated prior validation below. Screenshots are visual checks, not a complete
-accessibility audit.
+The selection-preservation extension passes 145/145. The complete local catalogue
+finishes 21/23 commands: Typography has a local script-load failure (clean rerun
+184/184), and Palette measures stale closed-disclosure geometry (843/844).
+Opening the actual Neutral view/reference and requiring both to be visible
+corrects that fixture; Palette then passes 844/844. Every other suite passes.
+The final successful suite inventory is 4,153 assertions across 21 browser suites
+(22 launches), plus 12 runner contracts and 84 assets. Hosted CI must validate
+the final exact head; the local catalogue was not repeated after focused fixes.
+These results are separate from the dated prior validation below. Screenshots
+are visual checks, not a complete accessibility audit.
 
 Typography selector correction, 16 November 2026: two additional learning checks
 dispatch native select input followed by change and verify actual specimen text

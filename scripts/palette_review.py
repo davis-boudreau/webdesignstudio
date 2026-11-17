@@ -542,8 +542,8 @@ app.onload=async()=>{
   const neutralBackgroundInspect=d.querySelectorAll('#palette-ramp-lessons [data-palette-role="neutral"] button')[1];neutralBackgroundInspect.click();await wait();
   test('Neutral background inspection targets an existing semantic declaration',()=>neutralBackgroundInspect.textContent==='Inspect background CSS' && d.getElementById('dockCss').textContent===evaluate('cssExport()') && d.getElementById('dockCss').textContent.includes('--background:') && d.getElementById('dockCss').scrollTop>0);
   for(const width of [320,390,1440]) {
-    app.style.width=width+'px';w.dssShowWizardStep(4);d.querySelector('#main-palette-steps [data-palette-role="neutral"]').open=true;await wait();
-    test('Neutral palette fits '+width+'px with expanded steps',()=>d.documentElement.scrollWidth<=w.innerWidth+1 && ['main-palette-steps','palette-ramp-lessons'].every(id=>{const el=d.getElementById(id);return el.scrollWidth<=el.clientWidth+1;}));
+    app.style.width=width+'px';w.dssShowWizardStep(4);w.DSStudio.paletteWorkspace.show('shades',false);d.querySelector('#palette-stage-shades [data-palette-family="neutral"]').click();w.dssRevealSection('palette-ramp-lessons',false);d.querySelector('#main-palette-steps [data-palette-role="neutral"]').open=true;await wait();
+    test('Neutral palette fits '+width+'px with expanded steps',()=>{const sections=['main-palette-steps','palette-ramp-lessons'].map(id=>{const el=d.getElementById(id);return {id,scroll:el.scrollWidth,client:el.clientWidth,visible:el.checkVisibility()};});if(d.documentElement.scrollWidth>w.innerWidth+1||sections.some(el=>!el.visible||el.scroll>el.client+1))throw Error(JSON.stringify({width:w.innerWidth,scroll:d.documentElement.scrollWidth,sections}));return true;});
   }
   app.style.width='1440px';reset();await wait();
   test('Reset restores the Primary-derived neutral default',()=>JSON.stringify(evaluate('palette().n'))===JSON.stringify(evaluate('makeNeutralRamp(DEFAULT.primary,DEFAULT.method)')));

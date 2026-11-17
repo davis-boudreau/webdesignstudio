@@ -32,8 +32,33 @@ Updated: 17 November 2026 (America/Halifax).
   held focus examples and top CSS disclosures render correctly. Visual capture
   commands each pass 1/1 with empty errors; temporary visual driver removed.
   Structure verifies 84 assets, runner contracts pass 12/12 and diff checking passes.
-  Full catalogue and release remain pending. Earlier dated counts
-  below describe their original revisions; no new accessibility claim is made.
+  A final selection correction keeps theme-control focus from changing the
+  highlighted component; its focused suite passes 145/145 with empty errors.
+- Full python scripts/review_suites.py finishes 21/23 commands. Typography's
+  first local run captures a failed section-accordions.js request and follow-on
+  previousReveal errors; its unchanged isolated rerun passes 184/184. Palette
+  initially passes 843/844 locally and in hosted CI: the Neutral 320px assertion
+  measures a closed shade/reference subtree after a wide-to-narrow resize. The
+  page itself fits (305px); stale closed-child dimensions report 524px within a
+  155px container. The corrected fixture opens the actual Neutral selector and
+  reference, requires both to be visible, and retains the width assertion.
+  Final python scripts/palette_review.py passes 844/844 with empty errors.
+  Temporary layout probes removed. Initial hosted run 44068570116 passes every
+  other browser suite and correctly blocks merge on the Palette failure.
+- Final successful local suite inventory: 4,153 browser assertions across 21
+  suites (22 browser launches), 12 runner contracts, 84 assets; all final error
+  lists empty. The complete catalogue was not repeated after the focused
+  corrections; final hosted checks must validate the exact pushed head.
+  Logs: .consistency-catalogue.log, .consistency-typography-retry.log,
+  .consistency-palette-final.log and .consistency-selection-final.log.
+  Git diff --check passes. Runtime asset queries refreshed; a UTF-8-corrected
+  query audit verifies every changed tracked runtime asset has a new version.
+- Pushed the reviewed feature as 384904a and opened
+  [PR #3](https://github.com/davis-boudreau/webdesignstudio/pull/3). Final correction
+  and validation notes are ready for the next feature commit. Next: hosted
+  revalidation, authorized merge, Pages deployment and public-file verification.
+  Earlier dated counts below describe their original revisions; manual keyboard,
+  screen-reader, zoom, touch and Firefox/Safari review remain open.
 
 ## Typography theme selector event-order fix (16 November 2026)
 
