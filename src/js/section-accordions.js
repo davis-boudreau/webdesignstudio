@@ -14,11 +14,13 @@
   syncScrollOffset();
   // Only a deliberate summary activation moves the view. Programmatic opens
   // during routing, imports and preview refreshes must not steal focus or scroll.
-  let activation=0;
+  let activation=0,settling,settleTimers=[];
+  function cancelAlignment(){++activation;settling?.disconnect();settleTimers.forEach(clearTimeout);settleTimers=[];}
+  for(const type of ['wheel','touchstart','pointerdown','keydown'])document.addEventListener(type,cancelAlignment,{capture:true,passive:true});
   document.addEventListener('click', event => {
     const summary=event.target.closest('summary'),details=summary?.parentElement;
     if(!details || details.tagName!=='DETAILS' || details.open || event.button!==0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)return;
-    const revision=++activation;
+    cancelAlignment();const revision=activation;
     queueMicrotask(()=>{
       if(event.defaultPrevented || !details.open)return;
       const focused=document.activeElement;
@@ -33,6 +35,12 @@
         window.scrollBy({top:summary.getBoundingClientRect().top-top,behavior:'instant'});
       }
       align();requestAnimationFrame(()=>requestAnimationFrame(align));
+      // Frames and other disclosures can resize the flow after the opening
+      // click. Follow that brief settling period, while later user input wins.
+      settling=new ResizeObserver(()=>requestAnimationFrame(align));
+      for(const area of new Set([document.body,header,details.parentElement]))settling.observe(area);
+      // Timers also cover layout work between rendering opportunities.
+      settleTimers=[setTimeout(align,80),setTimeout(align,160),setTimeout(()=>settling?.disconnect(),250)];
     });
   },true);
   function reveal(id, scroll = true) {

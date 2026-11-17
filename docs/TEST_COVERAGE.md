@@ -14,6 +14,14 @@ errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
 
+Accordion follow-up: the documentation-only handoff run 44073640483 catches an
+intermittent native alignment failure (144/145) and blocks deployment. A focused
+late-growth reproduction fails 0/1 before, passes 1/1 after. The consistency suite
+now deliberately grows preceding content after opening and adds four manual
+wheel-cancellation cases: 149/149 focused checks pass with empty errors. A fresh
+complete catalogue and exact-head hosted validation are pending. The preceding
+publication evidence below describes its own verified revision.
+
 Final release validation, 17 November 2026:
 [CI run 44071416209](https://github.com/davis-boudreau/webdesignstudio/actions/runs/44071416209)
 passes all 23 jobs on its first attempt for exact feature head d063847: checks,

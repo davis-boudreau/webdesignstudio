@@ -13,6 +13,8 @@ the saved project theme. Step-side and specimen controls stay synchronized.
 `section-accordions.js` handles explicit summary opening clicks across the app,
 including later-created details. It aligns the summary below the measured sticky
 header and inside scrolling ancestors, then checks layout again after two frames.
+It follows layout settling for 250ms with ResizeObserver and guarded 80/160ms
+measurements; subsequent wheel, touch, pointer or keyboard input cancels the work.
 Closing and programmatic opening do not trigger this behavior; later focus or
 activation cancels a pending adjustment.
 
