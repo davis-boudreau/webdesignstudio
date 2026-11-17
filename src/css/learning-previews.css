@@ -1,0 +1,11 @@
+.learning-preview-frame { display: block; width: 100%; max-width: none; min-height: 96px; border: 0; box-sizing: border-box; }
+#type-generated-css { margin-top: 0; }
+:is(.button-learning-css,.spacing-learning-css,.learning-css-quick) { min-width: 0; margin-block: 0 1rem; }
+:is(.button-learning-css,.spacing-learning-css,.learning-css-quick) > summary { min-height: 44px; align-content: center; cursor: pointer; font-weight: 700; }
+:is(.button-learning-css,.spacing-learning-css,.learning-css-quick):not([open]) > :not(summary) { display: none; }
+.step-learning { min-width: 0; margin-block: 1rem; padding: 1rem; border: 1px solid var(--studio-control-border); border-radius: 12px; }
+.step-learning-tools { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.step-learning-scroller { overflow: auto; max-width: 100%; border: 1px solid var(--studio-control-border); }
+.step-learning pre { max-height: 22rem; overflow: auto; }
+.step-learning-tools select { width: 100%; }
+@media (max-width: 600px) { .step-learning-tools { grid-template-columns: 1fr; } }

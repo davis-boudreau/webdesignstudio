@@ -333,10 +333,12 @@ ${sectionActions(['#contact', 'Ask a design question'], ['#grid-lab', 'Return to
 `;
   }
 
-  function homepageCss() {
+  function homepageCss(snapshot) {
+    const responsive=DSStudio.responsive.normalize((snapshot?.state || state).responsiveDesign);
     // Breakpoints follow the actual content width and the saved card controls.
-    const threeCards = adv.columns * 3 + adv.gap * 2;
-    const twoCards = adv.columns * 2 + adv.gap;
+    const settings=snapshot?.state?.advanced || adv;
+    const threeCards = settings.columns * 3 + settings.gap * 2;
+    const twoCards = settings.columns * 2 + settings.gap;
     return `/* SAMPLE HOME PAGE: 12-column layout; 8px rhythm with 4px fine spacing at defaults.
    The spacing-unit and component controls remain configurable. */
 .sample-home { color-scheme: light; }
@@ -471,17 +473,17 @@ ${flexRecipe}
 .sample-feedback--danger { border-inline-start-color: var(--danger); }
 .sample-footer-inner { align-items: start; padding-block: var(--space-8); }
 .sample-footer p { margin-top: var(--space-2); color: var(--text-muted); }
-@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
+@media (min-width: ${DSStudio.responsive.rem(responsive.stack)}) {
   .sample-section { padding-block: var(--space-12); }
 }
-@media (min-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
+@media (min-width: ${DSStudio.responsive.rem(responsive.wide)}) {
   .sample-home .container { padding-inline: var(--page-gutter-wide); }
   .sample-home main.container { padding-left: calc(var(--page-gutter-wide) + var(--main-padding-left)); padding-right: calc(var(--page-gutter-wide) + var(--main-padding-right)); }
   .sample-logo { width: var(--space-16); }
   .sample-hero { padding-block: var(--space-20); }
   .sample-section { padding-block: var(--space-16); }
 }
-@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().wide)}) {
+@media (max-width: ${DSStudio.responsive.rem(responsive.wide)}) {
   .sample-home .sample-workshop-grid { grid-template-columns: minmax(0, 1fr); }
   .sample-workshop-grid > .sample-grid-figure, .sample-workshop-grid > .sample-lab-notes { grid-column: auto; }
 }
@@ -493,7 +495,7 @@ ${flexRecipe}
 @container sample-content (width < ${twoCards}px) {
   .sample-home .card-grid { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
+@media (max-width: ${DSStudio.responsive.rem(responsive.stack)}) {
   .sample-home .sample-hero, .sample-home .sample-split { grid-template-columns: minmax(0, 1fr); }
   .sample-hero > *, .sample-split > * { grid-column: auto; }
   .sample-header-inner { align-items: center; flex-direction: row; flex-wrap: nowrap; }
@@ -518,7 +520,7 @@ ${flexRecipe}
       DSStudio.samples.advancedSourceHtml = homepageHtml;
       DSStudio.samples.advancedHtml = () => DSStudio.websiteContent.apply(homepageHtml(),'advanced');
       DSStudio.exports.registerSample('advanced',{
-        css:()=> '\n' + homepageCss() + DSStudio.samples.footerCss(), html:DSStudio.samples.advancedHtml
+        css:snapshot=> '\n' + homepageCss(snapshot) + DSStudio.samples.footerCss(snapshot), html:DSStudio.samples.advancedHtml
       });
       renderCode();
     }

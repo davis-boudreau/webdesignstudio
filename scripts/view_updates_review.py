@@ -18,19 +18,19 @@ app.onload = async () => {
   try {
     evaluate('resetStudio()');await wait();
     w.dssShowWizardStep(5,false);w.DSStudio.typographyWorkspace.show('review',false);
-    const sampleButton=d.querySelector('.type-sample-cta');sampleButton.click();sampleButton.focus();
+    const learningDoc=d.getElementById('type-learning-frame').contentDocument,sampleButton=learningDoc.querySelector('.type-sample-cta');sampleButton.click();sampleButton.focus();
     await wait();
     const weight=d.getElementById('bdWeight');weight.value='700';
     weight.dispatchEvent(new w.Event('input',{bubbles:true}));w.DSStudio.propertyEditors.saveFor(weight);await wait();
     test('Typography component context refreshes after the live preview changes',()=>{
       const frame=d.getElementById('previewPage'),button=frame.contentDocument.querySelector('.ds-button');
       const actual=frame.contentWindow.getComputedStyle(button).fontWeight;
-      const specimen=w.getComputedStyle(d.getElementById('type-specimen-text')).fontWeight;
+      const specimen=w.getComputedStyle(learningDoc.getElementById('type-specimen-text')).fontWeight;
       if(actual!=='700'||specimen!==actual || !d.getElementById('type-context-size').value.endsWith(' / '+actual))throw Error(JSON.stringify({actual,specimen}));
       return true;
     });
     test('Background component refresh preserves the active Typography lesson and focus',()=>
-      w.DSStudio.activeStage===5 && d.activeElement===sampleButton);
+      w.DSStudio.activeStage===5 && d.activeElement===d.getElementById('type-learning-frame') && learningDoc.activeElement===sampleButton);
     const views=w.DSStudio.views,emit=event=>w.DSStudio.emit(event);
     views.flush();
     {

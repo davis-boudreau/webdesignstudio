@@ -12,6 +12,29 @@
   offsetObserver.observe(header);
   window.addEventListener('resize', syncScrollOffset);
   syncScrollOffset();
+  // Only a deliberate summary activation moves the view. Programmatic opens
+  // during routing, imports and preview refreshes must not steal focus or scroll.
+  let activation=0;
+  document.addEventListener('click', event => {
+    const summary=event.target.closest('summary'),details=summary?.parentElement;
+    if(!details || details.tagName!=='DETAILS' || details.open || event.button!==0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)return;
+    const revision=++activation;
+    queueMicrotask(()=>{
+      if(event.defaultPrevented || !details.open)return;
+      const focused=document.activeElement;
+      if(focused!==document.body && focused!==summary && !summary.contains(focused))return;
+      function align(){
+        if(revision!==activation || !details.open || !summary.isConnected || document.activeElement!==focused)return;
+        for(let parent=details.parentElement;parent && parent!==document.body;parent=parent.parentElement){
+          if(!/(auto|scroll)/.test(getComputedStyle(parent).overflowY) || parent.scrollHeight<=parent.clientHeight)continue;
+          parent.scrollTop+=summary.getBoundingClientRect().top-parent.getBoundingClientRect().top-8;
+        }
+        const top=header.getBoundingClientRect().bottom+8;
+        window.scrollBy({top:summary.getBoundingClientRect().top-top,behavior:'instant'});
+      }
+      align();requestAnimationFrame(()=>requestAnimationFrame(align));
+    });
+  },true);
   function reveal(id, scroll = true) {
     const target = document.getElementById(id);
     if (!target) return;

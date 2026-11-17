@@ -1,6 +1,120 @@
 # Project progress
 
-Updated: 16 November 2026 (America/Halifax).
+Updated: 17 November 2026 (America/Halifax).
+
+## Consistent accordions, design-step learning and theme persistence (17 November 2026)
+
+- User authorized implementation, repository update, merge and hosted publication.
+  Continuing feat/shared-learning-previews, including the preceding uncommitted
+  learning-preview feature and Typography selector fix.
+- Delegated native summary-click handling aligns opened disclosures below the
+  measured sticky header and reveals them inside scrolling containers. Only
+  explicit openings scroll; programmatic updates and closing do not. Deferred
+  alignment stops after another activation, focus change or close.
+- Website theme selectors now share input/change handling. Buttons, Spacing and
+  Palette use the same handler as Typography/semantic colours. Theme changes flow
+  through existing project mutation, autosave, preview and JSON serialization.
+- Added independent learning samples and initially closed generated CSS/calculation
+  views to the remaining Palette stages, Colour lab, Responsive layout and
+  Accessibility. New step-side theme controls accompany the latter three. All
+  use complete generated Basic/Advanced CSS and their own property proposals.
+  Samples show cards, fields, links, actions, navigation and feedback, highlighting
+  the selected component; existing Type/Button/Spacing/semantic selections remain.
+  Brand proposals and selected shade families use real generated tokens. Planning
+  keeps its existing artifacts; delivery keeps its existing export tools.
+- Current focused checks: existing learning suite 114/114; initial consistency
+  run 114/117 had an out-of-range grid-gap fixture and wrong semantic-control IDs.
+  Corrected fixtures pass 136/136, including theme configuration, local save,
+  downloaded JSON/reimport and native disclosure positioning at 320/1440px in
+  both Studio appearances. Extended component/brand/shade checks pass 144/144.
+- Inspected new Responsive/Dark, Accessibility/Light and Palette-components/Dark
+  screenshots in work/reviews/consistent-*.png. Theme colours, selected components,
+  held focus examples and top CSS disclosures render correctly. Visual capture
+  commands each pass 1/1 with empty errors; temporary visual driver removed.
+  Structure verifies 84 assets, runner contracts pass 12/12 and diff checking passes.
+  Full catalogue and release remain pending. Earlier dated counts
+  below describe their original revisions; no new accessibility claim is made.
+
+## Typography theme selector event-order fix (16 November 2026)
+
+- Reproduced the user's unchanged Typography specimen: the native select's input
+  event bubbles to the workspace and refreshes the old theme before the change
+  handler can read the new choice. Previous checks dispatched change alone.
+  Added two real input-then-change regressions; before correction the learning
+  suite passes 113/114, failing the transition from Dark to Light.
+- Shared learning-theme controls now apply on input before the workspace refresh;
+  change remains supported and duplicate values do not trigger another update.
+  Refreshed the helper's runtime asset query. Structure passes 83 assets and
+  git diff --check passes. Focused learning verification passes 114/114, including
+  both native-event transitions, computed specimen text colours, selected theme,
+  retained Typography draft and unchanged Studio appearance.
+- Full python scripts/review_suites.py finishes 21/22 commands. Responsive preview
+  reports 155/157 because section-accordions.js failed to load from the local test
+  server; both failed assertions concern captured startup/resource errors. Its
+  unchanged isolated rerun passes 157/157 with empty errors. All other suites
+  pass, including Typography 184/184, integration 279/279, shared actions 234/234
+  and learning previews 114/114. Final inventory with that rerun is 4,008 browser
+  assertions, 12 runner contracts and 83 assets. No other captured errors.
+  Logs: .learning-theme-before.log, .learning-theme-after.log,
+  .learning-theme-catalogue.log and .learning-theme-responsive-retry.log.
+  No commit, push or publication. Manual accessibility/cross-browser gaps from
+  the preceding feature remain open.
+
+## Shared learning-preview CSS and theme controls (16 November 2026)
+
+- Working locally on feat/shared-learning-previews from the verified main release.
+  Typography, Buttons, Spacing and semantic colours now have an initially closed
+  Generated CSS and the calculation disclosure above their learning sample.
+  Existing excerpts, calculations, Copy, full references and Save/Discard scopes
+  are retained. Typography and semantic colours gain nearby Website Light/Dark
+  controls; all four use the existing shared website theme, independent of Studio
+  appearance. Changing theme preserves unrelated property proposals.
+- Added an optional normalized snapshot to the existing CSS pipeline/contributors
+  and page CSS generators. Default exports keep their original path and bytes;
+  learning documents consume that same complete Basic/Advanced stylesheet for
+  their own draft. No temporary reassignment of project globals or new schema.
+  Detached state palettes have a bounded cache and do not overwrite saved UI
+  source metadata. Early export verification passes 98/98 with unchanged fixtures.
+- Independent teaching markup renders in script-free same-origin sandboxed
+  documents. Presentation/selection guides and explicit font/spacing comparisons
+  are separate from the unmodified website stylesheet. Type's original website
+  text inspector remains clearly labelled as a reference; editing real website
+  wording no longer changes the teaching sample. Original nodes/listeners and
+  selected-level actions survive adoption into the learning documents.
+- Each document owns optional curated-font links, fallback comparison, retry and
+  project-change cleanup. Default system-font operation remains offline. Font
+  fixtures now cover the child documents too. ARIA control references resolve in
+  their own document. Runtime asset queries refreshed; structure verifies 83 assets
+  and git diff --check passes. No commit, push or publication for this feature.
+- Interim affected results: Typography 184/184, Components 197/197 and Spacing
+  313/313 with empty errors. Earlier Type fixtures used a malformed computed-style
+  helper and assumed rounded inline sizes; corrected document lookup and allowed
+  only the 0.05px rounding difference of the existing 0.1px readout. The original
+  838/844 Palette run exposed obsolete inline-style/document/padding expectations;
+  the corrected semantic/background subset passes 39/39. An iframe ResizeObserver
+  loop was fixed by scheduling height changes outside observer delivery.
+- The new cross-preview suite initially passes 100/100 for stylesheet/theme parity,
+  isolated drafts, safe independent copy, layout and metadata. Its font extension
+  initially passes 105/109: all four fallback failures expected Arial even for
+  Literata's correct Georgia fallback. The corrected font subset passes 10/10.
+  Temporary subset drivers removed; those counts overlap the tracked suites.
+- Final current-session validation: python scripts/review_suites.py passes all
+  22/22 commands: 83 assets, 12 runner contracts and 4,006 browser assertions
+  across 20 suites (21 browser launches). All captured browser error lists are
+  empty. The new learning suite passes 112/112, including actual isolated-document
+  font loading, fallback comparison and readable Studio annotation controls when
+  project text/focus colours are transparent. Export fixtures remain unchanged.
+- Inspected saved screenshots of Typography in Light/Dark and Buttons, Spacing
+  and semantic colours in Light. CSS disclosures sit above the samples; theme
+  controls and independent content render correctly. Guide labels use Studio
+  colours while sample content retains the actual website colours. Screenshots
+  are in work/reviews/shared-learning-*.png; temporary visual driver removed.
+  Final structure, runner-contract and git diff --check checks pass after cleanup.
+  The first cleanup contract command used a nonexistent filename; the corrected
+  browser_runner_review.py command hit Windows sandbox temporary-profile cleanup
+  permissions, then passes 12/12 with the same elevation used by the catalogue.
+  Manual keyboard/touch, screen-reader, zoom and Firefox/Safari review remain open.
+  Next: user review of this local branch; commit/push/publication are not performed.
 
 ## Learning workspace release (16 November 2026)
 

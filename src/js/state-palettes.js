@@ -7,7 +7,7 @@
   const buttonStates=['default','hover','focus','active','selected','disabled','loading'];
   const generalStates=[...buttonStates,'invalid','success','readonly'];
   const cues={default:'Ready to activate.',hover:'Underline supplements the colour change.',focus:'Keep a visible outline and test actual keyboard focus.',active:'A pressed cue is momentary; it is separate from selection.',selected:'Keep the checkmark and aria-pressed on toggle buttons.',disabled:'Native disabled prevents activation; opacity .55 also affects the displayed colour.',loading:'Keep the progress indicator, busy label and duplicate-action protection.',invalid:'Include an error message and aria-invalid.',success:'Include a success message; colour alone is insufficient.',readonly:'Read-only text stays readable and selectable; it is separate from disabled.'};
-  function entries(theme,group='general',buttonData=window.dssGetButtonContrastData(),roles=palette(theme).roles) {
+  function entries(theme,group='general',buttonData=window.dssGetButtonContrastData(),roles=palette(theme).roles,foundation=state) {
     const semantic={default:'primary',hover:'primary-hover',focus:'focus',active:'primary',selected:'primary',disabled:'primary',loading:'primary',invalid:'danger',success:'success',readonly:'surface-muted'};
     const isButton=variants.includes(group),colours=isButton?buttonData.themes[theme][group]:null;let retained;
     return (isButton?buttonStates:generalStates).map(key=>{
@@ -16,38 +16,43 @@
         property=key==='hover'?'hover':key==='active'?'active':key==='focus'||key==='selected'?'focus':'bg';
         anchor=property==='focus'?buttonData.settings.focus:colours[property];
         transparent=anchor==='transparent';
-        if(transparent){const explicit=state.colourTransparency?.['button:'+group+':'+property] || state.colourTransparency?.['button:'+group+':source'] || state.colourTransparency?.['anchor:'+buttonData.settings.sources[group]];if(explicit){retained??=window.dssGetButtonContrastData(buttonData.settings,{...state,colourTransparency:{}}).themes[theme][group];anchor=retained[property]==='transparent'?retained.fg:retained[property];}else{anchor=colours.fg;property='text';}}
+        if(transparent){const explicit=foundation.colourTransparency?.['button:'+group+':'+property] || foundation.colourTransparency?.['button:'+group+':source'] || foundation.colourTransparency?.['anchor:'+buttonData.settings.sources[group]];if(explicit){retained??=window.dssGetButtonContrastData(buttonData.settings,{...foundation,colourTransparency:{}}).themes[theme][group];anchor=retained[property]==='transparent'?retained.fg:retained[property];}else{anchor=colours.fg;property='text';}}
         source=property==='focus'?'--button-focus':'--button-'+group+'-'+(transparent?'text':property);
         control=property==='focus'?'bdFocus':transparent?'bdText':{bg:'bdDefaultBg',hover:'bdHover',active:'bdActive'}[property];
       } else {
         source='--'+semantic[key];anchor=roles[semantic[key]];control='jSemanticRole';
       }
-      if(!validHex(anchor))anchor=state.primary;
+      if(!validHex(anchor))anchor=foundation.primary;
       return {key,label:labels[key],prefix:isButton?'--button-'+group+'-state-'+key:'--state-'+key,anchor:anchor.toUpperCase(),source,control,property,semantic:isButton?null:semantic[key],variant:isButton?group:null,cue:cues[key]+(transparent?' The background is transparent: this ramp uses the foreground colour; it is not the composited background.':'')};
     });
   }
   const sourceRows=new Map();
+  const previewCss=new Map();
   DSStudio.statePalettes={entries,variants,sourceFor:(prefix,theme)=>sourceRows.get(theme+prefix)};
   let signature='',generated='';
-  function css() {
-    const next=JSON.stringify([state.method,state.primary,state.secondary,state.accent,state.semanticOverrides,state.semanticSources,state.colourTransparency,state.brandPalette,state.buttonDesign]);
-    if(next===signature)return generated;
-    const buttonData=window.dssGetButtonContrastData();
+  function css(snapshot) {
+    const model=snapshot?.state || state;
+    const next=JSON.stringify([model.method,model.primary,model.secondary,model.accent,model.semanticOverrides,model.semanticSources,model.colourTransparency,model.brandPalette,model.buttonDesign]);
+    if(!snapshot && next===signature)return generated;
+    if(snapshot && previewCss.has(next))return previewCss.get(next);
+    const buttonData=window.dssGetButtonContrastData(model.buttonDesign,model);
     const themes=['light','dark'].map(theme=>{
-      const roles=palette(theme).roles;
-      return {theme,rows:['general',...variants].flatMap(group=>entries(theme,group,buttonData,roles))};
+      const roles=palette(theme,model).roles;
+      return {theme,rows:['general',...variants].flatMap(group=>entries(theme,group,buttonData,roles,model))};
     });
     const ramps=new Map();
-    for(const {theme,rows} of themes)for(const row of rows)sourceRows.set(theme+row.prefix,row);
-    generated='\n/* STATE PALETTES: shade options derived from resolved state colours.\n   500 preserves the source colour; existing component rules and non-colour cues still apply. */\n'+themes.map(({theme,rows})=>{
+    if(!snapshot)for(const {theme,rows} of themes)for(const row of rows)sourceRows.set(theme+row.prefix,row);
+    const output='\n/* STATE PALETTES: shade options derived from resolved state colours.\n   500 preserves the source colour; existing component rules and non-colour cues still apply. */\n'+themes.map(({theme,rows})=>{
       const declarations=rows.flatMap(row=>{
-        if(!ramps.has(row.anchor))ramps.set(row.anchor,makeRamp(row.anchor,state.method));
+        if(!ramps.has(row.anchor))ramps.set(row.anchor,makeRamp(row.anchor,model.method));
         const ramp=ramps.get(row.anchor);
         return steps.map(step=>`  ${row.prefix}-${step}: ${ramp[step]};`);
       }).join('\n');
       return (theme==='dark'?'[data-theme="dark"]':':root')+' {\n'+declarations+'\n}';
     }).join('\n');
-    signature=next;return generated;
+    if(!snapshot){signature=next;generated=output;}
+    else {previewCss.set(next,output);if(previewCss.size>12)previewCss.delete(previewCss.keys().next().value);}
+    return output;
   }
   DSStudio.exports.registerCss({id:'state-palettes',stage:'states',generate:css});
   DSStudio.register({

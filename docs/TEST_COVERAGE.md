@@ -3,7 +3,7 @@
 The application has no build step or runtime network dependency. Run
 `python scripts/review_suites.py` for the complete offline check set, followed by
 `git diff --check`. The catalogue runs structure checks, runner contracts and all
-19 browser suites in independent processes. It finishes every command and returns
+21 browser suites in independent processes. It finishes every command and returns
 nonzero if any command failed. `--list` prints commands; `--matrix` prints the CI
 browser matrix without importing suites or launching Chrome.
 
@@ -13,6 +13,39 @@ Chromium or Edge. The runner rejects failed assertions, captured JavaScript
 errors, nonzero browser exits, malformed/empty reports and incomplete harnesses.
 
 ## Suite ownership
+
+17 November 2026 consistency work adds interaction_consistency_review.py: native
+accordion alignment and cancellation in nested scrollers at 320/1440px and both
+Studio appearances; generated CSS and component selection across eight added
+learning views; native input/change theme sequences; per-theme colour overrides;
+local save, downloaded JSON and reimport; brand proposals, shade families and
+component highlights. Focused result: 144/144 with empty errors. Existing learning
+checks pass 114/114; structure verifies 84 assets and runner contracts pass 12/12.
+The complete 23-command catalogue is running. These results are separate from
+the dated prior validation below. Screenshots are visual checks, not a complete
+accessibility audit.
+
+Typography selector correction, 16 November 2026: two additional learning checks
+dispatch native select input followed by change and verify actual specimen text
+colours, selected theme and preserved draft/Studio appearance in both directions.
+Before the correction, 113/114 pass; after it, 114/114 pass. The full catalogue
+finishes 21/22 commands because responsive preview captures a local
+section-accordions.js resource-load error (155/157); its unchanged isolated rerun
+passes 157/157 with empty errors. All other suites pass. The assertion inventory
+with that clean rerun is 4,008. The following baseline describes the earlier run.
+
+The local shared-learning-preview feature adds learning_previews_review.py to the
+catalogue. It owns exact saved/candidate stylesheet parity, all four CSS quick
+views, shared website themes in both sample modes at 320/1440px, independent safe
+teaching content, draft/storage/export isolation, local ARIA references, snapshot
+purity, font loading/fallback inside isolated documents and readable editing
+annotations with transparent project colours. Its 112 checks use local font
+fixtures. Current-session local validation passes all 22/22 catalogue commands:
+4,006 browser assertions across 20 suites (21 browser launches), 12 runner
+contracts and 83 assets, with empty captured browser error lists. Export fixtures
+are unchanged. Existing owner
+suites retain their assertions, with new document lookups, deliberate independent
+copy expectations and browser subpixel comparisons against rounded size readouts.
 
 Final feature release validation, 16 November 2026:
 [CI run 43960139274](https://github.com/davis-boudreau/webdesignstudio/actions/runs/43960139274)

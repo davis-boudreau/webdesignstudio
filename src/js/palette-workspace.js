@@ -108,7 +108,7 @@ DSStudio.register({
       selectRegion();syncComponents();
     }
     get('palette-brand-selection').addEventListener('change',event=>selectBrand(event.target.value));get('palette-region-selection').addEventListener('change',selectRegion);
-    get('palette-theme').addEventListener('change',event=>{get('jTheme').value=event.target.value;get('jTheme').dispatchEvent(new Event('input',{bubbles:true}));});
+    DSStudio.learningPreviews.bindTheme(get('palette-theme'));
     get('palette-status-role').addEventListener('change',sync);
     get('palette-status-colour').addEventListener('input',event=>{if(!validHex(event.target.value))return;const role=get('palette-status-role').value;state.semanticOverrides={...state.semanticOverrides,[state.theme]:{...state.semanticOverrides?.[state.theme],[role]:event.target.value}};apply();window.dssAutosave?.();});
     get('palette-status-reset').addEventListener('click',()=>{delete state.semanticOverrides?.[state.theme]?.[get('palette-status-role').value];apply();window.dssAutosave?.();});

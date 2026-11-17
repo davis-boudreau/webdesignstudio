@@ -13,8 +13,8 @@
   }
   const settings = () => normalize(state.responsiveDesign);
   const rem = px => Number((px / 16).toFixed(4)) + 'rem';
-  function tokens() {
-    const r = settings();
+  function tokens(foundation = state) {
+    const r = normalize(foundation.responsiveDesign);
     return `  --page-max-width: ${rem(r.maxWidth)};\n  --page-gutter: ${rem(r.gutter)};\n  --page-gutter-wide: ${rem(r.wideGutter)};`;
   }
   DSStudio.responsive = { defaults, normalize, settings, rem, tokens };

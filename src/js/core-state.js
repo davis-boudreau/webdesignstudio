@@ -407,38 +407,39 @@ function renderInspector(roles) {
   $('tokenInspector').innerHTML = names.map(k => `<div class="token-item"><strong>--${k}</strong><code>${semanticPaint(k,state.theme,state,roles[k])}</code><span class="help">${k==='primary'?'Foundation ramp → semantic primary → button':k==='surface'?'Semantic surface → card background':k==='text'?'Semantic text → body and headings':'Semantic role → multiple components'}</span></div>`).join('');
 }
 
-function foundationCss() {
+function foundationCss(snapshot) {
+  const model = snapshot?.state || state, config = snapshot?.clampConfig || clampConfig;
   const {
     p,
     s,
     a,
     n,
     roles
-  } = palette('light');
-  const darkRoles = palette('dark').roles;
+  } = palette('light', model);
+  const darkRoles = palette('dark', model).roles;
   const foundation = Object.entries({
     primary: p,
     secondary: s,
     accent: a,
     neutral: n
   }).flatMap(([name, r]) => steps.map(s => `  --${name}-${s}: ${r[s]};`)).join('\n');
-  const semantic = (r, theme) => Object.entries(r).map(([k, v]) => `  --${k}: ${colourIsTransparent(k,theme)?'transparent':semanticSource(k,theme)?'var('+semanticSource(k,theme).token+')':v};`).concat(STATUS_PALETTE_ROLES.flatMap(role => {
-    const ramp = makeRamp(r[role], state.method);
+  const semantic = (r, theme) => Object.entries(r).map(([k, v]) => `  --${k}: ${colourIsTransparent(k,theme,model)?'transparent':semanticSource(k,theme,model)?'var('+semanticSource(k,theme,model).token+')':v};`).concat(STATUS_PALETTE_ROLES.flatMap(role => {
+    const ramp = makeRamp(r[role], model.method);
     return steps.map(step => `  --${role}-${step}: ${ramp[step]};`);
   }), BACKGROUND_REGIONS.map(region => {
     const colour = r[region === 'body' ? 'background' : region+'-background'];
-    return `  --${region}-background-rgb: ${hexRgb(colour).join(' ')};\n  --${region}-background-opacity: ${backgroundOpacity(region, theme)};\n  --${region}-background-paint: rgb(var(--${region}-background-rgb) / var(--${region}-background-opacity));`;
+    return `  --${region}-background-rgb: ${hexRgb(colour).join(' ')};\n  --${region}-background-opacity: ${backgroundOpacity(region, theme, model)};\n  --${region}-background-paint: rgb(var(--${region}-background-rgb) / var(--${region}-background-opacity));`;
   })).join('\n');
-  const sz = sizes();
-  const fonts = DSStudio.fonts.resolve();
+  const sz = sizes(model);
+  const fonts = DSStudio.fonts.resolve(false, model);
   // The default 4px unit provides an 8px rhythm and 4px fine adjustments.
   const spacing = SPACING_STEPS
     .map(n => `  --space-${n}: calc(var(--space-unit) * ${n});`).join("\n");
-  return `/* Web Design System Studio V4.1 — ${state.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(state.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 keeps selected anchors; Neutral uses a derived midpoint. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${state.base}px;\n  --type-ratio: ${state.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5)};
---text-h1: ${fluidTypeCss(4)};
---text-h2: ${fluidTypeCss(3)};
---text-body: ${fluidTypeCss(0)};
---text-small: ${fluidTypeCss(-1)};\n  --heading-letter-spacing: ${state.headingTracking}em;\n  --body-letter-spacing: ${state.bodyTracking}em;\n  --body-leading: ${state.leading};\n  --heading-leading: ${state.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${state.spacing}px;\n${spacing}\n${PADDING_REGIONS.flatMap(region => PADDING_SIDES.map(side => `  --${region}-padding-${side}: ${regionPadding(region, side)}px;`)).join('\n')}\n${DSStudio.responsive.tokens()}\n  --radius-base: ${state.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles, 'light')}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles, 'dark')}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nhtml { background: var(--surface); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--body-background-paint); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding-inline: var(--page-gutter); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
+  return `/* Web Design System Studio V4.1 — ${model.project.replace(/\*\//g,'')}\n   Studio-generated starting point. Review contrast and project requirements.\n   Foundation → Semantic → Components. */\n:root {\n  /* BRAND PALETTE: project reference colours. */\n${DSStudio.brandPalette.css(model.brandPalette)}\n\n  /* FOUNDATION: generated ramps extend the reference palette. Step 500 keeps selected anchors; Neutral uses a derived midpoint. */\n${foundation}\n\n  /* FOUNDATION: typography. Arial is the default system font. */\n  --font-body: ${fonts.body};\n  --font-heading: ${fonts.heading};\n  --font-ui: var(--font-body);\n  --font-size-base: ${model.base}px;\n  --type-ratio: ${model.ratio};\n${sz.map((o,i)=>`  --text-step-${i}: ${round(o.size,4)}px;`).join('\n')}\n  --text-display: ${fluidTypeCss(5, 'vw', 0, model, config)};
+--text-h1: ${fluidTypeCss(4, 'vw', 0, model, config)};
+--text-h2: ${fluidTypeCss(3, 'vw', 0, model, config)};
+--text-body: ${fluidTypeCss(0, 'vw', 0, model, config)};
+--text-small: ${fluidTypeCss(-1, 'vw', 0, model, config)};\n  --heading-letter-spacing: ${model.headingTracking}em;\n  --body-letter-spacing: ${model.bodyTracking}em;\n  --body-leading: ${model.leading};\n  --heading-leading: ${model.headingLeading};\n\n  /* FOUNDATION: spacing and corners */\n  --space-unit: ${model.spacing}px;\n${spacing}\n${PADDING_REGIONS.flatMap(region => PADDING_SIDES.map(side => `  --${region}-padding-${side}: ${regionPadding(region, side, model)}px;`)).join('\n')}\n${DSStudio.responsive.tokens(model)}\n  --radius-base: ${model.radius}px;\n\n  /* SEMANTIC: light theme roles */\n${semantic(roles, 'light')}\n}\n/* SEMANTIC: dark theme swaps roles, not component rules. */\n[data-theme="dark"] {\n  color-scheme: dark;\n${semantic(darkRoles, 'dark')}\n}\n/* COMPONENT: responsive, reusable and accessible starting points. */\nh1, h2, h3, .heading-1, .heading-2 { font-family: var(--font-heading); letter-spacing: var(--heading-letter-spacing); }\nhtml { background: var(--surface); }\nbody { margin: 0; letter-spacing: var(--body-letter-spacing); font: var(--text-body)/var(--body-leading) var(--font-ui); background: var(--body-background-paint); color: var(--text); }\n.container { box-sizing: border-box; width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding-inline: var(--page-gutter); }\n.page-title { font-size: var(--text-display); line-height: var(--heading-leading); }
 .heading-1 { font-size: var(--text-h1); line-height: var(--heading-leading); }
 .heading-2 { font-size: var(--text-h2); line-height: var(--heading-leading); }
 .small-text { font-size: var(--text-small); }\n.card-grid { display: grid; }\n.card { padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface); }\n.button { padding: var(--space-2) var(--space-4); border: 0; border-radius: calc(var(--radius-base) * .7); background: var(--primary); color: var(--on-primary); }\n.button:hover { background: var(--primary-hover); }\n:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }\n@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }\n`;

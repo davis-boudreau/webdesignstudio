@@ -120,6 +120,7 @@ Browser storage may be unavailable in private or restricted contexts. */
     autosave();
   }
   for (const [id, key] of Object.entries(bindings)) el(id).addEventListener('input', e => updateKey(key, numbers.has(key) ? Number(e.target.value) : e.target.value));
+  el('jTheme').addEventListener('change',event=>{if(state.theme!==event.target.value)updateKey('theme',event.target.value);});
   /* FIX: keep the guided fields in sync with every change (brand swatch buttons, theme toggle, JSON import, reset). */
   DSStudio.on('foundation:updated', () => { syncJourney(); autosave(); });
   el('jPreset').addEventListener('change', e => {

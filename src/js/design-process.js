@@ -257,7 +257,7 @@
 .process-note { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 48rem) { .process-wireframe { grid-template-columns: minmax(0, 1fr); } }
 `;
-  const processCss = () => artifactCss.replace('@media (max-width: 48rem)', `@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)})`) + (DSStudio.wireframeEngine?.css()||'');
+  const processCss = snapshot => artifactCss.replace('@media (max-width: 48rem)', `@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.normalize((snapshot?.state || state).responsiveDesign).stack)})`) + (DSStudio.wireframeEngine?.css()||'');
   DSStudio.process = { defaults, normalize, hierarchy, tree, entries, stages, briefFields, artifactHtml, sitemapHtml, samplePages, currentPlan, destinationId:(label,plan=currentPlan(),mode=state.sampleMode)=>linkTargets(plan,mode).get(labelKey(label))||'', inventory: mode => inventories[mode === 'basic' ? 'basic' : 'advanced'].flatMap(([label,id,children=[]])=>[[label,id],...children.map(([name,target])=>[name,target])]), css: processCss };
   DSStudio.register({
     id: 'design-process',
@@ -266,7 +266,7 @@
       const studioCss=()=>processCss() + (DSStudio.contentArchitecture?.reportCss()||'');
       const style = document.createElement('style');
       style.textContent = studioCss(); document.head.append(style);
-      DSStudio.exports.registerCss({id:'planning',stage:'planning',generate:()=> '\n' + processCss()});
+      DSStudio.exports.registerCss({id:'planning',stage:'planning',generate:snapshot=> '\n' + processCss(snapshot)});
       for (const [index, [id,title,heading,explanation,exercise]] of stages.entries()) {
         const panel = document.querySelector(`#process-${id} > .panel`);
         panel.innerHTML = `<section class="studio-lesson"><h3>${heading}</h3><p>${explanation}</p><p><strong>Practice:</strong> ${exercise}</p><button class="ghost" type="button" data-configure-step="${index}">Configure in wizard · step ${index+1}</button></section><div data-process-artifact="${id}"></div>`;

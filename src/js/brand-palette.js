@@ -218,6 +218,12 @@
         targetRole = 'primary'; get('brandFeedback').textContent = 'Choose a role, then click a swatch below.';
       });
       DSStudio.on('foundation:updated', sync);
+      DSStudio.brandPalette.proposedItems=()=>normalize(state.brandPalette.map(item=>{
+        const row=rows.get(item.id);if(!drafts.has(item.id)||!row)return item;
+        const next=fields(row);
+        return next.name.trim() && /^[a-z][a-z0-9-]{0,39}$/.test(next.id) && !state.brandPalette.some(other=>other.id!==item.id && other.id===next.id) && validHex(next.hex)?{...item,...next}:item;
+      }));
+      DSStudio.brandPalette.hasDrafts=()=>drafts.size>0;
       sync();
     }
   });

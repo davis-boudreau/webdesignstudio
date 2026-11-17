@@ -48,7 +48,8 @@
     </div>
   </footer>`;
   }
-  function footerCss() {
+  function footerCss(snapshot) {
+    const responsive=DSStudio.responsive.normalize((snapshot?.state || state).responsiveDesign);
     return `/* Shared classic footer: main navigation, native sitemap disclosure and return link. */
 .website-footer { border-top: var(--border-width) solid var(--border); background: var(--footer-background-paint); }
 .website-footer .footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: var(--space-8); padding-block: var(--space-8); }
@@ -77,12 +78,12 @@
 .website-footer .sitemap-planned { display: block; font-size: var(--text-small); font-weight: 400; color: var(--text-muted); }
 .website-footer .footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-4); padding-block: var(--space-4); border-top: var(--border-width) solid var(--border); }
 .website-footer .footer-bottom small { margin: 0; font-size: var(--text-small); color: var(--text-muted); overflow-wrap: anywhere; }
-@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
+@media (max-width: ${DSStudio.responsive.rem(responsive.stack)}) {
   .website-footer .footer-inner { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
 }
 .website-footer .footer-inner > nav { justify-self: end; }
 .website-footer #sitemap-title { display: inline; font: inherit; font-weight: var(--heading-weight); margin: 0; text-align: left; }
-@media (max-width: ${DSStudio.responsive.rem(DSStudio.responsive.settings().stack)}) {
+@media (max-width: ${DSStudio.responsive.rem(responsive.stack)}) {
   .website-footer .footer-inner > nav { justify-self: start; }
   .website-footer .footer-bottom { flex-direction: column; align-items: flex-start; }
 }
